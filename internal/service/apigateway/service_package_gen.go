@@ -5,9 +5,6 @@ package apigateway
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,40 +23,53 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAPIKey,
+			Factory:  dataSourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
+			Name:     "API Key",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceAuthorizer,
+			Factory:  dataSourceAuthorizer,
 			TypeName: "aws_api_gateway_authorizer",
+			Name:     "Authorizer",
 		},
 		{
-			Factory:  DataSourceAuthorizers,
+			Factory:  dataSourceAuthorizers,
 			TypeName: "aws_api_gateway_authorizers",
+			Name:     "Authorizers",
 		},
 		{
-			Factory:  DataSourceDomainName,
+			Factory:  dataSourceDomainName,
 			TypeName: "aws_api_gateway_domain_name",
+			Name:     "Domain Name",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceExport,
+			Factory:  dataSourceExport,
 			TypeName: "aws_api_gateway_export",
+			Name:     "Export",
 		},
 		{
-			Factory:  DataSourceResource,
+			Factory:  dataSourceResource,
 			TypeName: "aws_api_gateway_resource",
+			Name:     "Resource",
 		},
 		{
-			Factory:  DataSourceRestAPI,
+			Factory:  dataSourceRestAPI,
 			TypeName: "aws_api_gateway_rest_api",
+			Name:     "REST API",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSdk,
+			Factory:  dataSourceSDK,
 			TypeName: "aws_api_gateway_sdk",
+			Name:     "SDK",
 		},
 		{
-			Factory:  DataSourceVPCLink,
+			Factory:  dataSourceVPCLink,
 			TypeName: "aws_api_gateway_vpc_link",
+			Name:     "VPC Link",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -67,11 +77,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccount,
+			Factory:  resourceAccount,
 			TypeName: "aws_api_gateway_account",
+			Name:     "Account",
 		},
 		{
-			Factory:  ResourceAPIKey,
+			Factory:  resourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
 			Name:     "API Key",
 			Tags: &types.ServicePackageResourceTags{
@@ -79,15 +90,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAuthorizer,
+			Factory:  resourceAuthorizer,
 			TypeName: "aws_api_gateway_authorizer",
+			Name:     "Authorizer",
 		},
 		{
-			Factory:  ResourceBasePathMapping,
+			Factory:  resourceBasePathMapping,
 			TypeName: "aws_api_gateway_base_path_mapping",
+			Name:     "Base Path Mapping",
 		},
 		{
-			Factory:  ResourceClientCertificate,
+			Factory:  resourceClientCertificate,
 			TypeName: "aws_api_gateway_client_certificate",
 			Name:     "Client Certificate",
 			Tags: &types.ServicePackageResourceTags{
@@ -95,19 +108,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDeployment,
+			Factory:  resourceDeployment,
 			TypeName: "aws_api_gateway_deployment",
+			Name:     "Deployment",
 		},
 		{
-			Factory:  ResourceDocumentationPart,
+			Factory:  resourceDocumentationPart,
 			TypeName: "aws_api_gateway_documentation_part",
+			Name:     "Documentation Part",
 		},
 		{
-			Factory:  ResourceDocumentationVersion,
+			Factory:  resourceDocumentationVersion,
 			TypeName: "aws_api_gateway_documentation_version",
+			Name:     "Documentation Version",
 		},
 		{
-			Factory:  ResourceDomainName,
+			Factory:  resourceDomainName,
 			TypeName: "aws_api_gateway_domain_name",
 			Name:     "Domain Name",
 			Tags: &types.ServicePackageResourceTags{
@@ -115,43 +131,52 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGatewayResponse,
+			Factory:  resourceGatewayResponse,
 			TypeName: "aws_api_gateway_gateway_response",
+			Name:     "Gateway Response",
 		},
 		{
-			Factory:  ResourceIntegration,
+			Factory:  resourceIntegration,
 			TypeName: "aws_api_gateway_integration",
+			Name:     "Integration",
 		},
 		{
-			Factory:  ResourceIntegrationResponse,
+			Factory:  resourceIntegrationResponse,
 			TypeName: "aws_api_gateway_integration_response",
+			Name:     "Integration Response",
 		},
 		{
-			Factory:  ResourceMethod,
+			Factory:  resourceMethod,
 			TypeName: "aws_api_gateway_method",
+			Name:     "Method",
 		},
 		{
-			Factory:  ResourceMethodResponse,
+			Factory:  resourceMethodResponse,
 			TypeName: "aws_api_gateway_method_response",
+			Name:     "Method Response",
 		},
 		{
-			Factory:  ResourceMethodSettings,
+			Factory:  resourceMethodSettings,
 			TypeName: "aws_api_gateway_method_settings",
+			Name:     "Method Settings",
 		},
 		{
-			Factory:  ResourceModel,
+			Factory:  resourceModel,
 			TypeName: "aws_api_gateway_model",
+			Name:     "Model",
 		},
 		{
-			Factory:  ResourceRequestValidator,
+			Factory:  resourceRequestValidator,
 			TypeName: "aws_api_gateway_request_validator",
+			Name:     "Request Validator",
 		},
 		{
-			Factory:  ResourceResource,
+			Factory:  resourceResource,
 			TypeName: "aws_api_gateway_resource",
+			Name:     "Resource",
 		},
 		{
-			Factory:  ResourceRestAPI,
+			Factory:  resourceRestAPI,
 			TypeName: "aws_api_gateway_rest_api",
 			Name:     "REST API",
 			Tags: &types.ServicePackageResourceTags{
@@ -159,11 +184,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRestAPIPolicy,
+			Factory:  resourceRestAPIPolicy,
 			TypeName: "aws_api_gateway_rest_api_policy",
+			Name:     "REST API Policy",
 		},
 		{
-			Factory:  ResourceStage,
+			Factory:  resourceStage,
 			TypeName: "aws_api_gateway_stage",
 			Name:     "Stage",
 			Tags: &types.ServicePackageResourceTags{
@@ -171,7 +197,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUsagePlan,
+			Factory:  resourceUsagePlan,
 			TypeName: "aws_api_gateway_usage_plan",
 			Name:     "Usage Plan",
 			Tags: &types.ServicePackageResourceTags{
@@ -179,11 +205,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUsagePlanKey,
+			Factory:  resourceUsagePlanKey,
 			TypeName: "aws_api_gateway_usage_plan_key",
+			Name:     "Usage Plan Key",
 		},
 		{
-			Factory:  ResourceVPCLink,
+			Factory:  resourceVPCLink,
 			TypeName: "aws_api_gateway_vpc_link",
 			Name:     "VPC Link",
 			Tags: &types.ServicePackageResourceTags{
@@ -195,13 +222,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.APIGateway
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*apigateway_sdkv1.APIGateway, error) {
-	sess := config["session"].(*session_sdkv1.Session)
-
-	return apigateway_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

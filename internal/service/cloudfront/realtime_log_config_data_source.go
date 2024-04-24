@@ -7,14 +7,16 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_realtime_log_config")
-func DataSourceRealtimeLogConfig() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
+func dataSourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRealtimeLogConfigRead,
 
@@ -73,20 +75,29 @@ func dataSourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get("name").(string)
-	logConfig, err := FindRealtimeLogConfigByName(ctx, conn, name)
+	logConfig, err := findRealtimeLogConfigByName(ctx, conn, name)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Real-time Log Config (%s): %s", name, err)
 	}
-	d.SetId(
-		aws.ToString(logConfig.ARN),
-	)
-	d.Set("arn", logConfig.ARN)
+
+	arn := aws.ToString(logConfig.ARN)
+	d.SetId(arn)
+	d.Set("arn", arn)
 	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
-	d.Set("fields", aws.StringSlice(logConfig.Fields))
+	d.Set("fields", logConfig.Fields)
 	d.Set("name", logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 
 	return diags
+}
+
+func findRealtimeLogConfigByName(ctx context.Context, conn *cloudfront.Client, name string) (*awstypes.RealtimeLogConfig, error) {
+	input := &cloudfront.GetRealtimeLogConfigInput{
+		Name: aws.String(name),
+	}
+
+	return findRealtimeLogConfig(ctx, conn, input)
 }

@@ -5,20 +5,19 @@ package cloudfront
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-// @SDKDataSource("aws_cloudfront_origin_access_identities")
-func DataSourceOriginAccessIdentities() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_origin_access_identities", name="Origin Access Identities")
+func dataSourceOriginAccessIdentities() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginAccessIdentitiesRead,
 
@@ -51,38 +50,39 @@ func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	var comments []interface{}
-
+	var comments []any
 	if v, ok := d.GetOk("comments"); ok && v.(*schema.Set).Len() > 0 {
 		comments = v.(*schema.Set).List()
 	}
-	var output []*awstypes.CloudFrontOriginAccessIdentitySummary
 
 	input := &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}
+	var output []awstypes.CloudFrontOriginAccessIdentitySummary
 
 	pages := cloudfront.NewListCloudFrontOriginAccessIdentitiesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing CloudFront origin access identities: %s", err)
+			return sdkdiag.AppendErrorf(diags, "listing CloudFront Origin Access Identities: %s", err)
 		}
-		comments = append(comments, page)
+
+		for _, v := range page.CloudFrontOriginAccessIdentityList.Items {
+			if len(comments) > 0 {
+				if idx := tfslices.IndexOf(comments, aws.ToString(v.Comment)); idx == -1 {
+					continue
+				}
+			}
+
+			output = append(output, v)
+		}
 	}
 
 	var iamARNs, ids, s3CanonicalUserIDs []string
 
 	for _, v := range output {
-		// See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html#private-content-updating-s3-bucket-policies-principal.
-		iamARN := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "iam",
-			AccountID: "cloudfront",
-			Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *v.Id),
-		}.String()
-		iamARNs = append(iamARNs, iamARN)
-		ids = append(ids, aws.ToString(v.Id))
+		id := aws.ToString(v.Id)
+		iamARNs = append(iamARNs, originAccessIdentityARN(meta.(*conns.AWSClient), id))
+		ids = append(ids, id)
 		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.ToString(v.S3CanonicalUserId))
 	}
 

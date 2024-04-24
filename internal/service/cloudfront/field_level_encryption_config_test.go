@@ -26,7 +26,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFront) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		CheckDestroy:             testAccCheckFieldLevelEncryptionConfigDestroy(ctx),
@@ -91,7 +91,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFront) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		CheckDestroy:             testAccCheckFieldLevelEncryptionConfigDestroy(ctx),
@@ -100,7 +100,6 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 				Config: testAccFieldLevelEncryptionConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -135,15 +134,11 @@ func testAccCheckFieldLevelEncryptionConfigDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckFieldLevelEncryptionConfigExists(ctx context.Context, r string, v *cloudfront.GetFieldLevelEncryptionConfigOutput) resource.TestCheckFunc {
+func testAccCheckFieldLevelEncryptionConfigExists(ctx context.Context, n string, v *cloudfront.GetFieldLevelEncryptionConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[r]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", r)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudFront Field-level Encryption Config ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)

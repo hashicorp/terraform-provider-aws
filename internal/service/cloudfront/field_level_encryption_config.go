@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -20,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_cloudfront_field_level_encryption_config")
-func ResourceFieldLevelEncryptionConfig() *schema.Resource {
+// @SDKResource("aws_cloudfront_field_level_encryption_config", name="Field-level Encryption Config")
+func resourceFieldLevelEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFieldLevelEncryptionConfigCreate,
 		ReadWithoutTimeout:   resourceFieldLevelEncryptionConfigRead,
 		UpdateWithoutTimeout: resourceFieldLevelEncryptionConfigUpdate,
 		DeleteWithoutTimeout: resourceFieldLevelEncryptionConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -156,7 +158,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 	output, err := conn.CreateFieldLevelEncryptionConfig(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Config: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.FieldLevelEncryption.Id))
@@ -168,7 +170,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	output, err := FindFieldLevelEncryptionConfigByID(ctx, conn, d.Id())
+	output, err := findFieldLevelEncryptionConfigByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Field-level Encryption Config (%s) not found, removing from state", d.Id())
@@ -258,6 +260,31 @@ func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
+func findFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
+	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetFieldLevelEncryptionConfig(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionConfig](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FieldLevelEncryptionConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func expandContentTypeProfileConfig(tfMap map[string]interface{}) *awstypes.ContentTypeProfileConfig {
 	if tfMap == nil {
 		return nil
@@ -284,12 +311,8 @@ func expandContentTypeProfiles(tfMap map[string]interface{}) *awstypes.ContentTy
 	apiObject := &awstypes.ContentTypeProfiles{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		apiItems := []awstypes.ContentTypeProfile{}
 		items := expandContentTypeProfileItems(v.List())
-		for _, v := range items {
-			apiItems = append(apiItems, *v)
-		}
-		apiObject.Items = apiItems
+		apiObject.Items = items
 		apiObject.Quantity = aws.Int32(int32(len(items)))
 	}
 
@@ -318,12 +341,12 @@ func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTyp
 	return apiObject
 }
 
-func expandContentTypeProfileItems(tfList []interface{}) []*awstypes.ContentTypeProfile {
+func expandContentTypeProfileItems(tfList []interface{}) []awstypes.ContentTypeProfile {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.ContentTypeProfile
+	var apiObjects []awstypes.ContentTypeProfile
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -338,7 +361,7 @@ func expandContentTypeProfileItems(tfList []interface{}) []*awstypes.ContentType
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -410,14 +433,13 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 			continue
 		}
 
-		apiObject := *expandQueryArgProfile(tfMap)
+		apiObject := expandQueryArgProfile(tfMap)
 
-		emptyObj := awstypes.QueryArgProfile{}
-		if apiObject == emptyObj {
+		if apiObject == nil {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -448,14 +470,8 @@ func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[str
 
 	tfMap := map[string]interface{}{}
 
-	tfmapItems := make([]*awstypes.ContentTypeProfile, 0)
-	for _, v := range apiObject.Items {
-		item := v
-		tfmapItems = append(tfmapItems, &item)
-	}
-
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenContentTypeProfileItems(tfmapItems)
+		tfMap["items"] = flattenContentTypeProfileItems(v)
 	}
 
 	return tfMap
@@ -466,14 +482,12 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"format": apiObject.Format,
+	}
 
 	if v := apiObject.ContentType; v != nil {
 		tfMap["content_type"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Format; v != awstypes.Format("") {
-		tfMap["format"] = v
 	}
 
 	if v := apiObject.ProfileId; v != nil {
@@ -483,7 +497,7 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	return tfMap
 }
 
-func flattenContentTypeProfileItems(apiObjects []*awstypes.ContentTypeProfile) []interface{} {
+func flattenContentTypeProfileItems(apiObjects []awstypes.ContentTypeProfile) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -491,11 +505,7 @@ func flattenContentTypeProfileItems(apiObjects []*awstypes.ContentTypeProfile) [
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		if v := flattenContentTypeProfile(apiObject); len(v) > 0 {
+		if v := flattenContentTypeProfile(&apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}
@@ -560,12 +570,7 @@ func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interf
 
 	var tfList []interface{}
 
-	emptyObj := awstypes.QueryArgProfile{}
 	for _, apiObject := range apiObjects {
-		if apiObject == emptyObj {
-			continue
-		}
-
 		if v := flattenQueryArgProfile(&apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}

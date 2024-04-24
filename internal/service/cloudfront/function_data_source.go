@@ -76,7 +76,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get("name").(string)
-	stage := d.Get("stage").(string)
+	stage := awstypes.FunctionStage(d.Get("stage").(string))
 	outputDF, err := findFunctionByTwoPartKey(ctx, conn, name, stage)
 
 	if err != nil {
@@ -97,7 +97,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
 		Name:  aws.String(name),
-		Stage: awstypes.FunctionStage(stage),
+		Stage: stage,
 	})
 
 	if err != nil {

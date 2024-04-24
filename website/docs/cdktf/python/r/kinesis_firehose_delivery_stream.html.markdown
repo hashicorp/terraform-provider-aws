@@ -950,7 +950,7 @@ The `output_format_configuration` configuration block supports the following arg
 The `serializer` configuration block supports the following arguments:
 
 * `orc_ser_de` - (Optional) Specifies converting data to the ORC format before storing it in Amazon S3. For more information, see [Apache ORC](https://orc.apache.org/docs/). See [`orc_ser_de` block](#orc_ser_de-block) below for details.
-* `parquet_ser_de` - (Optional) Specifies converting data to the Parquet format before storing it in Amazon S3. For more information, see [Apache Parquet](https://parquet.apache.org/documentation/latest/). More details below.
+* `parquet_ser_de` - (Optional) Specifies converting data to the Parquet format before storing it in Amazon S3. For more information, see [Apache Parquet](https://parquet.apache.org/docs/). More details below.
 
 #### `orc_ser_de` block
 
@@ -1048,4 +1048,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.1 input-e1aaa310a62939861e597e76f65ef7d08b859c368806be11be0c8fc80ad59e42 -->
+<!-- cache-key: cdktf-0.20.1 input-79014386743297ebb93e940f78b39f0394a04c1f2f3a605a06f77247ee9a6d82 -->

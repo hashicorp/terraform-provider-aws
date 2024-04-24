@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -72,13 +73,11 @@ func resourceFunction() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-
 			"runtime": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionRuntime](),
 			},
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -133,7 +132,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	outputDF, err := findFunctionByTwoPartKey(ctx, conn, d.Id(), string(awstypes.FunctionStageDevelopment))
+	outputDF, err := findFunctionByTwoPartKey(ctx, conn, d.Id(), awstypes.FunctionStageDevelopment)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
@@ -166,7 +165,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("code", string(outputGF.FunctionCode))
 
-	outputDF, err = findFunctionByTwoPartKey(ctx, conn, d.Id(), string(awstypes.FunctionStageLive))
+	outputDF, err = findFunctionByTwoPartKey(ctx, conn, d.Id(), awstypes.FunctionStageLive)
 
 	if tfresource.NotFound(err) {
 		d.Set("live_stage_etag", "")
@@ -245,10 +244,10 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
+func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name string, stage awstypes.FunctionStage) (*cloudfront.DescribeFunctionOutput, error) {
 	input := &cloudfront.DescribeFunctionInput{
 		Name:  aws.String(name),
-		Stage: awstypes.FunctionStage(stage),
+		Stage: stage,
 	}
 
 	output, err := conn.DescribeFunction(ctx, input)
@@ -276,15 +275,11 @@ func expandKeyValueStoreAssociations(tfList []interface{}) *awstypes.KeyValueSto
 		return nil
 	}
 
-	var items []awstypes.KeyValueStoreAssociation
-
-	for _, tfItem := range tfList {
-		item := tfItem.(string)
-
-		items = append(items, awstypes.KeyValueStoreAssociation{
-			KeyValueStoreARN: aws.String(item),
-		})
-	}
+	items := tfslices.ApplyToAll(tfList, func(v interface{}) awstypes.KeyValueStoreAssociation {
+		return awstypes.KeyValueStoreAssociation{
+			KeyValueStoreARN: aws.String(v.(string)),
+		}
+	})
 
 	return &awstypes.KeyValueStoreAssociations{
 		Items:    items,
@@ -297,10 +292,7 @@ func flattenKeyValueStoreAssociations(input *awstypes.KeyValueStoreAssociations)
 		return nil
 	}
 
-	var items []string
-
-	for _, item := range input.Items {
-		items = append(items, aws.ToString(item.KeyValueStoreARN))
-	}
-	return items
+	return tfslices.ApplyToAll(input.Items, func(v awstypes.KeyValueStoreAssociation) string {
+		return aws.ToString(v.KeyValueStoreARN)
+	})
 }

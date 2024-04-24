@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.MethodResponse
+	var conf apigateway.GetMethodResponseOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_response.test"
 
@@ -67,7 +67,7 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 
 func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.MethodResponse
+	var conf apigateway.GetMethodResponseOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_response.test"
 
@@ -89,18 +89,14 @@ func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigateway.MethodResponse) resource.TestCheckFunc {
+func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigateway.GetMethodResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Method Response ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
 
@@ -116,7 +112,7 @@ func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigatew
 
 func testAccCheckMethodResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method_response" {

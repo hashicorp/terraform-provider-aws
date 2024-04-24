@@ -59,6 +59,10 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"application_tag": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -219,8 +223,9 @@ func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Cl
 }
 
 type resourceApplicationData struct {
-	ARN         types.String `tfsdk:"arn"`
-	Description types.String `tfsdk:"description"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
+	ARN            types.String `tfsdk:"arn"`
+	Description    types.String `tfsdk:"description"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ApplicationTag types.Map    `tfsdk:"application_tag"`
 }

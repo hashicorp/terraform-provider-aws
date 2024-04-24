@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -19,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_cloudfront_monitoring_subscription")
-func ResourceMonitoringSubscription() *schema.Resource {
+// @SDKResource("aws_cloudfront_monitoring_subscription", name="Monitoring Subscription")
+func resourceMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMonitoringSubscriptionCreate,
 		ReadWithoutTimeout:   resourceMonitoringSubscriptionRead,
 		UpdateWithoutTimeout: resourceMonitoringSubscriptionCreate,
 		DeleteWithoutTimeout: resourceMonitoringSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceMonitoringSubscriptionImport,
 		},
@@ -84,7 +86,9 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Monitoring Subscription (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourceMonitoringSubscriptionRead(ctx, d, meta)...)
 }
@@ -93,7 +97,7 @@ func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	output, err := FindMonitoringSubscriptionByDistributionID(ctx, conn, d.Id())
+	output, err := findMonitoringSubscriptionByDistributionID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Monitoring Subscription (%s) not found, removing from state", d.Id())
@@ -120,7 +124,7 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription: %s", d.Id())
 	_, err := conn.DeleteMonitoringSubscription(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
 		DistributionId: aws.String(d.Id()),
 	})
@@ -139,6 +143,31 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 func resourceMonitoringSubscriptionImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	d.Set("distribution_id", d.Id())
 	return []*schema.ResourceData{d}, nil
+}
+
+func findMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetMonitoringSubscriptionOutput, error) {
+	input := &cloudfront.GetMonitoringSubscriptionInput{
+		DistributionId: aws.String(id),
+	}
+
+	output, err := conn.GetMonitoringSubscription(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandMonitoringSubscription(tfMap map[string]interface{}) *awstypes.MonitoringSubscription {
@@ -188,10 +217,8 @@ func flattenRealtimeMetricsSubscriptionConfig(apiObject *awstypes.RealtimeMetric
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.RealtimeMetricsSubscriptionStatus; v != awstypes.RealtimeMetricsSubscriptionStatus("") {
-		tfMap["realtime_metrics_subscription_status"] = v
+	tfMap := map[string]interface{}{
+		"realtime_metrics_subscription_status": apiObject.RealtimeMetricsSubscriptionStatus,
 	}
 
 	return tfMap

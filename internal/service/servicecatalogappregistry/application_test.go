@@ -177,6 +177,13 @@ func testAccApplicationConfig_basic(name string) string {
 resource "aws_servicecatalogappregistry_application" "test" {
   name = %[1]q
 }
+
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = "String"
+  value = "test"
+  tags  = aws_servicecatalogappregistry_application.test.application_tag
+}
 `, name)
 }
 

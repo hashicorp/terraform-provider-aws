@@ -38,6 +38,7 @@ func TestAccVPCDHCPOptions_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_preferred_lease_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ntp_servers.#", "0"),
@@ -76,6 +77,7 @@ func TestAccVPCDHCPOptions_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.0", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.1", "10.0.0.2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_preferred_lease_time", "1440"),
 					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.0", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "2"),
@@ -223,11 +225,12 @@ resource "aws_vpc_dhcp_options" "test" {
 func testAccVPCDHCPOptionsConfig_full(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
-  domain_name          = %[2]q
-  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
-  ntp_servers          = ["127.0.0.1"]
-  netbios_name_servers = ["127.0.0.1"]
-  netbios_node_type    = "2"
+  domain_name                       = %[2]q
+  domain_name_servers               = ["127.0.0.1", "10.0.0.2"]
+  ipv6_address_preferred_lease_time = 1440
+  ntp_servers                       = ["127.0.0.1"]
+  netbios_name_servers              = ["127.0.0.1"]
+  netbios_node_type                 = "2"
 
   tags = {
     Name = %[1]q

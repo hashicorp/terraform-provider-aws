@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_cache_policy")
-func DataSourceCachePolicy() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_cache_policy", name="Cache Policy")
+func dataSourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCachePolicyRead,
 
@@ -156,7 +156,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		name := d.Get("name").(string)
 		input := &cloudfront.ListCachePoliciesInput{}
 
-		err := ListCachePoliciesPages(ctx, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
+		err := listCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -170,7 +170,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			return !lastPage
-		}, conn)
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing CloudFront Cache Policies: %s", err)
@@ -181,7 +181,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	output, err := FindCachePolicyByID(ctx, conn, cachePolicyID)
+	output, err := findCachePolicyByID(ctx, conn, cachePolicyID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Cache Policy (%s): %s", cachePolicyID, err)

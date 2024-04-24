@@ -5,7 +5,6 @@ package cloudfront_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,7 +36,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -92,7 +90,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -124,7 +122,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -223,7 +221,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -293,38 +291,38 @@ func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource
 			}
 
 			_, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*awstypes.NoSuchContinuousDeploymentPolicy](err) {
-				return nil
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return create.Error(names.CloudFront, create.ErrActionCheckingDestroyed, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("CloudFront Continuous Deployment Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, name string, policy *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
+func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, n string, v *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
-		resp, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*policy = *resp
+		*v = *output
 
 		return nil
 	}

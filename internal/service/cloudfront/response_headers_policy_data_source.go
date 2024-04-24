@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_response_headers_policy")
-func DataSourceResponseHeadersPolicy() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_response_headers_policy", name="Response Headers Policy")
+func dataSourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
@@ -307,7 +307,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		name := d.Get("name").(string)
 		input := &cloudfront.ListResponseHeadersPoliciesInput{}
 
-		err := ListResponseHeadersPoliciesPages(ctx, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+		err := listResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -321,7 +321,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 			}
 
 			return !lastPage
-		}, conn)
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing CloudFront Response Headers Policies: %s", err)
@@ -332,7 +332,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	output, err := FindResponseHeadersPolicyByID(ctx, conn, responseHeadersPolicyID)
+	output, err := findResponseHeadersPolicyByID(ctx, conn, responseHeadersPolicyID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Response Headers Policy (%s): %s", responseHeadersPolicyID, err)
@@ -350,7 +350,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		d.Set("cors_config", nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
-		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(*apiObject.CustomHeadersConfig)}); err != nil {
+		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {
@@ -372,7 +372,6 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	} else {
 		d.Set("security_headers_config", nil)
 	}
-
 	if apiObject.ServerTimingHeadersConfig != nil {
 		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)

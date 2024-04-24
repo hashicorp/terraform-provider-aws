@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -20,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_cloudfront_cache_policy")
-func ResourceCachePolicy() *schema.Resource {
+// @SDKResource("aws_cloudfront_cache_policy", name="Cache Policy")
+func resourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCachePolicyCreate,
 		ReadWithoutTimeout:   resourceCachePolicyRead,
 		UpdateWithoutTimeout: resourceCachePolicyUpdate,
 		DeleteWithoutTimeout: resourceCachePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -202,7 +204,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	output, err := FindCachePolicyByID(ctx, conn, d.Id())
+	output, err := findCachePolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Cache Policy (%s) not found, removing from state", d.Id())
@@ -289,6 +291,31 @@ func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetCachePolicyOutput, error) {
+	input := &cloudfront.GetCachePolicyInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetCachePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}) *awstypes.ParametersInCacheKeyAndForwardedToOrigin {
@@ -435,11 +462,11 @@ func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *awstypes.Paramet
 	}
 
 	if v := apiObject.EnableAcceptEncodingBrotli; v != nil {
-		tfMap["enable_accept_encoding_brotli"] = aws.Bool(*v)
+		tfMap["enable_accept_encoding_brotli"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.EnableAcceptEncodingGzip; v != nil {
-		tfMap["enable_accept_encoding_gzip"] = aws.Bool(*v)
+		tfMap["enable_accept_encoding_gzip"] = aws.ToBool(v)
 	}
 
 	if v := flattenCachePolicyHeadersConfig(apiObject.HeadersConfig); len(v) > 0 {
@@ -458,10 +485,8 @@ func flattenCachePolicyCookiesConfig(apiObject *awstypes.CachePolicyCookiesConfi
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CookieBehavior; v != awstypes.CachePolicyCookieBehavior("") {
-		tfMap["cookie_behavior"] = v
+	tfMap := map[string]interface{}{
+		"cookie_behavior": apiObject.CookieBehavior,
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
@@ -490,10 +515,8 @@ func flattenCachePolicyHeadersConfig(apiObject *awstypes.CachePolicyHeadersConfi
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.HeaderBehavior; v != awstypes.CachePolicyHeaderBehavior("") {
-		tfMap["header_behavior"] = v
+	tfMap := map[string]interface{}{
+		"header_behavior": apiObject.HeaderBehavior,
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
@@ -522,10 +545,8 @@ func flattenCachePolicyQueryStringsConfig(apiObject *awstypes.CachePolicyQuerySt
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.QueryStringBehavior; v != awstypes.CachePolicyQueryStringBehavior("") {
-		tfMap["query_string_behavior"] = v
+	tfMap := map[string]interface{}{
+		"query_string_behavior": apiObject.QueryStringBehavior,
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {

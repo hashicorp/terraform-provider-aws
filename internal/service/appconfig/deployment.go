@@ -9,18 +9,21 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,7 +110,7 @@ func ResourceDeployment() *schema.Resource {
 
 func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	input := &appconfig.StartDeploymentInput{
 		ApplicationId:          aws.String(d.Get("application_id").(string)),
@@ -123,28 +126,29 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
-	output, err := conn.StartDeploymentWithContext(ctx, input)
+	const (
+		timeout = 30 * time.Minute // AWS SDK for Go v1 compatibility.
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
+		return conn.StartDeployment(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: empty response")
-	}
+	output := outputRaw.(*appconfig.StartDeploymentOutput)
+	appID := aws.ToString(output.ApplicationId)
+	envID := aws.ToString(output.EnvironmentId)
 
-	appID := aws.StringValue(output.ApplicationId)
-	envID := aws.StringValue(output.EnvironmentId)
-	deployNum := aws.Int64Value(output.DeploymentNumber)
-
-	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, deployNum))
+	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, output.DeploymentNumber))
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
 func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
@@ -154,13 +158,13 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &appconfig.GetDeploymentInput{
 		ApplicationId:    aws.String(appID),
-		DeploymentNumber: aws.Int64(int64(deploymentNum)),
+		DeploymentNumber: aws.Int32(int32(deploymentNum)),
 		EnvironmentId:    aws.String(envID),
 	}
 
-	output, err := conn.GetDeploymentWithContext(ctx, input)
+	output, err := conn.GetDeployment(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Appconfig Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -178,7 +182,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.EnvironmentId), aws.Int64Value(output.DeploymentNumber)),
+		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", aws.ToString(output.ApplicationId), aws.ToString(output.EnvironmentId), output.DeploymentNumber),
 		Service:   "appconfig",
 	}.String()
 

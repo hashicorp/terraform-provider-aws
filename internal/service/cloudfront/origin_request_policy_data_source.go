@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_origin_request_policy")
-func DataSourceOriginRequestPolicy() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_origin_request_policy", name="Origin Request Policy")
+func dataSourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginRequestPolicyRead,
 
@@ -129,10 +129,11 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 		name := d.Get("name").(string)
 		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
-		err := ListOriginRequestPoliciesPages(ctx, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+		err := listOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
+
 			for _, policySummary := range page.OriginRequestPolicyList.Items {
 				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.ToString(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
 					originRequestPolicyID = aws.ToString(originRequestPolicy.Id)
@@ -140,8 +141,9 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 					return false
 				}
 			}
+
 			return !lastPage
-		}, meta)
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing CloudFront Origin Request Policies: %s", err)
@@ -152,7 +154,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	output, err := FindOriginRequestPolicyByID(ctx, conn, originRequestPolicyID)
+	output, err := findOriginRequestPolicyByID(ctx, conn, originRequestPolicyID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Request Policy (%s): %s", originRequestPolicyID, err)
