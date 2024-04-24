@@ -74,15 +74,15 @@ func main() {
 		g.Fatalf("%s", err.Error())
 	}
 
-	for _, foo := range v.taggedResources {
-		sourceName := foo.FileName
+	for _, resource := range v.taggedResources {
+		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
 
-		foo.ProviderNameUpper = serviceRecord.ProviderNameUpper()
-		foo.ProviderPackage = servicePackage
+		resource.ProviderNameUpper = serviceRecord.ProviderNameUpper()
+		resource.ProviderPackage = servicePackage
 
-		if foo.GenerateTests {
+		if resource.GenerateTests {
 			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 			d := g.NewGoFileDestination(filename)
@@ -91,7 +91,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, foo); err != nil {
+			if err := d.WriteTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -108,7 +108,7 @@ func main() {
 				g.Fatalf("reading %q: %w", configTmplFile, err)
 			}
 			configTmpl = string(b)
-			foo.GenerateConfig = true
+			resource.GenerateConfig = true
 		} else if errors.Is(err, os.ErrNotExist) {
 			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
 			failed = true
@@ -116,8 +116,8 @@ func main() {
 			g.Fatalf("opening config template %q: %w", configTmplFile, err)
 		}
 
-		if foo.GenerateConfig {
-			testDirPath := path.Join("testdata", foo.Name)
+		if resource.GenerateConfig {
+			testDirPath := path.Join("testdata", resource.Name)
 
 			generateTestConfig(g, testDirPath, "tags0", 0, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags1", 0, configTmplFile, configTmpl)
@@ -149,7 +149,6 @@ type ResourceDatum struct {
 	ProviderNameUpper string
 	Name              string
 	TypeName          string
-	ExistsTypePackage string
 	ExistsTypeName    string
 	FileName          string
 	Generator         string
@@ -278,15 +277,18 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "Testing":
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["existsType"]; ok {
-					dotIx := strings.LastIndex(attr, ".")
-					pkg := attr[:dotIx]
-					d.ExistsTypePackage = pkg
-					slashIx := strings.LastIndex(attr, "/")
-					typeName := attr[slashIx+1:]
-					d.ExistsTypeName = typeName
+					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+						continue
+					} else {
+						d.ExistsTypeName = typeName
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
+					}
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					if funcName, importSpec, err := parseFunctionSpec(attr); err != nil {
+					if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
@@ -391,7 +393,6 @@ func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount 
 	}
 
 	configData := ConfigDatum{
-		// Name: foo.Name,
 		Tags:        test,
 		DefaultTags: defaultCount,
 	}
@@ -404,7 +405,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount 
 	}
 }
 
-func parseFunctionSpec(s string) (string, *goImport, error) {
+func parseIdentifierSpec(s string) (string, *goImport, error) {
 	parts := strings.Split(s, ";")
 	switch len(parts) {
 	case 1:
