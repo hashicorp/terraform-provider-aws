@@ -1027,16 +1027,24 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v := d.Get("continuous_deployment_policy_id").(string); v != "" {
-		if err := disableContinuousDeploymentPolicy(ctx, conn, v); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		err := disableContinuousDeploymentPolicy(ctx, conn, v)
 
-		if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
-			return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
+			return sdkdiag.AppendFromErr(diags, err)
+		default:
+			if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
+				return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
+			}
 		}
 	}
 
 	if err := disableDistribution(ctx, conn, d.Id()); err != nil {
+		if tfresource.NotFound(err) {
+			return diags
+		}
+
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -1056,6 +1064,10 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	// configuration from the Terraform configuration, should other changes have occurred manually.
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
+			if tfresource.NotFound(err) {
+				return diags
+			}
+
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
@@ -1076,16 +1088,20 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		})
 	}
 
-	if errs.IsA[*awstypes.NoSuchDistribution](err) { // nosemgrep:dgryski.semgrep-go.oddifsequence.odd-sequence-ifs
-		return diags
-	}
-
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
+			if tfresource.NotFound(err) {
+				return diags
+			}
+
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		err = deleteDistribution(ctx, conn, d.Id())
+	}
+
+	if errs.IsA[*awstypes.NoSuchDistribution](err) { // nosemgrep:dgryski.semgrep-go.oddifsequence.odd-sequence-ifs
+		return diags
 	}
 
 	if err != nil {

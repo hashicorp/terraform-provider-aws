@@ -158,7 +158,7 @@ func testAccCheckMonitoringSubscriptionExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccMonitoringSubscriptionBaseConfig() string {
+func testAccMonitoringSubscriptionConfig_base() string {
 	return `
 resource "aws_cloudfront_distribution" "test" {
   enabled          = true
@@ -205,9 +205,7 @@ resource "aws_cloudfront_distribution" "test" {
 }
 
 func testAccMonitoringSubscriptionConfig_basic(status string) string {
-	return acctest.ConfigCompose(
-		testAccMonitoringSubscriptionBaseConfig(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccMonitoringSubscriptionConfig_base(), fmt.Sprintf(`
 resource "aws_cloudfront_monitoring_subscription" "test" {
   distribution_id = aws_cloudfront_distribution.test.id
 
