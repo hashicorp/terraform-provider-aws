@@ -131,7 +131,6 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.LifecyclePolicyDetail, &state)...)
 
 	state.ID = flex.StringToFramework(ctx, out.LifecyclePolicyDetail.Name)
-	// resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.LifecyclePolicyDetail)...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
