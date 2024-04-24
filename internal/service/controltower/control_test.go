@@ -67,6 +67,20 @@ func testAccControl_parameter(t *testing.T) {
 	resourceName := "aws_controltower_control.test"
 	controlName := "TXGPJWIFOIGP" // CT.MULTISERVICE.PV.1
 	ouName := "Security"
+
+	parameters := `
+parameters {
+	key   = "AllowedRegions"
+	value = jsonencode(["eu-central-1", "us-west-1"])
+}
+`
+	parametersUpdated := `
+parameters {
+	key   = "AllowedRegions"
+	value = jsonencode(["eu-central-1"])
+}
+`
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -78,11 +92,21 @@ func testAccControl_parameter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlConfig_parameter(controlName, ouName),
+				Config: testAccControlConfig_parameter(controlName, ouName, parameters),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.key", "AllowedRegions"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.value", `["eu-central-1","us-west-1"]`),
+				),
+			},
+			{
+				Config: testAccControlConfig_parameter(controlName, ouName, parametersUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckControlExists(ctx, resourceName, &control),
+					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.key", "AllowedRegions"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.value", `["eu-central-1"]`),
 				),
 			},
 		},
@@ -187,7 +211,7 @@ resource "aws_controltower_control" "test" {
 `, controlName, ouName)
 }
 
-func testAccControlConfig_parameter(controlName string, ouName string) string {
+func testAccControlConfig_parameter(controlName string, ouName string, parameters string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -205,10 +229,7 @@ resource "aws_controltower_control" "test" {
     for x in data.aws_organizations_organizational_units.test.children :
     x.arn if x.name == "%[2]s"
   ][0]
-  parameters {
-    key   = "AllowedRegions"
-    value = jsonencode(["eu-central-1", "us-west-1"])
-  }
+  %[3]s
 }
-`, controlName, ouName)
+`, controlName, ouName, parameters)
 }
