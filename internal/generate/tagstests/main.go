@@ -286,27 +286,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ExistsTypeName = typeName
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					parts := strings.Split(attr, ";")
-					switch len(parts) {
-					case 1:
-						d.Generator = parts[0]
-
-					case 2:
-						d.Generator = parts[1]
-						d.GoImports = append(d.GoImports, goImport{
-							Path: parts[0],
-						})
-
-					case 3:
-						d.Generator = parts[2]
-						d.GoImports = append(d.GoImports, goImport{
-							Path:  parts[0],
-							Alias: parts[1],
-						})
-
-					default:
-						v.errs = append(v.errs, fmt.Errorf("invalid generator value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if funcName, importSpec, err := parseFunctionSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
+					} else {
+						d.Generator = funcName
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
 					}
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
@@ -414,5 +401,27 @@ func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount 
 
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
+	}
+}
+
+func parseFunctionSpec(s string) (string, *goImport, error) {
+	parts := strings.Split(s, ";")
+	switch len(parts) {
+	case 1:
+		return parts[0], nil, nil
+
+	case 2:
+		return parts[1], &goImport{
+			Path: parts[0],
+		}, nil
+
+	case 3:
+		return parts[2], &goImport{
+			Path:  parts[0],
+			Alias: parts[1],
+		}, nil
+
+	default:
+		return "", nil, fmt.Errorf("invalid generator value: %q", s)
 	}
 }
