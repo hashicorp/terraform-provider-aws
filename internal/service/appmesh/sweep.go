@@ -137,7 +137,7 @@ func sweepVirtualGateways(region string) error {
 
 				for _, v := range page.VirtualGateways {
 					virtualGatewayName := aws.StringValue(v.VirtualGatewayName)
-					r := ResourceVirtualGateway()
+					r := resourceVirtualGateway()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualGatewayName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
