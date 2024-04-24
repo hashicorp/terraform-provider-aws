@@ -831,7 +831,7 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 // Prerequisites:
 // * Organizations root account
 // * Organization member account
-// * Deleegated administrator not configured
+// * Delegated administrator not configured
 // Authenticate with member account as target account and root account as alternate.
 func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
