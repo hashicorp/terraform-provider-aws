@@ -2608,7 +2608,7 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "off", "off", "1", "off"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "off", "off", 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -2622,7 +2622,7 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "off", "1", "off"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "off", 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -2636,7 +2636,7 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "on", "1", "off"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "on", 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -2650,7 +2650,7 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "off", "1", "on"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "off", 1, "on"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -2664,7 +2664,7 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "on", "1", "on"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "on", 1, "on"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -5103,7 +5103,7 @@ resource "aws_vpc" "test" {
 `, rName, protocol, enabled)
 }
 
-func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount string, unhealthyStateRoutingPercentageEnabled string) string {
+func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount int, unhealthyStateRoutingPercentageEnabled string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -5116,7 +5116,7 @@ resource "aws_lb_target_group" "test" {
     }
 
     unhealthy_state_routing {
-      minimum_healthy_targets_count = %[4]s
+      minimum_healthy_targets_count = %[4]d
       minimum_healthy_targets_percentage = %[5]s
     }
   }
