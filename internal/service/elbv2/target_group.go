@@ -345,9 +345,10 @@ func ResourceTargetGroup() *schema.Resource {
 										Default:  "off",
 									},
 									"minimum_healthy_targets_percentage": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "off",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "off",
+										ValidateFunc: validation.IntBetween(1, 100),
 									},
 								},
 							},
@@ -364,9 +365,10 @@ func ResourceTargetGroup() *schema.Resource {
 										Default:  1,
 									},
 									"minimum_healthy_targets_percentage": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "off",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "off",
+										ValidateFunc: validation.IntBetween(1, 100),
 									},
 								},
 							},
@@ -1369,8 +1371,8 @@ func expandTargetGroupHealthAttributes(tfMap map[string]interface{}) []*elbv2.Ta
 		if unhealthyStateRoutingMap, ok := targetGroupHealthMap["unhealthy_state_routing"].(map[string]interface{}); ok {
 			apiObjects = append(apiObjects,
 				&elbv2.TargetGroupAttribute{
-					Key:   aws.Int64("unhealthy_state_routing.minimum_healthy_targets_count"),
-					Value: aws.String(unhealthyStateRoutingMap["minimum_healthy_targets_count"].(string)),
+					Key:   aws.String("unhealthy_state_routing.minimum_healthy_targets_count"),
+					Value: flex.IntValueToString(unhealthyStateRoutingMap["minimum_healthy_targets_count"].(int)),
 				},
 				&elbv2.TargetGroupAttribute{
 					Key:   aws.String("unhealthy_state_routing.minimum_healthy_targets_percentage"),
