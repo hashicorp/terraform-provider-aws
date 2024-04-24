@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 type TestFlex00 struct{}
@@ -313,7 +314,7 @@ type TestFlexMapBlockKeyTF05 struct {
 	Attr2       types.String                 `tfsdk:"attr2"`
 }
 
-var _ JSONStringer = (*testJSONDocument)(nil)
+var _ smithyjson.JSONStringer = (*testJSONDocument)(nil)
 
 type testJSONDocument struct {
 	value any
@@ -332,7 +333,7 @@ func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
 }
 
 type TestFlexAWS19 struct {
-	Field1 JSONStringer `json:"field1"`
+	Field1 smithyjson.JSONStringer `json:"field1"`
 }
 
 type TestFlexTF19 struct {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 // Flatten = AWS --> TF
@@ -313,8 +314,8 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 			//
 			// JSONStringer -> types.String-ish.
 			//
-			if vFrom.Type().Implements(reflect.TypeOf((*JSONStringer)(nil)).Elem()) {
-				doc := vFrom.Interface().(JSONStringer)
+			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
+				doc := vFrom.Interface().(smithyjson.JSONStringer)
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
 					diags.AddError("AutoFlEx", err.Error())
