@@ -11198,9 +11198,9 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 
   # Minimum amounts required to qualify for IOPS / DedicatedLogVolume
-  allocated_storage   = 100
-  storage_type        = "io1"
-  iops                = 1000
+  allocated_storage = 100
+  storage_type      = "io1"
+  iops              = 1000
 }
 `, rName))
 }
