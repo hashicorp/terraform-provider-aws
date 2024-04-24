@@ -350,6 +350,8 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 * `path` - (Optional) Along with `namespace_type` and `name`, the pattern that AWS CodeBuild uses to name and store the output artifact. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS`, this value is ignored if specified. If `type` is set to `S3`, this is the path to the output artifact.
 * `type` - (Required) Build output artifact's type. Valid values `CODEPIPELINE`, `NO_ARTIFACTS`, and `S3`.
 
+  **Note:** The `CODEPIPELINE` type is not supported for `secondary_artifacts`.
+
 ### secondary_sources
 
 * `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`. It can either be a path to a file residing in the repository to be built or a local file path leveraging the `file()` built-in.
@@ -361,6 +363,8 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 * `build_status_config` - (Optional) Configuration block that contains information that defines how the build project reports the build status to the source provider. This option is only used when the source provider is GitHub, GitHub Enterprise, GitLab, GitLab Self Managed, or Bitbucket. `build_status_config` blocks are documented below.
 * `source_identifier` - (Required) An identifier for this project source. The identifier can only contain alphanumeric characters and underscores, and must be less than 128 characters in length.
 * `type` - (Required) Type of repository that contains the source code to be built. Valid values: `BITBUCKET`, `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `GITLAB`, `GITLAB_SELF_MANAGED`, `NO_SOURCE`, `S3`.
+
+  **Note:** The `CODEPIPELINE` type is not supported for `secondary_sources`.
 
 #### secondary_sources: git_submodules_config
 

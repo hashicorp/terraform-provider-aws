@@ -497,7 +497,7 @@ func resourceProject() *schema.Resource {
 						"type": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
+							ValidateDiagFunc: validation.ToDiagFunc(validateSecondaryArtifactsType),
 						},
 					},
 				},
@@ -566,7 +566,7 @@ func resourceProject() *schema.Resource {
 						"type": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.SourceType](),
+							ValidateDiagFunc: validation.ToDiagFunc(validateSecondarySourcesType),
 						},
 					},
 				},
@@ -2004,6 +2004,34 @@ func validProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []
 		errors = append(errors, fmt.Errorf(
 			"%q does not match pattern (%q): %q",
 			k, simplePattern, value))
+	}
+
+	return
+}
+
+func validateSecondaryArtifactsType(v interface{}, k string) (warnings []string, errors []error) {
+	ws, es := validation.StringInSlice(enum.Values[types.ArtifactsType](), false)(v, k)
+	warnings = append(warnings, ws...)
+	errors = append(errors, es...)
+
+	value := v.(string)
+	if value == string(types.ArtifactsTypeCodepipeline) {
+		errors = append(errors, fmt.Errorf(
+			"the %q type is not supported for secondary artifacts", value))
+	}
+
+	return
+}
+
+func validateSecondarySourcesType(v interface{}, k string) (warnings []string, errors []error) {
+	ws, es := validation.StringInSlice(enum.Values[types.SourceType](), false)(v, k)
+	warnings = append(warnings, ws...)
+	errors = append(errors, es...)
+
+	value := v.(string)
+	if value == string(types.SourceTypeCodepipeline) {
+		errors = append(errors, fmt.Errorf(
+			"the %q type is not supported for secondary sources", value))
 	}
 
 	return
