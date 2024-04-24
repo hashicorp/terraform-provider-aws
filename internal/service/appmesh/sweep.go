@@ -433,7 +433,7 @@ func sweepGatewayRoutes(region string) error {
 
 						for _, v := range page.GatewayRoutes {
 							gatewayRouteName := aws.StringValue(v.GatewayRouteName)
-							r := ResourceGatewayRoute()
+							r := resourceGatewayRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualGatewayName, gatewayRouteName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
