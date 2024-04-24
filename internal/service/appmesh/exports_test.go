@@ -10,10 +10,12 @@ var (
 	ResourceRoute          = resourceRoute
 	ResourceVirtualGateway = resourceVirtualGateway
 	ResourceVirtualNode    = resourceVirtualNode
+	ResourceVirtualRouter  = resourceVirtualRouter
 
 	FindGatewayRouteByFourPartKey    = findGatewayRouteByFourPartKey
 	FindMeshByTwoPartKey             = findMeshByTwoPartKey
 	FindRouteByFourPartKey           = findRouteByFourPartKey
 	FindVirtualGatewayByThreePartKey = findVirtualGatewayByThreePartKey
 	FindVirtualNodeByThreePartKey    = findVirtualNodeByThreePartKey
+	FindVirtualRouterByThreePartKey  = findVirtualRouterByThreePartKey
 )

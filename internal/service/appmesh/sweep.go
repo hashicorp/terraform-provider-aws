@@ -279,7 +279,7 @@ func sweepVirtualRouters(region string) error {
 
 				for _, v := range page.VirtualRouters {
 					virtualRouterName := aws.StringValue(v.VirtualRouterName)
-					r := ResourceVirtualRouter()
+					r := resourceVirtualRouter()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualRouterName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
