@@ -3,10 +3,6 @@
 
 package cloudfront
 
-const (
-	ResNameDistribution = "Distribution"
-)
-
 type streamType string
 
 const (

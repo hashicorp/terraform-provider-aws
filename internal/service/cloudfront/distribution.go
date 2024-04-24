@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -58,7 +57,6 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      AliasesHash,
 			},
 			"caller_reference": {
 				Type:     schema.TypeString,
@@ -77,7 +75,6 @@ func resourceDistribution() *schema.Resource {
 			"custom_error_response": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      CustomErrorResponseHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"error_caching_min_ttl": {
@@ -220,7 +217,6 @@ func resourceDistribution() *schema.Resource {
 									},
 								},
 							},
-							Set: LambdaFunctionAssociationHash,
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
@@ -454,7 +450,6 @@ func resourceDistribution() *schema.Resource {
 									},
 								},
 							},
-							Set: LambdaFunctionAssociationHash,
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
@@ -512,7 +507,6 @@ func resourceDistribution() *schema.Resource {
 			"origin_group": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      OriginGroupHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"failover_criteria": {
@@ -554,7 +548,6 @@ func resourceDistribution() *schema.Resource {
 			"origin": {
 				Type:     schema.TypeSet,
 				Required: true,
-				Set:      OriginHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_attempts": {
@@ -572,7 +565,6 @@ func resourceDistribution() *schema.Resource {
 						"custom_header": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      OriginCustomHeaderHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -901,26 +893,78 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
-	// Update attributes from DistributionConfig
-	err = flattenDistributionConfig(d, output.Distribution.DistributionConfig)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution (%s): %s", d.Id(), err)
+	distributionConfig := output.Distribution.DistributionConfig
+	if distributionConfig.Aliases != nil {
+		if err := d.Set("aliases", FlattenAliases(distributionConfig.Aliases)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
+		}
 	}
-
-	// Update other attributes outside of DistributionConfig
+	d.Set("arn", output.Distribution.ARN)
+	d.Set("caller_reference", distributionConfig.CallerReference)
+	if aws.ToString(distributionConfig.Comment) != "" {
+		d.Set("comment", distributionConfig.Comment)
+	}
+	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
+	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
+	// API call for staging distributions.
+	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
+	if distributionConfig.CustomErrorResponses != nil {
+		if err := d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting custom_error_response: %s", err)
+		}
+	}
+	if err := d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting default_cache_behavior: %s", err)
+	}
+	d.Set("default_root_object", distributionConfig.DefaultRootObject)
+	d.Set("domain_name", output.Distribution.DomainName)
+	d.Set("enabled", distributionConfig.Enabled)
+	d.Set("etag", output.ETag)
+	d.Set("http_version", distributionConfig.HttpVersion)
+	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
+	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
+	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
+	if distributionConfig.Logging != nil && aws.ToBool(distributionConfig.Logging.Enabled) {
+		if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
+		}
+	} else {
+		err = d.Set("logging_config", []interface{}{})
+	}
+	if distributionConfig.CacheBehaviors != nil {
+		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ordered_cache_behavior: %s", err)
+		}
+	}
+	if aws.ToInt32(distributionConfig.Origins.Quantity) > 0 {
+		if err := d.Set("origin", FlattenOrigins(distributionConfig.Origins)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting origin: %s", err)
+		}
+	}
+	if aws.ToInt32(distributionConfig.OriginGroups.Quantity) > 0 {
+		if err := d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting origin_group: %s", err)
+		}
+	}
+	d.Set("price_class", distributionConfig.PriceClass)
+	if distributionConfig.Restrictions != nil {
+		if err := d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting restrictions: %s", err)
+		}
+	}
+	d.Set("staging", distributionConfig.Staging)
+	d.Set("status", output.Distribution.Status)
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
 	}
 	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(output.Distribution.ActiveTrustedSigners)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trusted_signers: %s", err)
 	}
-	d.Set("status", output.Distribution.Status)
-	d.Set("domain_name", output.Distribution.DomainName)
-	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
-	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
-	d.Set("etag", output.ETag)
-	d.Set("arn", output.Distribution.ARN)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	if err := d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting viewer_certificate: %s", err)
+	}
+	d.Set("web_acl_id", distributionConfig.WebACLId)
 
 	return diags
 }
@@ -982,7 +1026,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	if v := d.Get("continuous_deployment_policy_id").(string); v != "" {
 		if err := disableContinuousDeploymentPolicy(ctx, conn, v); err != nil {
-			return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
