@@ -1226,7 +1226,7 @@ func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 			return nil, "", nil
 		}
 
-		return output.Distribution, aws.ToString(output.Distribution.Status), nil
+		return output, aws.ToString(output.Distribution.Status), nil
 	}
 }
 
