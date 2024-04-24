@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -331,11 +333,11 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
 
-	_, err := conn.ListAcceleratorsWithContext(ctx, input)
+	_, err := conn.ListAccelerators(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -355,19 +357,24 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 
 	parsedAddr := net.ParseIP(requestedAddr)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.ListByoipCidrsInput{}
-	cidrs := make([]*globalaccelerator.ByoipCidr, 0)
+	cidrs := make([]awstypes.ByoipCidr, 0)
 
-	err := conn.ListByoipCidrsPagesWithContext(ctx, input,
-		func(page *globalaccelerator.ListByoipCidrsOutput, lastPage bool) bool {
-			cidrs = append(cidrs, page.ByoipCidrs...)
-			return !lastPage
-		})
+	pages := globalaccelerator.NewListByoipCidrsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
+		cidrs = append(cidrs, page.ByoipCidrs...)
 	}
 
 	if len(cidrs) == 0 {
@@ -377,7 +384,7 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 	matches := false
 
 	for _, cidr := range cidrs {
-		_, network, _ := net.ParseCIDR(*cidr.Cidr)
+		_, network, _ := net.ParseCIDR(aws.ToString(cidr.Cidr))
 		if network.Contains(parsedAddr) {
 			matches = true
 			break
@@ -387,24 +394,16 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 	if !matches {
 		t.Skipf("skipping acceptance testing: requested address %s not available via BYOIP", requestedAddr)
 	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccCheckAcceleratorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Global Accelerator Accelerator ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 		_, err := tfglobalaccelerator.FindAcceleratorByARN(ctx, conn, rs.Primary.ID)
 
@@ -414,7 +413,7 @@ func testAccCheckAcceleratorExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckAcceleratorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_accelerator" {

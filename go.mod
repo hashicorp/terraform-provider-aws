@@ -23,6 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.4
+	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.4
@@ -89,6 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/fms v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0

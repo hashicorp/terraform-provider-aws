@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
@@ -20,7 +21,7 @@ func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*s
 	return output
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) Set[string] {
+func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) itypes.Set[string] {
 	var output []string
 
 	must(Expand(ctx, v, &output))
