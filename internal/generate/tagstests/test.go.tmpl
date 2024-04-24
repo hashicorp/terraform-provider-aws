@@ -39,6 +39,10 @@
 {{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ProviderNameUpper }}{{ .Name }}
 {{- end }}
 
+{{ define "ExistsCheck" }}
+	testAccCheck{{ .Name }}Exists(ctx, resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
+{{ end }}
+
 package {{ .ProviderPackage }}_test
 
 import (
@@ -94,7 +98,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -118,7 +122,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					"tagValue2": config.StringVariable("value2"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -143,7 +147,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					"tagValue1": config.StringVariable("value2"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -163,7 +167,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					"rName":     config.StringVariable(rName),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -194,7 +198,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					"tagKey1":   config.StringVariable("key1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -230,7 +234,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 					"rName":     config.StringVariable(rName),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -242,7 +246,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -277,7 +281,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					"tagValue1": config.StringVariable(""),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
@@ -297,7 +301,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					"rName":     config.StringVariable(rName),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -329,7 +333,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -344,7 +348,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"tagValue2": config.StringVariable(""),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
@@ -369,7 +373,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -404,7 +408,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -417,7 +421,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					"tagValue1": config.StringVariable(""),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
@@ -449,7 +453,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					"providerTagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -474,7 +478,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					"providerTagValue2": config.StringVariable("value2"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
@@ -500,7 +504,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					"providerTagValue1": config.StringVariable("value2"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
@@ -522,7 +526,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					"rName":     config.StringVariable(rName),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -555,7 +559,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"tagValue1":         config.StringVariable("resourcevalue1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
@@ -586,7 +590,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"tagValue2":         config.StringVariable("resourcevalue2"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
@@ -616,7 +620,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"rName": config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -649,7 +653,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					"tagValue1": config.StringVariable("resourcevalue1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -681,7 +685,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					"tagValue2":         config.StringVariable("resourcevalue2"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
@@ -715,7 +719,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					"tagValue1": config.StringVariable("resourcevalue2"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -752,7 +756,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -767,7 +771,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					"providerTagValue1": config.StringVariable("value1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -800,7 +804,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 					"providerTagValue1": config.StringVariable("value1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -815,7 +819,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 					"tagValue1": config.StringVariable("value1"),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -855,7 +859,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					"tagValue1": config.StringVariable(""),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -895,7 +899,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					"tagKey1":           config.StringVariable("key1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
@@ -933,7 +937,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					"tagKey1":           config.StringVariable("resourcekey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
+					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
