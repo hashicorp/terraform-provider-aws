@@ -36382,6 +36382,19 @@ var awscnPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"entitlement.marketplace": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "cn-northwest-1",
+				}: endpoint{
+					Hostname:  "entitlement-marketplace.cn-northwest-1.amazonaws.com.cn",
+					Protocols: []string{"HTTPS"},
+					CredentialScope: credentialScope{
+						Region: "cn-northwest-1",
+					},
+				},
+			},
+		},
 		"es": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{

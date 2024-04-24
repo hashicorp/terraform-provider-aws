@@ -34,6 +34,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"basic":                    testAccMesh_basic,
 			"disappears":               testAccMesh_disappears,
 			"egressFilter":             testAccMesh_egressFilter,
+			"serviceDiscovery":         testAccMesh_serviceDiscovery,
 			"tags":                     testAccMesh_tags,
 			"dataSourceBasic":          testAccMeshDataSource_basic,
 			"dataSourceMeshOwner":      testAccMeshDataSource_meshOwner,
