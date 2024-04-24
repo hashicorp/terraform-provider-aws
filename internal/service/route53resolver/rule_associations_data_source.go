@@ -83,20 +83,8 @@ func (d *dataSourceRuleAssociations) Schema(ctx context.Context, req datasource.
 }
 
 func (d *dataSourceRuleAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	// TIP: ==== DATA SOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the config
-	// 3. Get information about a resource from AWS
-	// 4. Set the ID, arguments, and attributes
-	// 5. Set the tags
-	// 6. Set the state
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := d.Meta().Route53ResolverConn(ctx)
 
-	// TIP: -- 2. Fetch the config
 	var data DataSourceRuleAssociationsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -109,7 +97,6 @@ func (d *dataSourceRuleAssociations) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	// TIP: -- 3. Get information about a resource from AWS
 	input := &route53resolver.ListResolverRuleAssociationsInput{Filters: filters}
 	associations := []*DataSourceRuleAssociation{}
 	err := conn.ListResolverRuleAssociationsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
@@ -142,7 +129,6 @@ func (d *dataSourceRuleAssociations) Read(ctx context.Context, req datasource.Re
 		}
 	}
 
-	//fmt.Printf("%v\n", data)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
