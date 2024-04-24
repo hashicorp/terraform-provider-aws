@@ -100,17 +100,6 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	//in := &opensearchserverless.CreateLifecyclePolicyInput{
-	//	ClientToken: aws.String(id.UniqueId()),
-	//	Name:        flex.StringFromFramework(ctx, plan.Name),
-	//	Policy:      flex.StringFromFramework(ctx, plan.Policy),
-	//	Type:        awstypes.LifecyclePolicyType(plan.Type.ValueString()),
-	//}
-	//
-	//if !plan.Description.IsNull() {
-	//	in.Description = flex.StringFromFramework(ctx, plan.Description)
-	//}
-
 	in := &opensearchserverless.CreateLifecyclePolicyInput{}
 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
@@ -172,8 +161,10 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	//resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -188,21 +179,6 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 	}
 
 	if !plan.Description.Equal(state.Description) || !plan.Policy.Equal(state.Policy) {
-		//in := &opensearchserverless.UpdateLifecyclePolicyInput{
-		//	ClientToken:   aws.String(id.UniqueId()),
-		//	Name:          flex.StringFromFramework(ctx, plan.Name),
-		//	PolicyVersion: flex.StringFromFramework(ctx, state.PolicyVersion),
-		//	Type:          awstypes.LifecyclePolicyType(plan.Type.ValueString()),
-		//}
-		//
-		//if !plan.Policy.Equal(state.Policy) {
-		//	in.Policy = flex.StringFromFramework(ctx, plan.Policy)
-		//}
-		//
-		//if !plan.Description.Equal(state.Description) {
-		//	in.Description = flex.StringFromFramework(ctx, plan.Description)
-		//}
-
 		in := &opensearchserverless.UpdateLifecyclePolicyInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
@@ -212,7 +188,6 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 		}
 
 		in.ClientToken = aws.String(id.UniqueId())
-		in.PolicyVersion = flex.StringFromFramework(ctx, state.PolicyVersion)
 
 		out, err := conn.UpdateLifecyclePolicy(ctx, in)
 		if err != nil {
@@ -231,7 +206,9 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 		}
 
 		resp.Diagnostics.Append(flex.Flatten(ctx, out.LifecyclePolicyDetail, &state)...)
-		//resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.LifecyclePolicyDetail)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -287,33 +264,6 @@ func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.
 		return
 	}
 }
-
-//// refreshFromOutput writes state data from an AWS response object
-//func (rd *resourceLifecyclePolicyData) refreshFromOutput(ctx context.Context, out *awstypes.LifecyclePolicyDetail) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//
-//	if out == nil {
-//		return diags
-//	}
-//
-//	rd.ID = flex.StringToFramework(ctx, out.Name)
-//	rd.Description = flex.StringToFramework(ctx, out.Description)
-//	rd.Name = flex.StringToFramework(ctx, out.Name)
-//	rd.Type = flex.StringValueToFramework(ctx, out.Type)
-//	rd.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
-//
-//	policyBytes, err := out.Policy.MarshalSmithyDocument()
-//	if err != nil {
-//		diags.AddError(fmt.Sprintf("refreshing state for %s (%s)", ResNameLifecyclePolicy, rd.Name), err.Error())
-//		return diags
-//	}
-//
-//	p := string(policyBytes)
-//
-//	rd.Policy = flex.StringToFramework(ctx, &p)
-//
-//	return diags
-//}
 
 type resourceLifecyclePolicyData struct {
 	Description   types.String                                     `tfsdk:"description"`
