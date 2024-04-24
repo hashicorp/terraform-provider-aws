@@ -208,7 +208,7 @@ func sweepVirtualNodes(region string) error {
 
 				for _, v := range page.VirtualNodes {
 					virtualNodeName := aws.StringValue(v.VirtualNodeName)
-					r := ResourceVirtualNode()
+					r := resourceVirtualNode()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualNodeName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
