@@ -322,7 +322,6 @@ func testAccKnowledgeBase_base(rName, model string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-provider "aws" {}
 
 resource "aws_opensearchserverless_security_policy" "test" {
   name = %[1]q
