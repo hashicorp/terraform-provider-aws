@@ -24,10 +24,10 @@ func TestAccFISExperimentTemplatesDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFISExperimentTemplatesDataSourceConfig_basic(rName),
+				Config: testAccExperimentTemplatesDataSourceConfig_basic(rName),
 			},
 			{
-				Config: testAccFISExperimentTemplatesDataSourceConfig_dataSource(rName),
+				Config: testAccExperimentTemplatesDataSourceConfig_dataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_fis_experiment_templates.selected", "ids.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_fis_experiment_templates.tier_1", "ids.#", "3"),
@@ -39,7 +39,7 @@ func TestAccFISExperimentTemplatesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccFISExperimentTemplatesDataSourceConfig_basic(rName string) string {
+func testAccExperimentTemplatesDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_iam_policy_document" "assume" {
   version = "2012-10-17"
@@ -231,8 +231,8 @@ resource "aws_fis_experiment_template" "fis_d" {
 `, rName))
 }
 
-func testAccFISExperimentTemplatesDataSourceConfig_dataSource(rName string) string {
-	return acctest.ConfigCompose(testAccFISExperimentTemplatesDataSourceConfig_basic(rName), `
+func testAccExperimentTemplatesDataSourceConfig_dataSource(rName string) string {
+	return acctest.ConfigCompose(testAccExperimentTemplatesDataSourceConfig_basic(rName), `
 data "aws_fis_experiment_templates" "selected" {
   tags = {
     Name = "selected"

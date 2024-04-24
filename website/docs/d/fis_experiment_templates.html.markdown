@@ -34,8 +34,8 @@ data "aws_fis_experiment_templates" "example" {
 
 data "aws_iam_policy_document" "example" {
   statement {
-    sid = "StartFISExperiment"
-    effect = "Allow"
+    sid     = "StartFISExperiment"
+    effect  = "Allow"
     actions = ["fis:StartExperiment"]
     resources = [
       "arn:aws:fis:*:*:experiment-template/${data.aws_fis_experiment_templates.example.ids[0]}",
