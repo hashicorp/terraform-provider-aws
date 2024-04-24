@@ -191,6 +191,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -427,6 +428,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		rolesanywhere.ServicePackage(ctx),
 		route53.ServicePackage(ctx),
 		route53domains.ServicePackage(ctx),
+		route53profiles.ServicePackage(ctx),
 		route53recoverycontrolconfig.ServicePackage(ctx),
 		route53recoveryreadiness.ServicePackage(ctx),
 		route53resolver.ServicePackage(ctx),

@@ -187,6 +187,7 @@ Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
