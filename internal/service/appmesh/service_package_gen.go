@@ -36,8 +36,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Service Mesh",
 		},
 		{
-			Factory:  DataSourceRoute,
+			Factory:  dataSourceRoute,
 			TypeName: "aws_appmesh_route",
+			Name:     "Route",
 		},
 		{
 			Factory:  DataSourceVirtualGateway,
