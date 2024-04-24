@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.26
+	github.com/aws/aws-sdk-go v1.51.27
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -31,8 +31,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/batch v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.7
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.7.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.14.4
@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.36.4
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.157.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.158.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7
@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
-	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.5
