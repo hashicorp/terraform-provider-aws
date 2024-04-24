@@ -251,7 +251,7 @@ jobs:
           path: terraform-plugin-dir
           key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36
+        uses: hashicorp/setup-terraform@97f030cf6dc0b4f5e0da352c7bca9cca34579800
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
