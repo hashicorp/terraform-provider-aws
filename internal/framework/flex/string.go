@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	smithydocument "github.com/aws/smithy-go/document"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -103,4 +104,10 @@ func EmptyStringAsNull(v types.String) types.String {
 	}
 
 	return v
+}
+
+// JSONStringer interface is used to marshal and unmarshal JSON interface objects.
+type JSONStringer interface {
+	smithydocument.Marshaler
+	smithydocument.Unmarshaler
 }

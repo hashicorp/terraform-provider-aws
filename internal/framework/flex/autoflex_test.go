@@ -4,6 +4,7 @@
 package flex
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -310,4 +311,30 @@ type TestFlexMapBlockKeyTF05 struct {
 	MapBlockKey fwtypes.StringEnum[TestEnum] `tfsdk:"map_block_key"`
 	Attr1       types.String                 `tfsdk:"attr1"`
 	Attr2       types.String                 `tfsdk:"attr2"`
+}
+
+var _ JSONStringer = (*testJSONDocument)(nil)
+
+type testJSONDocument struct {
+	value any
+}
+
+func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
+	data, err := json.Marshal(m.value)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
+}
+
+func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
+	return json.Marshal(m.value)
+}
+
+type TestFlexAWS19 struct {
+	Field1 JSONStringer `json:"field1"`
+}
+
+type TestFlexTF19 struct {
+	Field1 types.String `tfsdk:"field1"`
 }

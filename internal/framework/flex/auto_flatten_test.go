@@ -57,6 +57,20 @@ func TestFlatten(t *testing.T) {
 			WantErr:  true,
 		},
 		{
+			TestName: "json interface Source string Target",
+			Source: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target:     &TestFlexTF19{},
+			WantTarget: &TestFlexTF19{Field1: types.StringValue(`{"test":"a"}`)},
+		},
+		{
 			TestName:   "empty struct Source and Target",
 			Source:     TestFlex00{},
 			Target:     &TestFlex00{},

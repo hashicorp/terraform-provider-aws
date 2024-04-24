@@ -91,29 +91,16 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-	data.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
 	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
 
 	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
 	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
-
-	policyBytes, err := out.Policy.MarshalSmithyDocument()
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameLifecyclePolicy, data.Name.ValueString(), err),
-			err.Error(),
-		)
-	}
-
-	pb := string(policyBytes)
-	data.Policy = flex.StringToFramework(ctx, &pb)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
