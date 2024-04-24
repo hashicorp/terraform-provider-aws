@@ -184,6 +184,7 @@ val services = mapOf(
     "rolesanywhere" to ServiceSpec("Roles Anywhere"),
     "route53" to ServiceSpec("Route 53", vpcLock = true),
     "route53domains" to ServiceSpec("Route 53 Domains"),
+    "route53profiles" to ServiceSpec("Route 53 Profiles"),
     "route53recoverycontrolconfig" to ServiceSpec("Route 53 Recovery Control Config"),
     "route53recoveryreadiness" to ServiceSpec("Route 53 Recovery Readiness"),
     "route53resolver" to ServiceSpec("Route 53 Resolver", vpcLock = true),
