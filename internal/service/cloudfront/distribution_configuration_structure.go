@@ -4,8 +4,6 @@
 package cloudfront
 
 import (
-	"strconv"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -1193,7 +1191,7 @@ func expandCustomErrorResponse(tfMap map[string]interface{}) *awstypes.CustomErr
 	}
 
 	if v, ok := tfMap["response_code"]; ok && v.(int) != 0 {
-		apiObject.ResponseCode = aws.String(strconv.Itoa(v.(int)))
+		apiObject.ResponseCode = flex.IntValueToString(v.(int))
 	} else {
 		apiObject.ResponseCode = aws.String("")
 	}
