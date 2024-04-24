@@ -129,7 +129,7 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 		DistributionId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
 		return diags
 	}
 
