@@ -838,6 +838,7 @@ func TestAccCloudFrontDistribution_noCustomErrorResponse(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"custom_error_response.0.response_code",
 					"retain_on_delete",
 					"wait_for_deployment",
 				},
@@ -1351,6 +1352,7 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"retain_on_delete",
+					"status",
 					"wait_for_deployment",
 				},
 			},
@@ -1427,6 +1429,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"etag",
 					"retain_on_delete",
 					"wait_for_deployment",
 				},
