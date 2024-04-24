@@ -1447,6 +1447,45 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.failover_distribution"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_originGroups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
+						"origin_id":                          "groupS3",
+						"failover_criteria.#":                "1",
+						"failover_criteria.0.status_codes.#": "4",
+						"member.#":                           "2",
+						"member.0.origin_id":                 "primaryS3",
+						"member.1.origin_id":                 "failoverS3",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "403"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "404"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "500"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "502"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
@@ -1587,43 +1626,19 @@ func testAccDistributionRetainConfig() string {
 	return ""
 }
 
-func TestAccCloudFrontDistribution_originGroups(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
+// testAccRegionProviderConfig is the Terraform provider configuration for CloudFront region testing
+//
+// Testing CloudFront assumes no other provider configurations
+// are necessary and overwrites the "aws" provider configuration.
+func testAccRegionProviderConfig() string {
+	switch acctest.Partition() {
+	case names.StandardPartitionID:
+		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
+	case names.ChinaPartitionID:
+		return acctest.ConfigRegionalProvider(names.CNNorthwest1RegionID)
+	default:
+		return acctest.ConfigRegionalProvider(acctest.Region())
 	}
-
-	var distribution awstypes.Distribution
-	resourceName := "aws_cloudfront_distribution.failover_distribution"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDistributionConfig_originGroups(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "origin_group.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin_group.*", map[string]string{
-						"origin_id":                          "groupS3",
-						"failover_criteria.#":                "1",
-						"failover_criteria.0.status_codes.#": "4",
-						"member.#":                           "2",
-						"member.0.origin_id":                 "primaryS3",
-						"member.1.origin_id":                 "failoverS3",
-					}),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "403"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "404"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "500"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "origin_group.*.failover_criteria.0.status_codes.*", "502"),
-				),
-			},
-		},
-	})
 }
 
 func originBucket(rName string) string {
@@ -3661,12 +3676,12 @@ func testAccDistributionViewerCertificateACMCertificateARNBaseConfig(t *testing.
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, commonName)
 
-	return testAccRegionProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRegionProviderConfig(), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 }
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
+`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccDistributionConfig_viewerCertificateACMCertificateARN(t *testing.T, retainOnDelete bool) string {
