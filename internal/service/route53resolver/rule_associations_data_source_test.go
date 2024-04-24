@@ -6,7 +6,6 @@ package route53resolver_test
 import (
 	"testing"
 
-	route53 "github.com/aws/aws-sdk-go/service/route53resolver"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,6 @@ func TestAccRoute53ResolverRuleAssociationsDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +58,6 @@ func TestAccRoute53ResolverRuleAssociationsDataSource_multipleFilters(t *testing
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +83,6 @@ func TestAccRoute53ResolverRuleAssociationsDataSource_emptyList(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -102,10 +98,10 @@ func TestAccRoute53ResolverRuleAssociationsDataSource_emptyList(t *testing.T) {
 func testAccRuleAssociationsDataSourceConfig_vpcFilter(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccRuleAssociationConfig_basic(rName, domainName), `
 data "aws_route53_resolver_rule_associations" "test" {
-	filter {
-		name = "VPCId"
-		values = [ aws_route53_resolver_rule_association.test.vpc_id ]
-	}
+  filter {
+    name   = "VPCId"
+    values = [aws_route53_resolver_rule_association.test.vpc_id]
+  }
 }
 `)
 }
@@ -113,17 +109,17 @@ data "aws_route53_resolver_rule_associations" "test" {
 func testAccRuleAssociationsDataSourceConfig_vpcAndRuleFilter(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccRuleAssociationConfig_basic(rName, domainName), `
 data "aws_route53_resolver_rule_associations" "test" {
-	filter {
-		name = "ResolverRuleId"
-		values = [ aws_route53_resolver_rule_association.test.resolver_rule_id ]
-	}
+  filter {
+    name   = "ResolverRuleId"
+    values = [aws_route53_resolver_rule_association.test.resolver_rule_id]
+  }
 
-	filter {
-		name = "VPCId"
-		values = [ aws_route53_resolver_rule_association.test.vpc_id ]
-	}
+  filter {
+    name   = "VPCId"
+    values = [aws_route53_resolver_rule_association.test.vpc_id]
+  }
 
-	depends_on = [ aws_route53_resolver_rule_association.test ]
+  depends_on = [aws_route53_resolver_rule_association.test]
 }
 `)
 }
@@ -131,10 +127,10 @@ data "aws_route53_resolver_rule_associations" "test" {
 func testAccRuleAssociationsDataSourceConfig_noResults() string {
 	return `
 data "aws_route53_resolver_rule_associations" "test" {
-	filter {
-		name = "VPCId"
-		values = [ "vpc-00000000" ]
-	}
+  filter {
+    name   = "VPCId"
+    values = ["vpc-00000000"]
+  }
 }
 `
 }
