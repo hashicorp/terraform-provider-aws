@@ -3,6 +3,7 @@
 NOTES:
 
 * provider: Updates to Go 1.22. This is the last Go release that will run on macOS 10.15 Catalina ([#36996](https://github.com/hashicorp/terraform-provider-aws/issues/36996))
+* resource/aws_bedrockagent_knowledge_base: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#36783](https://github.com/hashicorp/terraform-provider-aws/issues/36783))
 
 FEATURES:
 
@@ -11,6 +12,7 @@ FEATURES:
 * **New Resource:** `aws_bedrockagent_agent` ([#36851](https://github.com/hashicorp/terraform-provider-aws/issues/36851))
 * **New Resource:** `aws_bedrockagent_agent_action_group` ([#36935](https://github.com/hashicorp/terraform-provider-aws/issues/36935))
 * **New Resource:** `aws_bedrockagent_agent_alias` ([#36905](https://github.com/hashicorp/terraform-provider-aws/issues/36905))
+* **New Resource:** `aws_bedrockagent_knowledge_base` ([#36783](https://github.com/hashicorp/terraform-provider-aws/issues/36783))
 * **New Resource:** `aws_globalaccelerator_cross_account_attachment` ([#35991](https://github.com/hashicorp/terraform-provider-aws/issues/35991))
 * **New Resource:** `aws_verifiedpermissions_policy` ([#35413](https://github.com/hashicorp/terraform-provider-aws/issues/35413))
 
