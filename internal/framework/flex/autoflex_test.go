@@ -4,12 +4,14 @@
 package flex
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 type TestFlex00 struct{}
@@ -310,4 +312,30 @@ type TestFlexMapBlockKeyTF05 struct {
 	MapBlockKey fwtypes.StringEnum[TestEnum] `tfsdk:"map_block_key"`
 	Attr1       types.String                 `tfsdk:"attr1"`
 	Attr2       types.String                 `tfsdk:"attr2"`
+}
+
+var _ smithyjson.JSONStringer = (*testJSONDocument)(nil)
+
+type testJSONDocument struct {
+	value any
+}
+
+func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
+	data, err := json.Marshal(m.value)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
+}
+
+func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
+	return json.Marshal(m.value)
+}
+
+type TestFlexAWS19 struct {
+	Field1 smithyjson.JSONStringer `json:"field1"`
+}
+
+type TestFlexTF19 struct {
+	Field1 types.String `tfsdk:"field1"`
 }

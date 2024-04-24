@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 // Flatten = AWS --> TF
@@ -91,7 +92,7 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 
 	case reflect.Interface:
-		// Smithy union type handling not yet implemented. Silently skip.
+		diags.Append(flattener.interface_(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 	}
 
@@ -291,6 +292,44 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 
 	case reflect.Struct:
 		diags.Append(flattener.struct_(ctx, vElem, isNilFrom, tTo, vTo)...)
+		return diags
+	}
+
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.StringTypable:
+		stringValue := types.StringNull()
+		if !isNullFrom {
+			//
+			// JSONStringer -> types.String-ish.
+			//
+			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
+				doc := vFrom.Interface().(smithyjson.JSONStringer)
+				b, err := doc.MarshalSmithyDocument()
+				if err != nil {
+					diags.AddError("AutoFlEx", err.Error())
+					return diags
+				}
+				stringValue = types.StringValue(string(b))
+			}
+		}
+		v, d := tTo.ValueFromString(ctx, stringValue)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
 
