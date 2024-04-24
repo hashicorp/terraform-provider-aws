@@ -114,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVirtualService,
+			Factory:  resourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
 			Name:     "Virtual Service",
 			Tags: &types.ServicePackageResourceTags{

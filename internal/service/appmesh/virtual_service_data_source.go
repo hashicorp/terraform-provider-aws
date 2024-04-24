@@ -66,7 +66,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualServiceName := d.Get("name").(string)
-	vs, err := FindVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
+	vs, err := findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)

@@ -350,7 +350,7 @@ func sweepVirtualServices(region string) error {
 
 				for _, v := range page.VirtualServices {
 					virtualServiceName := aws.StringValue(v.VirtualServiceName)
-					r := ResourceVirtualService()
+					r := resourceVirtualService()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualServiceName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
