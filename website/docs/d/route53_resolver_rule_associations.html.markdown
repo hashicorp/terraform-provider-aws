@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_route53_resolver_rule_associations
 
-`aws_route53_resolver_rule_associations` lists the Route53 Resolver rule assocations for current account as defined in the 
+`aws_route53_resolver_rule_associations` lists the Route53 Resolver rule assocations for current account as defined in the
 [AWS Docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_ListResolverRuleAssociations.html).
 
 Note that rule associations take time to propagate through AWS and be exposed through the API. For this reason, it's advisable to use a `depends_on` block if defining `aws_route53_resolver_rule_association` resources and fetching/iterating through this data source to avoid a race condition.
@@ -19,15 +19,15 @@ Note that rule associations take time to propagate through AWS and be exposed th
 
 ```terraform
 data "aws_route53_resolver_rule_associations" "examples" {
-	filter {
-		name = "VPCId"
-		values = [ aws_vpc.example.id ]
-	}
+  filter {
+    name   = "VPCId"
+    values = [aws_vpc.example.id]
+  }
 
-	filter {
-		name = "Status"
-		values = [ "COMPLETE", "CREATING" ]
-	}
+  filter {
+    name   = "Status"
+    values = ["COMPLETE", "CREATING"]
+  }
 }
 ```
 
@@ -35,10 +35,10 @@ data "aws_route53_resolver_rule_associations" "examples" {
 
 ```terraform
 data "aws_route53_resolver_rule_associations" "examples" {
-	filter {
-		name = "ResolverRuleId"
-		values = [ aws_route53_resolver_rule_association.example.resolver_rule_id ]
-	}
+  filter {
+    name   = "ResolverRuleId"
+    values = [aws_route53_resolver_rule_association.example.resolver_rule_id]
+  }
 }
 ```
 
@@ -58,8 +58,8 @@ Valid `filter` names include the following:
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
-* `assocations` - List of resolver rule assocations.
 
+* `assocations` - List of resolver rule assocations.
 
 #### `associations` Attribute Reference
 
