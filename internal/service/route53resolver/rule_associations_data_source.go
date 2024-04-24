@@ -3,43 +3,18 @@
 
 package route53resolver
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtype "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,36 +38,50 @@ func (d *dataSourceRuleAssociations) Metadata(_ context.Context, req datasource.
 
 func (d *dataSourceRuleAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
+		Blocks: map[string]schema.Block{
+			"associations": schema.ListNestedBlock{
+				CustomType: fwtype.NewListNestedObjectTypeOf[DataSourceRuleAssociation](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Computed: true,
+						},
+						"name": schema.StringAttribute{
+							Computed: true,
+						},
+						"resolver_rule_id": schema.StringAttribute{
+							Computed: true,
+						},
+						"status": schema.StringAttribute{
+							Computed: true,
+						},
+						"status_message": schema.StringAttribute{
+							Computed: true,
+						},
+						"vpc_id": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
 			},
-			"name": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
-			"resolver_rule_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
-			"status": schema.StringAttribute{
-				Computed:   true,
-				Optional:   true,
-				Validators: []validator.String{stringvalidator.OneOf(route53resolver.ResolverRuleAssociationStatus_Values()...)},
-			},
-			"status_message": schema.StringAttribute{
-				Computed: true,
-			},
-			"vpc_id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+			"filter": schema.SetNestedBlock{
+				CustomType: fwtype.NewSetNestedObjectTypeOf[Filter](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Required: true,
+						},
+						"values": schema.SetAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+						},
+					},
+				},
 			},
 		},
 	}
 }
 
-// TIP: ==== ASSIGN CRUD METHODS ====
-// Data sources only have a read method.
 func (d *dataSourceRuleAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	// TIP: ==== DATA SOURCE READ ====
 	// Generally, the Read function should do the following things. Make
@@ -108,80 +97,88 @@ func (d *dataSourceRuleAssociations) Read(ctx context.Context, req datasource.Re
 	conn := d.Meta().Route53ResolverConn(ctx)
 
 	// TIP: -- 2. Fetch the config
-	var in dataSourceRuleAssociationsData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &in)...)
+	var data DataSourceRuleAssociationsData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	filters := getFiltersFromData(&in)
+	filters, diags := getFiltersFromData(ctx, &data)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
 
 	// TIP: -- 3. Get information about a resource from AWS
 	input := &route53resolver.ListResolverRuleAssociationsInput{Filters: filters}
-	data := []dataSourceRuleAssociationsData{}
+	associations := []*DataSourceRuleAssociation{}
 	err := conn.ListResolverRuleAssociationsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
-		var ruleAssociation dataSourceRuleAssociationsData
+		var ruleAssociation DataSourceRuleAssociation
 		for _, out := range page.ResolverRuleAssociations {
-			diags := flex.Flatten(ctx, out, ruleAssociation)
+			diags := flex.Flatten(ctx, out, &ruleAssociation)
 			if diags.HasError() {
 				resp.Diagnostics.Append(diags...)
 				return true
 			}
-
-			data = append(data, ruleAssociation)
+			associations = append(associations, &ruleAssociation)
 		}
 
 		return !lastPage
 	})
+
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Resolver, create.ErrActionReading, DSNameRuleAssociations, data.Name.String(), err),
+			create.ProblemStandardMessage(names.Route53Resolver, create.ErrActionReading, DSNameRuleAssociations, DSNameRuleAssociations, err),
 			err.Error(),
 		)
 		return
 	}
 
+	if len(associations) != 0 {
+		data.ResolverRuleAssociations, diags = fwtype.NewListNestedObjectValueOfSlice[DataSourceRuleAssociation](ctx, associations)
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+			return
+		}
+	}
+
+	//fmt.Printf("%v\n", data)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func getFiltersFromData(data *dataSourceRuleAssociationsData) []*route53resolver.Filter {
+func getFiltersFromData(ctx context.Context, data *DataSourceRuleAssociationsData) ([]*route53resolver.Filter, diag.Diagnostics) {
 	filters := []*route53resolver.Filter{}
-	if !data.Name.IsNull() {
-		filters = append(filters, &route53resolver.Filter{Name: aws.String("Name"), Values: []*string{data.Name.ValueStringPointer()}})
+	df, diags := data.Filters.ToSlice(ctx)
+	if diags.HasError() {
+		return nil, diags
 	}
 
-	if !data.RuleResolverId.IsNull() {
-		filters = append(filters, &route53resolver.Filter{Name: aws.String("ResolverRuleId"), Values: []*string{data.RuleResolverId.ValueStringPointer()}})
+	for _, f := range df {
+		filter := &route53resolver.Filter{
+			Name:   f.Name.ValueStringPointer(),
+			Values: flex.ExpandFrameworkStringSet(ctx, f.Values),
+		}
+		filters = append(filters, filter)
 	}
 
-	if !data.Status.IsNull() {
-		filters = append(filters, &route53resolver.Filter{Name: aws.String("Status"), Values: []*string{data.Status.ValueStringPointer()}})
-	}
-
-	if !data.VpcId.IsNull() {
-		filters = append(filters, &route53resolver.Filter{Name: aws.String("VPCId"), Values: []*string{data.VpcId.ValueStringPointer()}})
-	}
-
-	return filters
+	return filters, nil
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
-type dataSourceRuleAssociationsData struct {
-	Id             types.String `tfsdk:"arn"`
-	Name           types.String `tfsdk:"complex_argument"`
-	RuleResolverId types.String `tfsdk:"description"`
-	Status         types.String `tfsdk:"id"`
-	StatusMessage  types.String `tfsdk:"name"`
-	VpcId          types.String `tfsdk:"type"`
+type DataSourceRuleAssociationsData struct {
+	Filters                  fwtype.SetNestedObjectValueOf[Filter]                     `tfsdk:"filter"`
+	ResolverRuleAssociations fwtype.ListNestedObjectValueOf[DataSourceRuleAssociation] `tfsdk:"associations"`
+}
+
+type DataSourceRuleAssociation struct {
+	Id             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ResolverRuleId types.String `tfsdk:"resolver_rule_id"`
+	Status         types.String `tfsdk:"status"`
+	StatusMessage  types.String `tfsdk:"status_message"`
+	VPCId          types.String `tfsdk:"vpc_id"`
+}
+
+type Filter struct {
+	Name   types.String                    `tfsdk:"name"`
+	Values fwtype.SetValueOf[types.String] `tfsdk:"values"`
 }
