@@ -39,8 +39,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Cache Policy",
 		},
 		{
-			Factory:  DataSourceDistribution,
+			Factory:  dataSourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
+			Name:     "Distribution",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  dataSourceFunction,
