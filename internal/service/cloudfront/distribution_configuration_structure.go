@@ -19,22 +19,22 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		CallerReference:              aws.String(id.UniqueId()),
 		Comment:                      aws.String(d.Get("comment").(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
-		CustomErrorResponses:         ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
-		DefaultCacheBehavior:         ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
+		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
+		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
 		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
 		Enabled:                      aws.Bool(d.Get("enabled").(bool)),
 		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
 		HttpVersion:                  awstypes.HttpVersion(d.Get("http_version").(string)),
-		Origins:                      ExpandOrigins(d.Get("origin").(*schema.Set).List()),
+		Origins:                      expandOrigins(d.Get("origin").(*schema.Set).List()),
 		PriceClass:                   awstypes.PriceClass(d.Get("price_class").(string)),
 		Staging:                      aws.Bool(d.Get("staging").(bool)),
 		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
-		apiObject.Aliases = ExpandAliases(v.(*schema.Set).List())
+		apiObject.Aliases = expandAliases(v.(*schema.Set).List())
 	} else {
-		apiObject.Aliases = ExpandAliases([]interface{}{})
+		apiObject.Aliases = expandAliases([]interface{}{})
 	}
 
 	if v, ok := d.GetOk("caller_reference"); ok {
@@ -42,21 +42,21 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 	}
 
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Logging = ExpandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.Logging = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
 	} else {
-		apiObject.Logging = ExpandLoggingConfig(nil)
+		apiObject.Logging = expandLoggingConfig(nil)
 	}
 
 	if v, ok := d.GetOk("origin_group"); ok {
-		apiObject.OriginGroups = ExpandOriginGroups(v.(*schema.Set).List())
+		apiObject.OriginGroups = expandOriginGroups(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("restrictions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Restrictions = ExpandRestrictions(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.Restrictions = expandRestrictions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("viewer_certificate"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ViewerCertificate = ExpandViewerCertificate(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.ViewerCertificate = expandViewerCertificate(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -78,7 +78,7 @@ func expandCacheBehavior(tfMap map[string]interface{}) *awstypes.CacheBehavior {
 	}
 
 	if v, ok := tfMap["allowed_methods"]; ok {
-		apiObject.AllowedMethods = ExpandAllowedMethods(v.(*schema.Set).List())
+		apiObject.AllowedMethods = expandAllowedMethods(v.(*schema.Set).List())
 	}
 
 	if tfMap["cache_policy_id"].(string) == "" {
@@ -88,19 +88,19 @@ func expandCacheBehavior(tfMap map[string]interface{}) *awstypes.CacheBehavior {
 	}
 
 	if v, ok := tfMap["cached_methods"]; ok {
-		apiObject.AllowedMethods.CachedMethods = ExpandCachedMethods(v.(*schema.Set).List())
+		apiObject.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["forwarded_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ForwardedValues = ExpandForwardedValues(v[0].(map[string]interface{}))
+		apiObject.ForwardedValues = expandForwardedValues(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["function_association"]; ok {
-		apiObject.FunctionAssociations = ExpandFunctionAssociations(v.(*schema.Set).List())
+		apiObject.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["lambda_function_association"]; ok {
-		apiObject.LambdaFunctionAssociations = ExpandLambdaFunctionAssociations(v.(*schema.Set).List())
+		apiObject.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["path_pattern"]; ok {
@@ -122,9 +122,9 @@ func expandCacheBehavior(tfMap map[string]interface{}) *awstypes.CacheBehavior {
 	}
 
 	if v, ok := tfMap["trusted_signers"]; ok {
-		apiObject.TrustedSigners = ExpandTrustedSigners(v.([]interface{}))
+		apiObject.TrustedSigners = expandTrustedSigners(v.([]interface{}))
 	} else {
-		apiObject.TrustedSigners = ExpandTrustedSigners([]interface{}{})
+		apiObject.TrustedSigners = expandTrustedSigners([]interface{}{})
 	}
 
 	return apiObject
@@ -172,11 +172,11 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]interfac
 	tfMap["response_headers_policy_id"] = aws.ToString(apiObject.ResponseHeadersPolicyId)
 
 	if apiObject.AllowedMethods != nil {
-		tfMap["allowed_methods"] = FlattenAllowedMethods(apiObject.AllowedMethods)
+		tfMap["allowed_methods"] = flattenAllowedMethods(apiObject.AllowedMethods)
 	}
 
 	if apiObject.AllowedMethods.CachedMethods != nil {
-		tfMap["cached_methods"] = FlattenCachedMethods(apiObject.AllowedMethods.CachedMethods)
+		tfMap["cached_methods"] = flattenCachedMethods(apiObject.AllowedMethods.CachedMethods)
 	}
 
 	if apiObject.DefaultTTL != nil {
@@ -184,15 +184,15 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]interfac
 	}
 
 	if apiObject.ForwardedValues != nil {
-		tfMap["forwarded_values"] = []interface{}{FlattenForwardedValues(apiObject.ForwardedValues)}
+		tfMap["forwarded_values"] = []interface{}{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
 	if len(apiObject.FunctionAssociations.Items) > 0 {
-		tfMap["function_association"] = FlattenFunctionAssociations(apiObject.FunctionAssociations)
+		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
 	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
-		tfMap["lambda_function_association"] = FlattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
+		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
 	if apiObject.MaxTTL != nil {
@@ -212,7 +212,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]interfac
 	}
 
 	if len(apiObject.TrustedSigners.Items) > 0 {
-		tfMap["trusted_signers"] = FlattenTrustedSigners(apiObject.TrustedSigners)
+		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
 	return tfMap
@@ -232,7 +232,7 @@ func flattenCacheBehaviors(apiObject *awstypes.CacheBehaviors) []interface{} {
 	return tfList
 }
 
-func ExpandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultCacheBehavior {
+func expandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultCacheBehavior {
 	if tfMap == nil {
 		return nil
 	}
@@ -248,7 +248,7 @@ func ExpandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultC
 	}
 
 	if v, ok := tfMap["allowed_methods"]; ok {
-		apiObject.AllowedMethods = ExpandAllowedMethods(v.(*schema.Set).List())
+		apiObject.AllowedMethods = expandAllowedMethods(v.(*schema.Set).List())
 	}
 
 	if tfMap["cache_policy_id"].(string) == "" {
@@ -258,19 +258,19 @@ func ExpandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultC
 	}
 
 	if v, ok := tfMap["cached_methods"]; ok {
-		apiObject.AllowedMethods.CachedMethods = ExpandCachedMethods(v.(*schema.Set).List())
+		apiObject.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set).List())
 	}
 
 	if forwardedValuesFlat, ok := tfMap["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
-		apiObject.ForwardedValues = ExpandForwardedValues(tfMap["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+		apiObject.ForwardedValues = expandForwardedValues(tfMap["forwarded_values"].([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["function_association"]; ok {
-		apiObject.FunctionAssociations = ExpandFunctionAssociations(v.(*schema.Set).List())
+		apiObject.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["lambda_function_association"]; ok {
-		apiObject.LambdaFunctionAssociations = ExpandLambdaFunctionAssociations(v.(*schema.Set).List())
+		apiObject.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["realtime_log_config_arn"]; ok && v.(string) != "" {
@@ -288,9 +288,9 @@ func ExpandDefaultCacheBehavior(tfMap map[string]interface{}) *awstypes.DefaultC
 	}
 
 	if v, ok := tfMap["trusted_signers"]; ok {
-		apiObject.TrustedSigners = ExpandTrustedSigners(v.([]interface{}))
+		apiObject.TrustedSigners = expandTrustedSigners(v.([]interface{}))
 	} else {
-		apiObject.TrustedSigners = ExpandTrustedSigners([]interface{}{})
+		apiObject.TrustedSigners = expandTrustedSigners([]interface{}{})
 	}
 
 	return apiObject
@@ -314,11 +314,11 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 	}
 
 	if apiObject.AllowedMethods != nil {
-		tfMap["allowed_methods"] = FlattenAllowedMethods(apiObject.AllowedMethods)
+		tfMap["allowed_methods"] = flattenAllowedMethods(apiObject.AllowedMethods)
 	}
 
 	if apiObject.AllowedMethods.CachedMethods != nil {
-		tfMap["cached_methods"] = FlattenCachedMethods(apiObject.AllowedMethods.CachedMethods)
+		tfMap["cached_methods"] = flattenCachedMethods(apiObject.AllowedMethods.CachedMethods)
 	}
 
 	if apiObject.DefaultTTL != nil {
@@ -326,15 +326,15 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 	}
 
 	if apiObject.ForwardedValues != nil {
-		tfMap["forwarded_values"] = []interface{}{FlattenForwardedValues(apiObject.ForwardedValues)}
+		tfMap["forwarded_values"] = []interface{}{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
 	if len(apiObject.FunctionAssociations.Items) > 0 {
-		tfMap["function_association"] = FlattenFunctionAssociations(apiObject.FunctionAssociations)
+		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
 	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
-		tfMap["lambda_function_association"] = FlattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
+		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
 	if apiObject.MaxTTL != nil {
@@ -350,7 +350,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 	}
 
 	if len(apiObject.TrustedSigners.Items) > 0 {
-		tfMap["trusted_signers"] = FlattenTrustedSigners(apiObject.TrustedSigners)
+		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
 	return tfMap
@@ -379,7 +379,7 @@ func flattenTrustedKeyGroups(apiObject *awstypes.TrustedKeyGroups) []interface{}
 	return []interface{}{}
 }
 
-func ExpandTrustedSigners(tfList []interface{}) *awstypes.TrustedSigners {
+func expandTrustedSigners(tfList []interface{}) *awstypes.TrustedSigners {
 	apiObject := &awstypes.TrustedSigners{}
 
 	if len(tfList) > 0 {
@@ -394,7 +394,7 @@ func ExpandTrustedSigners(tfList []interface{}) *awstypes.TrustedSigners {
 	return apiObject
 }
 
-func FlattenTrustedSigners(apiObject *awstypes.TrustedSigners) []interface{} {
+func flattenTrustedSigners(apiObject *awstypes.TrustedSigners) []interface{} {
 	if apiObject.Items != nil {
 		return flex.FlattenStringValueList(apiObject.Items)
 	}
@@ -424,7 +424,7 @@ func expandLambdaFunctionAssociation(tfMap map[string]interface{}) *awstypes.Lam
 	return apiObject
 }
 
-func ExpandLambdaFunctionAssociations(v interface{}) *awstypes.LambdaFunctionAssociations {
+func expandLambdaFunctionAssociations(v interface{}) *awstypes.LambdaFunctionAssociations {
 	if v == nil {
 		return &awstypes.LambdaFunctionAssociations{
 			Quantity: aws.Int32(0),
@@ -474,7 +474,7 @@ func expandFunctionAssociation(tfMap map[string]interface{}) *awstypes.FunctionA
 	return apiObject
 }
 
-func ExpandFunctionAssociations(v interface{}) *awstypes.FunctionAssociations {
+func expandFunctionAssociations(v interface{}) *awstypes.FunctionAssociations {
 	if v == nil {
 		return &awstypes.FunctionAssociations{
 			Quantity: aws.Int32(0),
@@ -518,7 +518,7 @@ func flattenLambdaFunctionAssociation(apiObject *awstypes.LambdaFunctionAssociat
 	return tfMap
 }
 
-func FlattenLambdaFunctionAssociations(apiObject *awstypes.LambdaFunctionAssociations) []interface{} {
+func flattenLambdaFunctionAssociations(apiObject *awstypes.LambdaFunctionAssociations) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -543,7 +543,7 @@ func flattenFunctionAssociation(apiObject *awstypes.FunctionAssociation) map[str
 	return tfMap
 }
 
-func FlattenFunctionAssociations(apiObject *awstypes.FunctionAssociations) []interface{} {
+func flattenFunctionAssociations(apiObject *awstypes.FunctionAssociations) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -557,7 +557,7 @@ func FlattenFunctionAssociations(apiObject *awstypes.FunctionAssociations) []int
 	return tfList
 }
 
-func ExpandForwardedValues(tfMap map[string]interface{}) *awstypes.ForwardedValues {
+func expandForwardedValues(tfMap map[string]interface{}) *awstypes.ForwardedValues {
 	if len(tfMap) < 1 {
 		return nil
 	}
@@ -567,21 +567,21 @@ func ExpandForwardedValues(tfMap map[string]interface{}) *awstypes.ForwardedValu
 	}
 
 	if v, ok := tfMap["cookies"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.Cookies = ExpandCookiePreference(v.([]interface{})[0].(map[string]interface{}))
+		apiObject.Cookies = expandCookiePreference(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["headers"]; ok {
-		apiObject.Headers = ExpandHeaders(v.(*schema.Set).List())
+		apiObject.Headers = expandForwardedValuesHeaders(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["query_string_cache_keys"]; ok {
-		apiObject.QueryStringCacheKeys = ExpandQueryStringCacheKeys(v.([]interface{}))
+		apiObject.QueryStringCacheKeys = expandQueryStringCacheKeys(v.([]interface{}))
 	}
 
 	return apiObject
 }
 
-func FlattenForwardedValues(apiObject *awstypes.ForwardedValues) map[string]interface{} {
+func flattenForwardedValues(apiObject *awstypes.ForwardedValues) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -591,28 +591,28 @@ func FlattenForwardedValues(apiObject *awstypes.ForwardedValues) map[string]inte
 	tfMap["query_string"] = aws.ToBool(apiObject.QueryString)
 
 	if apiObject.Cookies != nil {
-		tfMap["cookies"] = []interface{}{FlattenCookiePreference(apiObject.Cookies)}
+		tfMap["cookies"] = []interface{}{flattenCookiePreference(apiObject.Cookies)}
 	}
 
 	if apiObject.Headers != nil {
-		tfMap["headers"] = schema.NewSet(schema.HashString, FlattenHeaders(apiObject.Headers))
+		tfMap["headers"] = flattenForwardedValuesHeaders(apiObject.Headers)
 	}
 
 	if apiObject.QueryStringCacheKeys != nil {
-		tfMap["query_string_cache_keys"] = FlattenQueryStringCacheKeys(apiObject.QueryStringCacheKeys)
+		tfMap["query_string_cache_keys"] = flattenQueryStringCacheKeys(apiObject.QueryStringCacheKeys)
 	}
 
 	return tfMap
 }
 
-func ExpandHeaders(tfList []interface{}) *awstypes.Headers {
+func expandForwardedValuesHeaders(tfList []interface{}) *awstypes.Headers {
 	return &awstypes.Headers{
 		Items:    flex.ExpandStringValueList(tfList),
 		Quantity: aws.Int32(int32(len(tfList))),
 	}
 }
 
-func FlattenHeaders(apiObject *awstypes.Headers) []interface{} {
+func flattenForwardedValuesHeaders(apiObject *awstypes.Headers) []interface{} {
 	if apiObject.Items != nil {
 		return flex.FlattenStringValueList(apiObject.Items)
 	}
@@ -620,14 +620,14 @@ func FlattenHeaders(apiObject *awstypes.Headers) []interface{} {
 	return []interface{}{}
 }
 
-func ExpandQueryStringCacheKeys(tfList []interface{}) *awstypes.QueryStringCacheKeys {
+func expandQueryStringCacheKeys(tfList []interface{}) *awstypes.QueryStringCacheKeys {
 	return &awstypes.QueryStringCacheKeys{
 		Items:    flex.ExpandStringValueList(tfList),
 		Quantity: aws.Int32(int32(len(tfList))),
 	}
 }
 
-func FlattenQueryStringCacheKeys(apiObject *awstypes.QueryStringCacheKeys) []interface{} {
+func flattenQueryStringCacheKeys(apiObject *awstypes.QueryStringCacheKeys) []interface{} {
 	if apiObject.Items != nil {
 		return flex.FlattenStringValueList(apiObject.Items)
 	}
@@ -635,19 +635,19 @@ func FlattenQueryStringCacheKeys(apiObject *awstypes.QueryStringCacheKeys) []int
 	return []interface{}{}
 }
 
-func ExpandCookiePreference(tfMap map[string]interface{}) *awstypes.CookiePreference {
+func expandCookiePreference(tfMap map[string]interface{}) *awstypes.CookiePreference {
 	apiObject := &awstypes.CookiePreference{
 		Forward: awstypes.ItemSelection(tfMap["forward"].(string)),
 	}
 
 	if v, ok := tfMap["whitelisted_names"]; ok {
-		apiObject.WhitelistedNames = ExpandCookieNames(v.(*schema.Set).List())
+		apiObject.WhitelistedNames = expandCookiePreferenceCookieNames(v.(*schema.Set).List())
 	}
 
 	return apiObject
 }
 
-func FlattenCookiePreference(apiObject *awstypes.CookiePreference) map[string]interface{} {
+func flattenCookiePreference(apiObject *awstypes.CookiePreference) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -657,20 +657,20 @@ func FlattenCookiePreference(apiObject *awstypes.CookiePreference) map[string]in
 	tfMap["forward"] = apiObject.Forward
 
 	if apiObject.WhitelistedNames != nil {
-		tfMap["whitelisted_names"] = FlattenCookieNames(apiObject.WhitelistedNames)
+		tfMap["whitelisted_names"] = flattenCookiePreferenceCookieNames(apiObject.WhitelistedNames)
 	}
 
 	return tfMap
 }
 
-func ExpandCookieNames(tfList []interface{}) *awstypes.CookieNames {
+func expandCookiePreferenceCookieNames(tfList []interface{}) *awstypes.CookieNames {
 	return &awstypes.CookieNames{
 		Items:    flex.ExpandStringValueList(tfList),
 		Quantity: aws.Int32(int32(len(tfList))),
 	}
 }
 
-func FlattenCookieNames(apiObject *awstypes.CookieNames) []interface{} {
+func flattenCookiePreferenceCookieNames(apiObject *awstypes.CookieNames) []interface{} {
 	if apiObject.Items != nil {
 		return flex.FlattenStringValueList(apiObject.Items)
 	}
@@ -678,14 +678,14 @@ func FlattenCookieNames(apiObject *awstypes.CookieNames) []interface{} {
 	return []interface{}{}
 }
 
-func ExpandAllowedMethods(tfList []interface{}) *awstypes.AllowedMethods {
+func expandAllowedMethods(tfList []interface{}) *awstypes.AllowedMethods {
 	return &awstypes.AllowedMethods{
 		Items:    flex.ExpandStringyValueList[awstypes.Method](tfList),
 		Quantity: aws.Int32(int32(len(tfList))),
 	}
 }
 
-func FlattenAllowedMethods(apiObject *awstypes.AllowedMethods) []interface{} {
+func flattenAllowedMethods(apiObject *awstypes.AllowedMethods) []interface{} {
 	if apiObject.Items != nil {
 		return flex.FlattenStringyValueList(apiObject.Items)
 	}
@@ -693,14 +693,14 @@ func FlattenAllowedMethods(apiObject *awstypes.AllowedMethods) []interface{} {
 	return nil
 }
 
-func ExpandCachedMethods(tfList []interface{}) *awstypes.CachedMethods {
+func expandCachedMethods(tfList []interface{}) *awstypes.CachedMethods {
 	return &awstypes.CachedMethods{
 		Items:    flex.ExpandStringyValueList[awstypes.Method](tfList),
 		Quantity: aws.Int32(int32(len(tfList))),
 	}
 }
 
-func FlattenCachedMethods(apiObject *awstypes.CachedMethods) []interface{} {
+func flattenCachedMethods(apiObject *awstypes.CachedMethods) []interface{} {
 	if apiObject.Items != nil {
 		return flex.FlattenStringyValueList(apiObject.Items)
 	}
@@ -708,7 +708,7 @@ func FlattenCachedMethods(apiObject *awstypes.CachedMethods) []interface{} {
 	return nil
 }
 
-func ExpandOrigins(tfList []interface{}) *awstypes.Origins {
+func expandOrigins(tfList []interface{}) *awstypes.Origins {
 	var items []awstypes.Origin
 
 	for _, tfMapRaw := range tfList {
@@ -717,7 +717,7 @@ func ExpandOrigins(tfList []interface{}) *awstypes.Origins {
 			continue
 		}
 
-		item := ExpandOrigin(tfMap)
+		item := expandOrigin(tfMap)
 
 		if item == nil {
 			continue
@@ -732,7 +732,7 @@ func ExpandOrigins(tfList []interface{}) *awstypes.Origins {
 	}
 }
 
-func FlattenOrigins(apiObject *awstypes.Origins) []interface{} {
+func flattenOrigins(apiObject *awstypes.Origins) []interface{} {
 	if apiObject.Items == nil {
 		return nil
 	}
@@ -740,13 +740,13 @@ func FlattenOrigins(apiObject *awstypes.Origins) []interface{} {
 	tfList := []interface{}{}
 
 	for _, v := range apiObject.Items {
-		tfList = append(tfList, FlattenOrigin(&v))
+		tfList = append(tfList, flattenOrigin(&v))
 	}
 
 	return tfList
 }
 
-func ExpandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
+func expandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 	apiObject := &awstypes.Origin{
 		DomainName: aws.String(tfMap["domain_name"].(string)),
 		Id:         aws.String(tfMap["origin_id"].(string)),
@@ -761,12 +761,12 @@ func ExpandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 	}
 
 	if v, ok := tfMap["custom_header"]; ok {
-		apiObject.CustomHeaders = ExpandCustomHeaders(v.(*schema.Set).List())
+		apiObject.CustomHeaders = expandCustomHeaders(v.(*schema.Set).List())
 	}
 
 	if v, ok := tfMap["custom_origin_config"]; ok {
 		if v := v.([]interface{}); len(v) > 0 {
-			apiObject.CustomOriginConfig = ExpandCustomOriginConfig(v[0].(map[string]interface{}))
+			apiObject.CustomOriginConfig = expandCustomOriginConfig(v[0].(map[string]interface{}))
 		}
 	}
 
@@ -780,13 +780,13 @@ func ExpandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 
 	if v, ok := tfMap["origin_shield"]; ok {
 		if v := v.([]interface{}); len(v) > 0 {
-			apiObject.OriginShield = ExpandOriginShield(v[0].(map[string]interface{}))
+			apiObject.OriginShield = expandOriginShield(v[0].(map[string]interface{}))
 		}
 	}
 
 	if v, ok := tfMap["s3_origin_config"]; ok {
 		if v := v.([]interface{}); len(v) > 0 {
-			apiObject.S3OriginConfig = ExpandS3OriginConfig(v[0].(map[string]interface{}))
+			apiObject.S3OriginConfig = expandS3OriginConfig(v[0].(map[string]interface{}))
 		}
 	}
 
@@ -801,7 +801,7 @@ func ExpandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 	return apiObject
 }
 
-func FlattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
+func flattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -819,11 +819,11 @@ func FlattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 	}
 
 	if apiObject.CustomHeaders != nil {
-		tfMap["custom_header"] = FlattenCustomHeaders(apiObject.CustomHeaders)
+		tfMap["custom_header"] = flattenCustomHeaders(apiObject.CustomHeaders)
 	}
 
 	if apiObject.CustomOriginConfig != nil {
-		tfMap["custom_origin_config"] = []interface{}{FlattenCustomOriginConfig(apiObject.CustomOriginConfig)}
+		tfMap["custom_origin_config"] = []interface{}{flattenCustomOriginConfig(apiObject.CustomOriginConfig)}
 	}
 
 	if apiObject.OriginAccessControlId != nil {
@@ -835,17 +835,17 @@ func FlattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 	}
 
 	if apiObject.OriginShield != nil && aws.ToBool(apiObject.OriginShield.Enabled) {
-		tfMap["origin_shield"] = []interface{}{FlattenOriginShield(apiObject.OriginShield)}
+		tfMap["origin_shield"] = []interface{}{flattenOriginShield(apiObject.OriginShield)}
 	}
 
 	if apiObject.S3OriginConfig != nil && aws.ToString(apiObject.S3OriginConfig.OriginAccessIdentity) != "" {
-		tfMap["s3_origin_config"] = []interface{}{FlattenS3OriginConfig(apiObject.S3OriginConfig)}
+		tfMap["s3_origin_config"] = []interface{}{flattenS3OriginConfig(apiObject.S3OriginConfig)}
 	}
 
 	return tfMap
 }
 
-func ExpandOriginGroups(tfList []interface{}) *awstypes.OriginGroups {
+func expandOriginGroups(tfList []interface{}) *awstypes.OriginGroups {
 	var items []awstypes.OriginGroup
 
 	for _, tfMapRaw := range tfList {
@@ -869,7 +869,7 @@ func ExpandOriginGroups(tfList []interface{}) *awstypes.OriginGroups {
 	}
 }
 
-func FlattenOriginGroups(apiObject *awstypes.OriginGroups) []interface{} {
+func flattenOriginGroups(apiObject *awstypes.OriginGroups) []interface{} {
 	if apiObject.Items == nil {
 		return nil
 	}
@@ -985,7 +985,7 @@ func flattenOriginGroupMembers(apiObject *awstypes.OriginGroupMembers) []interfa
 	return tfList
 }
 
-func ExpandCustomHeaders(tfList []interface{}) *awstypes.CustomHeaders {
+func expandCustomHeaders(tfList []interface{}) *awstypes.CustomHeaders {
 	var items []awstypes.OriginCustomHeader
 
 	for _, tfMapRaw := range tfList {
@@ -994,7 +994,7 @@ func ExpandCustomHeaders(tfList []interface{}) *awstypes.CustomHeaders {
 			continue
 		}
 
-		item := ExpandOriginCustomHeader(tfMap)
+		item := expandOriginCustomHeader(tfMap)
 
 		if item == nil {
 			continue
@@ -1009,7 +1009,7 @@ func ExpandCustomHeaders(tfList []interface{}) *awstypes.CustomHeaders {
 	}
 }
 
-func FlattenCustomHeaders(apiObject *awstypes.CustomHeaders) []interface{} {
+func flattenCustomHeaders(apiObject *awstypes.CustomHeaders) []interface{} {
 	if apiObject.Items == nil {
 		return nil
 	}
@@ -1017,13 +1017,13 @@ func FlattenCustomHeaders(apiObject *awstypes.CustomHeaders) []interface{} {
 	tfList := []interface{}{}
 
 	for _, v := range apiObject.Items {
-		tfList = append(tfList, FlattenOriginCustomHeader(&v))
+		tfList = append(tfList, flattenOriginCustomHeader(&v))
 	}
 
 	return tfList
 }
 
-func ExpandOriginCustomHeader(tfMap map[string]interface{}) *awstypes.OriginCustomHeader {
+func expandOriginCustomHeader(tfMap map[string]interface{}) *awstypes.OriginCustomHeader {
 	if tfMap == nil {
 		return nil
 	}
@@ -1034,7 +1034,7 @@ func ExpandOriginCustomHeader(tfMap map[string]interface{}) *awstypes.OriginCust
 	}
 }
 
-func FlattenOriginCustomHeader(apiObject *awstypes.OriginCustomHeader) map[string]interface{} {
+func flattenOriginCustomHeader(apiObject *awstypes.OriginCustomHeader) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1045,7 +1045,7 @@ func FlattenOriginCustomHeader(apiObject *awstypes.OriginCustomHeader) map[strin
 	}
 }
 
-func ExpandCustomOriginConfig(tfMap map[string]interface{}) *awstypes.CustomOriginConfig {
+func expandCustomOriginConfig(tfMap map[string]interface{}) *awstypes.CustomOriginConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1056,13 +1056,13 @@ func ExpandCustomOriginConfig(tfMap map[string]interface{}) *awstypes.CustomOrig
 		OriginKeepaliveTimeout: aws.Int32(int32(tfMap["origin_keepalive_timeout"].(int))),
 		OriginProtocolPolicy:   awstypes.OriginProtocolPolicy(tfMap["origin_protocol_policy"].(string)),
 		OriginReadTimeout:      aws.Int32(int32(tfMap["origin_read_timeout"].(int))),
-		OriginSslProtocols:     ExpandCustomOriginConfigSSL(tfMap["origin_ssl_protocols"].(*schema.Set).List()),
+		OriginSslProtocols:     expandCustomOriginConfigSSL(tfMap["origin_ssl_protocols"].(*schema.Set).List()),
 	}
 
 	return apiObject
 }
 
-func FlattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[string]interface{} {
+func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1073,13 +1073,13 @@ func FlattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
 		"origin_protocol_policy":   apiObject.OriginProtocolPolicy,
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
-		"origin_ssl_protocols":     FlattenCustomOriginConfigSSL(apiObject.OriginSslProtocols),
+		"origin_ssl_protocols":     flattenCustomOriginConfigSSL(apiObject.OriginSslProtocols),
 	}
 
 	return tfMap
 }
 
-func ExpandCustomOriginConfigSSL(tfList []interface{}) *awstypes.OriginSslProtocols {
+func expandCustomOriginConfigSSL(tfList []interface{}) *awstypes.OriginSslProtocols {
 	if tfList == nil {
 		return nil
 
@@ -1091,7 +1091,7 @@ func ExpandCustomOriginConfigSSL(tfList []interface{}) *awstypes.OriginSslProtoc
 	}
 }
 
-func FlattenCustomOriginConfigSSL(apiObject *awstypes.OriginSslProtocols) []interface{} {
+func flattenCustomOriginConfigSSL(apiObject *awstypes.OriginSslProtocols) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1099,7 +1099,7 @@ func FlattenCustomOriginConfigSSL(apiObject *awstypes.OriginSslProtocols) []inte
 	return flex.FlattenStringyValueList(apiObject.Items)
 }
 
-func ExpandS3OriginConfig(tfMap map[string]interface{}) *awstypes.S3OriginConfig {
+func expandS3OriginConfig(tfMap map[string]interface{}) *awstypes.S3OriginConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1109,7 +1109,7 @@ func ExpandS3OriginConfig(tfMap map[string]interface{}) *awstypes.S3OriginConfig
 	}
 }
 
-func ExpandOriginShield(tfMap map[string]interface{}) *awstypes.OriginShield {
+func expandOriginShield(tfMap map[string]interface{}) *awstypes.OriginShield {
 	if tfMap == nil {
 		return nil
 	}
@@ -1120,7 +1120,7 @@ func ExpandOriginShield(tfMap map[string]interface{}) *awstypes.OriginShield {
 	}
 }
 
-func FlattenS3OriginConfig(apiObject *awstypes.S3OriginConfig) map[string]interface{} {
+func flattenS3OriginConfig(apiObject *awstypes.S3OriginConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1130,7 +1130,7 @@ func FlattenS3OriginConfig(apiObject *awstypes.S3OriginConfig) map[string]interf
 	}
 }
 
-func FlattenOriginShield(apiObject *awstypes.OriginShield) map[string]interface{} {
+func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1141,7 +1141,7 @@ func FlattenOriginShield(apiObject *awstypes.OriginShield) map[string]interface{
 	}
 }
 
-func ExpandCustomErrorResponses(tfList []interface{}) *awstypes.CustomErrorResponses {
+func expandCustomErrorResponses(tfList []interface{}) *awstypes.CustomErrorResponses {
 	var items []awstypes.CustomErrorResponse
 
 	for _, tfMapRaw := range tfList {
@@ -1150,7 +1150,7 @@ func ExpandCustomErrorResponses(tfList []interface{}) *awstypes.CustomErrorRespo
 			continue
 		}
 
-		item := ExpandCustomErrorResponse(tfMap)
+		item := expandCustomErrorResponse(tfMap)
 
 		if item == nil {
 			continue
@@ -1165,7 +1165,7 @@ func ExpandCustomErrorResponses(tfList []interface{}) *awstypes.CustomErrorRespo
 	}
 }
 
-func FlattenCustomErrorResponses(apiObject *awstypes.CustomErrorResponses) []interface{} {
+func flattenCustomErrorResponses(apiObject *awstypes.CustomErrorResponses) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1173,13 +1173,13 @@ func FlattenCustomErrorResponses(apiObject *awstypes.CustomErrorResponses) []int
 	tfList := []interface{}{}
 
 	for _, v := range apiObject.Items {
-		tfList = append(tfList, FlattenCustomErrorResponse(&v))
+		tfList = append(tfList, flattenCustomErrorResponse(&v))
 	}
 
 	return tfList
 }
 
-func ExpandCustomErrorResponse(tfMap map[string]interface{}) *awstypes.CustomErrorResponse {
+func expandCustomErrorResponse(tfMap map[string]interface{}) *awstypes.CustomErrorResponse {
 	if tfMap == nil {
 		return nil
 	}
@@ -1205,7 +1205,7 @@ func ExpandCustomErrorResponse(tfMap map[string]interface{}) *awstypes.CustomErr
 	return apiObject
 }
 
-func FlattenCustomErrorResponse(apiObject *awstypes.CustomErrorResponse) map[string]interface{} {
+func flattenCustomErrorResponse(apiObject *awstypes.CustomErrorResponse) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1228,7 +1228,7 @@ func FlattenCustomErrorResponse(apiObject *awstypes.CustomErrorResponse) map[str
 	return tfMap
 }
 
-func ExpandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
+func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 	apiObject := &awstypes.LoggingConfig{}
 
 	if tfMap != nil {
@@ -1260,7 +1260,7 @@ func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func ExpandAliases(tfList []interface{}) *awstypes.Aliases {
+func expandAliases(tfList []interface{}) *awstypes.Aliases {
 	apiObject := &awstypes.Aliases{
 		Quantity: aws.Int32(int32(len(tfList))),
 	}
@@ -1272,7 +1272,7 @@ func ExpandAliases(tfList []interface{}) *awstypes.Aliases {
 	return apiObject
 }
 
-func FlattenAliases(apiObject *awstypes.Aliases) []interface{} {
+func flattenAliases(apiObject *awstypes.Aliases) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1284,13 +1284,13 @@ func FlattenAliases(apiObject *awstypes.Aliases) []interface{} {
 	return []interface{}{}
 }
 
-func ExpandRestrictions(tfMap map[string]interface{}) *awstypes.Restrictions {
+func expandRestrictions(tfMap map[string]interface{}) *awstypes.Restrictions {
 	if tfMap == nil {
 		return nil
 	}
 
 	return &awstypes.Restrictions{
-		GeoRestriction: ExpandGeoRestriction(tfMap["geo_restriction"].([]interface{})[0].(map[string]interface{})),
+		GeoRestriction: expandGeoRestriction(tfMap["geo_restriction"].([]interface{})[0].(map[string]interface{})),
 	}
 }
 
@@ -1300,13 +1300,13 @@ func flattenRestrictions(apiObject *awstypes.Restrictions) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"geo_restriction": []interface{}{FlattenGeoRestriction(apiObject.GeoRestriction)},
+		"geo_restriction": []interface{}{flattenGeoRestriction(apiObject.GeoRestriction)},
 	}
 
 	return []interface{}{tfMap}
 }
 
-func ExpandGeoRestriction(tfMap map[string]interface{}) *awstypes.GeoRestriction {
+func expandGeoRestriction(tfMap map[string]interface{}) *awstypes.GeoRestriction {
 	if tfMap == nil {
 		return nil
 	}
@@ -1325,7 +1325,7 @@ func ExpandGeoRestriction(tfMap map[string]interface{}) *awstypes.GeoRestriction
 	return apiObject
 }
 
-func FlattenGeoRestriction(apiObject *awstypes.GeoRestriction) map[string]interface{} {
+func flattenGeoRestriction(apiObject *awstypes.GeoRestriction) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1340,7 +1340,7 @@ func FlattenGeoRestriction(apiObject *awstypes.GeoRestriction) map[string]interf
 	return tfMap
 }
 
-func ExpandViewerCertificate(tfMap map[string]interface{}) *awstypes.ViewerCertificate {
+func expandViewerCertificate(tfMap map[string]interface{}) *awstypes.ViewerCertificate {
 	if tfMap == nil {
 		return nil
 	}

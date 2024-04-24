@@ -895,7 +895,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	distributionConfig := output.Distribution.DistributionConfig
 	if distributionConfig.Aliases != nil {
-		if err := d.Set("aliases", FlattenAliases(distributionConfig.Aliases)); err != nil {
+		if err := d.Set("aliases", flattenAliases(distributionConfig.Aliases)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
 		}
 	}
@@ -909,7 +909,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	// API call for staging distributions.
 	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
-		if err := d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
+		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_error_response: %s", err)
 		}
 	}
@@ -938,12 +938,12 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 	if aws.ToInt32(distributionConfig.Origins.Quantity) > 0 {
-		if err := d.Set("origin", FlattenOrigins(distributionConfig.Origins)); err != nil {
+		if err := d.Set("origin", flattenOrigins(distributionConfig.Origins)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting origin: %s", err)
 		}
 	}
 	if aws.ToInt32(distributionConfig.OriginGroups.Quantity) > 0 {
-		if err := d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups)); err != nil {
+		if err := d.Set("origin_group", flattenOriginGroups(distributionConfig.OriginGroups)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting origin_group: %s", err)
 		}
 	}
