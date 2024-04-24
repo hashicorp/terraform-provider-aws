@@ -96,6 +96,7 @@ func (d *dataSourceLifecyclePolicy) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
+	data.ID = flex.StringToFramework(ctx, out.Name)
 	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
 	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
 
