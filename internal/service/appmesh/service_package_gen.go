@@ -56,8 +56,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Virtual Router",
 		},
 		{
-			Factory:  DataSourceVirtualService,
+			Factory:  dataSourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
+			Name:     "Virtual Service",
 		},
 	}
 }
