@@ -178,7 +178,6 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 
 	if !plan.Description.Equal(state.Description) ||
 		!plan.Policy.Equal(state.Policy) {
-
 		input := &opensearchserverless.UpdateAccessPolicyInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
