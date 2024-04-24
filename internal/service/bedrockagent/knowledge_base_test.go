@@ -20,6 +20,8 @@ import (
 )
 
 func testAccKnowledgeBase_basic(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -63,6 +65,8 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 }
 
 func testAccKnowledgeBase_rds(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -113,6 +117,8 @@ func testAccKnowledgeBase_rds(t *testing.T) {
 }
 
 func testAccKnowledgeBase_disappears(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -152,6 +158,8 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 }
 
 func testAccKnowledgeBase_update(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -222,6 +230,8 @@ func testAccKnowledgeBase_update(t *testing.T) {
 }
 
 func testAccKnowledgeBase_tags(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -318,7 +328,7 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 	}
 }
 
-func testAccKnowledgeBase_base(rName, model string) string {
+func testAccKnowledgeBaseConfig_baseOpenSearch(rName, model string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -406,7 +416,7 @@ POLICY
 }
 
 func testAccKnowledgeBaseConfig_basic(rName, model string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -437,7 +447,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBaseConfig_update(rName, model string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name        = "%[1]s-updated"
   description = %[1]q
@@ -469,7 +479,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -504,7 +514,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -539,7 +549,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
-func testAccKnowledgeBase_rdsBase(rName, model string) string {
+func testAccKnowledgeBase_baseRDS(rName, model string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -601,7 +611,6 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
-
 
 resource "aws_rds_cluster" "this" {
   cluster_identifier          = %[1]q
@@ -675,7 +684,7 @@ resource "null_resource" "db_setup" {
 }
 
 func testAccKnowledgeBaseConfig_rds(rName, model string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBase_rdsBase(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
