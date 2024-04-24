@@ -92,7 +92,6 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 		return diags
 
 	case reflect.Interface:
-		// Smithy union type handling not yet implemented. Silently skip.
 		diags.Append(flattener.interface_(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 	}
