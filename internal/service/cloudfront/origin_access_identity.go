@@ -173,7 +173,7 @@ func findOriginAccessIdentityByID(ctx context.Context, conn *cloudfront.Client, 
 	return output, nil
 }
 
-func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstypes.CloudFrontOriginAccessIdentityConfig {
+func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstypes.CloudFrontOriginAccessIdentityConfig { // nosemgrep:ci.cloudfront-in-func-name
 	apiObject := &awstypes.CloudFrontOriginAccessIdentityConfig{
 		Comment: aws.String(d.Get("comment").(string)),
 	}

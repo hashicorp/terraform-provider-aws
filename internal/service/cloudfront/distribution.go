@@ -1055,7 +1055,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
-		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
+		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
@@ -1076,12 +1076,12 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		})
 	}
 
-	if errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if errs.IsA[*awstypes.NoSuchDistribution](err) { // nosemgrep:dgryski.semgrep-go.oddifsequence.odd-sequence-ifs
 		return diags
 	}
 
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
-		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
+		if err := disableDistribution(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
