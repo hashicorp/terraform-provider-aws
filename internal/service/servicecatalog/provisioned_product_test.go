@@ -549,7 +549,7 @@ resource "aws_servicecatalog_constraint" "test" {
 }
 
 resource "aws_servicecatalog_product_portfolio_association" "test" {
-  portfolio_id = aws_servicecatalog_principal_portfolio_association.test.portfolio_id # avoid depends_on
+  portfolio_id = aws_servicecatalog_principal_portfolio_association.test.portfolio_id
   product_id   = aws_servicecatalog_product.test.id
 }
 
@@ -565,7 +565,7 @@ resource "aws_servicecatalog_principal_portfolio_association" "test" {
 }
 
 data "aws_servicecatalog_launch_paths" "test" {
-  product_id = aws_servicecatalog_product_portfolio_association.test.product_id # avoid depends_on
+  product_id = aws_servicecatalog_product_portfolio_association.test.product_id
 }
 `, rName)
 }
@@ -987,85 +987,4 @@ resource "aws_s3_bucket" "conflict" {
   bucket = %[2]q
 }
 `, rName, conflictingBucketName, tagValue))
-}
-
-func testAccProvisionedProductConfig_tags0(rName string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLSimpleBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_servicecatalog_provisioned_product" "test" {
-  name                       = %[1]q
-  product_id                 = aws_servicecatalog_constraint.test.product_id
-  provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
-
-  provisioning_parameters {
-    key   = "BucketName"
-    value = "%[1]s-dest"
-  }
-}
-`, rName))
-}
-
-func testAccProvisionedProductConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLSimpleBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_servicecatalog_provisioned_product" "test" {
-  name                       = %[1]q
-  product_id                 = aws_servicecatalog_constraint.test.product_id
-  provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
-
-  provisioning_parameters {
-    key   = "BucketName"
-    value = "%[1]s-dest"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccProvisionedProductConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLSimpleBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_servicecatalog_provisioned_product" "test" {
-  name                       = %[1]q
-  product_id                 = aws_servicecatalog_constraint.test.product_id
-  provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
-
-  provisioning_parameters {
-    key   = "BucketName"
-    value = "%[1]s-dest"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccProvisionedProductConfig_tagsNull(rName, tagKey1 string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLSimpleBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_servicecatalog_provisioned_product" "test" {
-  name                       = %[1]q
-  product_id                 = aws_servicecatalog_constraint.test.product_id
-  provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
-
-  provisioning_parameters {
-    key   = "BucketName"
-    value = "%[1]s-dest"
-  }
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1))
 }

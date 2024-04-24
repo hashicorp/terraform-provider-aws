@@ -26,6 +26,8 @@ import (
 )
 
 func main() {
+	failed := false
+
 	g := common.NewGenerator()
 
 	serviceData, err := data.ReadAllServiceData()
@@ -76,16 +78,26 @@ func main() {
 		sourceName := foo.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
-		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
-
-		d := g.NewGoFileDestination(filename)
 
 		foo.ProviderNameUpper = serviceRecord.ProviderNameUpper()
 		foo.ProviderPackage = servicePackage
 
-		templates, err := template.New("taggingtests").Parse(testGoTmpl)
-		if err != nil {
-			g.Fatalf("parsing base Go test template: %w", err)
+		if foo.GenerateTests {
+			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
+
+			d := g.NewGoFileDestination(filename)
+			templates, err := template.New("taggingtests").Parse(testGoTmpl)
+			if err != nil {
+				g.Fatalf("parsing base Go test template: %w", err)
+			}
+
+			if err := d.WriteTemplateSet(templates, foo); err != nil {
+				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", filename, err)
+			}
 		}
 
 		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.tmpl", sourceName))
@@ -98,23 +110,10 @@ func main() {
 			configTmpl = string(b)
 			foo.GenerateConfig = true
 		} else if errors.Is(err, os.ErrNotExist) {
-			// TODO: This will be an error when composed configurations are implemented.
-			g.Warnf("no tags template found for %s at %q", sourceName, configTmplFile)
+			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+			failed = true
 		} else {
 			g.Fatalf("opening config template %q: %w", configTmplFile, err)
-		}
-
-		_, err = templates.New("config").Parse(configTmpl)
-		if err != nil {
-			g.Fatalf("parsing config template %q: %w", configTmplFile, err)
-		}
-
-		if err := d.WriteTemplateSet(templates, foo); err != nil {
-			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
-		}
-
-		if err := d.Write(); err != nil {
-			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
 		if foo.GenerateConfig {
@@ -135,6 +134,10 @@ func main() {
 			generateTestConfig(g, testDirPath, "tags2", 2, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsNull", 1, configTmplFile, configTmpl)
 		}
+	}
+
+	if failed {
+		os.Exit(1)
 	}
 }
 
@@ -161,7 +164,7 @@ type ResourceDatum struct {
 	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	GoImports         []goImport
 	GenerateConfig    bool
-	Tags              string
+	GenerateTests     bool
 }
 
 type goImport struct {
@@ -238,7 +241,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	// Look first for tagging annotations.
 	d := ResourceDatum{
-		FileName: v.fileName,
+		FileName:      v.fileName,
+		GenerateTests: true,
 	}
 	tagged := false
 	skip := false
@@ -332,12 +336,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else if !b {
+					switch attr {
+					case "true":
+						// no-op
+
+					case "false":
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
 						skip = true
+
+					case "config-only":
+						d.GenerateTests = false
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
