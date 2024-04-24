@@ -6,6 +6,8 @@ package appmesh
 // Exports for use in tests only.
 var (
 	ResourceGatewayRoute = resourceGatewayRoute
+	ResourceMesh         = resourceMesh
 
 	FindGatewayRouteByFourPartKey = findGatewayRouteByFourPartKey
+	FindMeshByTwoPartKey          = findMeshByTwoPartKey
 )

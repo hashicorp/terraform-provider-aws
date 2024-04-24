@@ -80,7 +80,7 @@ func sweepMeshes(region string) error {
 		}
 
 		for _, v := range page.Meshes {
-			r := ResourceMesh()
+			r := resourceMesh()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.MeshName))
 

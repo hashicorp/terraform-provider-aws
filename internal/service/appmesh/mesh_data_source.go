@@ -62,7 +62,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get("name").(string)
-	mesh, err := FindMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
+	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", meshName, err)
