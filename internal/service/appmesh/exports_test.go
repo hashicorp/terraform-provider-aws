@@ -7,7 +7,9 @@ package appmesh
 var (
 	ResourceGatewayRoute = resourceGatewayRoute
 	ResourceMesh         = resourceMesh
+	ResourceRoute        = resourceRoute
 
 	FindGatewayRouteByFourPartKey = findGatewayRouteByFourPartKey
 	FindMeshByTwoPartKey          = findMeshByTwoPartKey
+	FindRouteByFourPartKey        = findRouteByFourPartKey
 )

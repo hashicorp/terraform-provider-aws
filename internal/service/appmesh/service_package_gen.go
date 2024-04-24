@@ -78,7 +78,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRoute,
+			Factory:  resourceRoute,
 			TypeName: "aws_appmesh_route",
 			Name:     "Route",
 			Tags: &types.ServicePackageResourceTags{

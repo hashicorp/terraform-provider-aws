@@ -70,7 +70,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	routeName := d.Get("name").(string)
-	route, err := FindRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
+	route, err := findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", routeName, err)
