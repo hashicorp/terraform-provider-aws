@@ -1,14 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package globalaccelerator_test
+package globalaccelerator
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func TestEndpointGroupARNToListenerARN(t *testing.T) {
@@ -52,7 +51,7 @@ func TestEndpointGroupARNToListenerARN(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfglobalaccelerator.EndpointGroupARNToListenerARN(testCase.InputARN)
+			got, err := endpointGroupARNToListenerARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())
@@ -119,7 +118,7 @@ func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfglobalaccelerator.ListenerOrEndpointGroupARNToAcceleratorARN(testCase.InputARN)
+			got, err := listenerOrEndpointGroupARNToAcceleratorARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())

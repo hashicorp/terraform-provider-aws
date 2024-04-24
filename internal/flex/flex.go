@@ -5,6 +5,7 @@ package flex
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -419,24 +420,6 @@ func ResourceIdPartCount(id string) int {
 	return len(idParts)
 }
 
-type Set[T comparable] []T
-
-// Difference find the elements in two sets that are not similar.
-func (s Set[T]) Difference(ns Set[T]) Set[T] {
-	m := make(map[T]struct{})
-	for _, v := range ns {
-		m[v] = struct{}{}
-	}
-
-	var result []T
-	for _, v := range s {
-		if _, ok := m[v]; !ok {
-			result = append(result, v)
-		}
-	}
-	return result
-}
-
 // DiffStringMaps returns the set of keys and values that must be created, the set of keys
 // and values that must be destroyed, and the set of keys and values that are unchanged.
 func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
@@ -479,6 +462,28 @@ func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]stri
 			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove and what is unchanged.
+	remove := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		if !slices.ContainsFunc(new, eq) {
+			// Delete it!
+			remove = append(remove, e)
+		} else {
+			unchanged = append(unchanged, e)
+			// Already present, so remove from new.
+			add = slices.DeleteFunc(add, eq)
 		}
 	}
 

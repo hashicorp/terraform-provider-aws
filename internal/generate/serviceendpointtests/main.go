@@ -38,6 +38,7 @@ func main() {
 			"mwaa",                // Resolver modifies URL
 			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL
+			"route53profiles",     // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
 			"timestreamwrite":     // Uses endpoint discovery
 			continue
