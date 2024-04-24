@@ -17,43 +17,45 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_virtual_router")
-func DataSourceVirtualRouter() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_router", name="Virtual Router")
+func dataSourceVirtualRouter() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualRouterRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_updated_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
