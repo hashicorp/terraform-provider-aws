@@ -7,7 +7,6 @@ resource "aws_accessanalyzer_analyzer" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

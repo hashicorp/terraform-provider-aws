@@ -9,7 +9,6 @@ resource "aws_accessanalyzer_analyzer" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -19,4 +18,5 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
+
 

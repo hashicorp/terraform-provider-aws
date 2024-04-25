@@ -1,31 +1,26 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
-  }
-}
+provider "null" {}
 
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = var.rName
 
   tags = {
-    (var.tagKey1) = null
+    (var.unknownTagKey) = null_resource.test.id
   }
 }
+
+resource "null_resource" "test" {}
 
 variable "rName" {
   type     = string
   nullable = false
 }
 
-variable "tagKey1" {
+variable "unknownTagKey" {
   type     = string
   nullable = false
 }
 
-variable "provider_tags" {
-  type     = map(string)
-  nullable = false
-}
+
