@@ -340,15 +340,16 @@ func ResourceTargetGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"minimum_healthy_targets_count": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "off",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "off",
+										ValidateFunc: validTargetGroupHealthInput,
 									},
 									"minimum_healthy_targets_percentage": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "off",
-										ValidateFunc: validation.IntBetween(1, 100),
+										ValidateFunc: validTargetGroupHealthPercentageInput,
 									},
 								},
 							},
@@ -368,7 +369,7 @@ func ResourceTargetGroup() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "off",
-										ValidateFunc: validation.IntBetween(1, 100),
+										ValidateFunc: validTargetGroupHealthPercentageInput,
 									},
 								},
 							},
