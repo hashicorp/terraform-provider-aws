@@ -1184,8 +1184,10 @@ func flattenResponseHeadersPolicyFrameOptions(apiObject *awstypes.ResponseHeader
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"frame_option": apiObject.FrameOption,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.FrameOption; v != "" {
+		tfMap["frame_option"] = v
 	}
 
 	if v := apiObject.Override; v != nil {
@@ -1200,12 +1202,14 @@ func flattenResponseHeadersPolicyReferrerPolicy(apiObject *awstypes.ResponseHead
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"referrer_policy": apiObject.ReferrerPolicy,
-	}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Override; v != nil {
 		tfMap["override"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.ReferrerPolicy; v != "" {
+		tfMap["referrer_policy"] = v
 	}
 
 	return tfMap
