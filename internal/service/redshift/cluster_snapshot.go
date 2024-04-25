@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_cluster_snapshot", name="Cluster Snapshot")
-// @Tags(identifierAttribute="arn")
+@SDKResource("aws_redshift_cluster_snapshot", name="Cluster Snapshot")
+@Tags(identifierAttribute="arn")
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
@@ -36,10 +36,6 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
