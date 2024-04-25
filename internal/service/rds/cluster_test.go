@@ -3133,7 +3133,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccConfig_ClusterSubnetGroup(rName), fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[2]q
   engine_latest_version      = true
@@ -3144,7 +3144,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
-  availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  db_subnet_group_name      = aws_db_subnet_group.test.name
   ca_certificate_identifier = "rds-ca-2019"
   cluster_identifier        = %[1]q
   engine                    = data.aws_rds_orderable_db_instance.test.engine
