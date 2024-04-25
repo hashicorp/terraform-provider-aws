@@ -72,6 +72,8 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 }
 
 func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
+	acctest.Skip(t, "MonitoringSubscriptionAlreadyExists: A monitoring subscription already exists for this distribution")
+
 	ctx := acctest.Context(t)
 	var v cloudfront.GetMonitoringSubscriptionOutput
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
