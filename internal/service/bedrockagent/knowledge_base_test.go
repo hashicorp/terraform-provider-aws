@@ -64,6 +64,8 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 	})
 }
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
 func testAccKnowledgeBase_rds(t *testing.T) {
 	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
 
@@ -550,10 +552,9 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBase_baseRDS(rName, model string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2), fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-resource "aws_default_vpc" "test" {}
 
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -612,7 +613,7 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
 
-resource "aws_rds_cluster" "this" {
+resource "aws_rds_cluster" "test" {
   cluster_identifier          = %[1]q
   engine                      = "aurora-postgresql"
   engine_mode                 = "provisioned"
@@ -621,8 +622,9 @@ resource "aws_rds_cluster" "this" {
   master_username             = "test"
   manage_master_user_password = true
   enable_http_endpoint        = true
-  vpc_security_group_ids      = [aws_security_group.db_sg.id]
+  vpc_security_group_ids      = [aws_security_group.test.id]
   skip_final_snapshot         = true
+  db_subnet_group_name        = aws_db_subnet_group.test.name
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
@@ -630,17 +632,43 @@ resource "aws_rds_cluster" "this" {
   }
 }
 
-resource "aws_rds_cluster_instance" "this" {
-  cluster_identifier = aws_rds_cluster.this.id
-  instance_class     = "db.serverless"
-  engine             = aws_rds_cluster.this.engine
-  engine_version     = aws_rds_cluster.this.engine_version
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier  = aws_rds_cluster.test.id
+  instance_class      = "db.serverless"
+  engine              = aws_rds_cluster.test.engine
+  engine_version      = aws_rds_cluster.test.engine_version
+  publicly_accessible = true
 }
 
-resource "aws_security_group" "db_sg" {
-  name        = %[1]q
-  description = "Allow PostgreSQL traffic"
-  vpc_id      = aws_default_vpc.test.id
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name    = %[1]q
+  vpc_id  = aws_vpc.test.id
 
   ingress {
     from_port   = 5432
@@ -655,32 +683,36 @@ resource "aws_security_group" "db_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-data "aws_secretsmanager_secret_version" "this" {
-  secret_id     = aws_rds_cluster.this.master_user_secret[0].secret_arn
+data "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_rds_cluster.test.master_user_secret[0].secret_arn
   version_stage = "AWSCURRENT"
-  depends_on    = [aws_rds_cluster.this]
+  depends_on    = [aws_rds_cluster.test]
 }
 
 resource "null_resource" "db_setup" {
-  depends_on = [aws_rds_cluster_instance.this, aws_rds_cluster.this, data.aws_secretsmanager_secret_version.this]
+  depends_on = [aws_rds_cluster_instance.test, aws_rds_cluster.test, data.aws_secretsmanager_secret_version.test]
 
   provisioner "local-exec" {
     command = <<EOT
-    	sleep 60
-      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.this.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.name} --query SecretString --output text | jq -r '."password"')
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
-      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
+      sleep 60
+      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.name} --query SecretString --output text | jq -r '."password"')
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
     EOT
   }
 }
-`, rName, model)
+`, rName, model))
 }
 
 func testAccKnowledgeBaseConfig_rds(rName, model string) string {
@@ -699,9 +731,9 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   storage_configuration {
     type = "RDS"
     rds_configuration {
-      resource_arn           = aws_rds_cluster.this.arn
-      credentials_secret_arn = tolist(aws_rds_cluster.this.master_user_secret)[0].secret_arn
-      database_name          = aws_rds_cluster.this.database_name
+      resource_arn           = aws_rds_cluster.test.arn
+      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
+      database_name          = aws_rds_cluster.test.database_name
       table_name             = "bedrock_integration.bedrock_kb"
       field_mapping {
         vector_field      = "embedding"
