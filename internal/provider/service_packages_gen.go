@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
@@ -273,6 +274,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrockagent.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
+		chatbot.ServicePackage(ctx),
 		chime.ServicePackage(ctx),
 		chimesdkmediapipelines.ServicePackage(ctx),
 		chimesdkvoice.ServicePackage(ctx),

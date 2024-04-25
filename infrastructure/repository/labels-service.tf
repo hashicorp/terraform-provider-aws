@@ -39,6 +39,7 @@ variable "service_labels" {
     "braket",
     "budgets",
     "ce",
+    "chatbot",
     "chime",
     "chimesdkidentity",
     "chimesdkmediapipelines",
