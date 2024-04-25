@@ -634,7 +634,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
 	}
 
-	if err := d.Set("target_group_health", []interface{}{flattenTargetGroupTargetHealthStateAttributes(attributes, protocol)}); err != nil {
+	if err := d.Set("target_group_health", []interface{}{flattenTargetGroupHealthAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_group_health: %s", err)
 	}
 
