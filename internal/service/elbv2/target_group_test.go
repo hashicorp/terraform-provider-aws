@@ -2602,12 +2602,7 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			if testAccPreCheckGatewayLoadBalancer(ctx, t) {
-				t.Fatal("PreCheck failed!")
-			}
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
