@@ -199,10 +199,13 @@ func (r *continuousDeploymentPolicyResource) Read(ctx context.Context, request r
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.ContinuousDeploymentPolicy, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.ContinuousDeploymentPolicy.LastModifiedTime)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
