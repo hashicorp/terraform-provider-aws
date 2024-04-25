@@ -12,7 +12,6 @@ resource "aws_batch_scheduling_policy" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

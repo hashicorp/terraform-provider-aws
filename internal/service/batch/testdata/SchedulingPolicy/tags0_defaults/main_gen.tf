@@ -17,12 +17,10 @@ resource "aws_batch_scheduling_policy" "test" {
 
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)

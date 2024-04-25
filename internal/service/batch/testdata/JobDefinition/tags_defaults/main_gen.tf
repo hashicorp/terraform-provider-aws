@@ -20,7 +20,6 @@ resource "aws_batch_job_definition" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -30,7 +29,6 @@ variable "tags" {
   type     = map(string)
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)

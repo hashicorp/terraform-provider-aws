@@ -1,9 +1,18 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
+provider "null" {}
+
+resource "aws_batch_job_queue" "test" {
+  name     = var.rName
+  priority = 1
+  state    = "DISABLED"
+
+  compute_environments = [aws_batch_compute_environment.test.arn]
+
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
   }
 }
 
@@ -11,7 +20,6 @@ resource "aws_batch_compute_environment" "test" {
   compute_environment_name = var.rName
   service_role             = aws_iam_role.batch_service.arn
   type                     = "UNMANAGED"
-
 
   depends_on = [aws_iam_role_policy_attachment.batch_service]
 }
@@ -71,12 +79,25 @@ resource "aws_iam_instance_profile" "ecs_instance" {
   role = aws_iam_role_policy_attachment.ecs_instance.role
 }
 
+resource "null_resource" "test" {}
+
 variable "rName" {
   type     = string
   nullable = false
 }
 
-variable "provider_tags" {
-  type     = map(string)
+variable "unknownTagKey" {
+  type     = string
   nullable = false
 }
+
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
+  type     = string
+  nullable = false
+}
+
