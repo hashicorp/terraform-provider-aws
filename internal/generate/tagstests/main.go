@@ -109,6 +109,15 @@ type ResourceDatum struct {
 	Generator         string
 	ImportIgnore      []string
 	Implementation    implementation
+	Serialize         bool
+	PreCheck          bool
+	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	GoImports         []goImport
+}
+
+type goImport struct {
+	Path  string
+	Alias string
 }
 
 //go:embed file.tmpl
@@ -219,13 +228,50 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ExistsTypeName = typeName
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					d.Generator = attr
+					parts := strings.Split(attr, ";")
+					switch len(parts) {
+					case 1:
+						d.Generator = parts[0]
+
+					case 2:
+						d.Generator = parts[1]
+						d.GoImports = append(d.GoImports, goImport{
+							Path: parts[0],
+						})
+
+					case 3:
+						d.Generator = parts[2]
+						d.GoImports = append(d.GoImports, goImport{
+							Path:  parts[0],
+							Alias: parts[1],
+						})
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid generator value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["preCheck"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preCheck value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.PreCheck = b
+					}
+				}
+				if attr, ok := args.Keyword["serialize"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.Serialize = b
+					}
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -234,6 +280,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else if !b {
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
 						skip = true
+					}
+				}
+				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SkipEmptyTags = b
 					}
 				}
 			}

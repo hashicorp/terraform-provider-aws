@@ -243,6 +243,12 @@ func resourceServer() *schema.Resource {
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
+			"sftp_authentication_methods": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(transfer.SftpAuthenticationMethods_Values(), false),
+			},
 			"structured_log_destinations": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -370,6 +376,14 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.SftpAuthenticationMethods = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
@@ -514,6 +528,11 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("invocation_role", "")
 	}
+	if output.IdentityProviderDetails != nil {
+		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
+	} else {
+		d.Set("sftp_authentication_methods", "")
+	}
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
@@ -657,7 +676,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
+		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
@@ -670,6 +689,10 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 			if attr, ok := d.GetOk("invocation_role"); ok {
 				identityProviderDetails.InvocationRole = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("sftp_authentication_methods"); ok {
+				identityProviderDetails.SftpAuthenticationMethods = aws.String(attr.(string))
 			}
 
 			if attr, ok := d.GetOk("url"); ok {

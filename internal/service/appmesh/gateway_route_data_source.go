@@ -17,47 +17,49 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_gateway_route")
-func DataSourceGatewayRoute() *schema.Resource {
+// @SDKDataSource("aws_appmesh_gateway_route", name="Gateway Route")
+func dataSourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRouteRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"virtual_gateway_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_updated_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"virtual_gateway_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -68,7 +70,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	gatewayRouteName := d.Get("name").(string)
-	gatewayRoute, err := FindGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
+	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), gatewayRouteName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", gatewayRouteName, err)

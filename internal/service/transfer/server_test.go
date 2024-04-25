@@ -1005,6 +1005,7 @@ func testAccServer_apiGateway(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_OR_PASSWORD"),
 				),
 			},
 			{
@@ -1210,6 +1211,78 @@ func testAccServer_lambdaFunction(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_OR_PASSWORD"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PASSWORD"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PASSWORD"),
+				),
+			},
+			{
+				Config: testAccServerConfig_identityProviderType_sftpAuthenticationMethods_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_AND_PASSWORD"),
 				),
 			},
 			{
@@ -1228,7 +1301,7 @@ func testAccServer_authenticationLoginBanners(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerDestroy(ctx),
@@ -2158,6 +2231,38 @@ resource "aws_transfer_server" "test" {
   }
 }
 `, rName, forceDestroy))
+}
+
+func testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName string) string {
+	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  identity_provider_type      = "API_GATEWAY"
+  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  invocation_role             = aws_iam_role.test.arn
+  logging_role                = aws_iam_role.test.arn
+  sftp_authentication_methods = "PASSWORD"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccServerConfig_identityProviderType_sftpAuthenticationMethods_updated(rName string) string {
+	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
+resource "aws_transfer_server" "test" {
+  identity_provider_type      = "API_GATEWAY"
+  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  invocation_role             = aws_iam_role.test.arn
+  logging_role                = aws_iam_role.test.arn
+  sftp_authentication_methods = "PUBLIC_KEY_AND_PASSWORD"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccServerConfig_workflow(rName string) string {

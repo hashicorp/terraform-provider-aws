@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -147,6 +148,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
@@ -173,6 +175,7 @@ func registerSweepers() {
 	autoscalingplans.RegisterSweepers()
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
+	bcmdataexports.RegisterSweepers()
 	budgets.RegisterSweepers()
 	cloud9.RegisterSweepers()
 	cloudformation.RegisterSweepers()
@@ -299,6 +302,7 @@ func registerSweepers() {
 	timestreamwrite.RegisterSweepers()
 	transcribe.RegisterSweepers()
 	transfer.RegisterSweepers()
+	verifiedpermissions.RegisterSweepers()
 	vpclattice.RegisterSweepers()
 	waf.RegisterSweepers()
 	wafregional.RegisterSweepers()

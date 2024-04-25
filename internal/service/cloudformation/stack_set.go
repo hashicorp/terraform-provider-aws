@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -266,10 +267,66 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.TemplateURL = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateStackSetWithContext(ctx, input)
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			output, err := conn.CreateStackSetWithContext(ctx, input)
+			if err != nil {
+				return nil, err
+			}
+
+			operation, err := WaitStackSetCreated(ctx, conn, name, d.Get("call_as").(string), d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return nil, fmt.Errorf("waiting for completion (%s): %w", aws.StringValue(output.StackSetId), err)
+			}
+			return operation, nil
+		},
+		func(err error) (bool, error) {
+			if err == nil {
+				return false, nil
+			}
+
+			message := err.Error()
+
+			// IAM eventual consistency
+			if strings.Contains(message, "AccountGate check failed") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
+			if strings.Contains(message, "is not authorized") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// XXX role has insufficient YYY permissions
+			if strings.Contains(message, "role has insufficient") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// Account XXX should have YYY role with trust relationship to Role ZZZ
+			if strings.Contains(message, "role with trust relationship") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			if strings.Contains(message, "The security token included in the request is invalid") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s): %s", name, err)
+		var detail string
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "Account used is not a delegated administrator") {
+			detail = "If you confirm that you are using a delegated administrator account, verify that the IAM User or Role has the permission \"organizations:ListDelegatedAdministrators\"."
+		}
+
+		d := errs.NewErrorDiagnostic(fmt.Sprintf("creating CloudFormation StackSet (%s): %s", name, err), detail)
+		return append(diags, d)
 	}
 
 	d.SetId(name)

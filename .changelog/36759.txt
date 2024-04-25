@@ -1,0 +1,6 @@
+```release-note:enhancement
+data-source/aws_iam_policy: Add `attachment_count` attribute
+```
+```release-note:enhancement
+resource/aws_iam_policy: Add `attachment_count` attribute
+```

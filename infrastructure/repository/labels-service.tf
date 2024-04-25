@@ -271,6 +271,7 @@ variable "service_labels" {
     "rolesanywhere",
     "route53",
     "route53domains",
+    "route53profiles",
     "route53recoverycluster",
     "route53recoverycontrolconfig",
     "route53recoveryreadiness",

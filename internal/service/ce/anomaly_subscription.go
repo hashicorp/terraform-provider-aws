@@ -26,6 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	anomalySubscriptionRootElementSchemaLevel = 2
+)
+
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
 // @Tags(identifierAttribute="id")
 func resourceAnomalySubscription() *schema.Resource {
@@ -96,7 +100,7 @@ func resourceAnomalySubscription() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Optional: true,
-				Elem:     elemExpression(),
+				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
 			},
 		},
 
@@ -124,7 +128,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
-		input.AnomalySubscription.ThresholdExpression = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
+		input.AnomalySubscription.ThresholdExpression = expandExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreateAnomalySubscription(ctx, input)
@@ -160,7 +164,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
 	d.Set("name", subscription.SubscriptionName)
 	d.Set("subscriber", flattenSubscribers(subscription.Subscribers))
-	if err := d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
+	if err := d.Set("threshold_expression", []interface{}{flattenExpression(subscription.ThresholdExpression)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting threshold_expression: %s", err)
 	}
 
@@ -190,7 +194,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("threshold_expression") {
-			input.ThresholdExpression = expandCostExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
+			input.ThresholdExpression = expandExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
 		}
 
 		_, err := conn.UpdateAnomalySubscription(ctx, input)
