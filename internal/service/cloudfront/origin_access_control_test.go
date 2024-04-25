@@ -333,7 +333,6 @@ func testAccCheckOriginAccessControlDestroy(ctx context.Context) resource.TestCh
 			}
 
 			return fmt.Errorf("CloudFront Origin Access Control %s still exists", rs.Primary.ID)
-
 		}
 
 		return nil

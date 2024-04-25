@@ -2337,7 +2337,6 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 func expandCustomOriginConfigSSL(tfList []interface{}) *awstypes.OriginSslProtocols {
 	if tfList == nil {
 		return nil
-
 	}
 
 	return &awstypes.OriginSslProtocols{
