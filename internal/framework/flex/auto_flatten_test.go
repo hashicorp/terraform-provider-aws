@@ -390,13 +390,13 @@ func TestFlatten(t *testing.T) {
 			TestName:   "single string Source and single ARN Target",
 			Source:     &TestFlexAWS01{Field1: testARN},
 			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 		},
 		{
 			TestName:   "single *string Source and single ARN Target",
 			Source:     &TestFlexAWS02{Field1: aws.String(testARN)},
 			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 		},
 		{
 			TestName:   "single nil *string Source and single ARN Target",
