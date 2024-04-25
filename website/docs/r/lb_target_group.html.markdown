@@ -86,7 +86,7 @@ resource "aws_lb_target_group" "tcp-example" {
 ```terraform
 resource "aws_lb_target_group" "tcp-example" {
   name     = "tf-example-lb-nlb-tg"
-  port     = 25
+  port     = 80
   protocol = "TCP"
   vpc_id   = aws_vpc.main.id
 
@@ -197,7 +197,9 @@ This resource supports the following arguments:
 
 ### target_group_health
 
-The `target_group_health`` block supports the following:
+~> **NOTE:** This block is only supported by Application Load Balancers and Network Load Balancers.
+
+The `target_group_health` block supports the following:
 
 * `dns_failover` - (Optional) Block to configure DNS Failover requirements. See [DNS Failover](#dns_failover) below for details on attributes.
 * `unhealthy_state_routing` - (Optional) Block to configure Unhealthy State Routing requirements. See [Unhealthy State Routing](#spot-unhealthy_state_routing) below for details on attributes.
