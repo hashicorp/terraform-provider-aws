@@ -481,6 +481,30 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_availabilityZones_caCertificateIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_valid_till"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3106,6 +3130,21 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL))
+}
+
+func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  apply_immediately         = true
+  availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  ca_certificate_identifier = "rds-ca-2019"
+  cluster_identifier        = %[1]q
+  engine                    = %[2]q
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
+  skip_final_snapshot       = true
+}
+`, rName, tfrds.ClusterEngineMySQL))
 }
 
 func testAccClusterConfig_storageType(rName string, sType string) string {
