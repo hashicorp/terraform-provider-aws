@@ -1,6 +1,8 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+provider "null" {}
+
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = var.rName
   product_id                 = aws_servicecatalog_constraint.test.product_id
@@ -12,6 +14,9 @@ resource "aws_servicecatalog_provisioned_product" "test" {
     value = "${var.rName}-dest"
   }
 
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
 }
 
 resource "aws_s3_bucket" "test" {
@@ -99,7 +104,14 @@ data "aws_servicecatalog_launch_paths" "test" {
   product_id = aws_servicecatalog_product_portfolio_association.test.product_id
 }
 
+resource "null_resource" "test" {}
+
 variable "rName" {
+  type     = string
+  nullable = false
+}
+
+variable "unknownTagKey" {
   type     = string
   nullable = false
 }

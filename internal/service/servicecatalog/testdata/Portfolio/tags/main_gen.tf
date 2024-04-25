@@ -9,7 +9,6 @@ resource "aws_servicecatalog_portfolio" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

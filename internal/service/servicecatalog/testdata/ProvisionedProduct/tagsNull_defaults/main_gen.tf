@@ -108,7 +108,6 @@ data "aws_servicecatalog_launch_paths" "test" {
   product_id = aws_servicecatalog_product_portfolio_association.test.product_id
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
