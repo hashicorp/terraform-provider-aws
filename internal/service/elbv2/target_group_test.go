@@ -5107,6 +5107,8 @@ func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCou
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
+  port     = 80
+  protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
   target_group_health {
@@ -5116,7 +5118,7 @@ resource "aws_lb_target_group" "test" {
     }
 
     unhealthy_state_routing {
-      minimum_healthy_targets_count = %[4]q
+      minimum_healthy_targets_count = %[4]d
       minimum_healthy_targets_percentage = %[5]q
     }
   }
@@ -5129,7 +5131,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-`, rName, targetGroupHealthCount, unhealthyStateRoutingCount, targetGroupHealthPercentageEnabled, unhealthyStateRoutingPercentageEnabled)
+`, rName, targetGroupHealthCount, targetGroupHealthPercentageEnabled, unhealthyStateRoutingCount, unhealthyStateRoutingPercentageEnabled)
 }
 
 func testAccTargetGroupConfig_typeTCP(rName string) string {
