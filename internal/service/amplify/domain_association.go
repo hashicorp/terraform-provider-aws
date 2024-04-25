@@ -442,7 +442,7 @@ func flattenCertificateSettings(apiObject *types.Certificate) map[string]interfa
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["type"] = types.CertificateType(apiObject.Type)
+	tfMap["type"] = apiObject.Type
 
 	if v := apiObject.CertificateVerificationDNSRecord; v != nil {
 		tfMap["certificate_verification_dns_record"] = aws.ToString(v)
