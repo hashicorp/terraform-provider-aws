@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/pem"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -68,7 +68,7 @@ func DataSourcePublicKey() *schema.Resource {
 
 func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 	keyId := d.Get("key_id").(string)
 
 	input := &kms.GetPublicKeyInput{
@@ -76,16 +76,16 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("grant_tokens"); ok {
-		input.GrantTokens = aws.StringSlice(v.([]string))
+		input.GrantTokens = v.([]string)
 	}
 
-	output, err := conn.GetPublicKeyWithContext(ctx, input)
+	output, err := conn.GetPublicKey(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while describing KMS public key (%s): %s", keyId, err)
 	}
 
-	d.SetId(aws.StringValue(output.KeyId))
+	d.SetId(aws.ToString(output.KeyId))
 
 	d.Set("arn", output.KeyId)
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
@@ -96,11 +96,11 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 		Bytes: output.PublicKey,
 	})))
 
-	if err := d.Set("encryption_algorithms", flex.FlattenStringList(output.EncryptionAlgorithms)); err != nil {
+	if err := d.Set("encryption_algorithms", flex.FlattenStringyValueList(output.EncryptionAlgorithms)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_algorithms: %s", err)
 	}
 
-	if err := d.Set("signing_algorithms", flex.FlattenStringList(output.SigningAlgorithms)); err != nil {
+	if err := d.Set("signing_algorithms", flex.FlattenStringyValueList(output.SigningAlgorithms)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signing_algorithms: %s", err)
 	}
 

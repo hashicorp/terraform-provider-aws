@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -60,7 +60,7 @@ const (
 func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	input := &kms.DescribeCustomKeyStoresInput{}
 
@@ -80,7 +80,7 @@ func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.KMS, create.ErrActionReading, DSNameCustomKeyStore, ksID, err)
 	}
 
-	d.SetId(aws.StringValue(keyStore.CustomKeyStoreId))
+	d.SetId(aws.ToString(keyStore.CustomKeyStoreId))
 	d.Set("custom_key_store_name", keyStore.CustomKeyStoreName)
 	d.Set("custom_key_store_id", keyStore.CustomKeyStoreId)
 	d.Set("cloud_hsm_cluster_id", keyStore.CloudHsmClusterId)

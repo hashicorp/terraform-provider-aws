@@ -9,8 +9,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,8 +20,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -63,11 +67,11 @@ func ResourceKey() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 22),
 			},
 			"customer_master_key_spec": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      kms.CustomerMasterKeySpecSymmetricDefault,
-				ValidateFunc: validation.StringInSlice(kms.CustomerMasterKeySpec_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.CustomerMasterKeySpecSymmetricDefault,
+				ValidateDiagFunc: enum.Validate[awstypes.CustomerMasterKeySpec](),
 			},
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
@@ -95,11 +99,11 @@ func ResourceKey() *schema.Resource {
 				Computed: true,
 			},
 			"key_usage": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      kms.KeyUsageTypeEncryptDecrypt,
-				ValidateFunc: validation.StringInSlice(kms.KeyUsageType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.KeyUsageTypeEncryptDecrypt,
+				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
 			},
 			"multi_region": {
 				Type:     schema.TypeBool,
@@ -134,12 +138,12 @@ func ResourceKey() *schema.Resource {
 
 func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	input := &kms.CreateKeyInput{
-		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
-		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
-		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
+		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
+		CustomerMasterKeySpec:          awstypes.CustomerMasterKeySpec(d.Get("customer_master_key_spec").(string)),
+		KeyUsage:                       awstypes.KeyUsageType(d.Get("key_usage").(string)),
 		Tags:                           getTagsIn(ctx),
 	}
 
@@ -161,12 +165,12 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("custom_key_store_id"); ok {
-		input.Origin = aws.String(kms.OriginTypeAwsCloudhsm)
+		input.Origin = awstypes.OriginTypeAwsCloudhsm
 		input.CustomKeyStoreId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("xks_key_id"); ok {
-		input.Origin = aws.String(kms.OriginTypeExternalKeyStore)
+		input.Origin = awstypes.OriginTypeExternalKeyStore
 		input.XksKeyId = aws.String(v.(string))
 	}
 
@@ -175,14 +179,14 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	output, err := WaitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func() (*kms.CreateKeyOutput, error) {
-		return conn.CreateKeyWithContext(ctx, input)
+		return conn.CreateKey(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating KMS Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
+	d.SetId(aws.ToString(output.KeyMetadata.KeyId))
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -216,7 +220,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -231,8 +235,8 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", d.Id(), err)
 	}
 
-	if aws.BoolValue(key.metadata.MultiRegion) &&
-		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypePrimary {
+	if aws.ToBool(key.metadata.MultiRegion) &&
+		key.metadata.MultiRegionConfiguration.MultiRegionKeyType != awstypes.MultiRegionKeyTypePrimary {
 		return sdkdiag.AppendErrorf(diags, "KMS Key (%s) is not a multi-Region primary key", d.Id())
 	}
 
@@ -259,14 +263,14 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("policy", policyToSet)
 
-	setTagsOut(ctx, key.tags)
+	setTagsOut(ctx, slices.Values(key.tags))
 
 	return diags
 }
 
 func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -307,7 +311,7 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -316,17 +320,18 @@ func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("deletion_window_in_days"); ok {
-		input.PendingWindowInDays = aws.Int64(int64(v.(int)))
+		input.PendingWindowInDays = aws.Int32(int32(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting KMS Key: (%s)", d.Id())
-	_, err := conn.ScheduleKeyDeletionWithContext(ctx, input)
+	_, err := conn.ScheduleKeyDeletion(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
-	if tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidStateException, "is pending deletion") {
+	var NotFoundException = awstypes.NotFoundException{}
+	if tfawserr.ErrMessageContains(err, NotFoundException.ErrorCode(), "is pending deletion") {
 		return diags
 	}
 
@@ -342,13 +347,13 @@ func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 type kmsKey struct {
-	metadata *kms.KeyMetadata
+	metadata *awstypes.KeyMetadata
 	policy   string
 	rotation *bool
-	tags     []*kms.Tag
+	tags     []*awstypes.Tag
 }
 
-func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
+func findKey(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKey, error) {
 	// Wait for propagation since KMS is eventually consistent.
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		var err error
@@ -366,13 +371,13 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 			return nil, fmt.Errorf("reading KMS Key (%s) policy: %w", keyID, err)
 		}
 
-		key.policy, err = structure.NormalizeJsonString(aws.StringValue(policy))
+		key.policy, err = structure.NormalizeJsonString(aws.ToString(policy))
 
 		if err != nil {
 			return nil, fmt.Errorf("policy contains invalid JSON: %w", err)
 		}
 
-		if aws.StringValue(key.metadata.Origin) == kms.OriginTypeAwsKms {
+		if key.metadata.Origin == awstypes.OriginTypeAwsKms {
 			key.rotation, err = FindKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 			if err != nil {
@@ -382,7 +387,7 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 
 		tags, err := listTags(ctx, conn, keyID)
 
-		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{LastError: err}
 		}
 
@@ -390,7 +395,7 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 			return nil, fmt.Errorf("listing tags for KMS Key (%s): %w", keyID, err)
 		}
 
-		key.tags = Tags(tags)
+		key.tags = slices.ToPointers(Tags(tags))
 
 		return &key, nil
 	}, isNewResource)
@@ -402,13 +407,13 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 	return outputRaw.(*kmsKey), nil
 }
 
-func updateKeyDescription(ctx context.Context, conn *kms.KMS, keyID string, description string) error {
+func updateKeyDescription(ctx context.Context, conn *kms.Client, keyID string, description string) error {
 	input := &kms.UpdateKeyDescriptionInput{
 		Description: aws.String(description),
 		KeyId:       aws.String(keyID),
 	}
 
-	_, err := conn.UpdateKeyDescriptionWithContext(ctx, input)
+	_, err := conn.UpdateKeyDescription(ctx, input)
 	if err != nil {
 		return fmt.Errorf("updating description: %w", err)
 	}
@@ -422,7 +427,7 @@ func updateKeyDescription(ctx context.Context, conn *kms.KMS, keyID string, desc
 	return nil
 }
 
-func updateKeyEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled bool) error {
+func updateKeyEnabled(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
 	var action string
 
 	updateFunc := func() (interface{}, error) {
@@ -431,13 +436,13 @@ func updateKeyEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled 
 		if enabled {
 			log.Printf("[DEBUG] Enabling KMS Key (%s)", keyID)
 			action = "enabling"
-			_, err = conn.EnableKeyWithContext(ctx, &kms.EnableKeyInput{
+			_, err = conn.EnableKey(ctx, &kms.EnableKeyInput{
 				KeyId: aws.String(keyID),
 			})
 		} else {
 			log.Printf("[DEBUG] Disabling KMS Key (%s)", keyID)
 			action = "disabling"
-			_, err = conn.DisableKeyWithContext(ctx, &kms.DisableKeyInput{
+			_, err = conn.DisableKey(ctx, &kms.DisableKeyInput{
 				KeyId: aws.String(keyID),
 			})
 		}
@@ -445,7 +450,8 @@ func updateKeyEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled 
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	var NotFoundException = awstypes.NotFoundException{}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, NotFoundException.ErrorCode())
 	if err != nil {
 		return fmt.Errorf("%s KMS Key: %w", action, err)
 	}
@@ -460,7 +466,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled 
 	return nil
 }
 
-func updateKeyPolicy(ctx context.Context, conn *kms.KMS, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
+func updateKeyPolicy(ctx context.Context, conn *kms.Client, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
 	if err != nil {
 		return fmt.Errorf("policy contains invalid JSON: %w", err)
@@ -470,18 +476,19 @@ func updateKeyPolicy(ctx context.Context, conn *kms.KMS, keyID string, policy st
 		var err error
 
 		input := &kms.PutKeyPolicyInput{
-			BypassPolicyLockoutSafetyCheck: aws.Bool(bypassPolicyLockoutSafetyCheck),
+			BypassPolicyLockoutSafetyCheck: bypassPolicyLockoutSafetyCheck,
 			KeyId:                          aws.String(keyID),
 			Policy:                         aws.String(policy),
 			PolicyName:                     aws.String(PolicyNameDefault),
 		}
 
-		_, err = conn.PutKeyPolicyWithContext(ctx, input)
+		_, err = conn.PutKeyPolicy(ctx, input)
 
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
+	var NotFoundException, MalformedPolicyDocumentException = awstypes.NotFoundException{}, awstypes.MalformedPolicyDocumentException{}
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, NotFoundException.ErrorCode(), MalformedPolicyDocumentException.ErrorCode())
 	if err != nil {
 		return fmt.Errorf("updating policy: %w", err)
 	}
@@ -495,7 +502,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.KMS, keyID string, policy st
 	return nil
 }
 
-func updateKeyRotationEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled bool) error {
+func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
 	var action string
 
 	updateFunc := func() (interface{}, error) {
@@ -503,12 +510,12 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.KMS, keyID string, 
 
 		if enabled {
 			log.Printf("[DEBUG] Enabling KMS Key (%s) key rotation", keyID)
-			_, err = conn.EnableKeyRotationWithContext(ctx, &kms.EnableKeyRotationInput{
+			_, err = conn.EnableKeyRotation(ctx, &kms.EnableKeyRotationInput{
 				KeyId: aws.String(keyID),
 			})
 		} else {
 			log.Printf("[DEBUG] Disabling KMS Key (%s) key rotation", keyID)
-			_, err = conn.DisableKeyRotationWithContext(ctx, &kms.DisableKeyRotationInput{
+			_, err = conn.DisableKeyRotation(ctx, &kms.DisableKeyRotationInput{
 				KeyId: aws.String(keyID),
 			})
 		}
@@ -516,7 +523,8 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.KMS, keyID string, 
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
+	var NotFoundException, DisabledException = awstypes.NotFoundException{}, awstypes.DisabledException{}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, KeyRotationUpdatedTimeout, updateFunc, NotFoundException.ErrorCode(), DisabledException.ErrorCode())
 	if err != nil {
 		return fmt.Errorf("%s key rotation: %w", action, err)
 	}

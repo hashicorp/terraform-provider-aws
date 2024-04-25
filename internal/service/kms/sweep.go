@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,19 +33,21 @@ func sweepKeys(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &kms.ListKeysInput{
-		Limit: aws.Int64(1000),
+		Limit: aws.Int32(1000),
 	}
-	conn := client.KMSConn(ctx)
+	conn := client.KMSClient(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListKeysPagesWithContext(ctx, input, func(page *kms.ListKeysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := kms.NewListKeysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return err
 		}
 
 		for _, v := range page.Keys {
-			keyID := aws.StringValue(v.KeyId)
+			keyID := aws.ToString(v.KeyId)
 			key, err := FindKeyByID(ctx, conn, keyID)
 
 			if tfresource.NotFound(err) {
@@ -60,11 +63,11 @@ func sweepKeys(region string) error {
 				continue
 			}
 
-			if aws.StringValue(key.KeyManager) == kms.KeyManagerTypeAws {
+			if key.KeyManager == awstypes.KeyManagerTypeAws {
 				log.Printf("[DEBUG] Skipping KMS Key (%s): managed by AWS", keyID)
 				continue
 			}
-			if aws.StringValue(key.KeyState) == kms.KeyStatePendingDeletion {
+			if key.KeyState == awstypes.KeyStatePendingDeletion {
 				log.Printf("[DEBUG] Skipping KMS Key (%s): pending deletion", keyID)
 				continue
 			}
@@ -77,9 +80,7 @@ func sweepKeys(region string) error {
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
+	}
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)

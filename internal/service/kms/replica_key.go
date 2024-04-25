@@ -8,17 +8,20 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -103,7 +106,7 @@ func ResourceReplicaKey() *schema.Resource {
 
 func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
 	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
@@ -119,7 +122,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
-		input.BypassPolicyLockoutSafetyCheck = aws.Bool(v.(bool))
+		input.BypassPolicyLockoutSafetyCheck = v.(bool)
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -134,14 +137,14 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	replicateConn := meta.(*conns.AWSClient).KMSConnForRegion(ctx, primaryKeyARN.Region)
 
 	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
-		return replicateConn.ReplicateKeyWithContext(ctx, input)
+		return replicateConn.ReplicateKey(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating KMS Replica Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ReplicaKeyMetadata.KeyId))
+	d.SetId(aws.ToString(output.ReplicaKeyMetadata.KeyId))
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -175,7 +178,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -190,16 +193,16 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading KMS Replica Key (%s): %s", d.Id(), err)
 	}
 
-	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
+	if keyManager := key.metadata.KeyManager; keyManager != awstypes.KeyManagerTypeCustomer {
 		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
 	}
 
-	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeAwsKms {
+	if origin := key.metadata.Origin; origin != awstypes.OriginTypeAwsKms {
 		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) has invalid Origin: %s", d.Id(), origin)
 	}
 
-	if !aws.BoolValue(key.metadata.MultiRegion) ||
-		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypeReplica {
+	if !aws.ToBool(key.metadata.MultiRegion) ||
+		key.metadata.MultiRegionConfiguration.MultiRegionKeyType != awstypes.MultiRegionKeyTypeReplica {
 		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) is not a multi-Region replica key", d.Id())
 	}
 
@@ -220,14 +223,14 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("policy", policyToSet)
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
-	setTagsOut(ctx, key.tags)
+	setTagsOut(ctx, slices.Values(key.tags))
 
 	return diags
 }
 
 func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -262,7 +265,7 @@ func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
@@ -271,17 +274,17 @@ func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("deletion_window_in_days"); ok {
-		input.PendingWindowInDays = aws.Int64(int64(v.(int)))
+		input.PendingWindowInDays = aws.Int32(int32(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting KMS Replica Key: (%s)", d.Id())
-	_, err := conn.ScheduleKeyDeletionWithContext(ctx, input)
+	_, err := conn.ScheduleKeyDeletion(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
-
-	if tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidStateException, "is pending deletion") {
+	var InvalidStateException = awstypes.KMSInvalidStateException{}
+	if tfawserr.ErrMessageContains(err, InvalidStateException.ErrorCode(), "is pending deletion") {
 		return diags
 	}
 

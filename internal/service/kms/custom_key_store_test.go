@@ -10,8 +10,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +38,7 @@ func testAccCustomKeyStore_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var customkeystore kms.CustomKeyStoresListEntry
+	var customkeystore awstypes.CustomKeyStoresListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_custom_key_store.test"
 
@@ -47,7 +48,7 @@ func testAccCustomKeyStore_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.KMSEndpointID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
@@ -85,7 +86,7 @@ func testAccCustomKeyStore_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var customkeystore kms.CustomKeyStoresListEntry
+	var customkeystore awstypes.CustomKeyStoresListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_custom_key_store.test"
 
@@ -95,7 +96,7 @@ func testAccCustomKeyStore_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.KMSEndpointID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
@@ -128,7 +129,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var customkeystore kms.CustomKeyStoresListEntry
+	var customkeystore awstypes.CustomKeyStoresListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_custom_key_store.test"
 
@@ -138,7 +139,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.KMSEndpointID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
@@ -159,7 +160,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 
 func testAccCheckCustomKeyStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_custom_key_store" {
@@ -182,7 +183,7 @@ func testAccCheckCustomKeyStoreDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customkeystore *kms.CustomKeyStoresListEntry) resource.TestCheckFunc {
+func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customkeystore *awstypes.CustomKeyStoresListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -193,7 +194,7 @@ func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customke
 			return create.Error(names.KMS, create.ErrActionCheckingExistence, tfkms.ResNameCustomKeyStore, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		in := &kms.DescribeCustomKeyStoresInput{
 			CustomKeyStoreId: aws.String(rs.Primary.ID),
@@ -211,10 +212,10 @@ func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customke
 }
 
 func testAccCustomKeyStoresPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 	input := &kms.DescribeCustomKeyStoresInput{}
-	_, err := conn.DescribeCustomKeyStoresWithContext(ctx, input)
+	_, err := conn.DescribeCustomKeyStores(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -7,49 +7,39 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAliasByName(ctx context.Context, conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
+func FindAliasByName(ctx context.Context, conn *kms.Client, name string) (*awstypes.AliasListEntry, error) {
 	input := &kms.ListAliasesInput{}
-	var output *kms.AliasListEntry
+	pages := kms.NewListAliasesPaginator(conn, input)
 
-	err := conn.ListAliasesPagesWithContext(ctx, input, func(page *kms.ListAliasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, alias := range page.Aliases {
-			if aws.StringValue(alias.AliasName) == name {
-				output = alias
-
-				return false
+			if aws.ToString(alias.AliasName) == name {
+				return &alias, nil
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
-	if output == nil {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
+	return nil, &retry.NotFoundError{}
 }
 
-func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, in *kms.DescribeCustomKeyStoresInput) (*kms.CustomKeyStoresListEntry, error) {
-	out, err := conn.DescribeCustomKeyStoresWithContext(ctx, in)
+func FindCustomKeyStoreByID(ctx context.Context, conn *kms.Client, in *kms.DescribeCustomKeyStoresInput) (*awstypes.CustomKeyStoresListEntry, error) {
+	out, err := conn.DescribeCustomKeyStores(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeCustomKeyStoreNotFoundException) {
+	if errs.IsA[*awstypes.CustomKeyStoreNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -59,21 +49,21 @@ func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, in *kms.Describe
 		return nil, err
 	}
 
-	if out == nil || out.CustomKeyStores[0] == nil {
+	if out == nil || len(out.CustomKeyStores) == 0 {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.CustomKeyStores[0], nil
+	return &out.CustomKeyStores[0], nil
 }
 
-func FindKeyByID(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
+func FindKeyByID(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(id),
 	}
 
-	output, err := conn.DescribeKeyWithContext(ctx, input)
+	output, err := conn.DescribeKey(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -91,9 +81,9 @@ func FindKeyByID(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadat
 	keyMetadata := output.KeyMetadata
 
 	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
-	if state := aws.StringValue(keyMetadata.KeyState); state == kms.KeyStatePendingDeletion || state == kms.KeyStatePendingReplicaDeletion {
+	if state := keyMetadata.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
@@ -109,18 +99,18 @@ func findDefaultKey(ctx context.Context, client *conns.AWSClient, service, regio
 		return "", fmt.Errorf("finding default key: %s", err)
 	}
 
-	return aws.StringValue(k.Arn), nil
+	return aws.ToString(k.Arn), nil
 }
 
-func FindKeyPolicyByKeyIDAndPolicyName(ctx context.Context, conn *kms.KMS, keyID, policyName string) (*string, error) {
+func FindKeyPolicyByKeyIDAndPolicyName(ctx context.Context, conn *kms.Client, keyID, policyName string) (*string, error) {
 	input := &kms.GetKeyPolicyInput{
 		KeyId:      aws.String(keyID),
 		PolicyName: aws.String(policyName),
 	}
 
-	output, err := conn.GetKeyPolicyWithContext(ctx, input)
+	output, err := conn.GetKeyPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -138,14 +128,14 @@ func FindKeyPolicyByKeyIDAndPolicyName(ctx context.Context, conn *kms.KMS, keyID
 	return output.Policy, nil
 }
 
-func FindKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.KMS, keyID string) (*bool, error) {
+func FindKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID string) (*bool, error) {
 	input := &kms.GetKeyRotationStatusInput{
 		KeyId: aws.String(keyID),
 	}
 
-	output, err := conn.GetKeyRotationStatusWithContext(ctx, input)
+	output, err := conn.GetKeyRotationStatus(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -160,5 +150,5 @@ func FindKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.KMS, keyID str
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.KeyRotationEnabled, nil
+	return &output.KeyRotationEnabled, nil
 }

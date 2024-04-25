@@ -6,7 +6,7 @@ package kms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,7 +41,7 @@ func DataSourceAlias() *schema.Resource {
 
 func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	target := d.Get("name").(string)
 
@@ -51,7 +51,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", target, err)
 	}
 
-	d.SetId(aws.StringValue(alias.AliasArn))
+	d.SetId(aws.ToString(alias.AliasArn))
 	d.Set("arn", alias.AliasArn)
 
 	// ListAliases can return an alias for an AWS service key (e.g.
