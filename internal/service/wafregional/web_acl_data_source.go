@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_wafregional_web_acl")
-func DataSourceWebACL() *schema.Resource {
+// @SDKDataSource("aws_wafregional_web_acl", name="Web ACL")
+func dataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWebACLRead,
 

@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
@@ -158,6 +159,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
@@ -189,6 +191,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -265,6 +268,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		autoscalingplans.ServicePackage(ctx),
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
+		bcmdataexports.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
@@ -392,6 +396,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
 		neptune.ServicePackage(ctx),
+		neptunegraph.ServicePackage(ctx),
 		networkfirewall.ServicePackage(ctx),
 		networkmanager.ServicePackage(ctx),
 		oam.ServicePackage(ctx),
@@ -423,6 +428,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		rolesanywhere.ServicePackage(ctx),
 		route53.ServicePackage(ctx),
 		route53domains.ServicePackage(ctx),
+		route53profiles.ServicePackage(ctx),
 		route53recoverycontrolconfig.ServicePackage(ctx),
 		route53recoveryreadiness.ServicePackage(ctx),
 		route53resolver.ServicePackage(ctx),

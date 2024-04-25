@@ -5,6 +5,7 @@ package flex
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -215,6 +217,10 @@ func FlattenStringValueSet(list []string) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
+func FlattenStringValueSetCaseInsensitive(list []string) *schema.Set {
+	return schema.NewSet(sdkv2.StringCaseInsensitiveSetFunc, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
+}
+
 func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringyValueList[E](list))
 }
@@ -232,6 +238,14 @@ func ExpandInt64Set(configured *schema.Set) []*int64 {
 
 func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
+}
+
+// Takes the result of flatmap.Expand for an array of int32
+// and returns a []int32
+func ExpandInt32ValueList(configured []interface{}) []int32 {
+	return tfslices.ApplyToAll(configured, func(v any) int32 {
+		return int32(v.(int))
+	})
 }
 
 // Takes the result of flatmap.Expand for an array of int64
@@ -354,6 +368,11 @@ func IntValueToString(v int) *string {
 }
 
 // Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int32ToStringValue(v *int32) string {
+	return strconv.FormatInt(int64(aws.Int32Value(v)), 10)
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
 func Int64ToStringValue(v *int64) string {
 	return strconv.FormatInt(aws.Int64Value(v), 10)
 }
@@ -393,24 +412,6 @@ func StringValueToInt64Value(v string) int64 {
 func ResourceIdPartCount(id string) int {
 	idParts := strings.Split(id, ResourceIdSeparator)
 	return len(idParts)
-}
-
-type Set[T comparable] []T
-
-// Difference find the elements in two sets that are not similar.
-func (s Set[T]) Difference(ns Set[T]) Set[T] {
-	m := make(map[T]struct{})
-	for _, v := range ns {
-		m[v] = struct{}{}
-	}
-
-	var result []T
-	for _, v := range s {
-		if _, ok := m[v]; !ok {
-			result = append(result, v)
-		}
-	}
-	return result
 }
 
 // DiffStringMaps returns the set of keys and values that must be created, the set of keys
@@ -455,6 +456,28 @@ func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]stri
 			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove and what is unchanged.
+	remove := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		if !slices.ContainsFunc(new, eq) {
+			// Delete it!
+			remove = append(remove, e)
+		} else {
+			unchanged = append(unchanged, e)
+			// Already present, so remove from new.
+			add = slices.DeleteFunc(add, eq)
 		}
 	}
 

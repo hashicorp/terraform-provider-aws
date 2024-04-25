@@ -39,6 +39,7 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &out),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "attachment_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "policy", expectedPolicyText),

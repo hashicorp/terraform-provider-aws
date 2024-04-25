@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_organizations_organization: Add `master_account_name` attribute
+```
+
+```release-note:enhancement
+resource/aws_organizations_organization: Add `master_account_name` attribute
+```

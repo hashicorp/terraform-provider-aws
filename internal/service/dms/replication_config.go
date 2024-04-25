@@ -113,11 +113,16 @@ func ResourceReplicationConfig() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
+			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
 			"replication_settings": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringIsJSON),
+					validateReplicationSettings,
+				),
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},

@@ -131,11 +131,13 @@ The following arguments are optional:
 
 ### DataStorage Configuration
 
+* `minimum` - The lower limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `maximum` - The upper limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `unit` - The unit that the storage is measured in, in GB.
 
 ### ECPUPerSecond Configuration
 
+* `minimum` - The minimum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 * `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 
 ## Attribute Reference
@@ -195,4 +197,4 @@ Using `terraform import`, import ElastiCache Serverless Cache using the `name`. 
 % terraform import aws_elasticache_serverless_cache.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c07e1ada9de186d716b2179ba0d3a5345e0b042610cce9ae75e76b68dec9a411 -->
+<!-- cache-key: cdktf-0.20.1 input-fbb993fb517edf3a5bef4122fc72e9da5bfc33d3e99688e1a36262b32f3c49d0 -->
