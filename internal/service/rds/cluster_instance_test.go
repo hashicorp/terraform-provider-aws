@@ -1365,6 +1365,10 @@ func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAcces
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -1373,6 +1377,10 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, 2),
 		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
@@ -1390,6 +1398,10 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_rds_cluster" "test" {
