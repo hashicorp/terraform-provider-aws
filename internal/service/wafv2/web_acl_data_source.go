@@ -118,10 +118,10 @@ func getWebAclDataSourceByArn(ctx context.Context, conn *wafv2.WAFV2, arn string
 		return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for source: %s", arn)
 	}
 
-	d.SetId(*output.WebACL.Id)
-	d.Set("arn", *output.WebACL.ARN)
-	d.Set("name", *output.WebACL.Name)
-	d.Set("description", *output.WebACL.Description)
+	d.SetId(aws.StringValue(output.WebACL.Id))
+	d.Set("arn", output.WebACL.ARN)
+	d.Set("name", output.WebACL.Name)
+	d.Set("description", output.WebACL.Description)
 	return diags
 }
 
