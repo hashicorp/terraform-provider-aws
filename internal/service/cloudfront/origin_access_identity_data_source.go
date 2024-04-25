@@ -6,6 +6,7 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,6 +63,7 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	apiObject := output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig
+	d.SetId(aws.ToString(output.CloudFrontOriginAccessIdentity.Id))
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set("comment", apiObject.Comment)
