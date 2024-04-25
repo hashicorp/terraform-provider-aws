@@ -932,7 +932,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {
-		err = d.Set("logging_config", []interface{}{})
+		d.Set("logging_config", []interface{}{})
 	}
 	if distributionConfig.CacheBehaviors != nil {
 		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
@@ -993,7 +993,8 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if errs.IsA[*awstypes.PreconditionFailed](err) {
-			etag, err := distroETag(ctx, conn, d.Id())
+			var etag string
+			etag, err = distroETag(ctx, conn, d.Id())
 
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
