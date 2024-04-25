@@ -56,6 +56,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 		},
 		Blocks: map[string]schema.Block{
 			"staging_distribution_dns_names": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[stagingDistributionDNSNamesModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
@@ -64,8 +65,8 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"items": schema.SetAttribute{
-							Optional:    true,
 							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
 							ElementType: types.StringType,
 						},
 						"quantity": schema.Int64Attribute{
@@ -75,6 +76,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 				},
 			},
 			"traffic_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[trafficConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -87,6 +89,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 					},
 					Blocks: map[string]schema.Block{
 						"single_header_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[continuousDeploymentSingleHeaderConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -102,6 +105,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 							},
 						},
 						"single_weight_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[continuousDeploymentSingleWeightConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -113,6 +117,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 								},
 								Blocks: map[string]schema.Block{
 									"session_stickiness_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[sessionStickinessConfigModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
