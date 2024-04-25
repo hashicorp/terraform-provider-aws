@@ -1196,7 +1196,7 @@ resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "container"
   container_properties = jsonencode({
-    command = ["ls", %[2]q],
+    command = ["ls", "%[2]s"],
     image   = "busybox"
 
     resourceRequirements = [
