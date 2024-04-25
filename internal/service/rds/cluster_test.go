@@ -3151,6 +3151,7 @@ resource "aws_rds_cluster" "test" {
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage         = 100
+  iops                      = 1000
   db_cluster_instance_class = "db.r6gd.xlarge"
   master_password           = "avoid-plaintext-passwords"
   master_username           = "tfacctest"
