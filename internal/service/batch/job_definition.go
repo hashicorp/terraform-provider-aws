@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -439,8 +441,137 @@ func ResourceJobDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			jobDefinitionCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
+}
+
+func jobDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if d.Id() != "" && needsJobDefUpdate(d) && d.Get("arn").(string) != "" {
+		d.SetNewComputed("arn")
+		d.SetNewComputed("revision")
+		d.SetNewComputed("id")
+	}
+
+	return nil
+}
+
+// needsJobDefUpdate determines if the Job Definition needs to be updated. This is the
+// cost of not forcing new when updates to one argument (eg, container_properties)
+// simultaneously impact a computed attribute (eg, arn). The real challenge here is that
+// we have to figure out if a change is **GOING** to cause a new revision to be created,
+// without the benefit of AWS just telling us. This is necessary because waiting until
+// after AWS tells us is too late, and practitioners will need to refresh or worse, get
+// an inconsistent plan. BUT, if we SetNewComputed **without** a change, we'll get a
+// testing error: "the non-refresh plan was not empty".
+func needsJobDefUpdate(d *schema.ResourceDiff) bool {
+	if d.HasChange("container_properties") {
+		o, n := d.GetChange("container_properties")
+
+		equivalent, err := EquivalentContainerPropertiesJSON(o.(string), n.(string))
+		if err != nil {
+			return false
+		}
+
+		if !equivalent {
+			return true
+		}
+	}
+
+	if d.HasChange("node_properties") {
+		o, n := d.GetChange("node_properties")
+
+		equivalent, err := EquivalentNodePropertiesJSON(o.(string), n.(string))
+		if err != nil {
+			return false
+		}
+
+		if !equivalent {
+			return true
+		}
+	}
+
+	if d.HasChange("eks_properties") {
+		o, n := d.GetChange("eks_properties")
+		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+			return false
+		}
+
+		if d.Get("type").(string) != batch.JobDefinitionTypeContainer {
+			return false
+		}
+
+		var oeks, neks *batch.EksPodProperties
+		if len(o.([]interface{})) > 0 {
+			oProps := o.([]interface{})[0].(map[string]interface{})
+			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
+				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
+			}
+		}
+
+		if len(n.([]interface{})) > 0 {
+			nProps := n.([]interface{})[0].(map[string]interface{})
+			if npodProps, ok := nProps["pod_properties"].([]interface{}); ok && len(npodProps) > 0 {
+				neks = expandEKSPodProperties(npodProps[0].(map[string]interface{}))
+			}
+		}
+
+		return !reflect.DeepEqual(oeks, neks)
+	}
+
+	if d.HasChange("retry_strategy") {
+		o, n := d.GetChange("retry_strategy")
+		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+			return false
+		}
+
+		var ors, nrs *batch.RetryStrategy
+		if len(o.([]interface{})) > 0 {
+			oProps := o.([]interface{})[0].(map[string]interface{})
+			ors = expandRetryStrategy(oProps)
+		}
+
+		if len(n.([]interface{})) > 0 {
+			nProps := n.([]interface{})[0].(map[string]interface{})
+			nrs = expandRetryStrategy(nProps)
+		}
+
+		return !reflect.DeepEqual(ors, nrs)
+	}
+
+	if d.HasChange("timeout") {
+		o, n := d.GetChange("timeout")
+		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+			return false
+		}
+
+		var ors, nrs *batch.JobTimeout
+		if len(o.([]interface{})) > 0 {
+			oProps := o.([]interface{})[0].(map[string]interface{})
+			ors = expandJobTimeout(oProps)
+		}
+
+		if len(n.([]interface{})) > 0 {
+			nProps := n.([]interface{})[0].(map[string]interface{})
+			nrs = expandJobTimeout(nProps)
+		}
+
+		return !reflect.DeepEqual(ors, nrs)
+	}
+
+	if d.HasChanges(
+		"propagate_tags",
+		"parameters",
+		"platform_capabilities",
+		"scheduling_priority",
+		"type",
+	) {
+		return true
+	}
+
+	return false
 }
 
 func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -684,7 +815,6 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		jd, err := conn.RegisterJobDefinitionWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
 		}
@@ -693,6 +823,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		currentARN := d.Get("arn").(string)
 		d.SetId(aws.StringValue(jd.JobDefinitionArn))
 		d.Set("revision", jd.Revision)
+		d.Set("arn", jd.JobDefinitionArn)
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting Previous Batch Job Definition: %s", currentARN)
@@ -889,7 +1020,7 @@ func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
 	apiObject := &batch.EvaluateOnExit{}
 
 	if v, ok := tfMap["action"].(string); ok && v != "" {
-		apiObject.Action = aws.String(v)
+		apiObject.Action = aws.String(strings.ToLower(v))
 	}
 
 	if v, ok := tfMap["on_exit_code"].(string); ok && v != "" {
