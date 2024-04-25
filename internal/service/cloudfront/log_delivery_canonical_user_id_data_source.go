@@ -43,7 +43,6 @@ func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.Res
 		region = v.(string)
 	}
 
-	names.PartitionForRegion(region)
 	if v := names.PartitionForRegion(region); v == names.ChinaPartitionID {
 		canonicalId = cnLogDeliveryCanonicalUserID
 	}
