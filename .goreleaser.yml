@@ -1,7 +1,7 @@
 archives:
   - files:
-      # Ensure only built binary is archived
-      - 'none*'
+      # Ensure only built binary and license file are archived
+      - 'LICENSE'
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 before:
