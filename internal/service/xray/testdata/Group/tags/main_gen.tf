@@ -8,7 +8,6 @@ resource "aws_xray_group" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

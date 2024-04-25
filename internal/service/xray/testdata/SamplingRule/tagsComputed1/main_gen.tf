@@ -1,6 +1,8 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+provider "null" {}
+
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = var.rName
   priority       = 5
@@ -18,16 +20,20 @@ resource "aws_xray_sampling_rule" "test" {
     Hello = "World"
   }
 
-  tags = var.tags
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
 }
+
+resource "null_resource" "test" {}
 
 variable "rName" {
   type     = string
   nullable = false
 }
 
-variable "tags" {
-  type     = map(string)
+variable "unknownTagKey" {
+  type     = string
   nullable = false
 }
 

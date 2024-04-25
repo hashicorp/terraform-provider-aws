@@ -125,6 +125,8 @@ func main() {
 			generateTestConfig(g, testDirPath, "tags0", true, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsNull", false, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsNull", true, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl)
 		}
 	}
 
@@ -166,6 +168,7 @@ type goImport struct {
 type ConfigDatum struct {
 	Tags            string
 	WithDefaultTags bool
+	ComputedTag     bool
 }
 
 //go:embed test.go.gtpl
@@ -388,6 +391,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	configData := ConfigDatum{
 		Tags:            test,
 		WithDefaultTags: withDefaults,
+		ComputedTag:     (test == "tagsComputed"),
 	}
 	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)

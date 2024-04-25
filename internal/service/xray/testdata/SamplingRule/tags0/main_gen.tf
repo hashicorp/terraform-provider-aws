@@ -20,7 +20,6 @@ resource "aws_xray_sampling_rule" "test" {
 
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
