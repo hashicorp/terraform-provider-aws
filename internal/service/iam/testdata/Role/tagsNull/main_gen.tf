@@ -23,7 +23,6 @@ resource "aws_iam_role" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -33,4 +32,5 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
+
 

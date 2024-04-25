@@ -29,7 +29,6 @@ resource "aws_iam_role" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

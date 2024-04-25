@@ -9,7 +9,6 @@ resource "aws_iam_virtual_mfa_device" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -19,4 +18,5 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
+
 

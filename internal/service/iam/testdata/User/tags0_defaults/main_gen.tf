@@ -12,12 +12,10 @@ resource "aws_iam_user" "test" {
 
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)

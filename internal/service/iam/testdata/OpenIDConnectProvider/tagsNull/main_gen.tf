@@ -15,7 +15,6 @@ resource "aws_iam_openid_connect_provider" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -25,4 +24,5 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
+
 

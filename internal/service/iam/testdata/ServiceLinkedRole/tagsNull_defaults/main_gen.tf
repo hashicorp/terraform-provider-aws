@@ -16,7 +16,6 @@ resource "aws_iam_service_linked_role" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

@@ -15,7 +15,6 @@ resource "aws_iam_user" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

@@ -21,7 +21,6 @@ resource "aws_iam_role" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

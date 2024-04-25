@@ -7,7 +7,6 @@ resource "aws_iam_virtual_mfa_device" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

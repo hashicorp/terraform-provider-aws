@@ -8,7 +8,6 @@ resource "aws_iam_service_linked_role" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
