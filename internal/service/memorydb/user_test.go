@@ -55,7 +55,7 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBUser_iam_auth_mode(t *testing.T) {
+func TestAccMemoryDBUser_authenticationModeIAM(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_user.test"
@@ -67,7 +67,7 @@ func TestAccMemoryDBUser_iam_auth_mode(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfigWithIAMAuthMode_basic(rName),
+				Config: testAccUserConfig_authenticationModeIAM(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
@@ -76,8 +76,6 @@ func TestAccMemoryDBUser_iam_auth_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
 			{
@@ -313,7 +311,7 @@ resource "aws_memorydb_user" "test" {
 `, rName)
 }
 
-func testAccUserConfigWithIAMAuthMode_basic(rName string) string {
+func testAccUserConfig_authenticationModeIAM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_user" "test" {
   access_string = "on ~* &* +@all"
@@ -321,10 +319,6 @@ resource "aws_memorydb_user" "test" {
 
   authentication_mode {
     type = "iam"
-  }
-
-  tags = {
-    Test = "test"
   }
 }
 `, rName)
