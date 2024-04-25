@@ -4112,7 +4112,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_dedicatedLogVolume_enable(t *testing.T) {
+func TestAccRDSInstance_dedicatedLogVolume_enableOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -4129,18 +4129,79 @@ func TestAccRDSInstance_dedicatedLogVolume_enable(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_noDedicatedLogVolume(rName),
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName),
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
 			},
 		},
 	})
@@ -11185,7 +11246,7 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
 }
 
-func testAccInstanceConfig_noDedicatedLogVolume(rName string) string {
+func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   # Dedicated log volumes do not support PG 16 instances.
@@ -11196,35 +11257,16 @@ resource "aws_db_instance" "test" {
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
+  apply_immediately   = true
 
   # Minimum amounts required to qualify for IOPS / DedicatedLogVolume
   allocated_storage = 100
   storage_type      = "io1"
   iops              = 1000
-}
-`, rName))
-}
 
-func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  # Dedicated log volumes do not support PG 16 instances.
-  engine              = "postgres"
-  engine_version      = "15.6"
-  identifier          = %[1]q
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  password            = "avoid-plaintext-passwords"
-  username            = "tfacctest"
-  skip_final_snapshot = true
-
-  # Minimum amounts required to qualify for IOPS / DedicatedLogVolume
-  allocated_storage    = 100
-  storage_type         = "io1"
-  iops                 = 1000
-  dedicated_log_volume = true
-  apply_immediately    = true
+  dedicated_log_volume = %[2]t
 }
-`, rName))
+`, rName, enabled))
 }
 
 func testAccInstanceConfig_noDeleteAutomatedBackups(rName string) string {
