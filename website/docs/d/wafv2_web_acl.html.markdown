@@ -23,8 +23,9 @@ data "aws_wafv2_web_acl" "example" {
 
 This data source supports the following arguments:
 
-* `name` - (Required) Name of the WAFv2 Web ACL.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
+* `name` - (Required) Name of the WAFv2 Web ACL. Optional if `resource_arn` is provided.
+* `resource_arn` - (Optional) Name of a resource associated with a WAF. 
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider. Optional if `resource_arn` is provided.
 
 ## Attribute Reference
 
