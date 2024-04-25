@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_rest_api: Correctly set `root_resource_id` on resource Read ([#37040](https://github.com/hashicorp/terraform-provider-aws/issues/37040))
 * resource/aws_appmesh_mesh: Add `spec.service_discovery` argument ([#37042](https://github.com/hashicorp/terraform-provider-aws/issues/37042))
 * resource/aws_cloudformation_stack_set: Adds guidance on permissions when using delegated administrator account ([#37069](https://github.com/hashicorp/terraform-provider-aws/issues/37069))
+* resource/aws_db_instance: Add `dedicated_log_volume` argument ([#36503](https://github.com/hashicorp/terraform-provider-aws/issues/36503))
 * resource/aws_eip: Add `arn` attribute ([#35991](https://github.com/hashicorp/terraform-provider-aws/issues/35991))
 * resource/aws_elasticache_replication_group: Add `transit_encryption_mode` argument ([#30403](https://github.com/hashicorp/terraform-provider-aws/issues/30403))
 * resource/aws_elasticache_replication_group: Changes to the `transit_encryption_enabled` argument can now be done in-place for engine versions > `7.0.5` ([#30403](https://github.com/hashicorp/terraform-provider-aws/issues/30403))
