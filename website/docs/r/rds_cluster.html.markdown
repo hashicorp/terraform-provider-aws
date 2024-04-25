@@ -16,6 +16,8 @@ Changes to an RDS Cluster can occur when you manually change a parameter, such a
 
 ~> **Note:** Multi-AZ DB clusters are supported only for the MySQL and PostgreSQL DB engines.
 
+~> **Note:** `ca_certificate_identifier` is only supported for Multi-AZ DB clusters.
+
 ~> **Note:** using `apply_immediately` can result in a brief downtime as the server reboots. See the AWS Docs on [RDS Maintenance][4] for more information.
 
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
@@ -208,6 +210,7 @@ This argument supports the following arguments:
   A maximum of 3 AZs can be configured.
 * `backtrack_window` - (Optional) Target backtrack window, in seconds. Only available for `aurora` and `aurora-mysql` engines currently. To disable backtracking, set this value to `0`. Defaults to `0`. Must be between `0` and `259200` (72 hours)
 * `backup_retention_period` - (Optional) Days to retain backups for. Default `1`
+* `ca_certificate_identifier` - (Optional) The CA certificate identifier to use for the DB cluster's server certificate.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
@@ -368,6 +371,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_members` – List of RDS Instances that are a part of this cluster
 * `availability_zones` - Availability zone of the instance
 * `backup_retention_period` - Backup retention period
+* `ca_certificate_identifier` - CA identifier of the CA certificate used for the DB instance's server certificate
+* `ca_certificate_valid_till` - Expiration date of the DB instance’s server certificate
 * `preferred_backup_window` - Daily time range during which the backups happen
 * `preferred_maintenance_window` - Maintenance window
 * `endpoint` - DNS address of the RDS instance

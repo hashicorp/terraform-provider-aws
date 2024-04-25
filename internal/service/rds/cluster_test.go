@@ -3134,17 +3134,29 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_availabilityZones_caCertificateIdentifier(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[2]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[3]s]
+  supports_clusters          = true
+  supports_iops              = true
+}
+
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   ca_certificate_identifier = "rds-ca-2019"
   cluster_identifier        = %[1]q
-  engine                    = %[2]q
+  engine                    = data.aws_rds_orderable_db_instance.test.engine
+  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage         = 100
+  db_cluster_instance_class = "db.r6gd.xlarge"
   master_password           = "avoid-plaintext-passwords"
   master_username           = "tfacctest"
   skip_final_snapshot       = true
 }
-`, rName, tfrds.ClusterEngineMySQL))
+`, rName, tfrds.ClusterEngineMySQL, mainInstanceClasses))
 }
 
 func testAccClusterConfig_storageType(rName string, sType string) string {
