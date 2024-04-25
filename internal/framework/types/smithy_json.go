@@ -124,7 +124,6 @@ func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 				"Error: "+err.Error(),
 		)
 		return zero, diags
-
 	}
 
 	return v.f(data), diags
