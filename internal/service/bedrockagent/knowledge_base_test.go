@@ -19,54 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccKnowledgeBase_basic(t *testing.T) {
-	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
-
-	ctx := acctest.Context(t)
-	var knowledgebase types.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_knowledge_base.test"
-	foundationModel := "amazon.titan-embed-text-v1"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKnowledgeBaseConfig_basic(rName, foundationModel),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_SERVERLESS"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
-func testAccKnowledgeBase_rds(t *testing.T) {
+func testAccKnowledgeBase_basicRDS(t *testing.T) {
 	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
 
 	ctx := acctest.Context(t)
@@ -90,7 +45,7 @@ func testAccKnowledgeBase_rds(t *testing.T) {
 		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_rds(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
@@ -109,15 +64,16 @@ func testAccKnowledgeBase_rds(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
 func testAccKnowledgeBase_disappears(t *testing.T) {
 	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
 
@@ -125,7 +81,101 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 	var knowledgebase types.KnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
-	foundationModel := "amazon.titan-embed-g1-text-02"
+	foundationModel := "amazon.titan-embed-text-v1"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_basicOpenSearch(rName, foundationModel),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceKnowledgeBase, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
+func testAccKnowledgeBase_tags(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
+	ctx := acctest.Context(t)
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-text-v1"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_tags2(rName, foundationModel, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccKnowledgeBase_basicOpenSearch(t *testing.T) {
+	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+
+	ctx := acctest.Context(t)
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -136,10 +186,9 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basic(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicOpenSearch(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceKnowledgeBase, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
@@ -153,13 +202,18 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.text_field", "AMAZON_BEDROCK_TEXT_CHUNK"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_serverless_configuration.0.field_mapping.0.metadata_field", "AMAZON_BEDROCK_METADATA"),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
 }
 
-func testAccKnowledgeBase_update(t *testing.T) {
+func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
 
 	ctx := acctest.Context(t)
@@ -177,7 +231,7 @@ func testAccKnowledgeBase_update(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBaseConfig_basic(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_basicOpenSearch(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -202,7 +256,7 @@ func testAccKnowledgeBase_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccKnowledgeBaseConfig_update(rName, foundationModel),
+				Config: testAccKnowledgeBaseConfig_updateOpenSearch(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
 					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
@@ -226,58 +280,6 @@ func testAccKnowledgeBase_update(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-
-func testAccKnowledgeBase_tags(t *testing.T) {
-	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
-
-	ctx := acctest.Context(t)
-	var knowledgebase types.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_knowledge_base.test"
-	foundationModel := "amazon.titan-embed-g1-text-02"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-			{
-				Config: testAccKnowledgeBaseConfig_tags2(rName, foundationModel, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -328,227 +330,6 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 
 		return nil
 	}
-}
-
-func testAccKnowledgeBaseConfig_baseOpenSearch(rName, model string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_opensearchserverless_security_policy" "test" {
-  name = %[1]q
-  type = "encryption"
-
-  policy = jsonencode({
-    "Rules" = [
-      {
-        "Resource" = [
-          "collection/%[1]s"
-        ],
-        "ResourceType" = "collection"
-      }
-    ],
-    "AWSOwnedKey" = true
-  })
-}
-
-resource "aws_opensearchserverless_collection" "test" {
-  name = %[1]q
-
-  depends_on = [aws_opensearchserverless_security_policy.test]
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  path               = "/service-role/"
-  assume_role_policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [{
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		"Service": "bedrock.amazonaws.com"
-		},
-		"Effect": "Allow"
-	}]
-}
-POLICY
-}
-
-# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
-resource "aws_iam_role_policy" "test" {
-  name   = %[1]q
-  role   = aws_iam_role.test.name
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:ListFoundationModels",
-        "bedrock:ListCustomModels"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:InvokeModel"
-      ],
-      "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-      ]
-    },
-    {
-      "Action": [
-        "aoss:APIAccessAll"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_opensearchserverless_collection.test.arn}"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-`, rName, model)
-}
-
-func testAccKnowledgeBaseConfig_basic(rName, model string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_knowledge_base" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-
-  knowledge_base_configuration {
-    vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-    }
-    type = "VECTOR"
-  }
-
-  storage_configuration {
-    type = "OPENSEARCH_SERVERLESS"
-    opensearch_serverless_configuration {
-      collection_arn    = aws_opensearchserverless_collection.test.arn
-      vector_index_name = "bedrock-knowledge-base-default-index"
-      field_mapping {
-        vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
-        metadata_field = "AMAZON_BEDROCK_METADATA"
-      }
-    }
-  }
-
-  depends_on = [aws_iam_role_policy.test]
-}
-`, rName, model))
-}
-
-func testAccKnowledgeBaseConfig_update(rName, model string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_knowledge_base" "test" {
-  name        = "%[1]s-updated"
-  description = %[1]q
-  role_arn    = aws_iam_role.test.arn
-
-  knowledge_base_configuration {
-    vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-    }
-    type = "VECTOR"
-  }
-
-  storage_configuration {
-    type = "OPENSEARCH_SERVERLESS"
-    opensearch_serverless_configuration {
-      collection_arn    = aws_opensearchserverless_collection.test.arn
-      vector_index_name = "bedrock-knowledge-base-default-index"
-      field_mapping {
-        vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
-        metadata_field = "AMAZON_BEDROCK_METADATA"
-      }
-    }
-  }
-
-  depends_on = [aws_iam_role_policy.test]
-}
-`, rName, model))
-}
-
-func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_knowledge_base" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-
-  knowledge_base_configuration {
-    vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-    }
-    type = "VECTOR"
-  }
-
-  storage_configuration {
-    type = "OPENSEARCH_SERVERLESS"
-    opensearch_serverless_configuration {
-      collection_arn    = aws_opensearchserverless_collection.test.arn
-      vector_index_name = "bedrock-knowledge-base-default-index"
-      field_mapping {
-        vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
-        metadata_field = "AMAZON_BEDROCK_METADATA"
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-  }
-
-  depends_on = [aws_iam_role_policy.test]
-}
-`, rName, model, tag1Key, tag1Value))
-}
-
-func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_knowledge_base" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-
-  knowledge_base_configuration {
-    vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
-    }
-    type = "VECTOR"
-  }
-
-  storage_configuration {
-    type = "OPENSEARCH_SERVERLESS"
-    opensearch_serverless_configuration {
-      collection_arn    = aws_opensearchserverless_collection.test.arn
-      vector_index_name = "bedrock-knowledge-base-default-index"
-      field_mapping {
-        vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
-        metadata_field = "AMAZON_BEDROCK_METADATA"
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-
-  depends_on = [aws_iam_role_policy.test]
-}
-`, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
 func testAccKnowledgeBase_baseRDS(rName, model string) string {
@@ -715,7 +496,7 @@ resource "null_resource" "db_setup" {
 `, rName, model))
 }
 
-func testAccKnowledgeBaseConfig_rds(rName, model string) string {
+func testAccKnowledgeBaseConfig_basicRDS(rName, model string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
@@ -745,6 +526,233 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+}
+`, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "RDS"
+    rds_configuration {
+      resource_arn           = aws_rds_cluster.test.arn
+      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
+      database_name          = aws_rds_cluster.test.database_name
+      table_name             = "bedrock_integration.bedrock_kb"
+      field_mapping {
+        vector_field      = "embedding"
+        text_field        = "chunks"
+        metadata_field    = "metadata"
+        primary_key_field = "id"
+      }
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+
+  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+}
+`, rName, model, tag1Key, tag1Value))
+}
+
+func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBase_baseRDS(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "RDS"
+    rds_configuration {
+      resource_arn           = aws_rds_cluster.test.arn
+      credentials_secret_arn = tolist(aws_rds_cluster.test.master_user_secret)[0].secret_arn
+      database_name          = aws_rds_cluster.test.database_name
+      table_name             = "bedrock_integration.bedrock_kb"
+      field_mapping {
+        vector_field      = "embedding"
+        text_field        = "chunks"
+        metadata_field    = "metadata"
+        primary_key_field = "id"
+      }
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+
+  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+}
+`, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccKnowledgeBaseConfig_baseOpenSearch(rName, model string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_opensearchserverless_security_policy" "test" {
+  name = %[1]q
+  type = "encryption"
+
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/%[1]s"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
+}
+
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		"Service": "bedrock.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}]
+}
+POLICY
+}
+
+# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.name
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels",
+        "bedrock:ListCustomModels"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      ]
+    },
+    {
+      "Action": [
+        "aoss:APIAccessAll"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_opensearchserverless_collection.test.arn}"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+`, rName, model)
+}
+
+func testAccKnowledgeBaseConfig_basicOpenSearch(rName, model string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "OPENSEARCH_SERVERLESS"
+    opensearch_serverless_configuration {
+      collection_arn    = aws_opensearchserverless_collection.test.arn
+      vector_index_name = "bedrock-knowledge-base-default-index"
+      field_mapping {
+        vector_field   = "bedrock-knowledge-base-default-vector"
+        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+        metadata_field = "AMAZON_BEDROCK_METADATA"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_updateOpenSearch(rName, model string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_baseOpenSearch(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name        = "%[1]s-updated"
+  description = %[1]q
+  role_arn    = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "OPENSEARCH_SERVERLESS"
+    opensearch_serverless_configuration {
+      collection_arn    = aws_opensearchserverless_collection.test.arn
+      vector_index_name = "bedrock-knowledge-base-default-index"
+      field_mapping {
+        vector_field   = "bedrock-knowledge-base-default-vector"
+        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+        metadata_field = "AMAZON_BEDROCK_METADATA"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, model))
 }
