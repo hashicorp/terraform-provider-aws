@@ -289,6 +289,18 @@ func TestExpand(t *testing.T) {
 				CreationDateTime: testTimeTime,
 			},
 		},
+		{
+			TestName: "string Source to interface Target",
+			Source:   &TestFlexTF20{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Target:   &TestFlexAWS19{},
+			WantTarget: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					Value: map[string]any{
+						"field1": "a",
+					},
+				},
+			},
+		},
 	}
 
 	runAutoExpandTestCases(ctx, t, testCases)
