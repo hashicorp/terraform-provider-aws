@@ -53,13 +53,13 @@ func DataSourceWebACL() *schema.Resource {
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
-	diags = validateDataSourceInput(d)
+	diags = validateWebACLDataSourceInput(d)
 	if diags.HasError() {
 		return diags
 	}
 
 	if v, ok := d.GetOk("resource_arn"); ok {
-		return getWebAclDataSourceByArn(ctx, conn, v.(string), d, diags)
+		return getWebACLDataSourceByARN(ctx, conn, v.(string), d, diags)
 	}
 
 	name := d.Get("name").(string)
@@ -104,7 +104,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func getWebAclDataSourceByArn(ctx context.Context, conn *wafv2.WAFV2, arn string, d *schema.ResourceData, diags diag.Diagnostics) diag.Diagnostics {
+func getWebACLDataSourceByARN(ctx context.Context, conn *wafv2.WAFV2, arn string, d *schema.ResourceData, diags diag.Diagnostics) diag.Diagnostics {
 	input := &wafv2.GetWebACLForResourceInput{
 		ResourceArn: aws.String(arn),
 	}
@@ -125,7 +125,7 @@ func getWebAclDataSourceByArn(ctx context.Context, conn *wafv2.WAFV2, arn string
 	return diags
 }
 
-func validateDataSourceInput(d *schema.ResourceData) diag.Diagnostics {
+func validateWebACLDataSourceInput(d *schema.ResourceData) diag.Diagnostics {
 	if _, ok := d.GetOk("resource_arn"); ok {
 		return nil
 	}
