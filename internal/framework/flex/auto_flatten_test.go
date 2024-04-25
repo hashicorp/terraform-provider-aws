@@ -905,6 +905,62 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
+func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64   `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *float32
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: aws.Float32(0.01)},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Float64 `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field1 float32
+		Field2 *float32
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field1: 1.11, Field2: aws.Float32(-2.22)}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
 func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
