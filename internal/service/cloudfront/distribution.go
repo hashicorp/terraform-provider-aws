@@ -1387,10 +1387,6 @@ func expandCacheBehavior(tfMap map[string]interface{}) *awstypes.CacheBehavior {
 }
 
 func expandCacheBehaviors(tfList []interface{}) *awstypes.CacheBehaviors {
-	if len(tfList) == 0 {
-		return nil
-	}
-
 	var items []awstypes.CacheBehavior
 
 	for _, tfMapRaw := range tfList {
@@ -2336,10 +2332,6 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 }
 
 func expandCustomOriginConfigSSL(tfList []interface{}) *awstypes.OriginSslProtocols {
-	if tfList == nil {
-		return nil
-	}
-
 	return &awstypes.OriginSslProtocols{
 		Items:    flex.ExpandStringyValueList[awstypes.SslProtocol](tfList),
 		Quantity: aws.Int32(int32(len(tfList))),
