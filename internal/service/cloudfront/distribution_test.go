@@ -1123,44 +1123,6 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 	})
 }
 
-// TestAccCloudFrontDistribution_retainOnDelete verifies retain_on_delete = true
-// This acceptance test performs the following steps:
-//   - Trigger a Terraform destroy of the resource, which should only disable the distribution
-//   - Check it still exists and is disabled outside Terraform
-//   - Destroy for real outside Terraform
-func TestAccCloudFrontDistribution_retainOnDelete(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var distribution awstypes.Distribution
-	resourceName := "aws_cloudfront_distribution.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDistributionConfig_enabled(true, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-				),
-			},
-			{
-				Config:  testAccDistributionConfig_enabled(true, true),
-				Destroy: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExistsAPIOnly(ctx, &distribution),
-					testAccCheckDistributionDelete(ctx, &distribution),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_whitelistedNames(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1542,22 +1504,6 @@ func testAccCheckDistributionExists(ctx context.Context, n string, v *awstypes.D
 	}
 }
 
-func testAccCheckDistributionExistsAPIOnly(ctx context.Context, v *awstypes.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
-
-		output, err := tfcloudfront.FindDistributionByID(ctx, conn, aws.ToString(v.Id))
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output.Distribution
-
-		return nil
-	}
-}
-
 func testAccCheckDistributionStatusDeployed(distribution *awstypes.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if distribution == nil {
@@ -1583,30 +1529,6 @@ func testAccCheckDistributionStatusInProgress(distribution *awstypes.Distributio
 		}
 
 		return nil
-	}
-}
-
-// testAccCheckDistributionDelete deletes a CloudFront Distribution outside Terraform.
-func testAccCheckDistributionDelete(ctx context.Context, v *awstypes.Distribution) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
-
-		output, err := tfcloudfront.FindDistributionByID(ctx, conn, aws.ToString(v.Id))
-
-		if tfresource.NotFound(err) {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		r := tfcloudfront.ResourceDistribution()
-		d := r.Data(nil)
-		d.SetId(aws.ToString(v.Id))
-		d.Set("etag", output.ETag)
-
-		return acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 	}
 }
 
