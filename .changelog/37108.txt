@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `ca_certificate_identifier` argument
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `ca_certificate_identifier` and `ca_certificate_valid_till` attribute
+```
