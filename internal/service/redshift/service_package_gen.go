@@ -167,7 +167,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Scheduled Action",
 		},
 		{
-			Factory:  ResourceSnapshotCopyGrant,
+			Factory:  resourceSnapshotCopyGrant,
 			TypeName: "aws_redshift_snapshot_copy_grant",
 			Name:     "Snapshot Copy Grant",
 			Tags: &types.ServicePackageResourceTags{

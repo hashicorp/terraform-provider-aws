@@ -22,6 +22,7 @@ var (
 	ResourceResourcePolicy               = resourceResourcePolicy
 	ResourceScheduledAction              = resourceScheduledAction
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
+	ResourceSnapshotCopyGrant            = resourceSnapshotCopyGrant
 
 	FindAuthenticationProfileByID        = findAuthenticationProfileByID
 	FindClusterByID                      = findClusterByID
@@ -39,4 +40,5 @@ var (
 	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindScheduledActionByName            = findScheduledActionByName
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
+	FindSnapshotCopyGrantByName          = findSnapshotCopyGrantByName
 )
