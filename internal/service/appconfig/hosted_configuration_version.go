@@ -118,7 +118,7 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	input := &appconfig.GetHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-		VersionNumber:          aws.Int32(int32(versionNumber)),
+		VersionNumber:          aws.Int32(versionNumber),
 	}
 
 	output, err := conn.GetHostedConfigurationVersion(ctx, input)
@@ -170,7 +170,7 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	_, err = conn.DeleteHostedConfigurationVersion(ctx, &appconfig.DeleteHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
-		VersionNumber:          aws.Int32(int32(versionNumber)),
+		VersionNumber:          aws.Int32(versionNumber),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -184,17 +184,17 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func HostedConfigurationVersionParseID(id string) (string, string, int, error) {
+func HostedConfigurationVersionParseID(id string) (string, string, int32, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID/ConfigurationProfileID/VersionNumber", id)
 	}
 
-	version, err := strconv.Atoi(parts[2])
+	version, err := strconv.ParseInt(parts[2], 0, 32)
 	if err != nil {
 		return "", "", 0, fmt.Errorf("parsing Hosted Configuration Version version_number: %w", err)
 	}
 
-	return parts[0], parts[1], version, nil
+	return parts[0], parts[1], int32(version), nil
 }

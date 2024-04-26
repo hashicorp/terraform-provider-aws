@@ -208,7 +208,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
-		mcs, err := strconv.Atoi(v.(string))
+		mcs, err := strconv.ParseInt(v.(string), 0, 32)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "converting minimum_compression_size (%s): %s", v, err)
 		}
