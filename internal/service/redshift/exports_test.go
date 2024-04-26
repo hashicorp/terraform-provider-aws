@@ -49,4 +49,5 @@ var (
 	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
 	FindSubnetGroupByName                       = findSubnetGroupByName
 	FindUsageLimitByID                          = findUsageLimitByID
+	WaitSnapshotScheduleAssociationCreated      = waitSnapshotScheduleAssociationCreated
 )

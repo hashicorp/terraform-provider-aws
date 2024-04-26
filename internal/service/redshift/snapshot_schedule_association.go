@@ -68,7 +68,7 @@ func resourceSnapshotScheduleAssociationCreate(ctx context.Context, d *schema.Re
 
 	d.SetId(id)
 
-	if _, err := WaitSnapshotScheduleAssociationCreated(ctx, conn, clusterIdentifier, scheduleIdentifier); err != nil {
+	if _, err := waitSnapshotScheduleAssociationCreated(ctx, conn, clusterIdentifier, scheduleIdentifier); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Snapshot Schedule Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -199,7 +199,7 @@ func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Redsh
 	}
 }
 
-func WaitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.Redshift, clusterIdentifier, scheduleIdentifier string) (*redshift.ClusterAssociatedToSchedule, error) {
+func waitSnapshotScheduleAssociationCreated(ctx context.Context, conn *redshift.Redshift, clusterIdentifier, scheduleIdentifier string) (*redshift.ClusterAssociatedToSchedule, error) {
 	const (
 		timeout = 75 * time.Minute
 	)
