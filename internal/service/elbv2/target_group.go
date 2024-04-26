@@ -783,7 +783,7 @@ func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType strin
 			}
 		case schema.TypeInt:
 			v := v.(string)
-			if v, null, _ := nullable.Int(v).Value(); !null {
+			if v, null, _ := nullable.Int(v).Int64Value(); !null {
 				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
 					Key:   k,
 					Value: flex.Int64ValueToString(v),

@@ -889,10 +889,10 @@ func expandPredictiveScalingConfig(predictiveScalingConfigSlice []interface{}) *
 		MaxCapacityBreachBehavior: awstypes.PredictiveScalingMaxCapacityBreachBehavior(predictiveScalingConfigFlat["max_capacity_breach_behavior"].(string)),
 		Mode:                      awstypes.PredictiveScalingMode(predictiveScalingConfigFlat["mode"].(string)),
 	}
-	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["max_capacity_buffer"].(string)).Value(); !null {
+	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["max_capacity_buffer"].(string)).Int64Value(); !null {
 		predictiveScalingConfig.MaxCapacityBuffer = aws.Int32(int32(v))
 	}
-	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["scheduling_buffer_time"].(string)).Value(); !null {
+	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["scheduling_buffer_time"].(string)).Int64Value(); !null {
 		predictiveScalingConfig.SchedulingBufferTime = aws.Int32(int32(v))
 	}
 	return predictiveScalingConfig

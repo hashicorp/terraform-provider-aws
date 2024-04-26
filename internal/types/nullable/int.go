@@ -20,7 +20,7 @@ func (i Int) IsNull() bool {
 	return i == ""
 }
 
-func (i Int) Value() (int64, bool, error) {
+func (i Int) Int64Value() (int64, bool, error) {
 	if i.IsNull() {
 		return 0, true, nil
 	}

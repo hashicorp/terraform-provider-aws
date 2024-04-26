@@ -415,7 +415,7 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 		result = &awstypes.VariableValueMemberBoolValue{
 			Value: val,
 		}
-	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).Value(); !null {
+	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).Int64Value(); !null {
 		result = &awstypes.VariableValueMemberLongValue{
 			Value: v,
 		}

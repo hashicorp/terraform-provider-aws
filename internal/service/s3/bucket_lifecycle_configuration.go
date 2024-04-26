@@ -668,13 +668,13 @@ func expandLifecycleRuleFilter(ctx context.Context, l []interface{}) types.Lifec
 		result = expandLifecycleRuleFilterMemberAnd(ctx, v[0].(map[string]interface{}))
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v >= 0 {
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Int64Value(); !null && v >= 0 {
 		result = &types.LifecycleRuleFilterMemberObjectSizeGreaterThan{
 			Value: v,
 		}
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).Int64Value(); !null && v > 0 {
 		result = &types.LifecycleRuleFilterMemberObjectSizeLessThan{
 			Value: v,
 		}
@@ -754,7 +754,7 @@ func expandNoncurrentVersionExpiration(m map[string]interface{}) *types.Noncurre
 
 	result := &types.NoncurrentVersionExpiration{}
 
-	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).Int64Value(); !null && v > 0 {
 		result.NewerNoncurrentVersions = aws.Int32(int32(v))
 	}
 
@@ -781,7 +781,7 @@ func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersi
 
 		transition := types.NoncurrentVersionTransition{}
 
-		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
+		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).Int64Value(); !null && v > 0 {
 			transition.NewerNoncurrentVersions = aws.Int32(int32(v))
 		}
 
