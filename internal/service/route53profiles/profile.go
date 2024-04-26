@@ -37,6 +37,7 @@ func newResourceProfile(_ context.Context) (resource.ResourceWithConfigure, erro
 	r := &resourceProfile{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultReadTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
@@ -112,6 +113,8 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 
 	// Even tough the tags are Map based, CreateProfile expects a slice of tags
 	for k, v := range getTagsIn(ctx) {
+		k := k
+		v := v
 		tags = append(tags, awstypes.Tag{Key: &k, Value: &v})
 	}
 
