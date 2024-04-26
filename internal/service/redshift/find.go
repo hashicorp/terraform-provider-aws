@@ -225,7 +225,7 @@ func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift,
 	return out.AuthenticationProfiles[0], nil
 }
 
-func FindEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EventSubscription, error) {
+func findEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EventSubscription, error) {
 	input := &redshift.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}

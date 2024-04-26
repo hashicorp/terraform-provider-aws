@@ -13,6 +13,7 @@ var (
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
 	ResourceEndpointAccess               = resourceEndpointAccess
 	ResourceEndpointAuthorization        = resourceEndpointAuthorization
+	ResourceEventSubscription            = resourceEventSubscription
 	ResourceLogging                      = newResourceLogging
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
@@ -23,6 +24,7 @@ var (
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
 	FindEndpointAccessByName             = findEndpointAccessByName
 	FindEndpointAuthorizationByID        = findEndpointAuthorizationByID
+	FindEventSubscriptionByName          = findEventSubscriptionByName
 	FindLoggingByID                      = findLoggingByID
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )

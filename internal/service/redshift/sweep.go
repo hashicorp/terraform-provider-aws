@@ -175,10 +175,10 @@ func sweepEventSubscriptions(region string) error {
 			return !lastPage
 		}
 
-		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+		for _, v := range page.EventSubscriptionsList {
+			r := resourceEventSubscription()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
+			d.SetId(aws.StringValue(v.CustSubscriptionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
