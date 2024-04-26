@@ -77,7 +77,7 @@ func testAccSubscriber_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
@@ -152,7 +152,7 @@ func testAccSubscriber_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -166,7 +166,7 @@ func testAccSubscriber_tags(t *testing.T) {
 			},
 			{
 				Config: testAccSubscriberConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -175,7 +175,7 @@ func testAccSubscriber_tags(t *testing.T) {
 			},
 			{
 				Config: testAccSubscriberConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -203,7 +203,7 @@ func testAccSubscriber_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
@@ -223,7 +223,7 @@ func testAccSubscriber_update(t *testing.T) {
 			},
 			{
 				Config: testAccSubscriberConfig_update(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
