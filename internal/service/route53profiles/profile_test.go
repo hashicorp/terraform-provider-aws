@@ -7,15 +7,14 @@ import (
 	"context"
 	"fmt"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"testing"
-
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"testing"
 )
 
 func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
@@ -48,6 +47,80 @@ func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ProfilesProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53profiles_profile.test"
+	var v awstypes.Profile
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53profiles.Route53ProfilesProfile, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ProfilesProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53profiles_profile.test"
+	var v awstypes.Profile
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -99,4 +172,29 @@ resource "aws_route53profiles_profile" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccProfileConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53profiles_profile" "test" {
+  name = %[1]q
+
+  tags = {
+	%[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccProfileConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53profiles_profile" "test" {
+  name = %[1]q
+
+  tags = {
+	%[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

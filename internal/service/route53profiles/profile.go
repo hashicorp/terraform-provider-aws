@@ -9,13 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,18 +30,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_route53profiles_profile", name="Profile")
+// @Tags("identifierAttribute=arn")
 func newResourceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProfile{}
 
@@ -92,6 +83,8 @@ func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest
 			"status_message": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
@@ -115,8 +108,16 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 	input := &route53profiles.CreateProfileInput{}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 
+	var tags []awstypes.Tag
+
+	// Even tough the tags are Map based, CreateProfile expects a slice of tags
+	for k, v := range getTagsIn(ctx) {
+		tags = append(tags, awstypes.Tag{Key: &k, Value: &v})
+	}
+
 	// Additional fields
 	input.ClientToken = aws.String(id.UniqueId())
+	input.Tags = tags
 
 	output, err := conn.CreateProfile(ctx, input)
 	name := data.Name
@@ -150,7 +151,7 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := FindProfileByID(ctx, conn, state.ID.ValueString())
+	out, err := findProfileByID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -170,6 +171,28 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var oldProfile, newProfile resourceProfileData
+	resp.Diagnostics.Append(req.State.Get(ctx, &oldProfile)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &newProfile)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Update is only called when `tags` are updated
+	// Set unknown values on newProfile to oldProfile
+	newProfile.OwnerId = oldProfile.OwnerId
+	newProfile.ShareStatus = oldProfile.ShareStatus
+	newProfile.Status = oldProfile.Status
+	newProfile.StatusMessage = oldProfile.StatusMessage
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newProfile)...)
 }
 
 func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -209,10 +232,6 @@ func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
 func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*route53profiles.GetProfileOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
@@ -249,7 +268,7 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 
 func statusProfile(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindProfileByID(ctx, conn, id)
+		out, err := findProfileByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -262,7 +281,11 @@ func statusProfile(ctx context.Context, conn *route53profiles.Client, id string)
 	}
 }
 
-func FindProfileByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.Profile, error) {
+func (r *resourceProfile) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
+func findProfileByID(ctx context.Context, conn *route53profiles.Client, id string) (*awstypes.Profile, error) {
 	in := &route53profiles.GetProfileInput{
 		ProfileId: aws.String(id),
 	}
@@ -294,5 +317,7 @@ type resourceProfileData struct {
 	ShareStatus   fwtypes.StringEnum[awstypes.ShareStatus]   `tfsdk:"share_status"`
 	Status        fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage types.String                               `tfsdk:"status_message"`
+	Tags          types.Map                                  `tfsdk:"tags"`
+	TagsAll       types.Map                                  `tfsdk:"tags_all"`
 	Timeouts      timeouts.Value                             `tfsdk:"timeouts"`
 }
