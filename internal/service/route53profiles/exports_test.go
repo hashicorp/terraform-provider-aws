@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53profiles
 
 var (
-	Route53ProfilesProfile = newResourceProfile
-	FindProfileByID        = findProfileByID
+	Route53Profile  = newResourceProfile
+	FindProfileByID = findProfileByID
 )

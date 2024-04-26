@@ -70,7 +70,7 @@ func TestAccRoute53ProfilesProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53profiles.Route53ProfilesProfile, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53profiles.Route53Profile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
