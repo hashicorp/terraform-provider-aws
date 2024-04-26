@@ -6,6 +6,8 @@ package route53profiles_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
@@ -180,7 +181,7 @@ resource "aws_route53profiles_profile" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -192,8 +193,8 @@ resource "aws_route53profiles_profile" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
