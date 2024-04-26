@@ -160,7 +160,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.PipeLogConfigurationParameters = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
+		input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreatePipe(ctx, input)
@@ -206,7 +206,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("log_configuration", output.LogConfiguration)
 	if v := output.LogConfiguration; !types.IsZero(v) {
-		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfigurationParameters(v)}); err != nil {
+		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
 			return diag.Errorf("setting log_configuration: %s", err)
 		}
 	} else {
