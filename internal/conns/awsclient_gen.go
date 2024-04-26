@@ -26,6 +26,7 @@ import (
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
+	chatbot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chatbot"
 	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
@@ -376,6 +377,10 @@ func (c *AWSClient) CEClient(ctx context.Context) *costexplorer_sdkv2.Client {
 
 func (c *AWSClient) CURClient(ctx context.Context) *costandusagereportservice_sdkv2.Client {
 	return errs.Must(client[*costandusagereportservice_sdkv2.Client](ctx, c, names.CUR, make(map[string]any)))
+}
+
+func (c *AWSClient) ChatbotClient(ctx context.Context) *chatbot_sdkv2.Client {
+	return errs.Must(client[*chatbot_sdkv2.Client](ctx, c, names.Chatbot, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {

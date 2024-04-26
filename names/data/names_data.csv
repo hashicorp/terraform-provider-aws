@@ -41,7 +41,7 @@ bcmdataexports,bcmdataexports,bcmdataexports,bcmdataexports,,bcmdataexports,,,BC
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
 braket,braket,braket,braket,,braket,,,Braket,Braket,,1,,,aws_braket_,,braket_,Braket,Amazon,,x,,,,,Braket,,,
 ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,,2,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
-,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,,,,No SDK support
+chatbot,chatbot,chatbot,chatbot,,chatbot,,,Chatbot,,x,,2,,aws_chatbot_,,chatbot_,Chatbot,AWS,,,,,,,Chatbot,GetAccountPreferences,,
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,Chime,ListAccounts,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,Chime SDK Identity,,,
 chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,,2,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,,,Chime SDK Media Pipelines,ListMediaPipelines,,

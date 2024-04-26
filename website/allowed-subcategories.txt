@@ -26,6 +26,7 @@ BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
