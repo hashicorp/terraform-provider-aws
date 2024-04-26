@@ -294,18 +294,6 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 
 func testAccSubscriberConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
-data "aws_caller_identity" "test" {}
-
-resource "aws_securitylake_aws_log_source" "test" {
-  source {
-    accounts       = [data.aws_caller_identity.test.account_id]
-    regions        = [%[1]q]
-    source_name    = "ROUTE53"
-    source_version = "1.0"
-  }
-  depends_on = [aws_securitylake_data_lake.test]
-}
-
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[2]q
   access_type     = "S3"
@@ -317,16 +305,62 @@ resource "aws_securitylake_subscriber" "test" {
   }
   subscriber_identity {
     external_id = "example"
-    principal   = data.aws_caller_identity.test.account_id
+    principal   = data.aws_caller_identity.current.account_id
   }
 
   depends_on = [aws_securitylake_aws_log_source.test]
+}
+
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts       = [data.aws_caller_identity.current.account_id]
+    regions        = [%[1]q]
+    source_name    = "ROUTE53"
+    source_version = "1.0"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
 }
 `, acctest.Region(), rName))
 }
 
 func testAccSubscriberConfig_customLog(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
+resource "aws_securitylake_subscriber" "test" {
+  subscriber_name        = %[1]q
+  subscriber_description = "Example"
+  source {
+    custom_log_source_resource {
+      source_name    = aws_securitylake_custom_log_source.test.source_name
+      source_version = aws_securitylake_custom_log_source.test.source_version
+    }
+  }
+  subscriber_identity {
+    external_id = "example"
+    principal   = data.aws_caller_identity.current.account_id
+  }
+
+  depends_on = [aws_securitylake_custom_log_source.test]
+}
+
+resource "aws_securitylake_custom_log_source" "test" {
+  source_name    = "windows-sysmon"
+  source_version = "1.0"
+  event_classes  = ["FILE_ACTIVITY"]
+
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.test.arn
+    }
+
+    provider_identity {
+      external_id = "windows-sysmon-test"
+      principal   = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
+}
+
 resource "aws_iam_role" "test" {
   name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   path = "/service-role/"
@@ -369,42 +403,6 @@ POLICY
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = aws_iam_role.test.name
-}
-
-resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = "windows-sysmon"
-  source_version = "1.0"
-  event_classes  = ["FILE_ACTIVITY"]
-
-  configuration {
-    crawler_configuration {
-      role_arn = aws_iam_role.test.arn
-    }
-
-    provider_identity {
-      external_id = "windows-sysmon-test"
-      principal   = data.aws_caller_identity.current.account_id
-    }
-  }
-
-  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
-}
-
-resource "aws_securitylake_subscriber" "test" {
-  subscriber_name        = %[1]q
-  subscriber_description = "Example"
-  source {
-    custom_log_source_resource {
-      source_name    = aws_securitylake_custom_log_source.test.source_name
-      source_version = aws_securitylake_custom_log_source.test.source_version
-    }
-  }
-  subscriber_identity {
-    external_id = "example"
-    principal   = data.aws_caller_identity.current.account_id
-  }
-
-  depends_on = [aws_securitylake_custom_log_source.test]
 }
 `, rName))
 }
@@ -588,18 +586,6 @@ resource "aws_securitylake_subscriber" "test" {
 
 func testAccSubscriberConfig_update(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
-data "aws_caller_identity" "test" {}
-
-resource "aws_securitylake_aws_log_source" "test" {
-  source {
-    accounts       = [data.aws_caller_identity.test.account_id]
-    regions        = [%[1]q]
-    source_name    = "ROUTE53"
-    source_version = "1.0"
-  }
-  depends_on = [aws_securitylake_data_lake.test]
-}
-
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[2]q
   access_type     = "S3"
@@ -611,8 +597,18 @@ resource "aws_securitylake_subscriber" "test" {
   }
   subscriber_identity {
     external_id = "updated"
-    principal   = data.aws_caller_identity.test.account_id
+    principal   = data.aws_caller_identity.current.account_id
   }
+}
+
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts       = [data.aws_caller_identity.current.account_id]
+    regions        = [%[1]q]
+    source_name    = "ROUTE53"
+    source_version = "1.0"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
 }
 `, acctest.Region(), rName))
 }
