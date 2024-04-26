@@ -22,7 +22,7 @@ import (
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
 func testAccKnowledgeBase_basicRDS(t *testing.T) {
-	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+	acctest.SkipIfExeNotOnPath(t, "psql")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
@@ -75,7 +75,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
 func testAccKnowledgeBase_disappears(t *testing.T) {
-	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+	acctest.SkipIfExeNotOnPath(t, "psql")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
@@ -112,7 +112,7 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
 func testAccKnowledgeBase_tags(t *testing.T) {
-	acctest.Skip(t, "Bedrock Agent Knowledge Base requires external configuration of a vector index")
+	acctest.SkipIfExeNotOnPath(t, "psql")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
