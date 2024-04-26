@@ -87,6 +87,11 @@ func (t SmithyJSONType[T]) ValueFromString(ctx context.Context, in basetypes.Str
 		return SmithyJSONUnknown[T](), diags
 	}
 
+	var data map[string]any
+	if err := json.Unmarshal([]byte(in.ValueString()), &data); err != nil {
+		return SmithyJSONUnknown[T](), diags
+	}
+
 	return SmithyJSONValue[T](in.ValueString(), t.f), diags
 }
 
@@ -114,11 +119,16 @@ func (v SmithyJSON[T]) Equal(o attr.Value) bool {
 
 func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 	var diags diag.Diagnostics
+
+	var zero T
+	if v.IsNull() || v.IsUnknown() {
+		return zero, diags
+	}
+
 	var data map[string]any
 	err := json.Unmarshal([]byte(v.ValueString()), &data)
 
 	if err != nil {
-		var zero T
 		diags.AddError(
 			"JSON Unmarshal Error",
 			"An unexpected error occurred while unmarshalling a JSON string. "+
