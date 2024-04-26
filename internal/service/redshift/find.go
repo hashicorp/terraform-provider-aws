@@ -168,7 +168,7 @@ func findHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id s
 	return out.HsmConfigurations[0], nil
 }
 
-func FindUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.UsageLimit, error) {
+func findUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.UsageLimit, error) {
 	input := &redshift.DescribeUsageLimitsInput{
 		UsageLimitId: aws.String(id),
 	}

@@ -26,6 +26,7 @@ var (
 	ResourceSnapshotSchedule             = resourceSnapshotSchedule
 	ResourceSnapshotScheduleAssociation  = resourceSnapshotScheduleAssociation
 	ResourceSubnetGroup                  = resourceSubnetGroup
+	ResourceUsageLimit                   = resourceUsageLimit
 
 	FindAuthenticationProfileByID               = findAuthenticationProfileByID
 	FindClusterByID                             = findClusterByID
@@ -47,4 +48,5 @@ var (
 	FindSnapshotScheduleAssociationByTwoPartKey = findSnapshotScheduleAssociationByTwoPartKey
 	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
 	FindSubnetGroupByName                       = findSubnetGroupByName
+	FindUsageLimitByID                          = findUsageLimitByID
 )
