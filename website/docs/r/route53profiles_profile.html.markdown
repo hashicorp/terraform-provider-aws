@@ -3,12 +3,12 @@ subcategory: "Route 53 Profiles"
 layout: "aws"
 page_title: "AWS: aws_route53profiles_profile"
 description: |-
-  Terraform resource for managing an AWS Route 53 Profiles Profile.
+  Terraform resource for managing an AWS Route 53 Profile.
 ---
 
 # Resource: aws_route53profiles_profile
 
-Terraform resource for managing an AWS Route 53 Profiles Profile.
+Terraform resource for managing an AWS Route 53 Profile.
 
 ## Example Usage
 
@@ -37,7 +37,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `status_message` - The status message of the Profile.
 * `share_status` - The share status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Timeouts
 
