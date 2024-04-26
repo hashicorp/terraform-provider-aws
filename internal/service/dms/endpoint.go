@@ -776,6 +776,8 @@ func ResourceEndpoint() *schema.Resource {
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpointID := d.Get("endpoint_id").(string)
@@ -1054,6 +1056,8 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutDelete))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -1419,6 +1423,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutDelete))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
@@ -1434,7 +1440,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err = waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
@@ -2715,12 +2721,13 @@ func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id 
 	}
 }
 
-func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{endpointStatusDeleting},
 		Target:  []string{},
 		Refresh: statusEndpoint(ctx, conn, id),
-		Timeout: timeout,
+		Timeout: time.Until(expiration),
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)

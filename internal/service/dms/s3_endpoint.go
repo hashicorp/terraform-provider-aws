@@ -547,6 +547,8 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutDelete))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
@@ -562,7 +564,7 @@ func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return create.AppendDiagError(diags, names.DMS, create.ErrActionDeleting, ResNameS3Endpoint, d.Id(), err)
 	}
 
-	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err = waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
 		return create.AppendDiagError(diags, names.DMS, create.ErrActionWaitingForDeletion, ResNameS3Endpoint, d.Id(), err)
 	}
 
