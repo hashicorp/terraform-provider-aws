@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_capacity_reservation: Fix issue where removing resource cause an error in refresh and delete
+```
