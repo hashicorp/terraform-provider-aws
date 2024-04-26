@@ -161,8 +161,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceScheduledAction,
+			Factory:  resourceScheduledAction,
 			TypeName: "aws_redshift_scheduled_action",
+			Name:     "Scheduled Action",
 		},
 		{
 			Factory:  ResourceSnapshotCopyGrant,

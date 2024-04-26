@@ -217,10 +217,10 @@ func sweepScheduledActions(region string) error {
 			return !lastPage
 		}
 
-		for _, scheduledAction := range page.ScheduledActions {
-			r := ResourceScheduledAction()
+		for _, v := range page.ScheduledActions {
+			r := resourceScheduledAction()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
+			d.SetId(aws.StringValue(v.ScheduledActionName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

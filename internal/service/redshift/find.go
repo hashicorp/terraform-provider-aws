@@ -83,7 +83,7 @@ func findClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*
 	return output, nil
 }
 
-func FindScheduledActionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
+func findScheduledActionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
 	input := &redshift.DescribeScheduledActionsInput{
 		ScheduledActionName: aws.String(name),
 	}
