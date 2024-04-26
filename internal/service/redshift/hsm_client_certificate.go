@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_redshift_hsm_client_certificate", name="HSM Client Certificate")
 // @Tags(identifierAttribute="arn")
-func ResourceHSMClientCertificate() *schema.Resource {
+func resourceHSMClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMClientCertificateCreate,
 		ReadWithoutTimeout:   resourceHSMClientCertificateRead,
@@ -82,7 +82,8 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := FindHSMClientCertificateByID(ctx, conn, d.Id())
+	out, err := findHSMClientCertificateByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift HSM Client Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")

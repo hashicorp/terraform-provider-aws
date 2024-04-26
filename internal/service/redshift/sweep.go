@@ -369,16 +369,15 @@ func sweepHSMClientCertificates(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeHsmClientCertificatesPagesWithContext(ctx, &redshift.DescribeHsmClientCertificatesInput{}, func(resp *redshift.DescribeHsmClientCertificatesOutput, lastPage bool) bool {
-		if len(resp.HsmClientCertificates) == 0 {
-			log.Print("[DEBUG] No Redshift Hsm Client Certificates to sweep")
+	err = conn.DescribeHsmClientCertificatesPagesWithContext(ctx, &redshift.DescribeHsmClientCertificatesInput{}, func(page *redshift.DescribeHsmClientCertificatesOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
 		}
 
-		for _, c := range resp.HsmClientCertificates {
-			r := ResourceHSMClientCertificate()
+		for _, v := range page.HsmClientCertificates {
+			r := resourceHSMClientCertificate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(c.HsmClientCertificateIdentifier))
+			d.SetId(aws.StringValue(v.HsmClientCertificateIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

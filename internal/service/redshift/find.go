@@ -112,7 +112,7 @@ func FindScheduledActionByName(ctx context.Context, conn *redshift.Redshift, nam
 	return output.ScheduledActions[0], nil
 }
 
-func FindHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
+func findHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
 	input := redshift.DescribeHsmClientCertificatesInput{
 		HsmClientCertificateIdentifier: aws.String(id),
 	}

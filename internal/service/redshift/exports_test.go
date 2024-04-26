@@ -14,6 +14,7 @@ var (
 	ResourceEndpointAccess               = resourceEndpointAccess
 	ResourceEndpointAuthorization        = resourceEndpointAuthorization
 	ResourceEventSubscription            = resourceEventSubscription
+	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceLogging                      = newResourceLogging
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
@@ -25,6 +26,7 @@ var (
 	FindEndpointAccessByName             = findEndpointAccessByName
 	FindEndpointAuthorizationByID        = findEndpointAuthorizationByID
 	FindEventSubscriptionByName          = findEventSubscriptionByName
+	FindHSMClientCertificateByID         = findHSMClientCertificateByID
 	FindLoggingByID                      = findLoggingByID
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )
