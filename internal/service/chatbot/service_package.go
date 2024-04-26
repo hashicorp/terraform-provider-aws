@@ -2,7 +2,7 @@ package chatbot
 
 import (
 	"context"
-	"math/rand"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -18,14 +18,12 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			o.BaseEndpoint = aws.String(endpoint)
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// Chatbot endpoint is available only in the 4 regions us-east-2, us-west-2, eu-west-1, and ap-southeast-1.
-			// So pick a region randomly so that even if one endpoint is down, a retry might lead to trying a different endpoint.
-			available_regions := []string{
-				names.USEast2RegionID,
-				names.USWest2RegionID,
-				names.EUWest1RegionID,
-				names.APSoutheast1RegionID,
+			// If the region from the context is one of those four, then use that region. If not default to us-west-2
+			if slices.Contains([]string{names.USEast2RegionID, names.USWest2RegionID, names.EUWest1RegionID, names.APSoutheast1RegionID}, cfg.Region) {
+				o.Region = cfg.Region
+			} else {
+				o.Region = names.USWest2RegionID
 			}
-			o.Region = available_regions[rand.Intn(len(available_regions))]
 		}
 	}), nil
 }
