@@ -45,7 +45,7 @@ func TestNullableInt(t *testing.T) {
 			t.Fatalf("expected test case %d IsNull to return %t, got %t", i, null, tc.expectNull)
 		}
 
-		value, null, err := v.Int64Value()
+		value, null, err := v.ValueInt64()
 		if value != tc.expectedValue {
 			t.Fatalf("expected test case %d Value to be %d, got %d", i, tc.expectedValue, value)
 		}

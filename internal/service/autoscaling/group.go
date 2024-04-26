@@ -3327,7 +3327,7 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 	}
 
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
-		if v, null, _ := nullable.Int(v).Int64Value(); !null {
+		if v, null, _ := nullable.Int(v).ValueInt64(); !null {
 			apiObject.CheckpointDelay = aws.Int32(int32(v))
 		}
 	}
@@ -3337,7 +3337,7 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 	}
 
 	if v, ok := tfMap["instance_warmup"].(string); ok {
-		if v, null, _ := nullable.Int(v).Int64Value(); !null {
+		if v, null, _ := nullable.Int(v).ValueInt64(); !null {
 			apiObject.InstanceWarmup = aws.Int32(int32(v))
 		}
 	}
