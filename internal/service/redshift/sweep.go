@@ -414,16 +414,15 @@ func sweepHSMConfigurations(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeHsmConfigurationsPagesWithContext(ctx, &redshift.DescribeHsmConfigurationsInput{}, func(resp *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
-		if len(resp.HsmConfigurations) == 0 {
-			log.Print("[DEBUG] No Redshift Hsm Configurations to sweep")
+	err = conn.DescribeHsmConfigurationsPagesWithContext(ctx, &redshift.DescribeHsmConfigurationsInput{}, func(page *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
 		}
 
-		for _, c := range resp.HsmConfigurations {
-			r := ResourceHSMConfiguration()
+		for _, v := range page.HsmConfigurations {
+			r := resourceHSMConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(c.HsmConfigurationIdentifier))
+			d.SetId(aws.StringValue(v.HsmConfigurationIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

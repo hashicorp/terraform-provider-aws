@@ -140,7 +140,7 @@ func findHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, 
 	return out.HsmClientCertificates[0], nil
 }
 
-func FindHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmConfiguration, error) {
+func findHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmConfiguration, error) {
 	input := redshift.DescribeHsmConfigurationsInput{
 		HsmConfigurationIdentifier: aws.String(id),
 	}
