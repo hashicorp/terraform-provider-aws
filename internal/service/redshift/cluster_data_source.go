@@ -211,7 +211,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
-	rsc, err := FindClusterByID(ctx, conn, clusterID)
+	rsc, err := findClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", clusterID, err)

@@ -87,7 +87,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Authentication Profile",
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_redshift_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{

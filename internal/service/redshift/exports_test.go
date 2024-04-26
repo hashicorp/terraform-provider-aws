@@ -6,6 +6,7 @@ package redshift
 // Exports for use in tests only.
 var (
 	ResourceAuthenticationProfile        = resourceAuthenticationProfile
+	ResourceCluster                      = resourceCluster
 	ResourceClusterIAMRoles              = resourceClusterIAMRoles
 	ResourceClusterSnapshot              = resourceClusterSnapshot
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
@@ -14,6 +15,7 @@ var (
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
 	FindAuthenticationProfileByID        = findAuthenticationProfileByID
+	FindClusterByID                      = findClusterByID
 	FindClusterSnapshotByID              = findClusterSnapshotByID
 	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID

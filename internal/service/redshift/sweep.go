@@ -124,17 +124,16 @@ func sweepClusters(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeClustersPagesWithContext(ctx, &redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, lastPage bool) bool {
-		if len(resp.Clusters) == 0 {
-			log.Print("[DEBUG] No Redshift clusters to sweep")
+	err = conn.DescribeClustersPagesWithContext(ctx, &redshift.DescribeClustersInput{}, func(page *redshift.DescribeClustersOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
 		}
 
-		for _, c := range resp.Clusters {
-			r := ResourceCluster()
+		for _, v := range page.Clusters {
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.Set("skip_final_snapshot", true)
-			d.SetId(aws.StringValue(c.ClusterIdentifier))
+			d.SetId(aws.StringValue(v.ClusterIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

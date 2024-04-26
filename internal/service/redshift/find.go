@@ -62,7 +62,7 @@ func findCluster(ctx context.Context, conn *redshift.Redshift, input *redshift.D
 	return output[0], nil
 }
 
-func FindClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
+func findClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
 	input := &redshift.DescribeClustersInput{
 		ClusterIdentifier: aws.String(id),
 	}

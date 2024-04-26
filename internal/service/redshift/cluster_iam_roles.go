@@ -99,7 +99,7 @@ func resourceClusterIAMRolesRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	rsc, err := FindClusterByID(ctx, conn, d.Id())
+	rsc, err := findClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster IAM Roles (%s) not found, removing from state", d.Id())
