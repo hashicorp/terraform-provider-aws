@@ -80,8 +80,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAuthenticationProfile,
+			Factory:  resourceAuthenticationProfile,
 			TypeName: "aws_redshift_authentication_profile",
+			Name:     "Authentication Profile",
 		},
 		{
 			Factory:  ResourceCluster,

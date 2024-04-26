@@ -197,7 +197,7 @@ func FindUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string)
 	return output.UsageLimits[0], nil
 }
 
-func FindAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.AuthenticationProfile, error) {
+func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.AuthenticationProfile, error) {
 	input := redshift.DescribeAuthenticationProfilesInput{
 		AuthenticationProfileName: aws.String(id),
 	}

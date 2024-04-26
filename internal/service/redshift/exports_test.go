@@ -5,11 +5,13 @@ package redshift
 
 // Exports for use in tests only.
 var (
+	ResourceAuthenticationProfile        = resourceAuthenticationProfile
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
 	ResourceLogging                      = newResourceLogging
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
+	FindAuthenticationProfileByID        = findAuthenticationProfileByID
 	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
 	FindLoggingByID                      = findLoggingByID

@@ -475,10 +475,10 @@ func sweepAuthenticationProfiles(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	for _, c := range output.AuthenticationProfiles {
-		r := ResourceAuthenticationProfile()
+	for _, v := range output.AuthenticationProfiles {
+		r := resourceAuthenticationProfile()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(c.AuthenticationProfileName))
+		d.SetId(aws.StringValue(v.AuthenticationProfileName))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
