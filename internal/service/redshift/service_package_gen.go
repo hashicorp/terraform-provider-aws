@@ -75,8 +75,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Service Account",
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
+			Name:     "Subnet Group",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
