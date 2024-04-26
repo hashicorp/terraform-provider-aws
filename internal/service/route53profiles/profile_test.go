@@ -37,6 +37,11 @@ func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_message"),
+					resource.TestCheckResourceAttrSet(resourceName, "share_status"),
 				),
 			},
 			{

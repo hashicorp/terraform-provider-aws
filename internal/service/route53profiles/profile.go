@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -77,6 +78,20 @@ func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"owner_id": schema.StringAttribute{
+				Computed: true,
+			},
+			"share_status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ShareStatus](),
+				Computed:   true,
+			},
+			"status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ProfileStatus](),
+				Computed:   true,
+			},
+			"status_message": schema.StringAttribute{
+				Computed: true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
@@ -113,6 +128,10 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 
 	data.ARN = fwflex.StringToFramework(ctx, output.Profile.Arn)
 	data.ID = fwflex.StringToFramework(ctx, output.Profile.Id)
+	data.OwnerId = fwflex.StringToFramework(ctx, output.Profile.OwnerId)
+	data.ShareStatus = fwtypes.StringEnumValue(output.Profile.ShareStatus)
+	data.Status = fwtypes.StringEnumValue(output.Profile.Status)
+	data.StatusMessage = fwflex.StringToFramework(ctx, output.Profile.StatusMessage)
 
 	if _, err := waitProfileCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for route53 profile (%s) created", name), err.Error())
@@ -268,8 +287,12 @@ func FindProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 }
 
 type resourceProfileData struct {
-	ARN      types.String   `tfsdk:"arn"`
-	ID       types.String   `tfsdk:"id"`
-	Name     types.String   `tfsdk:"name"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	ARN           types.String                               `tfsdk:"arn"`
+	ID            types.String                               `tfsdk:"id"`
+	Name          types.String                               `tfsdk:"name"`
+	OwnerId       types.String                               `tfsdk:"owner_id"`
+	ShareStatus   fwtypes.StringEnum[awstypes.ShareStatus]   `tfsdk:"share_status"`
+	Status        fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
+	StatusMessage types.String                               `tfsdk:"status_message"`
+	Timeouts      timeouts.Value                             `tfsdk:"timeouts"`
 }
