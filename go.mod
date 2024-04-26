@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.28
+	github.com/aws/aws-sdk-go v1.51.29
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -88,7 +88,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.2
-	github.com/aws/aws-sdk-go-v2/service/fms v1.31.4
+	github.com/aws/aws-sdk-go-v2/service/fms v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.0
@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
-	github.com/aws/aws-sdk-go-v2/service/rds v1.77.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.3
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.5
@@ -148,7 +148,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.4
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.3
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/shield v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/signer v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4
