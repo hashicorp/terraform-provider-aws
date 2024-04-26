@@ -420,7 +420,7 @@ func findClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id st
 	return output.Snapshots[0], nil
 }
 
-func FindResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.ResourcePolicy, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.ResourcePolicy, error) {
 	input := &redshift.GetResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 	}

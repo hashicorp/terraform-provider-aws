@@ -19,6 +19,7 @@ var (
 	ResourceLogging                      = newResourceLogging
 	ResourceParameterGroup               = resourceParameterGroup
 	ResourcePartner                      = resourcePartner
+	ResourceResourcePolicy               = resourceResourcePolicy
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
 	FindAuthenticationProfileByID        = findAuthenticationProfileByID
@@ -34,5 +35,6 @@ var (
 	FindLoggingByID                      = findLoggingByID
 	FindParameterGroupByName             = findParameterGroupByName
 	FindPartnerByID                      = findPartnerByID
+	FindResourcePolicyByARN              = findResourcePolicyByARN
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )
