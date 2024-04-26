@@ -312,7 +312,7 @@ func findEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name
 	return output.EndpointAccessList[0], nil
 }
 
-func FindEndpointAuthorizationById(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAuthorization, error) {
+func findEndpointAuthorizationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAuthorization, error) {
 	account, clusterId, err := DecodeEndpointAuthorizationID(id)
 	if err != nil {
 		return nil, err

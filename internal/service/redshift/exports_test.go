@@ -12,6 +12,7 @@ var (
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
 	ResourceEndpointAccess               = resourceEndpointAccess
+	ResourceEndpointAuthorization        = resourceEndpointAuthorization
 	ResourceLogging                      = newResourceLogging
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
@@ -21,6 +22,7 @@ var (
 	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
 	FindEndpointAccessByName             = findEndpointAccessByName
+	FindEndpointAuthorizationByID        = findEndpointAuthorizationByID
 	FindLoggingByID                      = findLoggingByID
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )
