@@ -60,7 +60,7 @@ func TestNullableBool(t *testing.T) {
 			t.Fatalf("expected test case %d IsNull to return %t, got %t", i, null, tc.expectNull)
 		}
 
-		value, null, err := v.Value()
+		value, null, err := v.ValueBool()
 		if value != tc.expectedValue {
 			t.Fatalf("expected test case %d Value to be %t, got %t", i, tc.expectedValue, value)
 		}

@@ -479,11 +479,11 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 
 	apiObject := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 

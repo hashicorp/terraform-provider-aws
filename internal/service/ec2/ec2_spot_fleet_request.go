@@ -1151,7 +1151,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 	// If terminate_instances_on_delete is not null, its value is used.
-	if v, null, _ := nullable.Bool(d.Get("terminate_instances_on_delete").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("terminate_instances_on_delete").(string)).ValueBool(); !null {
 		terminateInstances = v
 	}
 

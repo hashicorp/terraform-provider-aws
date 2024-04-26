@@ -579,7 +579,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
 		if v {
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {

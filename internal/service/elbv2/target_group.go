@@ -775,7 +775,7 @@ func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType strin
 		switch v, nt, k := d.Get(tfAttributeName), attributeInfo.tfNullableType, aws.String(attributeInfo.apiAttributeKey); nt {
 		case schema.TypeBool:
 			v := v.(string)
-			if v, null, _ := nullable.Bool(v).Value(); !null {
+			if v, null, _ := nullable.Bool(v).ValueBool(); !null {
 				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
 					Key:   k,
 					Value: flex.BoolValueToString(v),

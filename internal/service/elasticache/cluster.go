@@ -390,7 +390,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
-		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
 	}
@@ -660,7 +660,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("auto_minor_version_upgrade") {
 			v := d.Get("auto_minor_version_upgrade")
-			if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				input.AutoMinorVersionUpgrade = aws.Bool(v)
 			}
 			requestUpdate = true

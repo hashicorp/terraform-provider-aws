@@ -282,7 +282,7 @@ func expandFilter(l *schema.Set) map[string]types.Criterion {
 			}
 		}
 		if v, ok := value.(map[string]interface{})["exists"]; ok {
-			if val, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if val, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				c.Exists = aws.Bool(val)
 			}
 		}

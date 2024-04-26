@@ -378,7 +378,7 @@ func resourceBroker() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
-						if v, _, _ := nullable.Bool(v.(string)).Value(); v {
+						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
 							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
 						}
 					}
@@ -1169,7 +1169,7 @@ func expandLogs(engineType string, l []interface{}) *types.Logs {
 
 	// When the engine type is "RabbitMQ", the parameter audit cannot be set at all.
 	if v, ok := m["audit"]; ok {
-		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			if !strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) {
 				logs.Audit = aws.Bool(v)
 			}

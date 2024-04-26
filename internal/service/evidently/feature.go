@@ -411,7 +411,7 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 	var result awstypes.VariableValue
 
 	// Only one of these values can be set at a time
-	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).Value(); !null {
+	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).ValueBool(); !null {
 		result = &awstypes.VariableValueMemberBoolValue{
 			Value: val,
 		}
