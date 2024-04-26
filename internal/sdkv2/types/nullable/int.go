@@ -20,6 +20,18 @@ func (i Int) IsNull() bool {
 	return i == ""
 }
 
+func (i Int) ValueInt32() (int32, bool, error) {
+	if i.IsNull() {
+		return 0, true, nil
+	}
+
+	value, err := strconv.ParseInt(string(i), 10, 32)
+	if err != nil {
+		return 0, false, err
+	}
+	return int32(value), false, nil
+}
+
 func (i Int) ValueInt64() (int64, bool, error) {
 	if i.IsNull() {
 		return 0, true, nil
