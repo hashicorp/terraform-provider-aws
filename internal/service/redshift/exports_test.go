@@ -18,6 +18,7 @@ var (
 	ResourceHSMConfiguration             = resourceHSMConfiguration
 	ResourceLogging                      = newResourceLogging
 	ResourceParameterGroup               = resourceParameterGroup
+	ResourcePartner                      = resourcePartner
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
 	FindAuthenticationProfileByID        = findAuthenticationProfileByID
@@ -32,5 +33,6 @@ var (
 	FindHSMConfigurationByID             = findHSMConfigurationByID
 	FindLoggingByID                      = findLoggingByID
 	FindParameterGroupByName             = findParameterGroupByName
+	FindPartnerByID                      = findPartnerByID
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )

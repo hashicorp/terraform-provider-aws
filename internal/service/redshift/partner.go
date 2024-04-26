@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_redshift_partner")
-func ResourcePartner() *schema.Resource {
+// @SDKResource("aws_redshift_partner", name="Partner")
+func resourcePartner() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartnerCreate,
 		ReadWithoutTimeout:   resourcePartnerRead,
@@ -93,7 +93,8 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := FindPartnerById(ctx, conn, d.Id())
+	out, err := findPartnerByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Partner (%s) not found, removing from state", d.Id())
 		d.SetId("")

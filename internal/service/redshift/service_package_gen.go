@@ -151,8 +151,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePartner,
+			Factory:  resourcePartner,
 			TypeName: "aws_redshift_partner",
+			Name:     "Partner",
 		},
 		{
 			Factory:  ResourceResourcePolicy,

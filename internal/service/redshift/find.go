@@ -347,7 +347,7 @@ func findEndpointAuthorizationByID(ctx context.Context, conn *redshift.Redshift,
 	return output.EndpointAuthorizationList[0], nil
 }
 
-func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.PartnerIntegrationInfo, error) {
+func findPartnerByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.PartnerIntegrationInfo, error) {
 	account, clusterId, dbName, partnerName, err := DecodePartnerID(id)
 	if err != nil {
 		return nil, err
