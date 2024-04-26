@@ -295,7 +295,7 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 func testAccSubscriberConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
-  subscriber_name = %[2]q
+  subscriber_name = %[1]q
   access_type     = "S3"
   source {
     aws_log_source_resource {
@@ -314,13 +314,15 @@ resource "aws_securitylake_subscriber" "test" {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.current.account_id]
-    regions        = [%[1]q]
+    regions        = [data.aws_region.current.name]
     source_name    = "ROUTE53"
     source_version = "1.0"
   }
   depends_on = [aws_securitylake_data_lake.test]
 }
-`, acctest.Region(), rName))
+
+data "aws_region" "current" {}
+`, rName))
 }
 
 func testAccSubscriberConfig_customLog(rName string) string {
@@ -587,7 +589,7 @@ resource "aws_securitylake_subscriber" "test" {
 func testAccSubscriberConfig_update(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
-  subscriber_name = %[2]q
+  subscriber_name = %[1]q
   access_type     = "S3"
   source {
     aws_log_source_resource {
@@ -604,11 +606,13 @@ resource "aws_securitylake_subscriber" "test" {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.current.account_id]
-    regions        = [%[1]q]
+    regions        = [data.aws_region.current.name]
     source_name    = "ROUTE53"
     source_version = "1.0"
   }
   depends_on = [aws_securitylake_data_lake.test]
 }
-`, acctest.Region(), rName))
+
+data "aws_region" "current" {}
+`, rName))
 }
