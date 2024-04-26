@@ -266,12 +266,12 @@ func sweepSnapshotSchedules(region string) error {
 			return !lastPage
 		}
 
-		for _, snapshotSchedules := range page.SnapshotSchedules {
-			id := aws.StringValue(snapshotSchedules.ScheduleIdentifier)
+		for _, v := range page.SnapshotSchedules {
+			id := aws.StringValue(v.ScheduleIdentifier)
 
 			for _, prefix := range prefixesToSweep {
 				if strings.HasPrefix(id, prefix) {
-					r := ResourceSnapshotSchedule()
+					r := resourceSnapshotSchedule()
 					d := r.Data(nil)
 					d.SetId(id)
 

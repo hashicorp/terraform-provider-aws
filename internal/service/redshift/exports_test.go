@@ -23,6 +23,7 @@ var (
 	ResourceScheduledAction              = resourceScheduledAction
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 	ResourceSnapshotCopyGrant            = resourceSnapshotCopyGrant
+	ResourceSnapshotSchedule             = resourceSnapshotSchedule
 	ResourceSnapshotScheduleAssociation  = resourceSnapshotScheduleAssociation
 
 	FindAuthenticationProfileByID               = findAuthenticationProfileByID
@@ -43,4 +44,5 @@ var (
 	FindSnapshotCopyByID                        = findSnapshotCopyByID
 	FindSnapshotCopyGrantByName                 = findSnapshotCopyGrantByName
 	FindSnapshotScheduleAssociationByTwoPartKey = findSnapshotScheduleAssociationByTwoPartKey
+	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
 )
