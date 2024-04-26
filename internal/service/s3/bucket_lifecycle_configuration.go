@@ -22,9 +22,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -668,13 +668,13 @@ func expandLifecycleRuleFilter(ctx context.Context, l []interface{}) types.Lifec
 		result = expandLifecycleRuleFilterMemberAnd(ctx, v[0].(map[string]interface{}))
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).Value(); !null && v >= 0 {
+	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
 		result = &types.LifecycleRuleFilterMemberObjectSizeGreaterThan{
 			Value: v,
 		}
 	}
 
-	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
 		result = &types.LifecycleRuleFilterMemberObjectSizeLessThan{
 			Value: v,
 		}
@@ -754,8 +754,8 @@ func expandNoncurrentVersionExpiration(m map[string]interface{}) *types.Noncurre
 
 	result := &types.NoncurrentVersionExpiration{}
 
-	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
-		result.NewerNoncurrentVersions = aws.Int32(int32(v))
+	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
+		result.NewerNoncurrentVersions = aws.Int32(v)
 	}
 
 	if v, ok := m["noncurrent_days"].(int); ok {
@@ -781,8 +781,8 @@ func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersi
 
 		transition := types.NoncurrentVersionTransition{}
 
-		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).Value(); !null && v > 0 {
-			transition.NewerNoncurrentVersions = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
+			transition.NewerNoncurrentVersions = aws.Int32(v)
 		}
 
 		if v, ok := tfMap["noncurrent_days"].(int); ok {

@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_appautoscaling_scheduled_action", namae="Scheduled Action")
@@ -285,12 +285,12 @@ func expandScalableTargetAction(l []interface{}) *applicationautoscaling.Scalabl
 	result := &applicationautoscaling.ScalableTargetAction{}
 
 	if v, ok := m["max_capacity"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Int(v.(string)).ValueInt64(); !null {
 			result.MaxCapacity = aws.Int64(v)
 		}
 	}
 	if v, ok := m["min_capacity"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Int(v.(string)).ValueInt64(); !null {
 			result.MinCapacity = aws.Int64(v)
 		}
 	}

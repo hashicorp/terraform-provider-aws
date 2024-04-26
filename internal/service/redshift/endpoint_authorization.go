@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_redshift_endpoint_authorization")
-func ResourceEndpointAuthorization() *schema.Resource {
+// @SDKResource("aws_redshift_endpoint_authorization", name="Endpoint Authorization")
+func resourceEndpointAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAuthorizationCreate,
 		ReadWithoutTimeout:   resourceEndpointAuthorizationRead,
 		UpdateWithoutTimeout: resourceEndpointAuthorizationUpdate,
 		DeleteWithoutTimeout: resourceEndpointAuthorizationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -103,7 +104,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	endpoint, err := FindEndpointAuthorizationById(ctx, conn, d.Id())
+	endpoint, err := findEndpointAuthorizationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Endpoint Authorization (%s) not found, removing from state", d.Id())

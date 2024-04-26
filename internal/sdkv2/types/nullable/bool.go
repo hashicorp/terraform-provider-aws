@@ -20,7 +20,7 @@ func (b Bool) IsNull() bool {
 	return b == ""
 }
 
-func (b Bool) Value() (bool, bool, error) {
+func (b Bool) ValueBool() (bool, bool, error) {
 	if b.IsNull() {
 		return false, true, nil
 	}
@@ -62,8 +62,8 @@ func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []
 }
 
 func DiffSuppressNullableBool(k, o, n string, d *schema.ResourceData) bool {
-	ov, onull, _ := Bool(o).Value()
-	nv, nnull, _ := Bool(n).Value()
+	ov, onull, _ := Bool(o).ValueBool()
+	nv, nnull, _ := Bool(n).ValueBool()
 	if onull && nnull {
 		return true
 	}
@@ -79,8 +79,8 @@ func DiffSuppressNullableBool(k, o, n string, d *schema.ResourceData) bool {
 // This is typically not what you want: it is indended for cases where a parameter is optional
 // in some cases and must be set in others.
 func DiffSuppressNullableBoolFalseAsNull(k, o, n string, d *schema.ResourceData) bool {
-	ov, onull, _ := Bool(o).Value()
-	nv, nnull, _ := Bool(n).Value()
+	ov, onull, _ := Bool(o).ValueBool()
+	nv, nnull, _ := Bool(n).ValueBool()
 	if !ov && nnull || onull && !nv {
 		return true
 	}

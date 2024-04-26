@@ -20,7 +20,7 @@ func (i Float) IsNull() bool {
 	return i == ""
 }
 
-func (i Float) Value() (float64, bool, error) {
+func (i Float) ValueFloat64() (float64, bool, error) {
 	if i.IsNull() {
 		return 0, true, nil
 	}
