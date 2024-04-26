@@ -448,8 +448,8 @@ resource "aws_default_route_table" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name    = %[1]q
-  vpc_id  = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 5432
