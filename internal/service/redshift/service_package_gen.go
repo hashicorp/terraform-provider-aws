@@ -190,7 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Snapshot Schedule Association",
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{

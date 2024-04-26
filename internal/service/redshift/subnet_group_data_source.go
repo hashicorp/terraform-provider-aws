@@ -51,7 +51,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	subnetgroup, err := FindSubnetGroupByName(ctx, conn, d.Get("name").(string))
+	subnetgroup, err := findSubnetGroupByName(ctx, conn, d.Get("name").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Subnet Group (%s): %s", d.Id(), err)

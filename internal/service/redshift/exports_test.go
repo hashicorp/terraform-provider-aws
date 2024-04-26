@@ -25,6 +25,7 @@ var (
 	ResourceSnapshotCopyGrant            = resourceSnapshotCopyGrant
 	ResourceSnapshotSchedule             = resourceSnapshotSchedule
 	ResourceSnapshotScheduleAssociation  = resourceSnapshotScheduleAssociation
+	ResourceSubnetGroup                  = resourceSubnetGroup
 
 	FindAuthenticationProfileByID               = findAuthenticationProfileByID
 	FindClusterByID                             = findClusterByID
@@ -45,4 +46,5 @@ var (
 	FindSnapshotCopyGrantByName                 = findSnapshotCopyGrantByName
 	FindSnapshotScheduleAssociationByTwoPartKey = findSnapshotScheduleAssociationByTwoPartKey
 	FindSnapshotScheduleByID                    = findSnapshotScheduleByID
+	FindSubnetGroupByName                       = findSubnetGroupByName
 )

@@ -320,18 +320,18 @@ func sweepSubnetGroups(region string) error {
 			return !lastPage
 		}
 
-		for _, clusterSubnetGroup := range page.ClusterSubnetGroups {
-			if clusterSubnetGroup == nil {
+		for _, v := range page.ClusterSubnetGroups {
+			if v == nil {
 				continue
 			}
 
-			name := aws.StringValue(clusterSubnetGroup.ClusterSubnetGroupName)
+			name := aws.StringValue(v.ClusterSubnetGroupName)
 
 			if name == "default" {
 				continue
 			}
 
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 

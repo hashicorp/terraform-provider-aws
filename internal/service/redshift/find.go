@@ -254,7 +254,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, n
 	return output.EventSubscriptionsList[0], nil
 }
 
-func FindSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ClusterSubnetGroup, error) {
+func findSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ClusterSubnetGroup, error) {
 	input := &redshift.DescribeClusterSubnetGroupsInput{
 		ClusterSubnetGroupName: aws.String(name),
 	}
