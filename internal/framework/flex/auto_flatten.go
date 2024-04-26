@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/shopspring/decimal"
 )
 
 // Flatten = AWS --> TF
@@ -143,7 +144,13 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 	case basetypes.Float64Typable:
 		float64Value := types.Float64Null()
 		if !isNullFrom {
-			float64Value = types.Float64Value(vFrom.Float())
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
+			default:
+				float64Value = types.Float64Value(vFrom.Float())
+			}
 		}
 		v, d := tTo.ValueFromFloat64(ctx, float64Value)
 		diags.Append(d...)
