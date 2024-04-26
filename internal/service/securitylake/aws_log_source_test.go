@@ -65,10 +65,11 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -168,34 +169,45 @@ func testAccCheckAWSLogSourceExists(ctx context.Context, n string, v *types.AwsL
 }
 
 func testAccAWSLogSourceConfig_basic() string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), `
 data "aws_caller_identity" "test" {}
 
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.test.account_id]
-    regions        = [%[1]q]
+    regions        = [data.aws_region.current.name]
     source_name    = "ROUTE53"
     source_version = "1.0"
   }
   depends_on = [aws_securitylake_data_lake.test]
 }
-`, acctest.Region()))
+
+data "aws_region" "current" {}
+`)
 }
 
 func testAccAWSLogSourceConfig_multiRegion(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_replication(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccDataLakeConfig_replication(rName), `
 data "aws_caller_identity" "test" {}
 
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.test.account_id]
-    regions        = [%[1]q, %[2]q]
+    regions        = [data.aws_region.current.name, data.aws_region.alternate.name]
     source_name    = "ROUTE53"
     source_version = "1.0"
   }
 
   depends_on = [aws_securitylake_data_lake.test, aws_securitylake_data_lake.region_2]
 }
-`, acctest.Region(), acctest.AlternateRegion()))
+
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+`)
 }
