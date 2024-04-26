@@ -11,6 +11,7 @@ var (
 	ResourceClusterSnapshot              = resourceClusterSnapshot
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
+	ResourceEndpointAccess               = resourceEndpointAccess
 	ResourceLogging                      = newResourceLogging
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
@@ -19,6 +20,7 @@ var (
 	FindClusterSnapshotByID              = findClusterSnapshotByID
 	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
+	FindEndpointAccessByName             = findEndpointAccessByName
 	FindLoggingByID                      = findLoggingByID
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )

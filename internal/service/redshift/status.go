@@ -78,7 +78,7 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) 
 
 func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEndpointAccessByName(ctx, conn, name)
+		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

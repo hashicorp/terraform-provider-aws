@@ -283,7 +283,7 @@ func FindSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name st
 	return output.ClusterSubnetGroups[0], nil
 }
 
-func FindEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EndpointAccess, error) {
+func findEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EndpointAccess, error) {
 	input := &redshift.DescribeEndpointAccessInput{
 		EndpointName: aws.String(name),
 	}

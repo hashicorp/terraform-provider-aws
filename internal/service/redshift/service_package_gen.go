@@ -108,8 +108,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEndpointAccess,
+			Factory:  resourceEndpointAccess,
 			TypeName: "aws_redshift_endpoint_access",
+			Name:     "Endpoint Access",
 		},
 		{
 			Factory:  ResourceEndpointAuthorization,
