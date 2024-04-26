@@ -95,8 +95,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterIAMRoles,
+			Factory:  resourceClusterIAMRoles,
 			TypeName: "aws_redshift_cluster_iam_roles",
+			Name:     "Cluster IAM Roles",
 		},
 		{
 			Factory:  ResourceClusterSnapshot,

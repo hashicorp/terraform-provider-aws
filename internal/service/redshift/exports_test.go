@@ -6,6 +6,7 @@ package redshift
 // Exports for use in tests only.
 var (
 	ResourceAuthenticationProfile        = resourceAuthenticationProfile
+	ResourceClusterIAMRoles              = resourceClusterIAMRoles
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
 	ResourceLogging                      = newResourceLogging
