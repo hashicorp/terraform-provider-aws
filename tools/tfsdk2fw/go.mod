@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.51.28 // indirect
+	github.com/aws/aws-sdk-go v1.51.29 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
@@ -51,6 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.14.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.12.0 // indirect
@@ -105,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/fms v1.31.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/fms v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.0 // indirect
@@ -151,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.77.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.5 // indirect
@@ -170,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.25.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signer v1.22.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4 // indirect
