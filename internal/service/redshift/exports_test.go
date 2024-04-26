@@ -7,12 +7,14 @@ package redshift
 var (
 	ResourceAuthenticationProfile        = resourceAuthenticationProfile
 	ResourceClusterIAMRoles              = resourceClusterIAMRoles
+	ResourceClusterSnapshot              = resourceClusterSnapshot
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
 	ResourceLogging                      = newResourceLogging
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
 	FindAuthenticationProfileByID        = findAuthenticationProfileByID
+	FindClusterSnapshotByID              = findClusterSnapshotByID
 	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
 	FindLoggingByID                      = findLoggingByID

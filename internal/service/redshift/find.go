@@ -384,7 +384,7 @@ func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*
 	return output.PartnerIntegrationInfoList[0], nil
 }
 
-func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
+func findClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
 	input := &redshift.DescribeClusterSnapshotsInput{
 		SnapshotIdentifier: aws.String(id),
 	}

@@ -94,7 +94,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name str
 
 func statusClusterSnapshot(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterSnapshotByID(ctx, conn, id)
+		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

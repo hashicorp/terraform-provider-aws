@@ -100,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Cluster IAM Roles",
 		},
 		{
-			Factory:  ResourceClusterSnapshot,
+			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_redshift_cluster_snapshot",
 			Name:     "Cluster Snapshot",
 			Tags: &types.ServicePackageResourceTags{
