@@ -17,6 +17,7 @@ var (
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
 	ResourceLogging                      = newResourceLogging
+	ResourceParameterGroup               = resourceParameterGroup
 	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
 	FindAuthenticationProfileByID        = findAuthenticationProfileByID
@@ -30,5 +31,6 @@ var (
 	FindHSMClientCertificateByID         = findHSMClientCertificateByID
 	FindHSMConfigurationByID             = findHSMConfigurationByID
 	FindLoggingByID                      = findLoggingByID
+	FindParameterGroupByName             = findParameterGroupByName
 	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )
