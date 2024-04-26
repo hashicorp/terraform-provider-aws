@@ -754,8 +754,8 @@ func expandNoncurrentVersionExpiration(m map[string]interface{}) *types.Noncurre
 
 	result := &types.NoncurrentVersionExpiration{}
 
-	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).ValueInt64(); !null && v > 0 {
-		result.NewerNoncurrentVersions = aws.Int32(int32(v))
+	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
+		result.NewerNoncurrentVersions = aws.Int32(v)
 	}
 
 	if v, ok := m["noncurrent_days"].(int); ok {
@@ -781,8 +781,8 @@ func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersi
 
 		transition := types.NoncurrentVersionTransition{}
 
-		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).ValueInt64(); !null && v > 0 {
-			transition.NewerNoncurrentVersions = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
+			transition.NewerNoncurrentVersions = aws.Int32(v)
 		}
 
 		if v, ok := tfMap["noncurrent_days"].(int); ok {
