@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -40,10 +41,72 @@ func testAccAWSLogSource_basic(t *testing.T) {
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, "source.0.accounts.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLogSourceConfig_sourceVersion("2.0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccAWSLogSource_sourceVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_aws_log_source.test"
+	var logSource types.AwsLogSourceConfiguration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLogSourceConfig_sourceVersion("1.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "1.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLogSourceConfig_sourceVersion("2.0"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
 				),
 			},
 			{
@@ -81,8 +144,6 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "1.0"),
 				),
 			},
 			{
@@ -171,14 +232,11 @@ func testAccCheckAWSLogSourceExists(ctx context.Context, n string, v *types.AwsL
 func testAccAWSLogSourceConfig_basic() string {
 	return acctest.ConfigCompose(
 		testAccDataLakeConfig_basic(), `
-data "aws_caller_identity" "test" {}
-
 resource "aws_securitylake_aws_log_source" "test" {
   source {
-    accounts       = [data.aws_caller_identity.test.account_id]
-    regions        = [data.aws_region.current.name]
-    source_name    = "ROUTE53"
-    source_version = "1.0"
+    accounts    = [data.aws_caller_identity.current.account_id]
+    regions     = [data.aws_region.current.name]
+    source_name = "ROUTE53"
   }
   depends_on = [aws_securitylake_data_lake.test]
 }
@@ -187,18 +245,32 @@ data "aws_region" "current" {}
 `)
 }
 
+func testAccAWSLogSourceConfig_sourceVersion(version string) string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts       = [data.aws_caller_identity.current.account_id]
+    regions        = [data.aws_region.current.name]
+    source_name    = "ROUTE53"
+    source_version = %[1]q
+  }
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+data "aws_region" "current" {}
+`, version))
+}
+
 func testAccAWSLogSourceConfig_multiRegion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccDataLakeConfig_replication(rName), `
-data "aws_caller_identity" "test" {}
-
 resource "aws_securitylake_aws_log_source" "test" {
   source {
-    accounts       = [data.aws_caller_identity.test.account_id]
-    regions        = [data.aws_region.current.name, data.aws_region.alternate.name]
-    source_name    = "ROUTE53"
-    source_version = "1.0"
+    accounts    = [data.aws_caller_identity.current.account_id]
+    regions     = [data.aws_region.current.name, data.aws_region.alternate.name]
+    source_name = "ROUTE53"
   }
 
   depends_on = [aws_securitylake_data_lake.test, aws_securitylake_data_lake.region_2]

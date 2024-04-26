@@ -144,6 +144,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	sourceData.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
 	sourceData.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
+	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }

@@ -28,9 +28,10 @@ func TestAccSecurityLake_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AWSLogSource": {
-			"basic":       testAccAWSLogSource_basic,
-			"disappears":  testAccAWSLogSource_disappears,
-			"multiRegion": testAccAWSLogSource_multiRegion,
+			"basic":         testAccAWSLogSource_basic,
+			"disappears":    testAccAWSLogSource_disappears,
+			"multiRegion":   testAccAWSLogSource_multiRegion,
+			"sourceVersion": testAccAWSLogSource_sourceVersion,
 		},
 		"CustomLogSource": {
 			"basic":      testAccCustomLogSource_basic,
