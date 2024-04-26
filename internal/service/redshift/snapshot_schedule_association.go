@@ -21,12 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_redshift_snapshot_schedule_association")
-func ResourceSnapshotScheduleAssociation() *schema.Resource {
+// @SDKResource("aws_redshift_snapshot_schedule_association", name="Snapshot Schedule Association")
+func resourceSnapshotScheduleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotScheduleAssociationCreate,
 		ReadWithoutTimeout:   resourceSnapshotScheduleAssociationRead,
 		DeleteWithoutTimeout: resourceSnapshotScheduleAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -83,7 +84,7 @@ func resourceSnapshotScheduleAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	association, err := FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+	association, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Snapshot Schedule Association (%s) not found, removing from state", d.Id())
@@ -151,7 +152,7 @@ func SnapshotScheduleAssociationParseResourceID(id string) (string, string, erro
 	return parts[0], parts[1], nil
 }
 
-func FindSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *redshift.Redshift, clusterIdentifier, scheduleIdentifier string) (*redshift.ClusterAssociatedToSchedule, error) {
+func findSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *redshift.Redshift, clusterIdentifier, scheduleIdentifier string) (*redshift.ClusterAssociatedToSchedule, error) {
 	input := &redshift.DescribeSnapshotSchedulesInput{
 		ClusterIdentifier:  aws.String(clusterIdentifier),
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
@@ -184,7 +185,7 @@ func FindSnapshotScheduleAssociationByTwoPartKey(ctx context.Context, conn *reds
 
 func statusSnapshotScheduleAssociation(ctx context.Context, conn *redshift.Redshift, clusterIdentifier, scheduleIdentifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
+		output, err := findSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

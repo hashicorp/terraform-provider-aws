@@ -183,8 +183,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSnapshotScheduleAssociation,
+			Factory:  resourceSnapshotScheduleAssociation,
 			TypeName: "aws_redshift_snapshot_schedule_association",
+			Name:     "Snapshot Schedule Association",
 		},
 		{
 			Factory:  ResourceSubnetGroup,
