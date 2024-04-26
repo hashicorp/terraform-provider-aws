@@ -6,7 +6,6 @@ package elasticache
 import (
 	"context"
 
-	elasticache_v2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -85,29 +84,6 @@ func StatusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cach
 		}
 
 		return c, aws.StringValue(c.CacheClusterStatus), nil
-	}
-}
-
-const (
-	ServerlessCacheAvailable = "available"
-	ServerlessCacheCreating  = "creating"
-	ServerlessCacheDeleted   = "deleted"
-	ServerlessCacheDeleting  = "deleting"
-	ServerlessCacheModifying = "modifying"
-)
-
-// statusCacheCluster fetches the Cache Cluster and its Status
-func statusServerlessCache(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		c, err := FindServerlessCacheByID(ctx, conn, cacheClusterID)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return c, aws.StringValue(c.Status), nil
 	}
 }
 
