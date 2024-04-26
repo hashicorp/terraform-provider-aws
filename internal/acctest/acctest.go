@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -2612,6 +2613,18 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	v := os.Getenv(key)
 	if v == "" {
 		t.Skipf("Environment variable %s is not set, skipping test", key)
+	}
+	return v
+}
+
+// SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
+// The absolute path to the executable is returned.
+func SkipIfExeNotOnPath(t *testing.T, file string) string {
+	t.Helper()
+
+	v, err := exec.LookPath(file)
+	if err != nil {
+		t.Skipf("File %s not found on PATH, skipping test: %s", v, err)
 	}
 	return v
 }
