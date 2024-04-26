@@ -1302,13 +1302,13 @@ func expandStepAdjustments(tfList []interface{}) []awstypes.StepAdjustment {
 		}
 
 		if v, ok := tfMap["metric_interval_lower_bound"].(string); ok {
-			if v, null, _ := nullable.Float(v).Value(); !null {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 				apiObject.MetricIntervalLowerBound = aws.Float64(v)
 			}
 		}
 
 		if v, ok := tfMap["metric_interval_upper_bound"].(string); ok {
-			if v, null, _ := nullable.Float(v).Value(); !null {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 				apiObject.MetricIntervalUpperBound = aws.Float64(v)
 			}
 		}

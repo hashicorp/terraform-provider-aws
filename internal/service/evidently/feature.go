@@ -419,7 +419,7 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 		result = &awstypes.VariableValueMemberLongValue{
 			Value: v,
 		}
-	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).Value(); !null {
+	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).ValueFloat64(); !null {
 		result = &awstypes.VariableValueMemberDoubleValue{
 			Value: v,
 		}

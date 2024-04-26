@@ -249,7 +249,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTrans
 	apiObject := &types.MetricTransformation{}
 
 	if v, ok := tfMap["default_value"].(string); ok {
-		if v, null, _ := nullable.Float(v).Value(); !null {
+		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 			apiObject.DefaultValue = aws.Float64(v)
 		}
 	}
