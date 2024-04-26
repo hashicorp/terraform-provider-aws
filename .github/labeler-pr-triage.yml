@@ -349,6 +349,12 @@ service/ce:
           - any-glob-to-any-file:
               - 'internal/service/ce/**/*'
               - 'website/**/ce_*'
+service/chatbot:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/chatbot/**/*'
+              - 'website/**/chatbot_*'
 service/chime:
   - any:
       - changed-files:
