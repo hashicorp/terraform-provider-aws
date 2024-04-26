@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.51.28 h1:x3CV5xjnL4EbVLaPXulBOxqiq2dkc9o6+50xxT3tvXY=
-github.com/aws/aws-sdk-go v1.51.28/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.51.29 h1:18I5kjEcbyJOH4l2EjQyJJG6v3uPjrzwG0uiSD3vJEM=
+github.com/aws/aws-sdk-go v1.51.29/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=
 github.com/aws/aws-sdk-go-v2 v1.26.1/go.mod h1:ffIFB97e2yNsv4aTSGkqtHnppsIJzw7G7BReUZ3jCXM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevwDA+vi/wqhp1ct18mVXYN08/93to=
@@ -196,8 +196,8 @@ github.com/aws/aws-sdk-go-v2/service/firehose v1.28.6 h1:CRmkhpMI1lamkPYyg64imP7
 github.com/aws/aws-sdk-go-v2/service/firehose v1.28.6/go.mod h1:78F+4pVJf6Qlg7a34oR2I2SpM/v0EUSAL/htTZ9trg4=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.2 h1:1QesvhdcRDCJYFCuUcQ8XbBEZXRZQXrAlkPdWov07dc=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.2/go.mod h1:ISG70NA5WILagob8et1PhuyC+4lWLflITLzWWPFLXoE=
-github.com/aws/aws-sdk-go-v2/service/fms v1.31.4 h1:gY+Dp2QdphY6m5IVkETmsNauYztd62piL9az5B6rVtQ=
-github.com/aws/aws-sdk-go-v2/service/fms v1.31.4/go.mod h1:X4DjA4sm8cobhR9DtHn947+dLYxU1oWq3zwRZUmFSLo=
+github.com/aws/aws-sdk-go-v2/service/fms v1.32.0 h1:I16KtX4iigW3hrkW7zw4jXVqsoXZuOMhGd924KXJjo8=
+github.com/aws/aws-sdk-go-v2/service/fms v1.32.0/go.mod h1:X4DjA4sm8cobhR9DtHn947+dLYxU1oWq3zwRZUmFSLo=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4 h1:y0/RN8LwIbyDTPe/dnDBdsCw89ko8ZNFPW4vStye4aE=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4/go.mod h1:8ofkOuh1SZLKR5EdfxPhQ1UgaQuCBAZzUwbeIBmeKIM=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.1 h1:E48tPAIKptyIb8OFOAsZ3xSzjwou8A63f40ao1H3tVU=
@@ -288,8 +288,8 @@ github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4 h1:h/Jmsgx2BVIBzN3CvEmU37bQ1y4
 github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4/go.mod h1:T789CzkMLwKq1b5MxcUfQeoUisJ6jJhciaZTtAQtUOU=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4 h1:f5RY4vrfqBG5nmgSiEejpFOeWfzkCXd+EpOsRdL4W+I=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4/go.mod h1:BUtbswz07qEjzGypmeUdtP53noKx1PBKAnX9Fe0Mul4=
-github.com/aws/aws-sdk-go-v2/service/rds v1.77.2 h1:d9GrRZEoi11Aa6az++UC6JsauTN7CscLDuNb/fxcttU=
-github.com/aws/aws-sdk-go-v2/service/rds v1.77.2/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
+github.com/aws/aws-sdk-go-v2/service/rds v1.77.3 h1:c5TjKZ2vPbvH4kMxT/vJGEQI2p96n+613qodYUggL4E=
+github.com/aws/aws-sdk-go-v2/service/rds v1.77.3/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0 h1:j18lTPPqe+qlapn1R8//+ujvXdplku8V41xzBNNLtn0=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0/go.mod h1:8ldsMsikORLj0GZUozSvbQdctrumAPYhizmj/3AAATI=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4 h1:Rnz5skILimGue5zJ8txb5Mr9JLjznYJFKgK0r/n3AI0=
@@ -326,8 +326,8 @@ github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.4 h1:LKjHBV
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.4/go.mod h1:t343bjk9DYrn8Y7+xRS55VQ45hoicK+mPO/4W/qVfDM=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.4 h1:SSDkZRAO8Ok5SoQ4BJ0onDeb0ga8JBOCkUmNEpRChcw=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.4/go.mod h1:plXue/Zg49kU3uU6WwfCWgRR5SRINNiJf03Y/UhYOhU=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.3 h1:8KP71cUPALMQxs8lhGiWcwdtqv1wsogigS7StDHq0IE=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.3/go.mod h1:WIpmp3q5Iw1AEhotd5OL03OFc0kOUoLPcqKFzcAOImU=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.4 h1:l3EQdfqEnoSUtFp2SIcSy4NIg4/I55vBq6NuHLyGnTI=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.4/go.mod h1:WIpmp3q5Iw1AEhotd5OL03OFc0kOUoLPcqKFzcAOImU=
 github.com/aws/aws-sdk-go-v2/service/shield v1.25.4 h1:YgXvfrcJipAAlMJYg1Iyen4pZI9DoFENQp2FtrJF+HY=
 github.com/aws/aws-sdk-go-v2/service/shield v1.25.4/go.mod h1:KizNr+ORjXFVELwvx3ubt49LMeTeBXm9EbhUcDXvHa8=
 github.com/aws/aws-sdk-go-v2/service/signer v1.22.6 h1:qwUj3Ic2mKUWW7r+za9g3K/877srDKBhpU0L1u5slhM=

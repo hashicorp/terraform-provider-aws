@@ -1360,21 +1360,7 @@ resource "aws_db_parameter_group" "test" {
 
 func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-}
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-}
-`, rName, 2),
+		acctest.ConfigVPCWithSubnetsEnableDNSHostnames(rName, 2),
 		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
 		fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
@@ -1390,6 +1376,10 @@ resource "aws_rds_cluster_instance" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_rds_cluster" "test" {
