@@ -411,76 +411,12 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 func testAccSubscriberConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
-  path = "/service-role/"
-
-  assume_role_policy = <<POLICY
-{
-"Version": "2012-10-17",
-"Statement": [{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-	"Service": "glue.amazonaws.com"
-	},
-	"Effect": "Allow"
-}]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
-  role = aws_iam_role.test.name
-
-  policy = <<POLICY
-{
-	"Version": "2012-10-17",
-		"Statement": [{
-		"Effect": "Allow",
-		"Action": [
-		"s3:GetObject",
-		"s3:PutObject"
-		],
-		"Resource": "*"
-}]
-}
-POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
-  role       = aws_iam_role.test.name
-}
-
-resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = "windows-sysmon"
-  source_version = "1.0"
-  event_classes  = ["FILE_ACTIVITY"]
-
-  configuration {
-    crawler_configuration {
-      role_arn = aws_iam_role.test.arn
-    }
-
-    provider_identity {
-      external_id = "windows-sysmon-test"
-      principal   = data.aws_caller_identity.current.account_id
-    }
-  }
-
-  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
-}
-
 resource "aws_securitylake_subscriber" "test" {
-  subscriber_name        = %[1]q
-  subscriber_description = "Example"
+  subscriber_name = %[1]q
   source {
-    custom_log_source_resource {
-      source_name    = aws_securitylake_custom_log_source.test.source_name
-      source_version = aws_securitylake_custom_log_source.test.source_version
+    aws_log_source_resource {
+      source_name    = "ROUTE53"
+      source_version = "1.0"
     }
   }
   subscriber_identity {
@@ -492,83 +428,31 @@ resource "aws_securitylake_subscriber" "test" {
     %[2]q = %[3]q
   }
 
-  depends_on = [aws_securitylake_custom_log_source.test]
+  depends_on = [aws_securitylake_aws_log_source.test]
 }
+
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts       = [data.aws_caller_identity.current.account_id]
+    regions        = [data.aws_region.current.name]
+    source_name    = "ROUTE53"
+    source_version = "1.0"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+data "aws_region" "current" {}
 `, rName, tag1Key, tag1Value))
 }
 
 func testAccSubscriberConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
-  path = "/service-role/"
-
-  assume_role_policy = <<POLICY
-{
-"Version": "2012-10-17",
-"Statement": [{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-	"Service": "glue.amazonaws.com"
-	},
-	"Effect": "Allow"
-}]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
-  role = aws_iam_role.test.name
-
-  policy = <<POLICY
-{
-	"Version": "2012-10-17",
-		"Statement": [{
-		"Effect": "Allow",
-		"Action": [
-		"s3:GetObject",
-		"s3:PutObject"
-		],
-		"Resource": "*"
-}]
-}
-POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
-  role       = aws_iam_role.test.name
-}
-
-resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = "windows-sysmon"
-  source_version = "1.0"
-  event_classes  = ["FILE_ACTIVITY"]
-
-  configuration {
-    crawler_configuration {
-      role_arn = aws_iam_role.test.arn
-    }
-
-    provider_identity {
-      external_id = "windows-sysmon-test"
-      principal   = data.aws_caller_identity.current.account_id
-    }
-  }
-
-  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
-}
-
 resource "aws_securitylake_subscriber" "test" {
-  subscriber_name        = %[1]q
-  subscriber_description = "Example"
+  subscriber_name = %[1]q
   source {
-    custom_log_source_resource {
-      source_name    = aws_securitylake_custom_log_source.test.source_name
-      source_version = aws_securitylake_custom_log_source.test.source_version
+    aws_log_source_resource {
+      source_name    = "ROUTE53"
+      source_version = "1.0"
     }
   }
   subscriber_identity {
@@ -581,8 +465,20 @@ resource "aws_securitylake_subscriber" "test" {
     %[4]q = %[5]q
   }
 
-  depends_on = [aws_securitylake_custom_log_source.test]
+  depends_on = [aws_securitylake_aws_log_source.test]
 }
+
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts       = [data.aws_caller_identity.current.account_id]
+    regions        = [data.aws_region.current.name]
+    source_name    = "ROUTE53"
+    source_version = "1.0"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+data "aws_region" "current" {}
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
