@@ -564,7 +564,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			inputR.SnapshotClusterIdentifier = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Restoring Redshift Cluster: %s", inputR)
 		output, err := conn.RestoreFromClusterSnapshotWithContext(ctx, inputR)
 
 		if err != nil {
