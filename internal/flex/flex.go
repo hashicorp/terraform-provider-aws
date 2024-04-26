@@ -264,6 +264,12 @@ func ExpandFloat64List(configured []interface{}) []*float64 {
 	})
 }
 
+func FlattenInt32ValueList(list []int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v int32) any {
+		return int(v)
+	})
+}
+
 // Takes list of pointers to int64s. Expand to an array
 // of raw ints and returns a []interface{}
 // to keep compatibility w/ schema.NewSet

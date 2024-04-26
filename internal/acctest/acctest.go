@@ -116,7 +116,9 @@ var (
 // the use of saving and referencing specific ProviderFactories instances.
 //
 // PreCheck(t) must be called before using this provider instance.
-var Provider *schema.Provider
+var (
+	Provider *schema.Provider = errs.Must(provider.New(context.Background()))
+)
 
 type ProviderFunc func() *schema.Provider
 
@@ -127,15 +129,6 @@ type ProviderFunc func() *schema.Provider
 // not prevent reconfiguration that may happen should the address of
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
-
-func init() {
-	var err error
-	Provider, err = provider.New(context.Background())
-
-	if err != nil {
-		panic(err)
-	}
-}
 
 func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
