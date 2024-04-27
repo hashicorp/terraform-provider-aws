@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_lambda_alias",
 		},
 		{
-			Factory:  DataSourceCodeSigningConfig,
+			Factory:  dataSourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
+			Name:     "Code Signing Config",
 		},
 		{
 			Factory:  DataSourceFunction,
