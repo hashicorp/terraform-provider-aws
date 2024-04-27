@@ -6,6 +6,7 @@ package securitylake
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -117,7 +119,12 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := conn.CreateAwsLogSource(ctx, input)
+	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, 2*time.Minute, func() (any, error) {
+		return conn.CreateAwsLogSource(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake AWS Log Source", err.Error())
@@ -213,7 +220,12 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := conn.DeleteAwsLogSource(ctx, input)
+	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, 2*time.Minute, func() (any, error) {
+		return conn.DeleteAwsLogSource(ctx, input)
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

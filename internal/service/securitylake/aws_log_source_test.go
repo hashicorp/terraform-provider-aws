@@ -182,6 +182,46 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 	})
 }
 
+func testAccAWSLogSource_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_aws_log_source.test"
+	resource2Name := "aws_securitylake_aws_log_source.test2"
+	var logSource, logSource2 types.AwsLogSourceConfiguration
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLogSourceConfig_multiple(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource2),
+
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
+
+					resource.TestCheckResourceAttr(resource2Name, "source.#", "1"),
+					resource.TestCheckResourceAttr(resource2Name, "source.0.source_name", "S3_DATA"),
+					resource.TestCheckResourceAttr(resource2Name, "source.0.source_version", "2.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLogSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
@@ -281,5 +321,30 @@ data "aws_region" "current" {}
 data "aws_region" "alternate" {
   provider = awsalternate
 }
+`)
+}
+
+func testAccAWSLogSourceConfig_multiple() string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), `
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts    = [data.aws_caller_identity.current.account_id]
+    regions     = [data.aws_region.current.name]
+    source_name = "ROUTE53"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+resource "aws_securitylake_aws_log_source" "test2" {
+  source {
+    accounts    = [data.aws_caller_identity.current.account_id]
+    regions     = [data.aws_region.current.name]
+    source_name = "S3_DATA"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+data "aws_region" "current" {}
 `)
 }

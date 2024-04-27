@@ -30,6 +30,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 		"AWSLogSource": {
 			"basic":         testAccAWSLogSource_basic,
 			"disappears":    testAccAWSLogSource_disappears,
+			"multiple":      testAccAWSLogSource_multiple,
 			"multiRegion":   testAccAWSLogSource_multiRegion,
 			"sourceVersion": testAccAWSLogSource_sourceVersion,
 		},

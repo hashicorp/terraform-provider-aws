@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -35,6 +36,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const dataLakeMutexKey = "aws_securitylake_data_lake"
 
 // @FrameworkResource(name="Data Lake")
 // @Tags(identifierAttribute="arn")
@@ -190,6 +193,9 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
+	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+
 	output, err := conn.CreateDataLake(ctx, input)
 
 	if err != nil {
@@ -294,6 +300,9 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
+		conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+		defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+
 		_, err := conn.UpdateDataLake(ctx, input)
 
 		if err != nil {
@@ -320,6 +329,9 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	conn := r.Meta().SecurityLakeClient(ctx)
+
+	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
 
 	// "ConflictException: The request failed because your Security Lake configuration or resources are currently being updated. Wait a few minutes and then try again."
 	const (
