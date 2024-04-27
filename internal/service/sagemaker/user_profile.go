@@ -92,6 +92,20 @@ func ResourceUserProfile() *schema.Resource {
 											},
 										},
 									},
+									"generative_ai_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"amazon_bedrock_role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
 									"identity_provider_oauth_settings": {
 										Type:     schema.TypeList,
 										Optional: true,
