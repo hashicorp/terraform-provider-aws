@@ -1337,6 +1337,17 @@ func functionInvokeARN(functionARN string, meta interface{}) string {
 	}.String()
 }
 
+// See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
+func invokeARN(c *conns.AWSClient, functionOrAliasARN string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
+	}.String()
+}
+
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
 // The AWS SDK endpoints package does not support Signer.
 // See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.

@@ -2377,10 +2377,6 @@ func testAccCheckFunctionExists(ctx context.Context, n string, v *lambda.GetFunc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lambda Function ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		output, err := tflambda.FindFunctionByName(ctx, conn, rs.Primary.ID)

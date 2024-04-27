@@ -6,21 +6,8 @@ package lambda
 import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
-
-func flattenAliasRoutingConfiguration(arc *lambda.AliasRoutingConfiguration) []interface{} {
-	if arc == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"additional_version_weights": aws.Float64ValueMap(arc.AdditionalVersionWeights),
-	}
-
-	return []interface{}{m}
-}
 
 func flattenLayers(layers []types.Layer) []interface{} {
 	arns := make([]*string, len(layers))
@@ -53,13 +40,4 @@ func flattenVPCConfigResponse(s *types.VpcConfigResponse) []map[string]interface
 	}
 
 	return []map[string]interface{}{settings}
-}
-
-// Expands a map of string to interface to a map of string to *float
-func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
-	float64Map := make(map[string]*float64, len(m))
-	for k, v := range m {
-		float64Map[k] = aws.Float64(v.(float64))
-	}
-	return float64Map
 }
