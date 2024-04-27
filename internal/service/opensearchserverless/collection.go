@@ -159,6 +159,12 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 
 	in := &opensearchserverless.CreateCollectionInput{}
 
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	in.ClientToken = aws.String(id.UniqueId())
 	in.Tags = getTagsIn(ctx)
 
@@ -172,15 +178,11 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	state := plan
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	state.ID = flex.StringToFramework(ctx, out.CreateCollectionDetail.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	collection, err := waitCollectionCreated(ctx, conn, aws.ToString(out.CreateCollectionDetail.Id), createTimeout)
+	_, err = waitCollectionCreated(ctx, conn, aws.ToString(out.CreateCollectionDetail.Id), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, ResNameCollection, plan.Name.ValueString(), err),
@@ -189,8 +191,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, collection, in)...)
-
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
