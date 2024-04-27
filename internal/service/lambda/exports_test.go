@@ -5,7 +5,9 @@ package lambda
 
 // Exports for use in tests only.
 var (
-	ResourceAlias = resourceAlias
+	ResourceAlias             = resourceAlias
+	ResourceCodeSigningConfig = resourceCodeSigningConfig
 
-	FindAliasByTwoPartKey = findAliasByTwoPartKey
+	FindAliasByTwoPartKey      = findAliasByTwoPartKey
+	FindCodeSigningConfigByARN = findCodeSigningConfigByARN
 )

@@ -171,6 +171,10 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:         aws.String(d.Get("name").(string)),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Alias (%s): %s", d.Id(), err)
 	}

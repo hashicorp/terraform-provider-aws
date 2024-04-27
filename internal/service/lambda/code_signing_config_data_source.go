@@ -105,7 +105,7 @@ func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config last modified: %s", err)
 	}
 
-	if err := d.Set("allowed_publishers", flattenCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
+	if err := d.Set("allowed_publishers", flattenAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config allowed publishers: %s", err)
 	}
 

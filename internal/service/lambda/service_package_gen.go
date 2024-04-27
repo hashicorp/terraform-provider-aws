@@ -63,8 +63,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Alias",
 		},
 		{
-			Factory:  ResourceCodeSigningConfig,
+			Factory:  resourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
+			Name:     "Code Signing Config",
 		},
 		{
 			Factory:  ResourceEventSourceMapping,
