@@ -5,8 +5,10 @@ package wafv2
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -41,9 +43,9 @@ func DataSourceWebACL() *schema.Resource {
 					Optional: true,
 				},
 				"scope": {
-					Type:     schema.TypeString,
-					Computed: true,
-					Optional: true,
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 				},
 			}
 		},
@@ -59,16 +61,46 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("resource_arn"); ok {
-		return getWebACLDataSourceByARN(ctx, conn, v.(string), d, diags)
+		if d.Get("scope").(string) == "REGIONAL" {
+			return getWebACLDataSourceByResourceARN(ctx, d, conn, diags, v.(string))
+		}
+		arn, diags := getWebACLFromCloudfrontARN(ctx, d, meta.(*conns.AWSClient).CloudFrontConn(ctx), diags)
+		if diags.HasError() {
+			return diags
+		}
+		return getWebACLDataSourceByField(ctx, d, conn, diags, *arn, false)
 	}
 
 	name := d.Get("name").(string)
 
+	return getWebACLDataSourceByField(ctx, d, conn, diags, name, true)
+}
+
+func getWebACLFromCloudfrontARN(ctx context.Context, d *schema.ResourceData, conn *cloudfront.CloudFront, diags diag.Diagnostics) (*string, diag.Diagnostics) {
+	arn := d.Get("resource_arn").(string)
+	arnParts := strings.Split(arn, "/")
+	id := arnParts[len(arnParts)-1]
+
+	input := &cloudfront.GetDistributionConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetDistributionConfigWithContext(ctx, input)
+	if err != nil {
+		return nil, sdkdiag.AppendErrorf(diags, "reading CloudFront distribution: %s", err)
+	}
+
+	return output.DistributionConfig.WebACLId, nil
+}
+
+func getWebACLDataSourceByField(ctx context.Context, d *schema.ResourceData, conn *wafv2.WAFV2, diags diag.Diagnostics, check string, isName bool) diag.Diagnostics {
 	var foundWebACL *wafv2.WebACLSummary
 	input := &wafv2.ListWebACLsInput{
 		Scope: aws.String(d.Get("scope").(string)),
 		Limit: aws.Int64(100),
 	}
+
+	name := d.Get("name").(string)
 
 	for {
 		resp, err := conn.ListWebACLsWithContext(ctx, input)
@@ -81,7 +113,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		for _, webACL := range resp.WebACLs {
-			if aws.StringValue(webACL.Name) == name {
+			if (isName && aws.StringValue(webACL.Name) == check) || (!isName && aws.StringValue(webACL.ARN) == check) {
 				foundWebACL = webACL
 				break
 			}
@@ -99,23 +131,24 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(foundWebACL.Id))
 	d.Set("arn", foundWebACL.ARN)
+	d.Set("name", foundWebACL.Name)
 	d.Set("description", foundWebACL.Description)
 
 	return diags
 }
 
-func getWebACLDataSourceByARN(ctx context.Context, conn *wafv2.WAFV2, arn string, d *schema.ResourceData, diags diag.Diagnostics) diag.Diagnostics {
+func getWebACLDataSourceByResourceARN(ctx context.Context, d *schema.ResourceData, conn *wafv2.WAFV2, diags diag.Diagnostics, arn string) diag.Diagnostics {
 	input := &wafv2.GetWebACLForResourceInput{
 		ResourceArn: aws.String(arn),
 	}
 
 	output, err := conn.GetWebACLForResourceWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs: %s", err)
+		sdkdiag.AppendWarningf(diags, "reading WAFv2 WebACLs: %s", err)
 	}
 
 	if output == nil || output.WebACL == nil {
-		return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for source: %s", arn)
+		return diags
 	}
 
 	d.SetId(aws.StringValue(output.WebACL.Id))
@@ -130,17 +163,9 @@ func validateWebACLDataSourceInput(d *schema.ResourceData) diag.Diagnostics {
 		return nil
 	}
 
-	if _, ok := d.GetOk("name"); !ok {
-		return diag.Errorf("name is required")
+	if _, ok := d.GetOk("name"); ok {
+		return nil
 	}
 
-	if v, ok := d.GetOk("scope"); !ok {
-		return diag.Errorf("scope is required")
-	} else {
-		_, err := validation.StringInSlice(wafv2.Scope_Values(), false)(v, "scope")
-		if len(err) == 0 {
-			return nil
-		}
-		return diag.FromErr(err[0])
-	}
+	return diag.Errorf("name or resource_arn are required")
 }

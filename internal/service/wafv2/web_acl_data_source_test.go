@@ -44,7 +44,7 @@ func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLDataSource_arn(t *testing.T) {
+func TestAccWAFV2WebACLDataSource_regionalResourceARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
@@ -56,10 +56,38 @@ func TestAccWAFV2WebACLDataSource_arn(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLDataSourceConfig_arn(name),
+				Config: testAccWebACLDataSourceConfig_regionalResourceARN(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexache.MustCompile(fmt.Sprintf("regional/webacl/%v/.+$", name))),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLDataSource_cloudfrontResourceARN(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	ctx := acctest.Context(t)
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+	datasourceName := "data.aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLDataSourceConfig_cloudfrontResourceARN(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexache.MustCompile(fmt.Sprintf("global/webacl/%v/.+$", name))),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -117,7 +145,7 @@ data "aws_wafv2_web_acl" "test" {
 `, name)
 }
 
-func testAccWebACLDataSourceConfig_arn(name string) string {
+func testAccWebACLDataSourceConfig_regionalResourceARN(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name  = "%s"
@@ -178,6 +206,75 @@ resource "aws_wafv2_web_acl_association" "test" {
 
 data "aws_wafv2_web_acl" "test" {
   resource_arn = aws_wafv2_web_acl_association.test.resource_arn
+  scope        = "REGIONAL"
+}
+`, name)
+}
+
+func testAccWebACLDataSourceConfig_cloudfrontResourceARN(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = "%s"
+  scope = "CLOUDFRONT"
+
+  default_action {
+    block {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-rule-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  web_acl_id = aws_wafv2_web_acl.test.arn
+}
+
+data "aws_wafv2_web_acl" "test" {
+  resource_arn = aws_cloudfront_distribution.test.arn
+  scope        = "CLOUDFRONT"
 }
 `, name)
 }
