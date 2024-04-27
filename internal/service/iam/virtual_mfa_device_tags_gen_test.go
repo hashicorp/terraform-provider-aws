@@ -459,7 +459,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -473,7 +474,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -487,7 +489,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -504,7 +507,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -520,7 +524,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -534,7 +539,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -588,7 +594,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -606,7 +613,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -622,7 +630,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -644,7 +653,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -702,7 +712,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -719,7 +730,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -735,7 +747,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -758,7 +771,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -778,7 +792,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -795,7 +810,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -842,7 +858,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToProviderOnly(t *testing
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -856,7 +873,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToProviderOnly(t *testing
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -885,7 +903,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToResourceOnly(t *testing
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -945,7 +964,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -962,7 +982,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -993,7 +1014,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullOverlappingResourceTag(t *t
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -1008,7 +1030,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullOverlappingResourceTag(t *t
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -1038,7 +1061,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullNonOverlappingResourceTag(t
 		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -1053,7 +1077,8 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullNonOverlappingResourceTag(t
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

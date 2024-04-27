@@ -432,7 +432,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -446,7 +447,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -457,7 +459,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -474,7 +477,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -487,7 +491,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -501,7 +506,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -549,7 +555,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -567,7 +574,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -580,7 +588,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -602,7 +611,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -654,7 +664,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -671,7 +682,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -684,7 +696,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -707,7 +720,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -724,7 +738,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -741,7 +756,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -785,7 +801,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -799,7 +816,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -825,7 +843,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToResourceOnly(t *tes
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -884,7 +903,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyResourceTag(t *testing
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -901,7 +921,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyResourceTag(t *testing
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -929,7 +950,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullOverlappingResourceTag(
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -944,7 +966,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullOverlappingResourceTag(
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -971,7 +994,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullNonOverlappingResourceT
 		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -986,7 +1010,8 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullNonOverlappingResourceT
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

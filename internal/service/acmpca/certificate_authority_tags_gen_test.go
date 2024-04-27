@@ -458,7 +458,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -472,7 +473,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -486,7 +488,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -503,7 +506,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -519,7 +523,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -533,7 +538,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -587,7 +593,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -605,7 +612,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -621,7 +629,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -643,7 +652,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -701,7 +711,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -718,7 +729,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -734,7 +746,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -757,7 +770,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -777,7 +791,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -794,7 +809,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -841,7 +857,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -855,7 +872,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -884,7 +902,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -944,7 +963,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -961,7 +981,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -992,7 +1013,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -1007,7 +1029,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -1037,7 +1060,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -1052,7 +1076,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

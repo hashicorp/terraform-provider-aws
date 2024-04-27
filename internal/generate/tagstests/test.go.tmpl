@@ -443,7 +443,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -457,7 +458,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -466,7 +468,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -483,7 +486,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -494,7 +498,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -508,7 +513,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -518,7 +524,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -530,7 +536,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -547,7 +553,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -565,7 +572,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -576,7 +584,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -598,7 +607,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -612,7 +622,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -624,7 +634,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -641,7 +651,8 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -658,7 +669,8 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -669,7 +681,8 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -692,7 +705,8 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -707,7 +721,8 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -724,7 +739,8 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -746,7 +762,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -761,7 +777,8 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -775,7 +792,8 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -794,7 +812,8 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -809,7 +828,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -825,7 +844,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -847,7 +866,8 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -864,7 +884,8 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -888,7 +909,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -903,7 +925,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -926,7 +949,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -941,7 +965,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

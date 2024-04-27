@@ -418,7 +418,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -432,7 +433,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -443,7 +445,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -460,7 +463,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -473,7 +477,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -487,7 +492,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -534,7 +540,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nonOverlapping(t *testing.
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -552,7 +559,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nonOverlapping(t *testing.
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -565,7 +573,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nonOverlapping(t *testing.
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -587,7 +596,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nonOverlapping(t *testing.
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -638,7 +648,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_overlapping(t *testing.T) 
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -655,7 +666,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_overlapping(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -668,7 +680,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_overlapping(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -691,7 +704,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_overlapping(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -708,7 +722,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_overlapping(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -725,7 +740,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_overlapping(t *testing.T) 
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -768,7 +784,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_updateToProviderOnly(t *te
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -782,7 +799,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_updateToProviderOnly(t *te
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -807,7 +825,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_updateToResourceOnly(t *te
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -863,7 +882,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_emptyResourceTag(t *testin
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -880,7 +900,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_emptyResourceTag(t *testin
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -907,7 +928,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nullOverlappingResourceTag
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -922,7 +944,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nullOverlappingResourceTag
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -948,7 +971,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nullNonOverlappingResource
 		CheckDestroy: testAccCheckOpenIDConnectProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -963,7 +987,8 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nullNonOverlappingResource
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
