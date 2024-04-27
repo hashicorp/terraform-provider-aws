@@ -5,7 +5,7 @@ package opensearchserverless
 
 import (
 	"context"
-	"errors"
+	// "errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -157,29 +157,10 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	in := &opensearchserverless.CreateCollectionInput{
-		// ClientToken: aws.String(id.UniqueId()),
-		// Name:        aws.String(plan.Name.ValueString()),
-		// Tags:        getTagsIn(ctx),
-	}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	in := &opensearchserverless.CreateCollectionInput{}
 
+	in.ClientToken = aws.String(id.UniqueId())
 	in.Tags = getTagsIn(ctx)
-
-	// if !plan.Description.IsNull() {
-	// 	in.Description = aws.String(plan.Description.ValueString())
-	// }
-
-	// if !plan.Type.IsNull() {
-	// 	in.Type = awstypes.CollectionType(plan.Type.ValueString())
-	// }
-
-	// if !plan.StandbyReplicas.IsNull() {
-	// 	in.StandbyReplicas = awstypes.StandbyReplicas(plan.StandbyReplicas.ValueString())
-	// }
 
 	out, err := conn.CreateCollection(ctx, in)
 	if err != nil {
@@ -191,11 +172,15 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	state := plan
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.ID = flex.StringToFramework(ctx, out.CreateCollectionDetail.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err := waitCollectionCreated(ctx, conn, aws.ToString(out.CreateCollectionDetail.Id), createTimeout)
-
+	collection, err := waitCollectionCreated(ctx, conn, aws.ToString(out.CreateCollectionDetail.Id), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, ResNameCollection, plan.Name.ValueString(), err),
@@ -204,15 +189,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// state.ARN = flex.StringToFramework(ctx, waitOut.Arn)
-	// state.CollectionEndpoint = flex.StringToFramework(ctx, waitOut.CollectionEndpoint)
-	// state.DashboardEndpoint = flex.StringToFramework(ctx, waitOut.DashboardEndpoint)
-	// state.Description = flex.StringToFramework(ctx, waitOut.Description)
-	// state.KmsKeyARN = flex.StringToFramework(ctx, waitOut.KmsKeyArn)
-	// state.Name = flex.StringToFramework(ctx, waitOut.Name)
-	// state.StandbyReplicas = flex.StringValueToFramework(ctx, waitOut.StandbyReplicas)
-	// state.Type = flex.StringValueToFramework(ctx, waitOut.Type)
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.CollectionDetail, &state)...)
+	resp.Diagnostics.Append(flex.Expand(ctx, collection, in)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -237,24 +214,6 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), nil),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	// state.ARN = flex.StringToFramework(ctx, out.Arn)
-	// state.CollectionEndpoint = flex.StringToFramework(ctx, out.CollectionEndpoint)
-	// state.DashboardEndpoint = flex.StringToFramework(ctx, out.DashboardEndpoint)
-	// state.Description = flex.StringToFramework(ctx, out.Description)
-	// state.ID = flex.StringToFramework(ctx, out.Id)
-	// state.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
-	// state.Name = flex.StringToFramework(ctx, out.Name)
-	// state.StandbyReplicas = flex.StringValueToFramework(ctx, out.StandbyReplicas)
-	// state.Type = flex.StringValueToFramework(ctx, out.Type)
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -275,12 +234,10 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	if !plan.Description.Equal(state.Description) {
-		input := &opensearchserverless.UpdateCollectionInput{
-			// ClientToken: aws.String(id.UniqueId()),
-			// Id:          flex.StringFromFramework(ctx, plan.ID),
-			// Description: flex.StringFromFramework(ctx, plan.Description),
-		}
+		input := &opensearchserverless.UpdateCollectionInput{}
+
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -297,16 +254,11 @@ func (r *resourceCollection) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.CollectionDetail, &state)...)
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		// plan.ARN = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Arn)
-		// plan.Description = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Description)
-		// plan.ID = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Id)
-		// plan.Name = flex.StringToFramework(ctx, out.UpdateCollectionDetail.Name)
-		// plan.Type = flex.StringValueToFramework(ctx, out.UpdateCollectionDetail.Type)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -331,10 +283,6 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	if err != nil {
-		// var nfe *awstypes.ResourceNotFoundException
-		// if errors.As(err, &nfe) {
-		// 	return
-		// }
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameCollection, state.Name.ValueString(), nil),
 			err.Error(),
