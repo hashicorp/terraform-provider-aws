@@ -5,9 +5,11 @@ package lambda
 
 // Exports for use in tests only.
 var (
-	ResourceAlias             = resourceAlias
-	ResourceCodeSigningConfig = resourceCodeSigningConfig
+	ResourceAlias              = resourceAlias
+	ResourceCodeSigningConfig  = resourceCodeSigningConfig
+	ResourceEventSourceMapping = resourceEventSourceMapping
 
-	FindAliasByTwoPartKey      = findAliasByTwoPartKey
-	FindCodeSigningConfigByARN = findCodeSigningConfigByARN
+	FindAliasByTwoPartKey                   = findAliasByTwoPartKey
+	FindCodeSigningConfigByARN              = findCodeSigningConfigByARN
+	FindEventSourceMappingConfigurationByID = findEventSourceMappingConfigurationByID
 )
