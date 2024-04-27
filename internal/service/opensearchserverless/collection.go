@@ -182,7 +182,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	state.ID = flex.StringToFramework(ctx, out.CreateCollectionDetail.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitCollectionCreated(ctx, conn, aws.ToString(out.CreateCollectionDetail.Id), createTimeout)
+	collection, err := waitCollectionCreated(ctx, conn, aws.ToString(out.CreateCollectionDetail.Id), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, ResNameCollection, plan.Name.ValueString(), err),
@@ -191,7 +191,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, collection, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
