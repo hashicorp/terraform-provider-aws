@@ -1983,6 +1983,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
+	if v, null, _ := nullable.Bool(tfMap["primary_ipv6"].(string)).ValueBool(); !null {
+		apiObject.PrimaryIpv6 = aws.Bool(v)
+	}
+
 	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
@@ -2063,10 +2067,6 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
-	}
-
-	if v, null, _ := nullable.Bool(tfMap["primary_ipv6"].(string)).ValueBool(); !null {
-		apiObject.PrimaryIpv6 = aws.Bool(v)
 	}
 
 	return apiObject
@@ -2976,6 +2976,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 
 	if v := apiObject.AssociatePublicIpAddress; v != nil {
 		tfMap["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v))
+	}
+
+	if v := apiObject.PrimaryIpv6; v != nil {
+		tfMap["primary_ipv6"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
