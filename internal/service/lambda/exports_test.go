@@ -9,11 +9,13 @@ var (
 	ResourceCodeSigningConfig         = resourceCodeSigningConfig
 	ResourceEventSourceMapping        = resourceEventSourceMapping
 	ResourceFunctionEventInvokeConfig = resourceFunctionEventInvokeConfig
+	ResourceFunctionURL               = resourceFunctionURL
 
 	FindAliasByTwoPartKey                     = findAliasByTwoPartKey
 	FindCodeSigningConfigByARN                = findCodeSigningConfigByARN
 	FindEventSourceMappingByID                = findEventSourceMappingByID
 	FindFunctionEventInvokeConfigByTwoPartKey = findFunctionEventInvokeConfigByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID  = functionEventInvokeConfigParseResourceID
+	FindFunctionURLByTwoPartKey               = findFunctionURLByTwoPartKey
 	SignerServiceIsAvailable                  = signerServiceIsAvailable
 )

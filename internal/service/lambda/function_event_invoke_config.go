@@ -117,12 +117,12 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 		MaximumRetryAttempts: aws.Int32(int32(d.Get("maximum_retry_attempts").(int))),
 	}
 
-	if v, ok := d.GetOk("maximum_event_age_in_seconds"); ok {
-		input.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
-	}
-
 	if qualifier != "" {
 		input.Qualifier = aws.String(qualifier)
+	}
+
+	if v, ok := d.GetOk("maximum_event_age_in_seconds"); ok {
+		input.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	// Retry for destination validation eventual consistency errors.
@@ -201,12 +201,12 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 		MaximumRetryAttempts: aws.Int32(int32(d.Get("maximum_retry_attempts").(int))),
 	}
 
-	if v, ok := d.GetOk("maximum_event_age_in_seconds"); ok {
-		input.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
-	}
-
 	if qualifier != "" {
 		input.Qualifier = aws.String(qualifier)
+	}
+
+	if v, ok := d.GetOk("maximum_event_age_in_seconds"); ok {
+		input.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	// Retry for destination validation eventual consistency errors.
@@ -253,6 +253,7 @@ func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.Reso
 		input.Qualifier = aws.String(qualifier)
 	}
 
+	log.Printf("[INFO] Deleting Lambda Function Event Invoke Config: %s", d.Id())
 	_, err = conn.DeleteFunctionEventInvokeConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

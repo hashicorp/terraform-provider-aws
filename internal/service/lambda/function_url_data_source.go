@@ -104,8 +104,8 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-	id := FunctionURLCreateResourceID(name, qualifier)
-	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
+	id := functionURLCreateResourceID(name, qualifier)
+	output, err := FindFunctionURLByTwoPartKey(ctx, conn, name, qualifier)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function URL (%s): %s", id, err)

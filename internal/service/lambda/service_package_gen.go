@@ -89,8 +89,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Function Event Invoke Config",
 		},
 		{
-			Factory:  ResourceFunctionURL,
+			Factory:  resourceFunctionURL,
 			TypeName: "aws_lambda_function_url",
+			Name:     "Function URL",
 		},
 		{
 			Factory:  ResourceInvocation,
