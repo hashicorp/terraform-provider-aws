@@ -34,8 +34,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Code Signing Config",
 		},
 		{
-			Factory:  DataSourceFunction,
+			Factory:  dataSourceFunction,
 			TypeName: "aws_lambda_function",
+			Name:     "Function",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceFunctionURL,

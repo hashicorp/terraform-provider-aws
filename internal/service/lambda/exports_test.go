@@ -15,4 +15,5 @@ var (
 	FindEventSourceMappingByID                = findEventSourceMappingByID
 	FindFunctionEventInvokeConfigByTwoPartKey = findFunctionEventInvokeConfigByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID  = functionEventInvokeConfigParseResourceID
+	SignerServiceIsAvailable                  = signerServiceIsAvailable
 )

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -746,8 +745,8 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition := meta.(*conns.AWSClient).Partition; partition == endpoints.AwsPartitionID && SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
-		var codeSigningConfigArn string
+	if partition, region := meta.(*conns.AWSClient).Partition, meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
 		if function.PackageType == types.PackageTypeZip {
@@ -760,11 +759,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			if output != nil {
-				codeSigningConfigArn = aws.ToString(output.CodeSigningConfigArn)
+				codeSigningConfigARN = aws.ToString(output.CodeSigningConfigArn)
 			}
 		}
 
-		d.Set("code_signing_config_arn", codeSigningConfigArn)
+		d.Set("code_signing_config_arn", codeSigningConfigARN)
 	}
 
 	return diags
@@ -1351,28 +1350,28 @@ func invokeARN(c *conns.AWSClient, functionOrAliasARN string) string {
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
 // The AWS SDK endpoints package does not support Signer.
 // See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
-func SignerServiceIsAvailable(region string) bool {
+func signerServiceIsAvailable(region string) bool {
 	availableRegions := map[string]struct{}{
-		endpoints.UsEast2RegionID:      {},
-		endpoints.UsEast1RegionID:      {},
-		endpoints.UsWest1RegionID:      {},
-		endpoints.UsWest2RegionID:      {},
-		endpoints.AfSouth1RegionID:     {},
-		endpoints.ApEast1RegionID:      {},
-		endpoints.ApSouth1RegionID:     {},
-		endpoints.ApNortheast2RegionID: {},
-		endpoints.ApSoutheast1RegionID: {},
-		endpoints.ApSoutheast2RegionID: {},
-		endpoints.ApNortheast1RegionID: {},
-		endpoints.CaCentral1RegionID:   {},
-		endpoints.EuCentral1RegionID:   {},
-		endpoints.EuWest1RegionID:      {},
-		endpoints.EuWest2RegionID:      {},
-		endpoints.EuSouth1RegionID:     {},
-		endpoints.EuWest3RegionID:      {},
-		endpoints.EuNorth1RegionID:     {},
-		endpoints.MeSouth1RegionID:     {},
-		endpoints.SaEast1RegionID:      {},
+		names.USEast1RegionID:      {},
+		names.USEast2RegionID:      {},
+		names.USWest1RegionID:      {},
+		names.USWest2RegionID:      {},
+		names.AFSouth1RegionID:     {},
+		names.APEast1RegionID:      {},
+		names.APSouth1RegionID:     {},
+		names.APNortheast2RegionID: {},
+		names.APSoutheast1RegionID: {},
+		names.APSoutheast2RegionID: {},
+		names.APNortheast1RegionID: {},
+		names.CACentral1RegionID:   {},
+		names.EUCentral1RegionID:   {},
+		names.EUWest1RegionID:      {},
+		names.EUWest2RegionID:      {},
+		names.EUSouth1RegionID:     {},
+		names.EUWest3RegionID:      {},
+		names.EUNorth1RegionID:     {},
+		names.MESouth1RegionID:     {},
+		names.SAEast1RegionID:      {},
 	}
 	_, ok := availableRegions[region]
 
