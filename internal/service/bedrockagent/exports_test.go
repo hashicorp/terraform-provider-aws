@@ -9,9 +9,11 @@ var (
 	ResourceAgentActionGroup = newAgentActionGroupResource
 	ResourceAgentAlias       = newAgentAliasResource
 	ResourceKnowledgeBase    = newKnowledgeBaseResource
+	ResourceDataSource       = newDataSourceResource
 
 	FindAgentActionGroupByThreePartKey = findAgentActionGroupByThreePartKey
 	FindAgentAliasByTwoPartKey         = findAgentAliasByTwoPartKey
 	FindAgentByID                      = findAgentByID
 	FindKnowledgeBaseByID              = findKnowledgeBaseByID
+	FindDataSourceByID                 = findDataSourceByID
 )
