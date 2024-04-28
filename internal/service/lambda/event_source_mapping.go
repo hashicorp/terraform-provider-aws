@@ -499,7 +499,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	output, err := findEventSourceMappingConfigurationByID(ctx, conn, d.Id())
+	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
@@ -738,7 +738,7 @@ type eventSourceMappingCU interface {
 }
 
 func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func() (*T, error)) (*T, error) {
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
 		func() (interface{}, error) {
 			return f()
 		},
@@ -766,7 +766,7 @@ func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func
 	return outputRaw.(*T), err
 }
 
-func findEventSourceMappingConfiguration(ctx context.Context, conn *lambda.Client, input *lambda.GetEventSourceMappingInput) (*lambda.GetEventSourceMappingOutput, error) {
+func findEventSourceMapping(ctx context.Context, conn *lambda.Client, input *lambda.GetEventSourceMappingInput) (*lambda.GetEventSourceMappingOutput, error) {
 	output, err := conn.GetEventSourceMapping(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -787,17 +787,17 @@ func findEventSourceMappingConfiguration(ctx context.Context, conn *lambda.Clien
 	return output, nil
 }
 
-func findEventSourceMappingConfigurationByID(ctx context.Context, conn *lambda.Client, uuid string) (*lambda.GetEventSourceMappingOutput, error) {
+func findEventSourceMappingByID(ctx context.Context, conn *lambda.Client, uuid string) (*lambda.GetEventSourceMappingOutput, error) {
 	input := &lambda.GetEventSourceMappingInput{
 		UUID: aws.String(uuid),
 	}
 
-	return findEventSourceMappingConfiguration(ctx, conn, input)
+	return findEventSourceMapping(ctx, conn, input)
 }
 
 func statusEventSourceMappingState(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findEventSourceMappingConfigurationByID(ctx, conn, id)
+		output, err := findEventSourceMappingByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

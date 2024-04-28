@@ -157,7 +157,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
 	// Retry for IAM and Lambda eventual consistency.
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, lambdaPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AddPermissionWithContext(ctx, input)
 		},
@@ -177,7 +177,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout,
 		func() (interface{}, error) {
 			return FindPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 		}, d.IsNewResource())
@@ -273,7 +273,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "removing Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
 		return FindPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	})
 

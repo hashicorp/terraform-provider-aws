@@ -1290,7 +1290,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, v *lambd
 
 		// wait for state to be propagated
 		return retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
-			output, err := tflambda.FindEventSourceMappingConfigurationByID(ctx, conn, aws.ToString(v.UUID))
+			output, err := tflambda.FindEventSourceMappingByID(ctx, conn, aws.ToString(v.UUID))
 
 			if err != nil {
 				return retry.NonRetryableError(
@@ -1316,7 +1316,7 @@ func testAccCheckEventSourceMappingDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tflambda.FindEventSourceMappingConfigurationByID(ctx, conn, rs.Primary.ID)
+			_, err := tflambda.FindEventSourceMappingByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1342,7 +1342,7 @@ func testAccCheckEventSourceMappingExists(ctx context.Context, n string, v *lamb
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-		output, err := tflambda.FindEventSourceMappingConfigurationByID(ctx, conn, rs.Primary.ID)
+		output, err := tflambda.FindEventSourceMappingByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

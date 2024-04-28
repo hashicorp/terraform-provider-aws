@@ -18,7 +18,8 @@ const (
 )
 
 const (
-	propagationTimeout = 5 * time.Minute
+	iamPropagationTimeout    = 2 * time.Minute
+	lambdaPropagationTimeout = 5 * time.Minute
 )
 
 const (

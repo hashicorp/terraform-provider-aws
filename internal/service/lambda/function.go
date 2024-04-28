@@ -595,7 +595,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
 		return FindFunctionByName(ctx, conn, d.Id())
 	})
 
@@ -1018,7 +1018,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
 			func() (interface{}, error) {
 				return conn.PublishVersion(ctx, input)
 			},
@@ -1207,7 +1207,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName 
 // retryFunctionOp retries a Lambda Function Create or Update operation.
 // It handles IAM eventual consistency and EC2 throttling.
 func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
-	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
 		f,
 		func(err error) (bool, error) {
 			var ipve *types.InvalidParameterValueException
