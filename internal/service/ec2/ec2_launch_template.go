@@ -820,6 +820,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"primary_ipv6": {
+							Type:             nullable.TypeNullableBool,
+							Optional:         true,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+						},
 						"private_ip_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -2057,6 +2063,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
+	}
+
+	if v, null, _ := nullable.Bool(tfMap["primary_ipv6"].(string)).ValueBool(); !null {
+		apiObject.PrimaryIpv6 = aws.Bool(v)
 	}
 
 	return apiObject

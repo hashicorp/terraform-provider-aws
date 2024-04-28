@@ -877,6 +877,7 @@ func TestAccEC2LaunchTemplate_networkInterface(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv6_prefixes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.network_card_index", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.private_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.subnet_id", ""),
@@ -1387,6 +1388,54 @@ func TestAccEC2LaunchTemplate_instanceMarketOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", "1"),
 					resource.TestCheckResourceAttr(asgResourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttr(asgResourceName, "launch_template.0.version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_primaryIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template ec2.LaunchTemplate
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", "false"),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_primaryIPv6(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.primary_ipv6", ""),
 				),
 			},
 		},
@@ -3811,6 +3860,44 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName, associatePublicIPAddress)
+}
+
+func testAccLaunchTemplateConfig_primaryIPv6(rName, primaryIPv6 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    network_interface_id = aws_network_interface.test.id
+    primary_ipv6         = %[2]s
+  }
+}
+`, rName, primaryIPv6)
 }
 
 func testAccLaunchTemplateConfig_associateCarrierIPAddress(rName, associateCarrierIPAddress string) string {
