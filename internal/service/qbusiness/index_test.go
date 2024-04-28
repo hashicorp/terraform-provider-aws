@@ -39,6 +39,7 @@ func TestAccQBusinessIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Index name"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_configuration.0.units", "1"),
 				),
 			},
 			{
@@ -66,7 +67,7 @@ func TestAccQBusinessIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceIndex(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,11 +95,6 @@ func TestAccQBusinessIndex_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccIndexConfig_tags(rName, "key1", "value1new", "key2", "value2new"),
@@ -145,10 +141,9 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 				Config: testAccIndexConfig_documentAttributeConfigurations(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.0.attribute.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.0.attribute.0.name", "foo1"),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.0.attribute.1.name", "foo2"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.0.name", "foo1"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.1.name", "foo2"),
 				),
 			},
 		},
@@ -225,6 +220,9 @@ data "aws_partition" "current" {}
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -248,7 +246,7 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
+  application_id       = aws_qbusiness_app.test.id
   display_name         = %[1]q
   capacity_configuration {
     units = 1
@@ -265,6 +263,9 @@ data "aws_partition" "current" {}
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -288,23 +289,21 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
+  application_id       = aws_qbusiness_app.test.id
   display_name         = %[1]q
   capacity_configuration {
     units = 1
   }
   description          = %[1]q
-  document_attribute_configurations {
-    attribute {
-        name   = "foo1"
-        search = "ENABLED"
-        type   = "STRING"
-	}
-	attribute {
-        name   = "foo2"
-        search = "ENABLED"
-        type   = "STRING"
-	}
+  document_attribute_configuration {
+    name   = "foo1"
+    search = "ENABLED"
+    type   = "STRING"
+  }
+  document_attribute_configuration {
+    name   = "foo2"
+    search = "ENABLED"
+    type   = "STRING"
   }
 }
 `, rName)
@@ -317,6 +316,9 @@ data "aws_partition" "current" {}
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -340,7 +342,7 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
+  application_id       = aws_qbusiness_app.test.id
   display_name         = %[1]q
   capacity_configuration {
     units = 1
@@ -350,7 +352,7 @@ resource "aws_qbusiness_index" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-  }  
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

@@ -5,4 +5,5 @@ package qbusiness
 
 var (
 	ResourceApplication = newResourceApplication
+	ResourceIndex       = newResourceIndex
 )

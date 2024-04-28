@@ -72,6 +72,25 @@ func waitIndexCreated(ctx context.Context, conn *qbusiness.Client, index_id stri
 	return nil, err
 }
 
+func waitIndexUpdated(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.IndexStatusCreating, types.IndexStatusUpdating),
+		Target:     enum.Slice(types.IndexStatusActive),
+		Refresh:    statusIndexAvailability(ctx, conn, index_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
 func waitIndexDeleted(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.IndexStatusActive, types.IndexStatusDeleting),
