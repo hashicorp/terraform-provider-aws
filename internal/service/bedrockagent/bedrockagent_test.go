@@ -20,6 +20,10 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"basicOpenSearch":  testAccKnowledgeBase_basicOpenSearch,
 			"updateOpenSearch": testAccKnowledgeBase_updateOpenSearch,
 		},
+		"DataSource": {
+			// "basic":      testAccDataSource_basic,
+			"disappears": testAccDataSource_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

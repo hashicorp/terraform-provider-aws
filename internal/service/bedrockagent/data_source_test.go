@@ -19,9 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Prerequisites:
-// * psql run via null_resource/provisioner "local-exec"
-func testAccDataSource_basic(t *testing.T) {
+func TestAccDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -126,13 +124,14 @@ func testAccCheckDataSourceBaseExists(ctx context.Context, n string, v *types.Da
 func testAccDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
-  name     = %[1]q
- knowledge_base_id = "kb_id"
+ name     = %[1]q
+ knowledge_base_id = "RFYQS34LF7"
+ data_deletion_policy = "RETAIN"
 
  data_source_configuration {
 	type = "S3"
 	s3_configuration {
-		bucket_arn = "bucket_arn"
+		bucket_arn = "arn:aws:s3:::aws-security-data-lake-eu-west-1-8rvl0sowjqqdgyw4nhwlqpaimqddah"
 	}
   }
 }

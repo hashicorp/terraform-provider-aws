@@ -60,11 +60,27 @@ func (r *dataSourceResource) Metadata(_ context.Context, req resource.MetadataRe
 func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"created_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"data_deletion_policy": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
+			},
+			"failure_reasons": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Computed:    true,
 			},
 			"id": framework.IDAttribute(),
 			"knowledge_base_id": schema.StringAttribute{
@@ -76,20 +92,22 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"server_side_encryption_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[serverSideEncryptionConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"kms_key_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
-							Required:   true,
+							Optional:   true,
 						},
 					},
 				},
@@ -111,8 +129,6 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 						"s3_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -122,7 +138,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 										Required:   true,
 									},
 									"bucket_owner_account_id": schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 									"inclusion_prefixes": schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
@@ -138,8 +154,6 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"vector_ingestion_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vectorIngestionConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -424,17 +438,17 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, id, kbID s
 }
 
 func findDataSourceByID(ctx context.Context, conn *bedrockagent.Client, id, kbID string) (*awstypes.DataSource, error) {
-	in := &bedrockagent.GetDataSourceInput{
+	input := &bedrockagent.GetDataSourceInput{
 		DataSourceId:    aws.String(id),
 		KnowledgeBaseId: aws.String(kbID),
 	}
 
-	out, err := conn.GetDataSource(ctx, in)
+	out, err := conn.GetDataSource(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
+				LastRequest: input,
 			}
 		}
 
@@ -442,7 +456,7 @@ func findDataSourceByID(ctx context.Context, conn *bedrockagent.Client, id, kbID
 	}
 
 	if out == nil || out.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return out.DataSource, nil
@@ -459,8 +473,6 @@ type dataSourceResourceModel struct {
 	Name                              types.String                                                            `tfsdk:"name"`
 	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[serverSideEncryptionConfigurationModel] `tfsdk:"server_side_encryption_configuration"`
 	VectorIngestionConfiguration      fwtypes.ListNestedObjectValueOf[vectorIngestionConfigurationModel]      `tfsdk:"vector_ingestion_configuration"`
-	Tags                              types.Map                                                               `tfsdk:"tags"`
-	TagsAll                           types.Map                                                               `tfsdk:"tags_all"`
 	Timeouts                          timeouts.Value                                                          `tfsdk:"timeouts"`
 	UpdatedAt                         timetypes.RFC3339                                                       `tfsdk:"updated_at"`
 }
