@@ -40,8 +40,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceFunctionURL,
+			Factory:  dataSourceFunctionURL,
 			TypeName: "aws_lambda_function_url",
+			Name:     "Function URL",
 		},
 		{
 			Factory:  DataSourceFunctions,
