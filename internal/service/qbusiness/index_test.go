@@ -246,12 +246,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description = "Index name"
 }
 `, rName)
 }
@@ -289,12 +289,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = %[1]q
+  description = %[1]q
   document_attribute_configuration {
     name   = "foo1"
     search = "ENABLED"
@@ -342,12 +342,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = %[1]q
+  description = %[1]q
 
   tags = {
     %[2]q = %[3]q
