@@ -8,14 +8,16 @@ var (
 	ResourceAlias                     = resourceAlias
 	ResourceCodeSigningConfig         = resourceCodeSigningConfig
 	ResourceEventSourceMapping        = resourceEventSourceMapping
+	ResourceFunction                  = resourceFunction
 	ResourceFunctionEventInvokeConfig = resourceFunctionEventInvokeConfig
 	ResourceFunctionURL               = resourceFunctionURL
 
 	FindAliasByTwoPartKey                     = findAliasByTwoPartKey
 	FindCodeSigningConfigByARN                = findCodeSigningConfigByARN
 	FindEventSourceMappingByID                = findEventSourceMappingByID
+	FindFunctionByName                        = findFunctionByName
 	FindFunctionEventInvokeConfigByTwoPartKey = findFunctionEventInvokeConfigByTwoPartKey
-	FunctionEventInvokeConfigParseResourceID  = functionEventInvokeConfigParseResourceID
 	FindFunctionURLByTwoPartKey               = findFunctionURLByTwoPartKey
+	FunctionEventInvokeConfigParseResourceID  = functionEventInvokeConfigParseResourceID
 	SignerServiceIsAvailable                  = signerServiceIsAvailable
 )

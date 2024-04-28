@@ -5,18 +5,16 @@ package lambda
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -42,7 +40,7 @@ const (
 
 // @SDKResource("aws_lambda_function", name="Function")
 // @Tags(identifierAttribute="arn")
-func ResourceFunction() *schema.Resource {
+func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
 		ReadWithoutTimeout:   resourceFunctionRead,
@@ -70,7 +68,7 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[types.Architecture](),
+					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
 				},
 			},
 			"arn": {
@@ -242,13 +240,13 @@ func ResourceFunction() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          "",
-							ValidateDiagFunc: enum.Validate[types.ApplicationLogLevel](),
+							ValidateDiagFunc: enum.Validate[awstypes.ApplicationLogLevel](),
 							DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
 						},
 						"log_format": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.LogFormat](),
+							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
 						},
 						"log_group": {
 							Type:         schema.TypeString,
@@ -260,7 +258,7 @@ func ResourceFunction() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          "",
-							ValidateDiagFunc: enum.Validate[types.SystemLogLevel](),
+							ValidateDiagFunc: enum.Validate[awstypes.SystemLogLevel](),
 							DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
 						},
 					},
@@ -276,8 +274,8 @@ func ResourceFunction() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				Default:          types.PackageTypeZip,
-				ValidateDiagFunc: enum.Validate[types.PackageType](),
+				Default:          awstypes.PackageTypeZip,
+				ValidateDiagFunc: enum.Validate[awstypes.PackageType](),
 			},
 			"publish": {
 				Type:     schema.TypeBool,
@@ -320,7 +318,7 @@ func ResourceFunction() *schema.Resource {
 			"runtime": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.Runtime](),
+				ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
 			},
 			"s3_bucket": {
 				Type:         schema.TypeString,
@@ -360,7 +358,7 @@ func ResourceFunction() *schema.Resource {
 						"apply_on": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.SnapStartApplyOn](),
+							ValidateDiagFunc: enum.Validate[awstypes.SnapStartApplyOn](),
 						},
 						"optimization_status": {
 							Type:     schema.TypeString,
@@ -397,7 +395,7 @@ func ResourceFunction() *schema.Resource {
 						"mode": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.TracingMode](),
+							ValidateDiagFunc: enum.Validate[awstypes.TracingMode](),
 						},
 					},
 				},
@@ -463,18 +461,14 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
-const (
-	functionExtraThrottlingTimeout = 9 * time.Minute
-)
-
 func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
-	packageType := types.PackageType(d.Get("package_type").(string))
+	packageType := awstypes.PackageType(d.Get("package_type").(string))
 	input := &lambda.CreateFunctionInput{
-		Code:         &types.FunctionCode{},
+		Code:         &awstypes.FunctionCode{},
 		Description:  aws.String(d.Get("description").(string)),
 		FunctionName: aws.String(functionName),
 		MemorySize:   aws.Int32(int32(d.Get("memory_size").(int))),
@@ -509,7 +503,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("architectures"); ok && len(v.([]interface{})) > 0 {
-		input.Architectures = expandArchitectures(v.([]interface{}))
+		input.Architectures = flex.ExpandStringyValueList[awstypes.Architecture](v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -521,21 +515,21 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "nil dead_letter_config supplied for function: %s", functionName)
 		}
 
-		input.DeadLetterConfig = &types.DeadLetterConfig{
+		input.DeadLetterConfig = &awstypes.DeadLetterConfig{
 			TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
 		}
 	}
 
 	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
-			input.Environment = &types.Environment{
+			input.Environment = &awstypes.Environment{
 				Variables: flex.ExpandStringValueMap(v),
 			}
 		}
 	}
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EphemeralStorage = &types.EphemeralStorage{
+		input.EphemeralStorage = &awstypes.EphemeralStorage{
 			Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
 		}
 	}
@@ -544,9 +538,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 	}
 
-	if packageType == types.PackageTypeZip {
+	if packageType == awstypes.PackageTypeZip {
 		input.Handler = aws.String(d.Get("handler").(string))
-		input.Runtime = types.Runtime(d.Get("runtime").(string))
+		input.Runtime = awstypes.Runtime(d.Get("runtime").(string))
 	}
 
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
@@ -570,21 +564,21 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TracingConfig = &types.TracingConfig{
-			Mode: types.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+		input.TracingConfig = &awstypes.TracingConfig{
+			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
 		}
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-		input.VpcConfig = &types.VpcConfig{
+		input.VpcConfig = &awstypes.VpcConfig{
 			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
 			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
 			SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 		}
 	}
 
-	_, err := retryFunctionOp(ctx, func() (interface{}, error) {
+	_, err := retryFunctionOp(ctx, func() (*lambda.CreateFunctionOutput, error) {
 		return conn.CreateFunction(ctx, input)
 	})
 
@@ -595,15 +589,15 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(functionName)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
-		return FindFunctionByName(ctx, conn, d.Id())
+		return findFunctionByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Lambda Function (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "awiting for Lambda Function (%s) create: %s", d.Id(), err)
 	}
 
 	if _, err := waitFunctionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Lambda Function (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "awiting for Lambda Function (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
@@ -647,7 +641,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	function := output.Configuration
-	d.Set("architectures", flattenArchitectures(function.Architectures))
+	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set("arn", functionARN)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
@@ -672,13 +666,13 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
 	}
 	d.Set("handler", function.Handler)
-	if err := d.Set("image_config", FlattenImageConfig(function.ImageConfigResponse)); err != nil {
+	if err := d.Set("image_config", flattenImageConfig(function.ImageConfigResponse)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting image_config: %s", err)
 	}
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", functionInvokeARN(functionARN, meta))
+	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
@@ -706,7 +700,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 	d.Set("timeout", function.Timeout)
-	tracingConfigMode := types.TracingModePassThrough
+	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
 	}
@@ -723,7 +717,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if hasQualifier {
 		d.Set("qualified_arn", functionARN)
-		d.Set("qualified_invoke_arn", functionInvokeARN(functionARN, meta))
+		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
 		d.Set("version", function.Version)
 	} else {
 		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
@@ -734,7 +728,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		qualifiedARN := aws.ToString(latest.FunctionArn)
 		d.Set("qualified_arn", qualifiedARN)
-		d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
+		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
 		d.Set("version", latest.Version)
 
 		setTagsOut(ctx, output.Tags)
@@ -749,7 +743,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
-		if function.PackageType == types.PackageTypeZip {
+		if function.PackageType == awstypes.PackageTypeZip {
 			output, err := conn.GetFunctionCodeSigningConfig(ctx, &lambda.GetFunctionCodeSigningConfigInput{
 				FunctionName: aws.String(d.Id()),
 			})
@@ -775,10 +769,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
-			_, err := conn.PutFunctionCodeSigningConfig(ctx, &lambda.PutFunctionCodeSigningConfigInput{
+			input := &lambda.PutFunctionCodeSigningConfigInput{
 				CodeSigningConfigArn: aws.String(v.(string)),
 				FunctionName:         aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.PutFunctionCodeSigningConfig(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) code signing config: %s", d.Id(), err)
@@ -806,11 +802,11 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendErrorf(diags, "nil dead_letter_config supplied for function: %s", d.Id())
 				}
 
-				input.DeadLetterConfig = &types.DeadLetterConfig{
+				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
 					TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
 				}
 			} else {
-				input.DeadLetterConfig = &types.DeadLetterConfig{
+				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
 					TargetArn: aws.String(""),
 				}
 			}
@@ -821,13 +817,13 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChanges("environment", "kms_key_arn") {
-			input.Environment = &types.Environment{
+			input.Environment = &awstypes.Environment{
 				Variables: map[string]string{},
 			}
 
 			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
-					input.Environment = &types.Environment{
+					input.Environment = &awstypes.Environment{
 						Variables: flex.ExpandStringValueMap(v),
 					}
 				}
@@ -836,7 +832,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("ephemeral_storage") {
 			if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.EphemeralStorage = &types.EphemeralStorage{
+				input.EphemeralStorage = &awstypes.EphemeralStorage{
 					Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
 				}
 			}
@@ -846,7 +842,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
 				input.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
 			} else {
-				input.FileSystemConfigs = []types.FileSystemConfig{}
+				input.FileSystemConfigs = []awstypes.FileSystemConfig{}
 			}
 		}
 
@@ -858,7 +854,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
 				input.ImageConfig = expandImageConfigs(v.([]interface{}))
 			} else {
-				input.ImageConfig = &types.ImageConfig{}
+				input.ImageConfig = &awstypes.ImageConfig{}
 			}
 		}
 
@@ -883,7 +879,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("runtime") {
-			input.Runtime = types.Runtime(d.Get("runtime").(string))
+			input.Runtime = awstypes.Runtime(d.Get("runtime").(string))
 		}
 
 		if d.HasChange("snap_start") {
@@ -896,8 +892,8 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("tracing_config") {
 			if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TracingConfig = &types.TracingConfig{
-					Mode: types.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+				input.TracingConfig = &awstypes.TracingConfig{
+					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
 				}
 			}
 		}
@@ -905,13 +901,13 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
-				input.VpcConfig = &types.VpcConfig{
+				input.VpcConfig = &awstypes.VpcConfig{
 					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
 					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
 					SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 				}
 			} else {
-				input.VpcConfig = &types.VpcConfig{
+				input.VpcConfig = &awstypes.VpcConfig{
 					Ipv6AllowedForDualStack: aws.Bool(false),
 					SecurityGroupIds:        []string{},
 					SubnetIds:               []string{},
@@ -919,7 +915,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		_, err := retryFunctionOp(ctx, func() (interface{}, error) {
+		_, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
 			return conn.UpdateFunctionConfiguration(ctx, input)
 		})
 
@@ -940,7 +936,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("architectures") {
 			if v, ok := d.GetOk("architectures"); ok && len(v.([]interface{})) > 0 {
-				input.Architectures = expandArchitectures(v.([]interface{}))
+				input.Architectures = flex.ExpandStringyValueList[awstypes.Architecture](v.([]interface{}))
 			}
 		}
 
@@ -974,8 +970,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateFunctionCode(ctx, input)
 
 		if err != nil {
-			var ipve *types.InvalidParameterValueException
-			if errors.As(err, &ipve) && strings.Contains(ipve.ErrorMessage(), "Error occurred while GetObject.") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Error occurred while GetObject.") {
 				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
 				for _, key := range []string{"s3_bucket", "s3_key", "s3_object_version"} {
 					old, _ := d.GetChange(key)
@@ -1017,18 +1012,9 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-			func() (interface{}, error) {
-				return conn.PublishVersion(ctx, input)
-			},
-			func(err error) (bool, error) {
-				var rce *types.ResourceConflictException
-				if errors.As(err, &rce) && strings.Contains(rce.ErrorMessage(), "in progress") {
-					return true, err
-				}
-				return false, err
-			},
-		)
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func() (interface{}, error) {
+			return conn.PublishVersion(ctx, input)
+		}, "in progress")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "publishing Lambda Function (%s) version: %s", d.Id(), err)
@@ -1059,13 +1045,13 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteFunction(ctx, &lambda.DeleteFunctionInput{
 			FunctionName: aws.String(d.Id()),
 		})
 	}, "because it is a replicated function")
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -1076,7 +1062,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func FindFunctionByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionOutput, error) {
+func findFunctionByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionOutput, error) {
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(name),
 	}
@@ -1087,7 +1073,7 @@ func FindFunctionByName(ctx context.Context, conn *lambda.Client, name string) (
 func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
 	output, err := conn.GetFunction(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1105,19 +1091,21 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	return output, nil
 }
 
-func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, name string) (*types.FunctionConfiguration, error) {
+func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, name string) (*awstypes.FunctionConfiguration, error) {
 	input := &lambda.ListVersionsByFunctionInput{
 		FunctionName: aws.String(name),
 		MaxItems:     aws.Int32(listVersionsMaxItems),
 	}
-	var output *types.FunctionConfiguration
+	var output *awstypes.FunctionConfiguration
 
 	pages := lambda.NewListVersionsByFunctionPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return output, err
 		}
+
 		if len(page.Versions) > 0 && page.NextMarker == nil {
 			// List is sorted from oldest to latest.
 			output = &page.Versions[len(page.Versions)-1]
@@ -1133,7 +1121,7 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 
 func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFunctionByName(ctx, conn, name)
+		output, err := findFunctionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1149,7 +1137,7 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 
 func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFunctionByName(ctx, conn, name)
+		output, err := findFunctionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1163,10 +1151,10 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 	}
 }
 
-func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*types.FunctionConfiguration, error) {
+func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.StatePending),
-		Target:  enum.Slice(types.StateActive),
+		Pending: enum.Slice(awstypes.StatePending),
+		Target:  enum.Slice(awstypes.StateActive),
 		Refresh: statusFunctionState(ctx, conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -1174,7 +1162,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.FunctionConfiguration); ok {
+	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
 		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
 
 		return output, err
@@ -1183,10 +1171,10 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 	return nil, err
 }
 
-func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) (*types.FunctionConfiguration, error) { //nolint:unparam
+func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.LastUpdateStatusInProgress),
-		Target:  enum.Slice(types.LastUpdateStatusSuccessful),
+		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
+		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
 		Refresh: statusFunctionLastUpdateStatus(ctx, conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -1194,7 +1182,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.FunctionConfiguration); ok {
+	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
 		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
@@ -1205,29 +1193,31 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName 
 
 // retryFunctionOp retries a Lambda Function Create or Update operation.
 // It handles IAM eventual consistency and EC2 throttling.
-func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
+type functionCU interface {
+	lambda.CreateFunctionOutput | lambda.UpdateFunctionConfigurationOutput
+}
+
+func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) { //nolint:unparam
 	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		f,
+		func() (interface{}, error) {
+			return f()
+		},
 		func(err error) (bool, error) {
-			var ipve *types.InvalidParameterValueException
-			if errors.As(err, &ipve) {
-				msg := ipve.ErrorMessage()
-				if strings.Contains(msg, "The role defined for the function cannot be assumed by Lambda") {
-					return true, err
-				}
-				if strings.Contains(msg, "The provided execution role does not have permissions") {
-					return true, err
-				}
-				if strings.Contains(msg, "throttled by EC2") {
-					return true, err
-				}
-				if strings.Contains(msg, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
-					return true, err
-				}
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "The role defined for the function cannot be assumed by Lambda") {
+				return true, err
 			}
 
-			var rce *types.ResourceConflictException
-			if errors.As(err, &rce) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "The provided execution role does not have permissions") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "throttled by EC2") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				return true, err
+			}
+
+			if errs.IsA[*awstypes.ResourceConflictException](err) {
 				return true, err
 			}
 
@@ -1236,13 +1226,16 @@ func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interf
 	)
 
 	// Additional retries when throttled.
-	var ipve *types.InvalidParameterValueException
-	if errors.As(err, &ipve) && strings.Contains(ipve.ErrorMessage(), "throttled by EC2") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "throttled by EC2") {
+		const (
+			functionExtraThrottlingTimeout = 9 * time.Minute
+		)
 		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
-			f,
+			func() (interface{}, error) {
+				return f()
+			},
 			func(err error) (bool, error) {
-				var ipve *types.InvalidParameterValueException
-				if errors.As(err, &ipve) && strings.Contains(ipve.ErrorMessage(), "throttled by EC2") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "throttled by EC2") {
 					return true, err
 				}
 
@@ -1251,7 +1244,7 @@ func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interf
 		)
 	}
 
-	return output, err
+	return output.(*T), err
 }
 
 func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -1259,7 +1252,7 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 	_, handlerOk := d.GetOk("handler")
 	_, runtimeOk := d.GetOk("runtime")
 
-	if packageType == string(types.PackageTypeZip) && (!handlerOk || !runtimeOk) {
+	if packageType == string(awstypes.PackageTypeZip) && (!handlerOk || !runtimeOk) {
 		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
 	}
 	return nil
@@ -1326,16 +1319,6 @@ func readFileContents(v string) ([]byte, error) {
 	return fileContent, nil
 }
 
-func functionInvokeARN(functionARN string, meta interface{}) string {
-	return arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionARN),
-	}.String()
-}
-
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
 func invokeARN(c *conns.AWSClient, functionOrAliasARN string) string {
 	return arn.ARN{
@@ -1378,7 +1361,7 @@ func signerServiceIsAvailable(region string) bool {
 	return ok
 }
 
-func flattenEnvironment(apiObject *types.EnvironmentResponse) []interface{} {
+func flattenEnvironment(apiObject *awstypes.EnvironmentResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1392,92 +1375,108 @@ func flattenEnvironment(apiObject *types.EnvironmentResponse) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenFileSystemConfigs(fscList []types.FileSystemConfig) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0, len(fscList))
-	for _, fsc := range fscList {
-		f := make(map[string]interface{})
-		f["arn"] = aws.ToString(fsc.Arn)
-		f["local_mount_path"] = aws.ToString(fsc.LocalMountPath)
+func flattenFileSystemConfigs(apiObjects []awstypes.FileSystemConfig) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObjects))
 
-		results = append(results, f)
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]interface{})
+		tfMap["arn"] = aws.ToString(apiObject.Arn)
+		tfMap["local_mount_path"] = aws.ToString(apiObject.LocalMountPath)
+
+		tfList = append(tfList, tfMap)
 	}
-	return results
+
+	return tfList
 }
 
-func expandFileSystemConfigs(fscMaps []interface{}) []types.FileSystemConfig {
-	fileSystemConfigs := make([]types.FileSystemConfig, 0, len(fscMaps))
-	for _, fsc := range fscMaps {
-		fscMap := fsc.(map[string]interface{})
-		fileSystemConfigs = append(fileSystemConfigs, types.FileSystemConfig{
-			Arn:            aws.String(fscMap["arn"].(string)),
-			LocalMountPath: aws.String(fscMap["local_mount_path"].(string)),
+func expandFileSystemConfigs(tfList []interface{}) []awstypes.FileSystemConfig {
+	apiObjects := make([]awstypes.FileSystemConfig, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObjects = append(apiObjects, awstypes.FileSystemConfig{
+			Arn:            aws.String(tfMap["arn"].(string)),
+			LocalMountPath: aws.String(tfMap["local_mount_path"].(string)),
 		})
 	}
-	return fileSystemConfigs
+
+	return apiObjects
 }
 
-func FlattenImageConfig(response *types.ImageConfigResponse) []map[string]interface{} {
-	settings := make(map[string]interface{})
+func flattenImageConfig(apiObject *awstypes.ImageConfigResponse) []interface{} {
+	tfMap := make(map[string]interface{})
 
-	if response == nil || response.Error != nil || response.ImageConfig == nil {
+	if apiObject == nil || apiObject.Error != nil || apiObject.ImageConfig == nil {
 		return nil
 	}
 
-	settings["command"] = response.ImageConfig.Command
-	settings["entry_point"] = response.ImageConfig.EntryPoint
-	settings["working_directory"] = response.ImageConfig.WorkingDirectory
+	tfMap["command"] = apiObject.ImageConfig.Command
+	tfMap["entry_point"] = apiObject.ImageConfig.EntryPoint
+	tfMap["working_directory"] = apiObject.ImageConfig.WorkingDirectory
 
-	return []map[string]interface{}{settings}
+	return []interface{}{tfMap}
 }
 
-func expandImageConfigs(imageConfigMaps []interface{}) *types.ImageConfig {
-	imageConfig := &types.ImageConfig{}
+func expandImageConfigs(tfList []interface{}) *awstypes.ImageConfig {
+	apiObject := &awstypes.ImageConfig{}
+
 	// only one image_config block is allowed
-	if len(imageConfigMaps) == 1 && imageConfigMaps[0] != nil {
-		config := imageConfigMaps[0].(map[string]interface{})
-		if len(config["entry_point"].([]interface{})) > 0 {
-			imageConfig.EntryPoint = flex.ExpandStringValueList(config["entry_point"].([]interface{}))
-		}
-		if len(config["command"].([]interface{})) > 0 {
-			imageConfig.Command = flex.ExpandStringValueList(config["command"].([]interface{}))
-		}
-		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
-	}
-	return imageConfig
-}
-
-func expandLoggingConfig(tfList []interface{}) *types.LoggingConfig {
-	loggingConfig := &types.LoggingConfig{}
 	if len(tfList) == 1 && tfList[0] != nil {
-		config := tfList[0].(map[string]interface{})
-		if v := config["application_log_level"].(string); len(v) > 0 {
-			loggingConfig.ApplicationLogLevel = types.ApplicationLogLevel(v)
+		tfMap := tfList[0].(map[string]interface{})
+
+		if len(tfMap["entry_point"].([]interface{})) > 0 {
+			apiObject.EntryPoint = flex.ExpandStringValueList(tfMap["entry_point"].([]interface{}))
 		}
-		if v := config["log_format"].(string); len(v) > 0 {
-			loggingConfig.LogFormat = types.LogFormat(v)
+
+		if len(tfMap["command"].([]interface{})) > 0 {
+			apiObject.Command = flex.ExpandStringValueList(tfMap["command"].([]interface{}))
 		}
-		if v := config["log_group"].(string); len(v) > 0 {
-			loggingConfig.LogGroup = aws.String(v)
-		}
-		if v := config["system_log_level"].(string); len(v) > 0 {
-			loggingConfig.SystemLogLevel = types.SystemLogLevel(v)
-		}
+
+		apiObject.WorkingDirectory = aws.String(tfMap["working_directory"].(string))
 	}
-	return loggingConfig
+
+	return apiObject
 }
 
-func flattenLoggingConfig(apiObject *types.LoggingConfig) []map[string]interface{} {
+func expandLoggingConfig(tfList []interface{}) *awstypes.LoggingConfig {
+	apiObject := &awstypes.LoggingConfig{}
+
+	if len(tfList) == 1 && tfList[0] != nil {
+		tfMap := tfList[0].(map[string]interface{})
+
+		if v := tfMap["application_log_level"].(string); len(v) > 0 {
+			apiObject.ApplicationLogLevel = awstypes.ApplicationLogLevel(v)
+		}
+
+		if v := tfMap["log_format"].(string); len(v) > 0 {
+			apiObject.LogFormat = awstypes.LogFormat(v)
+		}
+
+		if v := tfMap["log_group"].(string); len(v) > 0 {
+			apiObject.LogGroup = aws.String(v)
+		}
+
+		if v := tfMap["system_log_level"].(string); len(v) > 0 {
+			apiObject.SystemLogLevel = awstypes.SystemLogLevel(v)
+		}
+	}
+
+	return apiObject
+}
+
+func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
-	m := map[string]interface{}{
+
+	tfMap := map[string]interface{}{
 		"application_log_level": apiObject.ApplicationLogLevel,
 		"log_format":            apiObject.LogFormat,
 		"log_group":             aws.ToString(apiObject.LogGroup),
 		"system_log_level":      apiObject.SystemLogLevel,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]interface{}{tfMap}
 }
 
 // Suppress diff if log levels have not been specified, unless log_format has changed
@@ -1491,53 +1490,43 @@ func suppressLoggingConfigUnspecifiedLogLevels(k, old, new string, d *schema.Res
 	return false
 }
 
-func flattenEphemeralStorage(response *types.EphemeralStorage) []map[string]interface{} {
-	if response == nil {
-		return nil
-	}
-
-	m := make(map[string]interface{})
-	m["size"] = aws.ToInt32(response.Size)
-
-	return []map[string]interface{}{m}
-}
-
-func expandSnapStart(tfList []interface{}) *types.SnapStart {
-	snapStart := &types.SnapStart{ApplyOn: types.SnapStartApplyOnNone}
-	if len(tfList) == 1 && tfList[0] != nil {
-		item := tfList[0].(map[string]interface{})
-		snapStart.ApplyOn = types.SnapStartApplyOn(item["apply_on"].(string))
-	}
-	return snapStart
-}
-
-func flattenSnapStart(apiObject *types.SnapStartResponse) []interface{} {
+func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
-	if apiObject.ApplyOn == types.SnapStartApplyOnNone {
+
+	tfMap := make(map[string]interface{})
+	tfMap["size"] = aws.ToInt32(apiObject.Size)
+
+	return []interface{}{tfMap}
+}
+
+func expandSnapStart(tfList []interface{}) *awstypes.SnapStart {
+	apiObject := &awstypes.SnapStart{
+		ApplyOn: awstypes.SnapStartApplyOnNone,
+	}
+
+	if len(tfList) == 1 && tfList[0] != nil {
+		tfMap := tfList[0].(map[string]interface{})
+		apiObject.ApplyOn = awstypes.SnapStartApplyOn(tfMap["apply_on"].(string))
+	}
+
+	return apiObject
+}
+
+func flattenSnapStart(apiObject *awstypes.SnapStartResponse) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
-	m := map[string]interface{}{
-		"apply_on":            string(apiObject.ApplyOn),
-		"optimization_status": string(apiObject.OptimizationStatus),
+
+	if apiObject.ApplyOn == awstypes.SnapStartApplyOnNone {
+		return nil
 	}
 
-	return []interface{}{m}
-}
-
-func expandArchitectures(tfList []interface{}) []types.Architecture {
-	vs := make([]types.Architecture, 0, len(tfList))
-	for _, v := range tfList {
-		vs = append(vs, types.Architecture(v.(string)))
+	tfMap := map[string]interface{}{
+		"apply_on":            apiObject.ApplyOn,
+		"optimization_status": apiObject.OptimizationStatus,
 	}
-	return vs
-}
 
-func flattenArchitectures(apiObject []types.Architecture) []interface{} {
-	vs := make([]interface{}, 0, len(apiObject))
-	for _, v := range apiObject {
-		vs = append(vs, string(v))
-	}
-	return vs
+	return []interface{}{tfMap}
 }
