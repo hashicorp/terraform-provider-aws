@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package paymentcryptography_test
 
 import (
@@ -16,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCheckKeyAlias_basic(t *testing.T) {
+func TestAccPaymentCryptographyCheckKeyAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
@@ -29,12 +32,12 @@ func TestAccCheckKeyAlias_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyAliasConfig_basic(rName),
+				Config: testAccPaymentCryptographyKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -48,7 +51,7 @@ func TestAccCheckKeyAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccCheckKeyAlias_disappears(t *testing.T) {
+func TestAccCheckPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
@@ -61,12 +64,12 @@ func TestAccCheckKeyAlias_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyAliasConfig_basic(rName),
+				Config: testAccPaymentCryptographyKeyAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkeyalias.ResourceKeyAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,7 +78,7 @@ func TestAccCheckKeyAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCheckKeyAlias_update(t *testing.T) {
+func TestAccCheckPaymentCryptographyKeyAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
@@ -88,12 +91,12 @@ func TestAccCheckKeyAlias_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyAliasConfig_update(rName),
+				Config: testAccPaymentCryptographyKeyAliasConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -104,9 +107,9 @@ func TestAccCheckKeyAlias_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKeyAliasConfig_basic(rName),
+				Config: testAccPaymentCryptographyKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -115,7 +118,7 @@ func TestAccCheckKeyAlias_update(t *testing.T) {
 	})
 }
 
-func TestAccCheckKeyAlias_updateName(t *testing.T) {
+func TestAccCheckPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	rOldName := sdkacctest.RandomWithPrefix("alias/")
 	rNewName := sdkacctest.RandomWithPrefix("alias/")
@@ -129,12 +132,12 @@ func TestAccCheckKeyAlias_updateName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyAliasConfig_updateName(rOldName),
+				Config: testAccPaymentCryptographyKeyAliasConfig_updateName(rOldName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rOldName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -145,9 +148,9 @@ func TestAccCheckKeyAlias_updateName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKeyAliasConfig_updateName(rNewName),
+				Config: testAccPaymentCryptographyKeyAliasConfig_updateName(rNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rNewName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -156,7 +159,7 @@ func TestAccCheckKeyAlias_updateName(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPaymentCryptographyKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
 
@@ -182,7 +185,7 @@ func testAccCheckKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyAliasExists(ctx context.Context, n string, v *awstypes.Alias) resource.TestCheckFunc {
+func testAccCheckPaymentCryptographyKeyAliasExists(ctx context.Context, n string, v *awstypes.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -203,21 +206,21 @@ func testAccCheckKeyAliasExists(ctx context.Context, n string, v *awstypes.Alias
 	}
 }
 
-func testAccKeyAliasConfig_basic(name string) string {
+func testAccPaymentCryptographyKeyAliasConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key" "test" {
-	exportable = true
-	key_attributes {
-	  key_algorithm = "TDES_3KEY"
-	  key_class     = "SYMMETRIC_KEY"
-	  key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
-	  key_modes_of_use {
-		decrypt = true
-		encrypt = true
-		wrap    = true
-		unwrap  = true
-	  }
+  exportable = true
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+	key_class     = "SYMMETRIC_KEY"
+	key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+	key_modes_of_use {
+	  decrypt = true
+	  encrypt = true
+	  wrap    = true
+	  unwrap  = true
 	}
+  }
 }
 resource "aws_paymentcryptography_key_alias" "test" {
   alias_name = %[1]q
@@ -226,7 +229,7 @@ resource "aws_paymentcryptography_key_alias" "test" {
 `, name)
 }
 
-func testAccKeyAliasConfig_update(name string) string {
+func testAccPaymentCryptographyKeyAliasConfig_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key_alias" "test" {
   alias_name = %[1]q
@@ -234,23 +237,23 @@ resource "aws_paymentcryptography_key_alias" "test" {
 }
 
 resource "aws_paymentcryptography_key" "test" {
-	exportable = true
-	key_attributes {
-	  key_algorithm = "TDES_3KEY"
-	  key_class     = "SYMMETRIC_KEY"
-	  key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
-	  key_modes_of_use {
-		decrypt = true
-		encrypt = true
-		wrap    = true
-		unwrap  = true
-	  }
+  exportable = true
+  key_attributes {
+	key_algorithm = "TDES_3KEY"
+	key_class     = "SYMMETRIC_KEY"
+	key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+	key_modes_of_use {
+	  decrypt = true
+	  encrypt = true
+	  wrap    = true
+	  unwrap  = true
 	}
+  }
 }
 `, name)
 }
 
-func testAccKeyAliasConfig_updateName(name string) string {
+func testAccPaymentCryptographyKeyAliasConfig_updateName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key_alias" "test" {
   alias_name = %[1]q
@@ -258,18 +261,18 @@ resource "aws_paymentcryptography_key_alias" "test" {
 }
 
 resource "aws_paymentcryptography_key" "test" {
-	exportable = true
-	key_attributes {
-	  key_algorithm = "TDES_3KEY"
-	  key_class     = "SYMMETRIC_KEY"
-	  key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
-	  key_modes_of_use {
-		decrypt = true
-		encrypt = true
-		wrap    = true
-		unwrap  = true
-	  }
+  exportable = true
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+    key_class     = "SYMMETRIC_KEY"
+    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+    key_modes_of_use {
+  	  decrypt = true
+	  encrypt = true
+	  wrap    = true
+	  unwrap  = true
 	}
+  }
 }
 `, name)
 }

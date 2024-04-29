@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package paymentcryptography
 
 import (
@@ -54,9 +57,9 @@ func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRe
 			},
 			"key_arn": schema.StringAttribute{
 				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:payment-cryptography:[a-z]{2}-[a-z]{1,16}-[0-9]+:[0-9]{12}:key/[0-9a-zA-Z]{16,64}$`), "valid arn is required. Minimum length of 70. Maximum length of 150"),
-				},
+				// Validators: []validator.String{
+				// 	stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:payment-cryptography:[a-z]{2}-[a-z]{1,16}-[0-9]+:[0-9]{12}:key/[0-9a-zA-Z]{16,64}$`), "valid arn is required. Minimum length of 70. Maximum length of 150"),
+				// },
 			},
 			names.AttrID: framework.IDAttribute(),
 		},
@@ -162,7 +165,6 @@ func (r *keyAliasResource) Update(ctx context.Context, request resource.UpdateRe
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("reading PaymentCryptography key Alias (%s)", new.ID.String()), err.Error())
-
 			return
 		}
 

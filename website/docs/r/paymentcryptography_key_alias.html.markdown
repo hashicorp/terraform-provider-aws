@@ -45,6 +45,10 @@ The following arguments are optional:
 
 * `key_arn` - (Optional) The Amazon Resource Name (ARN) of the key.
 
+## Attribute Reference
+
+This resource exports the same attributes as mentioned in arguments above:
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Payment Cryptography Control Plane Key Alias using the `alias/4681482429376900170`. For example:
