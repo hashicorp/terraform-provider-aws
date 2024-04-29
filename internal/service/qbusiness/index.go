@@ -221,7 +221,10 @@ func (r *resourceIndex) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	conn := r.Meta().QBusinessClient(ctx)
 
-	data.initFromID()
+	if err := data.initFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
 
 	indexId := data.IndexId.ValueString()
 	appId := data.ApplicationId.ValueString()
@@ -297,7 +300,10 @@ func (r *resourceIndex) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	new.initFromID()
+	if err := new.initFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
 
 	if !old.CapacityConfiguration.Equal(new.CapacityConfiguration) ||
 		!old.DisplayName.Equal(new.DisplayName) ||
