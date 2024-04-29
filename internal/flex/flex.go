@@ -395,6 +395,13 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
+// StringToInt32Value converts a string pointer to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringToInt32Value(v *string) int32 {
+	i, _ := strconv.ParseInt(aws.StringValue(v), 0, 32)
+	return int32(i)
+}
+
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
 	return aws.String(itypes.Base64EncodeOnce([]byte(v)))

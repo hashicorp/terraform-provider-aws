@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_redshift_partner")
-func ResourcePartner() *schema.Resource {
+// @SDKResource("aws_redshift_partner", name="Partner")
+func resourcePartner() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartnerCreate,
 		ReadWithoutTimeout:   resourcePartnerRead,
@@ -93,7 +93,8 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := FindPartnerById(ctx, conn, d.Id())
+	out, err := findPartnerByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Partner (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -118,27 +119,25 @@ func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	account, clusterId, dbName, partnerName, err := DecodePartnerID(d.Id())
+	account, clusterID, dbName, partnerName, err := DecodePartnerID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	deleteInput := redshift.DeletePartnerInput{
+	log.Printf("[DEBUG] Deleting Partner: %s", d.Id())
+	_, err = conn.DeletePartnerWithContext(ctx, &redshift.DeletePartnerInput{
 		AccountId:         aws.String(account),
-		ClusterIdentifier: aws.String(clusterId),
+		ClusterIdentifier: aws.String(clusterID),
 		DatabaseName:      aws.String(dbName),
 		PartnerName:       aws.String(partnerName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodePartnerNotFoundFault) {
+		return diags
 	}
 
-	_, err = conn.DeletePartnerWithContext(ctx, &deleteInput)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodePartnerNotFoundFault) {
-			return diags
-		}
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
-		}
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
 	}
 
 	return diags

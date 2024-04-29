@@ -123,6 +123,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
+  <li><code>chatbot</code></li>
   <li><code>chime</code></li>
   <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkvoice</code></li>
@@ -277,6 +278,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
+  <li><code>route53profiles</code></li>
   <li><code>route53recoverycontrolconfig</code></li>
   <li><code>route53recoveryreadiness</code></li>
   <li><code>route53resolver</code></li>
@@ -424,4 +426,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d65f1f0b651e175fa2bfe7882a2a41b16b6ea0a04040101331fe126be0abcbfe -->
+<!-- cache-key: cdktf-0.20.1 input-fef19d282bd4baa2e4cfb819984b4f91b03ff5f8965b46d3753f80c46c4f1287 -->

@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_redshift_endpoint_access")
-func ResourceEndpointAccess() *schema.Resource {
+// @SDKResource("aws_redshift_endpoint_access", name="Endpoint Access")
+func resourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAccessCreate,
 		ReadWithoutTimeout:   resourceEndpointAccessRead,
 		UpdateWithoutTimeout: resourceEndpointAccessUpdate,
 		DeleteWithoutTimeout: resourceEndpointAccessDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -155,7 +156,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	endpoint, err := FindEndpointAccessByName(ctx, conn, d.Id())
+	endpoint, err := findEndpointAccessByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift endpoint access (%s) not found, removing from state", d.Id())

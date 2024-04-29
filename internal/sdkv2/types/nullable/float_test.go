@@ -55,7 +55,7 @@ func TestNullableFloat(t *testing.T) {
 			t.Fatalf("expected test case %d IsNull to return %t, got %t", i, null, tc.expectNull)
 		}
 
-		value, null, err := v.Value()
+		value, null, err := v.ValueFloat64()
 		if value != tc.expectedValue {
 			t.Fatalf("expected test case %d Value to be %f, got %f", i, tc.expectedValue, value)
 		}

@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -385,7 +386,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d verify.ResourceDiffer) string {
+func queueName(d sdkv2.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))

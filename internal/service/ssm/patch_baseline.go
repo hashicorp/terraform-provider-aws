@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -602,7 +603,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 	return nil
 }
 
-func hasObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"description",
 		"global_filter",
