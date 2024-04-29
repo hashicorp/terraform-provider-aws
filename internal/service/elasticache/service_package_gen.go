@@ -41,8 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Cluster",
 		},
 		{
-			Factory:  DataSourceReplicationGroup,
+			Factory:  dataSourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
+			Name:     "Replication Group",
 		},
 		{
 			Factory:  dataSourceSubnetGroup,
