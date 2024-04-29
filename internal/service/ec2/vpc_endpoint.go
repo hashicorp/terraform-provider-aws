@@ -160,6 +160,27 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"subnet_configurations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ipv6": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						// subnet_id in subnet_configurations must have a corresponding subnet in subnet_ids attribute
+						"subnet_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -236,6 +257,10 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("subnet_configurations"); ok {
+		input.SubnetConfigurations = expandSubnetConfiguration(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -337,6 +362,16 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("vpc_id", vpce.VpcId)
 
+	if subnetConfig, err := FindSubnetConfigurationsByInterfaceIds(ctx, conn, vpce.NetworkInterfaceIds); err != nil {
+		if tfresource.NotFound(err) {
+			d.Set("subnet_configurations", nil)
+		} else {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet Configuration: %s", err)
+		}
+	} else {
+		d.Set("subnet_configurations", subnetConfig)
+	}
+
 	if pl, err := FindPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
 			d.Set("cidr_blocks", nil)
@@ -377,7 +412,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChanges("dns_options", "ip_address_type", "policy", "private_dns_enabled", "security_group_ids", "route_table_ids", "subnet_ids") {
+	if d.HasChanges("dns_options", "ip_address_type", "policy", "private_dns_enabled", "security_group_ids", "route_table_ids", "subnet_configurations", "subnet_ids") {
 		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
@@ -424,6 +459,10 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 					input.PolicyDocument = aws.String(policy)
 				}
 			}
+		}
+
+		if d.HasChange("subnet_configurations") {
+			input.SubnetConfigurations = expandSubnetConfiguration(d.Get("subnet_configurations").(*schema.Set).List())
 		}
 
 		_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
@@ -530,6 +569,34 @@ func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{
 	return apiObject
 }
 
+func expandSubnetConfiguration(l []interface{}) []*ec2.SubnetConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	configurations := make([]*ec2.SubnetConfiguration, 0, len(l))
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		apiObject := &ec2.SubnetConfiguration{
+			SubnetId: aws.String(tfMap["subnet_id"].(string)),
+		}
+
+		if v, ok := tfMap["ipv4"].(string); ok && v != "" {
+			apiObject.Ipv4 = aws.String(v)
+		}
+
+		if v, ok := tfMap["ipv6"].(string); ok && v != "" {
+			apiObject.Ipv6 = aws.String(v)
+		}
+
+		configurations = append(configurations, apiObject)
+
+	}
+	return configurations
+}
+
 func flattenDNSEntry(apiObject *ec2.DnsEntry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -600,6 +667,37 @@ func flattenSecurityGroupIdentifiers(apiObjects []*ec2.SecurityGroupIdentifier) 
 	}
 
 	return tfList
+}
+
+func FindSubnetConfigurationsByInterfaceIds(ctx context.Context, conn *ec2.EC2, apiObjects []*string) ([]interface{}, error) {
+	if len(apiObjects) == 0 {
+		return nil, nil
+	}
+	var tfList []interface{}
+	for _, apiObject := range apiObjects {
+		v, err := FindNetworkInterfaceByID(ctx, conn, *apiObject)
+		if err != nil {
+			return nil, fmt.Errorf("accepting reading network interface: %w", err)
+		}
+		tfList = append(tfList, flattenSubnetConfigurations(v.SubnetId, v.PrivateIpAddress, v.Ipv6Address))
+	}
+
+	return tfList, nil
+}
+
+func flattenSubnetConfigurations(subnetId, privateIpv4, ipv6Address *string) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	tfMap["subnet_id"] = aws.StringValue(subnetId)
+
+	if privateIpv4 != nil {
+		tfMap["ipv4"] = aws.StringValue(privateIpv4)
+	}
+	if ipv6Address != nil {
+		tfMap["ipv6"] = aws.StringValue(ipv6Address)
+	}
+
+	return tfMap
 }
 
 func flattenAddAndRemoveStringLists(d *schema.ResourceData, key string) ([]*string, []*string) {

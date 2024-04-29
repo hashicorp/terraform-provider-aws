@@ -534,6 +534,249 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) { // 
 	})
 }
 
+func TestAccVPCEndpoint_interfaceUserDefinedIPv4(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	ipv4Address1 := "10.0.0.10"
+	ipv4Address2 := "10.0.1.10"
+	ipv4Address1Updated := "10.0.0.11"
+	ipv4Address2Updated := "10.0.1.11"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.0.ipv4", ipv4Address1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.1.ipv4", ipv4Address2),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1Updated, ipv4Address2Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.0.ipv4", ipv4Address1Updated),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.1.ipv4", ipv4Address2Updated),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	ipv6HostNum1 := 10
+	ipv6HostNum2 := 11
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIpv6(rName, ipv6HostNum1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.#", "2"),
+					// IPv6 VPC CIDR is allocated dynamically by AWS, use regex to match regional prefix with expected subnet and /128 address
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.0.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)1::a`)),
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.1.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)2::a`)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIpv6(rName, ipv6HostNum2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.#", "2"),
+					// IPv6 VPC CIDR is allocated dynamically by AWS, use regex to match regional prefix with expected subnet and /128 address
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.0.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)1::b`)),
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.1.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)2::b`)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_interfaceUserDefinedDualstack(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint ec2.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	ipv4Address1 := "10.0.0.10"
+	ipv4Address2 := "10.0.1.10"
+	ipv4Address1Updated := "10.0.0.11"
+	ipv4Address2Updated := "10.0.1.11"
+	ipv6HostNum1 := 10
+	ipv6HostNum2 := 11
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1, ipv4Address2, ipv6HostNum1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.0.ipv4", ipv4Address1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.1.ipv4", ipv4Address2),
+					// IPv6 VPC CIDR is allocated dynamically by AWS, use regex to match regional prefix with expected subnet and /128 address
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.0.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)1::a`)),
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.1.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)2::a`)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1Updated, ipv4Address2Updated, ipv6HostNum2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // Default SG.
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.0.ipv4", ipv4Address1Updated),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configurations.1.ipv4", ipv4Address2Updated),
+					// IPv6 VPC CIDR is allocated dynamically by AWS, use regex to match regional prefix with expected subnet and /128 address
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.0.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)1::b`)),
+					resource.TestMatchResourceAttr(resourceName, "subnet_configurations.1.ipv6", regexache.MustCompile(`2600:1f14([0-9a-f:]+)2::b`)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
@@ -1056,6 +1299,151 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName, autoAccept))
+}
+
+func testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1, ipv4Address2 string, ipv6HostNum int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id     = aws_vpc.test.id
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.0.0/24"
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id     = aws_vpc.test.id
+  availability_zone = "us-west-2b"
+  cidr_block = "10.0.1.0/24"
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.athena"
+  vpc_endpoint_type = "Interface"
+  ip_address_type = "dualstack"
+  subnet_configurations {
+    ipv4 = %[2]q
+    ipv6 = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[4]v)
+    subnet_id = aws_subnet.test1.id
+  }
+  subnet_configurations {
+    ipv4 = %[3]q
+    ipv6 = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[4]v)
+    subnet_id = aws_subnet.test2.id
+  }
+  subnet_ids = [
+   aws_subnet.test1.id, aws_subnet.test2.id
+  ]
+}
+`, rName, ipv4Address1, ipv4Address2, ipv6HostNum)
+}
+
+func testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id     = aws_vpc.test.id
+  availability_zone = "us-west-2a"
+  cidr_block = "10.0.0.0/24"
+}
+
+resource "aws_subnet" "test2" {
+	vpc_id     = aws_vpc.test.id
+	availability_zone = "us-west-2b"
+	cidr_block = "10.0.1.0/24"
+  }
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
+  subnet_configurations {
+    ipv4 = %[2]q
+    subnet_id = aws_subnet.test1.id
+  }
+  subnet_configurations {
+    ipv4 = %[3]q
+    subnet_id = aws_subnet.test2.id
+  }
+  subnet_ids = [
+   aws_subnet.test1.id, aws_subnet.test2.id
+  ]
+}
+`, rName, ipv4Address1, ipv4Address2)
+}
+
+func testAccVPCEndpointConfig_interfaceUserDefinedIpv6(rName string, ipv6HostNum int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id     = aws_vpc.test.id
+  availability_zone = "us-west-2a"
+  assign_ipv6_address_on_creation = true
+  enable_resource_name_dns_aaaa_record_on_launch = true
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  ipv6_native = true
+  private_dns_hostname_type_on_launch = "resource-name"
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id     = aws_vpc.test.id
+  availability_zone = "us-west-2b"
+  assign_ipv6_address_on_creation = true
+  enable_resource_name_dns_aaaa_record_on_launch = true
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+  ipv6_native = true
+  private_dns_hostname_type_on_launch = "resource-name"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.athena"
+  vpc_endpoint_type = "Interface"
+  ip_address_type = "ipv6"
+  subnet_configurations {
+    ipv6 = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[2]v)
+    subnet_id = aws_subnet.test1.id
+  }
+  subnet_configurations {
+    ipv6 = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[2]v)
+    subnet_id = aws_subnet.test2.id
+  }
+  subnet_ids = [
+   aws_subnet.test1.id, aws_subnet.test2.id
+  ]
+}
+`, rName, ipv6HostNum)
 }
 
 func testAccVPCEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
