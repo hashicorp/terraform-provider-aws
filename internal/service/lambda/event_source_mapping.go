@@ -497,7 +497,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	output, err := findEventSourceMappingByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
+		log.Printf("[WARN] Lambda Event Source Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}

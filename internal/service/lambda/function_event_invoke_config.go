@@ -166,7 +166,7 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 	output, err := findFunctionEventInvokeConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[DEBUG] Lambda Function Event Invoke Config (%s) not found", d.Id())
+		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
