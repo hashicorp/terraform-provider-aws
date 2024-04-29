@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Subscriber.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_subscriber`. Use a `depends_on` statement.
+
 ## Example Usage
 
 ```terraform
@@ -28,6 +30,8 @@ resource "aws_securitylake_subscriber" "example" {
     external_id = "example"
     principal   = "1234567890"
   }
+
+  depends_on = [aws_securitylake_data_lake.example]
 }
 ```
 

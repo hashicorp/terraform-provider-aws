@@ -10,17 +10,21 @@ description: |-
 
 Terraform resource for managing an Amazon Security Lake AWS Log Source.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_aws_log_source`. Use a `depends_on` statement.
+
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_securitylake_aws_log_source" "test" {
+resource "aws_securitylake_aws_log_source" "example" {
   source {
     accounts    = ["123456789012"]
     regions     = ["eu-west-1"]
     source_name = "ROUTE53"
   }
+
+  depends_on = [aws_securitylake_data_lake.example]
 }
 ```
 

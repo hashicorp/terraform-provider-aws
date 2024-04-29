@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Custom Log Source.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_custom_log_source`. Use a `depends_on` statement.
+
 ## Example Usage
 
 ### Basic Usage
@@ -30,6 +32,8 @@ resource "aws_securitylake_custom_log_source" "example" {
       principal   = "123456789012"
     }
   }
+
+  depends_on = [aws_securitylake_data_lake.example]
 }
 ```
 
