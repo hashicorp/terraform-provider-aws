@@ -190,8 +190,8 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
 	}
 
-	if v := output.FunctionError; v != nil {
-		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, aws.ToString(v))
+	if output.FunctionError != nil {
+		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))

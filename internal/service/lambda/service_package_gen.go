@@ -50,8 +50,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Functions",
 		},
 		{
-			Factory:  DataSourceInvocation,
+			Factory:  dataSourceInvocation,
 			TypeName: "aws_lambda_invocation",
+			Name:     "Invocation",
 		},
 		{
 			Factory:  DataSourceLayerVersion,
