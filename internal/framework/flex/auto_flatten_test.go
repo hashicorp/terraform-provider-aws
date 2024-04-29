@@ -60,7 +60,7 @@ func TestFlatten(t *testing.T) {
 			TestName: "json interface Source string Target",
 			Source: &TestFlexAWS19{
 				Field1: &testJSONDocument{
-					value: &struct {
+					Value: &struct {
 						Test string `json:"test"`
 					}{
 						Test: "a",
