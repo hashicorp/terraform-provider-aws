@@ -11,6 +11,7 @@ var (
 	ResourceFunction                  = resourceFunction
 	ResourceFunctionEventInvokeConfig = resourceFunctionEventInvokeConfig
 	ResourceFunctionURL               = resourceFunctionURL
+	ResourceInvocation                = resourceInvocation
 
 	FindAliasByTwoPartKey                     = findAliasByTwoPartKey
 	FindCodeSigningConfigByARN                = findCodeSigningConfigByARN

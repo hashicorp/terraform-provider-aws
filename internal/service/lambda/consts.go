@@ -22,19 +22,23 @@ const (
 	lambdaPropagationTimeout = 5 * time.Minute
 )
 
-const (
-	invocationActionCreate = "create"
-	invocationActionDelete = "delete"
-	invocationActionUpdate = "update"
-)
+type invocationAction string
 
 const (
-	lifecycleScopeCreateOnly = "CREATE_ONLY"
-	lifecycleScopeCrud       = "CRUD"
+	invocationActionCreate invocationAction = "create"
+	invocationActionDelete invocationAction = "delete"
+	invocationActionUpdate invocationAction = "update"
 )
 
-func lifecycleScope_Values() []string {
-	return []string{
+type lifecycleScope string
+
+const (
+	lifecycleScopeCreateOnly lifecycleScope = "CREATE_ONLY"
+	lifecycleScopeCrud       lifecycleScope = "CRUD"
+)
+
+func (lifecycleScope) Values() []lifecycleScope {
+	return []lifecycleScope{
 		lifecycleScopeCreateOnly,
 		lifecycleScopeCrud,
 	}

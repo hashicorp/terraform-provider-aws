@@ -78,7 +78,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Event Source Mapping",
 		},
 		{
-			Factory:  ResourceFunction,
+			Factory:  resourceFunction,
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
 			Tags: &types.ServicePackageResourceTags{
@@ -96,8 +96,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Function URL",
 		},
 		{
-			Factory:  ResourceInvocation,
+			Factory:  resourceInvocation,
 			TypeName: "aws_lambda_invocation",
+			Name:     "Invocation",
 		},
 		{
 			Factory:  ResourceLayerVersion,

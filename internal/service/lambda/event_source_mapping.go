@@ -36,6 +36,7 @@ func resourceEventSourceMapping() *schema.Resource {
 		ReadWithoutTimeout:   resourceEventSourceMappingRead,
 		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
 		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
