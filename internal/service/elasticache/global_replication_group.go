@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -227,19 +228,13 @@ of the Global Replication Group and all Replication Group members. The AWS provi
 Please use the "-replace" option on the terraform plan and apply commands (see https://www.terraform.io/cli/commands/plan#replace-address).`, diff.Id())
 }
 
-type changeDiffer interface {
-	Id() string
-	GetChange(key string) (any, any)
-	HasChange(key string) bool
-}
-
 func customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	return paramGroupNameRequiresMajorVersionUpgrade(diff)
 }
 
 // parameter_group_name can only be set when doing a major update,
 // but we also should allow it to stay set afterwards
-func paramGroupNameRequiresMajorVersionUpgrade(diff changeDiffer) error {
+func paramGroupNameRequiresMajorVersionUpgrade(diff sdkv2.ResourceDiffer) error {
 	o, n := diff.GetChange("parameter_group_name")
 	if o.(string) == n.(string) {
 		return nil
