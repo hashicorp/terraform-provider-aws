@@ -338,7 +338,7 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			CustomizeDiffValidateClusterAZMode,
-			CustomizeDiffValidateClusterEngineVersion,
+			customizeDiffValidateClusterEngineVersion,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,

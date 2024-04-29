@@ -426,7 +426,7 @@ func DisassociateMembers(ctx context.Context, conn *elasticache.ElastiCache, glo
 	for _, member := range globalReplicationGroup.Members {
 		member := member
 
-		if aws.StringValue(member.Role) == GlobalReplicationGroupMemberRolePrimary {
+		if aws.StringValue(member.Role) == globalReplicationGroupMemberRolePrimary {
 			continue
 		}
 

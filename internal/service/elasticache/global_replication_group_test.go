@@ -1457,7 +1457,7 @@ func testAccCheckGlobalReplicationGroupExists(ctx context.Context, resourceName 
 			return fmt.Errorf("retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
 		}
 
-		if aws.StringValue(grg.Status) == tfelasticache.GlobalReplicationGroupStatusDeleting || aws.StringValue(grg.Status) == tfelasticache.GlobalReplicationGroupStatusDeleted {
+		if aws.StringValue(grg.Status) == "deleting" || aws.StringValue(grg.Status) == "deleted" {
 			return fmt.Errorf("ElastiCache Global Replication Group (%s) exists, but is in a non-available state: %s", rs.Primary.ID, aws.StringValue(grg.Status))
 		}
 

@@ -5,7 +5,6 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -84,60 +83,6 @@ func FindCacheClustersByID(ctx context.Context, conn *elasticache.ElastiCache, i
 	})
 
 	return results, err
-}
-
-// FindGlobalReplicationGroupByID retrieves an ElastiCache Global Replication Group by id.
-func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.GlobalReplicationGroup, error) {
-	input := &elasticache.DescribeGlobalReplicationGroupsInput{
-		GlobalReplicationGroupId: aws.String(id),
-		ShowMemberInfo:           aws.Bool(true),
-	}
-	output, err := conn.DescribeGlobalReplicationGroupsWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.GlobalReplicationGroups) == 0 || output.GlobalReplicationGroups[0] == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.GlobalReplicationGroups[0], nil
-}
-
-// FindGlobalReplicationGroupMemberByID retrieves a member Replication Group by id from a Global Replication Group.
-func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
-	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
-	if err != nil {
-		return nil, &retry.NotFoundError{
-			Message:   "unable to retrieve enclosing Global Replication Group",
-			LastError: err,
-		}
-	}
-
-	if globalReplicationGroup == nil || len(globalReplicationGroup.Members) == 0 {
-		return nil, &retry.NotFoundError{
-			Message: "empty result",
-		}
-	}
-
-	for _, member := range globalReplicationGroup.Members {
-		if aws.StringValue(member.ReplicationGroupId) == id {
-			return member, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{
-		Message: fmt.Sprintf("Replication Group (%s) not found in Global Replication Group (%s)", id, globalReplicationGroupID),
-	}
 }
 
 type redisParameterGroupFilter func(group *elasticache.CacheParameterGroup) bool
