@@ -635,10 +635,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
 	}
 
-	if err := d.Set("target_group_health", []interface{}{map[string]interface{}{
-		"dns_failover":            []interface{}{map[string]interface{}{}},
-		"unhealthy_state_routing": []interface{}{map[string]interface{}{}},
-	}}); err != nil {
+	if err := d.Set("target_group_health", []interface{}{flattenTargetGroupHealthAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_group_health: %s", err)
 	}
 
@@ -1358,32 +1355,30 @@ func expandTargetGroupHealthAttributes(tfMap map[string]interface{}) []*elbv2.Ta
 
 	var apiObjects []*elbv2.TargetGroupAttribute
 
-	if targetGroupHealthMap, ok := tfMap["target_group_health"].(map[string]interface{}); ok {
-		if dnsFailoverMap, ok := targetGroupHealthMap["dns_failover"].(map[string]interface{}); ok {
-			apiObjects = append(apiObjects,
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("dns_failover.minimum_healthy_targets_count"),
-					Value: aws.String(dnsFailoverMap["minimum_healthy_targets_count"].(string)),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("dns_failover.minimum_healthy_targets_percentage"),
-					Value: aws.String(dnsFailoverMap["minimum_healthy_targets_percentage"].(string)),
-				},
-			)
-		}
+	if dnsFailoverMap, ok := tfMap["dns_failover"].([]interface{})[0].(map[string]interface{}); ok {
+		apiObjects = append(apiObjects,
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsCount),
+				Value: aws.String(dnsFailoverMap["minimum_healthy_targets_count"].(string)),
+			},
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetGroupHealthDNSFailoverMinimumHealthyTargetsPercentage),
+				Value: aws.String(dnsFailoverMap["minimum_healthy_targets_percentage"].(string)),
+			},
+		)
+	}
 
-		if unhealthyStateRoutingMap, ok := targetGroupHealthMap["unhealthy_state_routing"].(map[string]interface{}); ok {
-			apiObjects = append(apiObjects,
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("unhealthy_state_routing.minimum_healthy_targets_count"),
-					Value: flex.IntValueToString(unhealthyStateRoutingMap["minimum_healthy_targets_count"].(int)),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("unhealthy_state_routing.minimum_healthy_targets_percentage"),
-					Value: aws.String(unhealthyStateRoutingMap["minimum_healthy_targets_percentage"].(string)),
-				},
-			)
-		}
+	if unhealthyStateRoutingMap, ok := tfMap["unhealthy_state_routing"].([]interface{})[0].(map[string]interface{}); ok {
+		apiObjects = append(apiObjects,
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsCount),
+				Value: flex.IntValueToString(unhealthyStateRoutingMap["minimum_healthy_targets_count"].(int)),
+			},
+			&elbv2.TargetGroupAttribute{
+				Key:   aws.String(targetGroupAttributeTargetGroupHealthUnhealthyStateRoutingMinimumHealthyTargetsPercentage),
+				Value: aws.String(unhealthyStateRoutingMap["minimum_healthy_targets_percentage"].(string)),
+			},
+		)
 	}
 
 	return apiObjects
@@ -1395,25 +1390,32 @@ func flattenTargetGroupHealthAttributes(apiObjects []*elbv2.TargetGroupAttribute
 	}
 
 	tfMap := map[string]interface{}{
-		"target_group_health": map[string]interface{}{
-			"dns_failover":            map[string]interface{}{},
-			"unhealthy_state_routing": map[string]interface{}{},
-		},
+		"dns_failover":            make([]map[string]interface{}, 0),
+		"unhealthy_state_routing": make([]map[string]interface{}, 0),
 	}
+
+	dnsFailoverMap := make(map[string]interface{})
+	unhealthyStateRoutingMap := make(map[string]interface{})
 
 	for _, apiObject := range apiObjects {
-		key := aws.StringValue(apiObject.Key)
-		value := aws.StringValue(apiObject.Value)
-
-		switch {
-		case strings.HasPrefix(key, "dns_failover."):
-			subKey := strings.TrimPrefix(key, "dns_failover.")
-			tfMap["target_group_health"].(map[string]interface{})["dns_failover"].(map[string]interface{})[subKey] = value
-		case strings.HasPrefix(key, "unhealthy_state_routing."):
-			subKey := strings.TrimPrefix(key, "unhealthy_state_routing.")
-			tfMap["target_group_health"].(map[string]interface{})["unhealthy_state_routing"].(map[string]interface{})[subKey] = value
+		switch k, v := aws.StringValue(apiObject.Key), aws.StringValue(apiObject.Value); k {
+		case "target_group_health.dns_failover.minimum_healthy_targets.count":
+			dnsFailoverMap["minimum_healthy_targets_count"] = v
+		case "target_group_health.dns_failover.minimum_healthy_targets.percentage":
+			dnsFailoverMap["minimum_healthy_targets_percentage"] = v
+		case "target_group_health.unhealthy_state_routing.minimum_healthy_targets.count":
+			intV, err := strconv.Atoi(v)
+			if err != nil {
+				panic(err)
+			}
+			unhealthyStateRoutingMap["minimum_healthy_targets_count"] = intV
+		case "target_group_health.unhealthy_state_routing.minimum_healthy_targets.percentage":
+			unhealthyStateRoutingMap["minimum_healthy_targets_percentage"] = v
 		}
 	}
+
+	tfMap["dns_failover"] = append(tfMap["dns_failover"].([]map[string]interface{}), dnsFailoverMap)
+	tfMap["unhealthy_state_routing"] = append(tfMap["unhealthy_state_routing"].([]map[string]interface{}), unhealthyStateRoutingMap)
 
 	return tfMap
 }
