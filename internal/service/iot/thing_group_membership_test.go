@@ -170,15 +170,17 @@ func testAccCheckThingGroupMembershipExists(ctx context.Context, n string) resou
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		return tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+		_, err = tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+
+		return err
 	}
 }
 
 func testAccCheckThingGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_group_membership" {
@@ -191,7 +193,7 @@ func testAccCheckThingGroupMembershipDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			err = tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+			_, err = tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
 
 			if tfresource.NotFound(err) {
 				continue

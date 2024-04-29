@@ -170,15 +170,13 @@ func testAccCheckBillingGroupExists(ctx context.Context, n string, v *iot.Descri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		output, err := tfiot.FindBillingGroupByName(ctx, conn, rs.Primary.ID)
+		_, err := tfiot.FindBillingGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
-
-		*v = *output
 
 		return nil
 	}
@@ -186,7 +184,7 @@ func testAccCheckBillingGroupExists(ctx context.Context, n string, v *iot.Descri
 
 func testAccCheckBillingGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_billing_group" {

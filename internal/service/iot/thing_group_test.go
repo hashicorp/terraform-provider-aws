@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -221,15 +221,13 @@ func testAccCheckThingGroupExists(ctx context.Context, n string, v *iot.Describe
 			return fmt.Errorf("No IoT Thing Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
-		output, err := tfiot.FindThingGroupByName(ctx, conn, rs.Primary.ID)
+		_, err := tfiot.FindThingGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
-
-		*v = *output
 
 		return nil
 	}
@@ -237,7 +235,7 @@ func testAccCheckThingGroupExists(ctx context.Context, n string, v *iot.Describe
 
 func testAccCheckThingGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_group" {

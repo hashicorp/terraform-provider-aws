@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
@@ -188,7 +189,7 @@ func testAccCheckProvisioningTemplateExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No IoT Provisioning Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		_, err := tfiot.FindProvisioningTemplateByName(ctx, conn, rs.Primary.ID)
 
@@ -198,7 +199,7 @@ func testAccCheckProvisioningTemplateExists(ctx context.Context, n string) resou
 
 func testAccCheckProvisioningTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_provisioning_template" {
@@ -224,25 +225,16 @@ func testAccCheckProvisioningTemplateDestroy(ctx context.Context) resource.TestC
 
 func testAccCheckProvisioningTemplateNumVersions(ctx context.Context, name string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTClient(ctx)
 
 		var got int
-		err := conn.ListProvisioningTemplateVersionsPagesWithContext(ctx, &iot.ListProvisioningTemplateVersionsInput{TemplateName: aws.String(name)},
-			func(page *iot.ListProvisioningTemplateVersionsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				got += len(page.Versions)
-
-				return !lastPage
-			})
+		out, err := conn.ListProvisioningTemplateVersions(ctx, &iot.ListProvisioningTemplateVersionsInput{TemplateName: aws.String(name)})
 
 		if err != nil {
 			return err
 		}
 
-		if got != want {
+		if len(out.Versions) != want {
 			return fmt.Errorf("Incorrect version count for IoT Provisioning Template %s; got: %d, want: %d", name, got, want)
 		}
 

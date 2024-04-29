@@ -5,9 +5,8 @@ package iot
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	iot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,6 +41,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAuthorizer,
 			TypeName: "aws_iot_authorizer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceBillingGroup,
@@ -158,11 +160,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.IoT
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*iot_sdkv1.IoT, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*iot_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return iot_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return iot_sdkv2.NewFromConfig(cfg, func(o *iot_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

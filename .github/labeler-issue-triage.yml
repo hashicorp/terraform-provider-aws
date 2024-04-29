@@ -307,8 +307,6 @@ service/grafana:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_grafana_'
 service/greengrass:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_greengrass_'
-service/greengrassv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_greengrassv2_'
 service/groundstation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_groundstation_'
 service/guardduty:

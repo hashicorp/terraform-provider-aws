@@ -990,12 +990,6 @@ service/greengrass:
           - any-glob-to-any-file:
               - 'internal/service/greengrass/**/*'
               - 'website/**/greengrass_*'
-service/greengrassv2:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/greengrassv2/**/*'
-              - 'website/**/greengrassv2_*'
 service/groundstation:
   - any:
       - changed-files:

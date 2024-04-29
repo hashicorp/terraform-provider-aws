@@ -184,18 +184,17 @@ inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aw
 inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector,Amazon,,,,,,,Inspector2,ListAccountPermissions,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,x,,,,,IoT 1Click Devices Service,,,
 iot1click-projects,iot1clickprojects,iot1clickprojects,iot1clickprojects,,iot1clickprojects,,,IoT1ClickProjects,IoT1ClickProjects,,1,,,aws_iot1clickprojects_,,iot1clickprojects_,IoT 1-Click Projects,AWS,,x,,,,,IoT 1Click Projects,,,
-iotanalytics,iotanalytics,iotanalytics,iotanalytics,,iotanalytics,,,IoTAnalytics,IoTAnalytics,,1,,,aws_iotanalytics_,,iotanalytics_,IoT Analytics,AWS,,,,,,,IoTAnalytics,ListChannels,,
-iot,iot,iot,iot,,iot,,,IoT,IoT,,1,,,aws_iot_,,iot_,IoT Core,AWS,,,,,,,IoT,DescribeDefaultAuthorizer,,
+iotanalytics,iotanalytics,iotanalytics,iotanalytics,,iotanalytics,,,IoTAnalytics,IoTAnalytics,,,2,,aws_iotanalytics_,,iotanalytics_,IoT Analytics,AWS,,,,,,,IoTAnalytics,ListChannels,,
+iot,iot,iot,iot,,iot,,,IoT,IoT,,,2,,aws_iot_,,iot_,IoT Core,AWS,,,,,,,IoT,DescribeDefaultAuthorizer,,
 iot-data,iotdata,iotdataplane,iotdataplane,,iotdata,,iotdataplane,IoTData,IoTDataPlane,,1,,,aws_iotdata_,,iotdata_,IoT Data Plane,AWS,,x,,,,,IoT Data Plane,,,
 ,,,,,,,,,,,,,,,,,IoT Device Defender,AWS,x,,,,,,,,,Part of IoT
 iotdeviceadvisor,iotdeviceadvisor,iotdeviceadvisor,iotdeviceadvisor,,iotdeviceadvisor,,,IoTDeviceAdvisor,IoTDeviceAdvisor,,1,,,aws_iotdeviceadvisor_,,iotdeviceadvisor_,IoT Device Management,AWS,,x,,,,,IotDeviceAdvisor,,,
-iotevents,iotevents,iotevents,iotevents,,iotevents,,,IoTEvents,IoTEvents,,1,,,aws_iotevents_,,iotevents_,IoT Events,AWS,,,,,,,IoT Events,ListAlarmModels,,
+iotevents,iotevents,iotevents,iotevents,,iotevents,,,IoTEvents,IoTEvents,,,2,,aws_iotevents_,,iotevents_,IoT Events,AWS,,,,,,,IoT Events,ListAlarmModels,,
 iotevents-data,ioteventsdata,ioteventsdata,ioteventsdata,,ioteventsdata,,,IoTEventsData,IoTEventsData,,1,,,aws_ioteventsdata_,,ioteventsdata_,IoT Events Data,AWS,,x,,,,,IoT Events Data,,,
 ,,,,,,,,,,,,,,,,,IoT ExpressLink,AWS,x,,,,,,,,,No SDK support
 iotfleethub,iotfleethub,iotfleethub,iotfleethub,,iotfleethub,,,IoTFleetHub,IoTFleetHub,,1,,,aws_iotfleethub_,,iotfleethub_,IoT Fleet Hub,AWS,,x,,,,,IoTFleetHub,,,
 ,,,,,,,,,,,,,,,,,IoT FleetWise,AWS,x,,,,,,IoTFleetWise,,,No SDK support
-greengrass,greengrass,greengrass,greengrass,,greengrass,,,Greengrass,Greengrass,,1,,,aws_greengrass_,,greengrass_,IoT Greengrass,AWS,,,,,,,Greengrass,ListGroups,,
-greengrassv2,greengrassv2,greengrassv2,greengrassv2,,greengrassv2,,,GreengrassV2,GreengrassV2,,1,,,aws_greengrassv2_,,greengrassv2_,IoT Greengrass V2,AWS,,x,,,,,GreengrassV2,,,
+greengrass,greengrass,greengrass,greengrass,,greengrass,,,Greengrass,Greengrass,,,2,,aws_greengrass_,,greengrass_,IoT Greengrass,AWS,,,,,,,Greengrass,ListGroups,,
 iot-jobs-data,iotjobsdata,iotjobsdataplane,iotjobsdataplane,,iotjobsdata,,iotjobsdataplane,IoTJobsData,IoTJobsDataPlane,,1,,,aws_iotjobsdata_,,iotjobsdata_,IoT Jobs Data Plane,AWS,,x,,,,,IoT Jobs Data Plane,,,
 ,,,,,,,,,,,,,,,,,IoT RoboRunner,AWS,x,,,,,,,,,No SDK support
 iotsecuretunneling,iotsecuretunneling,iotsecuretunneling,iotsecuretunneling,,iotsecuretunneling,,,IoTSecureTunneling,IoTSecureTunneling,,1,,,aws_iotsecuretunneling_,,iotsecuretunneling_,IoT Secure Tunneling,AWS,,x,,,,,IoTSecureTunneling,,,

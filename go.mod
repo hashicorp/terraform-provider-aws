@@ -98,6 +98,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.0
+	github.com/aws/aws-sdk-go-v2/service/iot v1.53.3
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.22.4
+	github.com/aws/aws-sdk-go-v2/service/iotevents v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.5
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.1
@@ -227,6 +230,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.6 // indirect
