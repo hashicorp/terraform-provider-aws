@@ -6,6 +6,7 @@ package bedrockagent_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -82,8 +83,8 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_bedrockagent_data_source" {
 				continue
 			}
-
-			_, err := tfbedrockagent.FindDataSourceByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["knowledge_base_id"])
+			parts := strings.Split(rs.Primary.ID, ",")
+			_, err := tfbedrockagent.FindDataSourceByID(ctx, conn, parts[0], parts[1])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -109,7 +110,8 @@ func testAccCheckDataSourceBaseExists(ctx context.Context, n string, v *types.Da
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := tfbedrockagent.FindDataSourceByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["knowledge_base_id"])
+		parts := strings.Split(rs.Primary.ID, ",")
+		output, err := tfbedrockagent.FindDataSourceByID(ctx, conn, parts[0], parts[1])
 
 		if err != nil {
 			return err
@@ -124,16 +126,16 @@ func testAccCheckDataSourceBaseExists(ctx context.Context, n string, v *types.Da
 func testAccDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
- name     = %[1]q
- knowledge_base_id = "RFYQS34LF7"
- data_deletion_policy = "RETAIN"
+name     = %[1]q
+knowledge_base_id = "RFYQS34LF7"
+data_deletion_policy = "RETAIN"
 
- data_source_configuration {
+data_source_configuration {
 	type = "S3"
 	s3_configuration {
 		bucket_arn = "arn:aws:s3:::aws-security-data-lake-eu-west-1-8rvl0sowjqqdgyw4nhwlqpaimqddah"
 	}
-  }
+ }
 }
 `, rName)
 }

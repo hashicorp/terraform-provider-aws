@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -66,6 +67,9 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"data_source_id": schema.StringAttribute{
+				Computed: true,
 			},
 			"data_deletion_policy": schema.StringAttribute{
 				Optional: true,
@@ -230,8 +234,16 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	ds := outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource
 	data.DataSourceID = fwflex.StringToFramework(ctx, ds.DataSourceId)
 	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, ds.KnowledgeBaseId)
+	data.setID()
 
-	ds, err = waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), dataSourceResourceIdPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("Creating Bedrock Agent Data Source", err.Error())
+
+		return
+	}
+
+	ds, err = waitDataSourceCreated(ctx, conn, parts[0], parts[1], r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) create", data.DataSourceID.ValueString()), err.Error())
@@ -256,7 +268,14 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	ds, err := findDataSourceByID(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString())
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), dataSourceResourceIdPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("Reading Bedrock Agent Data Source", err.Error())
+
+		return
+	}
+
+	ds, err := findDataSourceByID(ctx, conn, parts[0], parts[1])
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -315,7 +334,14 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		ds, err := waitDataSourceUpdated(ctx, conn, new.DataSourceID.ValueString(), new.KnowledgeBaseID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		parts, err := flex.ExpandResourceId(new.ID.ValueString(), dataSourceResourceIdPartCount, false)
+		if err != nil {
+			response.Diagnostics.AddError("Updating Bedrock Agent Data Source", err.Error())
+
+			return
+		}
+
+		ds, err := waitDataSourceUpdated(ctx, conn, parts[0], parts[1], r.UpdateTimeout(ctx, new.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) update", new.DataSourceID.ValueString()), err.Error())
@@ -357,7 +383,14 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 		return
 	}
 
-	_, err = waitDataSourceDeleted(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), dataSourceResourceIdPartCount, false)
+	if err != nil {
+		response.Diagnostics.AddError("Deleting Bedrock Agent Data Source", err.Error())
+
+		return
+	}
+
+	_, err = waitDataSourceDeleted(ctx, conn, parts[0], parts[1], r.DeleteTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) delete", data.KnowledgeBaseID.ValueString()), err.Error())
@@ -370,11 +403,11 @@ func (r *dataSourceResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, id, kbID string, timeout time.Duration) (*awstypes.DataSource, error) {
+func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, id, kbId string, timeout time.Duration) (*awstypes.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.DataSourceStatusAvailable),
-		Refresh:                   statusDataSource(ctx, conn, id, kbID),
+		Refresh:                   statusDataSource(ctx, conn, id, kbId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -388,11 +421,11 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, id, k
 	return nil, err
 }
 
-func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, id, kbID string, timeout time.Duration) (*awstypes.DataSource, error) {
+func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, id, kbId string, timeout time.Duration) (*awstypes.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.DataSourceStatusAvailable),
 		Target:                    enum.Slice(awstypes.DataSourceStatusAvailable),
-		Refresh:                   statusDataSource(ctx, conn, id, kbID),
+		Refresh:                   statusDataSource(ctx, conn, id, kbId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -406,11 +439,11 @@ func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, id, k
 	return nil, err
 }
 
-func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, id, kbID string, timeout time.Duration) (*awstypes.DataSource, error) {
+func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, id, kbId string, timeout time.Duration) (*awstypes.DataSource, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDataSource(ctx, conn, id, kbID),
+		Refresh: statusDataSource(ctx, conn, id, kbId),
 		Timeout: timeout,
 	}
 
@@ -422,9 +455,9 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, id, k
 	return nil, err
 }
 
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, id, kbID string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *bedrockagent.Client, id, kbId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDataSourceByID(ctx, conn, id, kbID)
+		output, err := findDataSourceByID(ctx, conn, id, kbId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -437,10 +470,10 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, id, kbID s
 	}
 }
 
-func findDataSourceByID(ctx context.Context, conn *bedrockagent.Client, id, kbID string) (*awstypes.DataSource, error) {
+func findDataSourceByID(ctx context.Context, conn *bedrockagent.Client, id, kbId string) (*awstypes.DataSource, error) {
 	input := &bedrockagent.GetDataSourceInput{
 		DataSourceId:    aws.String(id),
-		KnowledgeBaseId: aws.String(kbID),
+		KnowledgeBaseId: aws.String(kbId),
 	}
 
 	out, err := conn.GetDataSource(ctx, input)
@@ -466,7 +499,8 @@ type dataSourceResourceModel struct {
 	CreatedAt                         timetypes.RFC3339                                                       `tfsdk:"created_at"`
 	DataDeletionPolicy                types.String                                                            `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
-	DataSourceID                      types.String                                                            `tfsdk:"id"`
+	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`
+	ID                                types.String                                                            `tfsdk:"id"`
 	Description                       types.String                                                            `tfsdk:"description"`
 	FailureReasons                    fwtypes.ListValueOf[types.String]                                       `tfsdk:"failure_reasons"`
 	KnowledgeBaseID                   types.String                                                            `tfsdk:"knowledge_base_id"`
@@ -475,6 +509,14 @@ type dataSourceResourceModel struct {
 	VectorIngestionConfiguration      fwtypes.ListNestedObjectValueOf[vectorIngestionConfigurationModel]      `tfsdk:"vector_ingestion_configuration"`
 	Timeouts                          timeouts.Value                                                          `tfsdk:"timeouts"`
 	UpdatedAt                         timetypes.RFC3339                                                       `tfsdk:"updated_at"`
+}
+
+const (
+	dataSourceResourceIdPartCount = 2
+)
+
+func (data *dataSourceResourceModel) setID() {
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString()}, dataSourceResourceIdPartCount, false)))
 }
 
 type dataSourceConfigurationModel struct {
