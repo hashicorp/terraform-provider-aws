@@ -1313,17 +1313,17 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id            = aws_vpc.test.id
   availability_zone = "us-west-2a"
-  cidr_block = "10.0.0.0/24"
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  cidr_block        = "10.0.0.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id            = aws_vpc.test.id
   availability_zone = "us-west-2b"
-  cidr_block = "10.0.1.0/24"
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+  cidr_block        = "10.0.1.0/24"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
 }
 
 data "aws_region" "current" {}
@@ -1332,19 +1332,19 @@ resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.athena"
   vpc_endpoint_type = "Interface"
-  ip_address_type = "dualstack"
+  ip_address_type   = "dualstack"
   subnet_configurations {
-    ipv4 = %[2]q
-    ipv6 = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[4]v)
+    ipv4      = %[2]q
+    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[4]v)
     subnet_id = aws_subnet.test1.id
   }
   subnet_configurations {
-    ipv4 = %[3]q
-    ipv6 = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[4]v)
+    ipv4      = %[3]q
+    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[4]v)
     subnet_id = aws_subnet.test2.id
   }
   subnet_ids = [
-   aws_subnet.test1.id, aws_subnet.test2.id
+    aws_subnet.test1.id, aws_subnet.test2.id
   ]
 }
 `, rName, ipv4Address1, ipv4Address2, ipv6HostNum)
@@ -1361,16 +1361,16 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id            = aws_vpc.test.id
   availability_zone = "us-west-2a"
-  cidr_block = "10.0.0.0/24"
+  cidr_block        = "10.0.0.0/24"
 }
 
 resource "aws_subnet" "test2" {
-	vpc_id     = aws_vpc.test.id
-	availability_zone = "us-west-2b"
-	cidr_block = "10.0.1.0/24"
-  }
+  vpc_id            = aws_vpc.test.id
+  availability_zone = "us-west-2b"
+  cidr_block        = "10.0.1.0/24"
+}
 
 data "aws_region" "current" {}
 
@@ -1379,15 +1379,15 @@ resource "aws_vpc_endpoint" "test" {
   service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
   subnet_configurations {
-    ipv4 = %[2]q
+    ipv4      = %[2]q
     subnet_id = aws_subnet.test1.id
   }
   subnet_configurations {
-    ipv4 = %[3]q
+    ipv4      = %[3]q
     subnet_id = aws_subnet.test2.id
   }
   subnet_ids = [
-   aws_subnet.test1.id, aws_subnet.test2.id
+    aws_subnet.test1.id, aws_subnet.test2.id
   ]
 }
 `, rName, ipv4Address1, ipv4Address2)
@@ -1405,23 +1405,23 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id     = aws_vpc.test.id
-  availability_zone = "us-west-2a"
-  assign_ipv6_address_on_creation = true
+  vpc_id                                         = aws_vpc.test.id
+  availability_zone                              = "us-west-2a"
+  assign_ipv6_address_on_creation                = true
   enable_resource_name_dns_aaaa_record_on_launch = true
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  ipv6_native = true
-  private_dns_hostname_type_on_launch = "resource-name"
+  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  ipv6_native                                    = true
+  private_dns_hostname_type_on_launch            = "resource-name"
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id     = aws_vpc.test.id
-  availability_zone = "us-west-2b"
-  assign_ipv6_address_on_creation = true
+  vpc_id                                         = aws_vpc.test.id
+  availability_zone                              = "us-west-2b"
+  assign_ipv6_address_on_creation                = true
   enable_resource_name_dns_aaaa_record_on_launch = true
-  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
-  ipv6_native = true
-  private_dns_hostname_type_on_launch = "resource-name"
+  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+  ipv6_native                                    = true
+  private_dns_hostname_type_on_launch            = "resource-name"
 }
 
 data "aws_region" "current" {}
@@ -1430,17 +1430,17 @@ resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
   service_name      = "com.amazonaws.${data.aws_region.current.name}.athena"
   vpc_endpoint_type = "Interface"
-  ip_address_type = "ipv6"
+  ip_address_type   = "ipv6"
   subnet_configurations {
-    ipv6 = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[2]v)
+    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[2]v)
     subnet_id = aws_subnet.test1.id
   }
   subnet_configurations {
-    ipv6 = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[2]v)
+    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[2]v)
     subnet_id = aws_subnet.test2.id
   }
   subnet_ids = [
-   aws_subnet.test1.id, aws_subnet.test2.id
+    aws_subnet.test1.id, aws_subnet.test2.id
   ]
 }
 `, rName, ipv6HostNum)

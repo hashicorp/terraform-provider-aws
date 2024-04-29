@@ -66,15 +66,15 @@ resource "aws_vpc_endpoint" "ec2" {
   service_name      = "com.amazonaws.us-west-2.ec2"
   vpc_endpoint_type = "Interface"
   subnet_configurations {
-    ipv4 = "10.0.1.10"
+    ipv4      = "10.0.1.10"
     subnet_id = aws_subnet.example1.id
   }
   subnet_configurations {
-    ipv4 = "10.0.2.10"
+    ipv4      = "10.0.2.10"
     subnet_id = aws_subnet.example2.id
   }
   subnet_ids = [
-   aws_subnet.example1.id, aws_subnet.example2.id
+    aws_subnet.example1.id, aws_subnet.example2.id
   ]
 }
 ```
