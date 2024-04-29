@@ -178,12 +178,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	clusterID := d.Get("cluster_id").(string)
 	cluster, err := findCacheClusterWithNodeInfoByID(ctx, conn, clusterID)
-	if tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again")
-	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", clusterID, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Cluster", err))
 	}
 
 	d.SetId(aws.StringValue(cluster.CacheClusterId))
