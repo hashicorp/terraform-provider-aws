@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -293,11 +294,11 @@ func findUserByID(ctx context.Context, conn *elasticache.ElastiCache, id string)
 		UserId: aws.String(id),
 	}
 
-	return findUser(ctx, conn, input)
+	return findUser(ctx, conn, input, tfslices.PredicateTrue[*elasticache.User]())
 }
 
-func findUser(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUsersInput) (*elasticache.User, error) {
-	output, err := findUsers(ctx, conn, input)
+func findUser(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*elasticache.User]) (*elasticache.User, error) {
+	output, err := findUsers(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -306,7 +307,7 @@ func findUser(ctx context.Context, conn *elasticache.ElastiCache, input *elastic
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findUsers(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUsersInput) ([]*elasticache.User, error) {
+func findUsers(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*elasticache.User]) ([]*elasticache.User, error) {
 	var output []*elasticache.User
 
 	err := conn.DescribeUsersPagesWithContext(ctx, input, func(page *elasticache.DescribeUsersOutput, lastPage bool) bool {
@@ -315,7 +316,7 @@ func findUsers(ctx context.Context, conn *elasticache.ElastiCache, input *elasti
 		}
 
 		for _, v := range page.Users {
-			if v != nil {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}

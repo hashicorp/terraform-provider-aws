@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -211,11 +212,11 @@ func findUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id st
 		UserGroupId: aws.String(id),
 	}
 
-	return findUserGroup(ctx, conn, input)
+	return findUserGroup(ctx, conn, input, tfslices.PredicateTrue[*elasticache.UserGroup]())
 }
 
-func findUserGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput) (*elasticache.UserGroup, error) {
-	output, err := findUserGroups(ctx, conn, input)
+func findUserGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*elasticache.UserGroup]) (*elasticache.UserGroup, error) {
+	output, err := findUserGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -224,7 +225,7 @@ func findUserGroup(ctx context.Context, conn *elasticache.ElastiCache, input *el
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput) ([]*elasticache.UserGroup, error) {
+func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*elasticache.UserGroup]) ([]*elasticache.UserGroup, error) {
 	var output []*elasticache.UserGroup
 
 	err := conn.DescribeUserGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeUserGroupsOutput, lastPage bool) bool {
@@ -233,7 +234,7 @@ func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *e
 		}
 
 		for _, v := range page.UserGroups {
-			if v != nil {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}
