@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -2902,15 +2903,21 @@ func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticac
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameDefault,
-		)
+		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
+			func(v *elasticache.CacheParameterGroup) bool {
+				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			},
+			func(v *elasticache.CacheParameterGroup) bool {
+				name := aws.StringValue(v.CacheParameterGroupName)
+				return strings.HasPrefix(name, "default.") && !strings.HasSuffix(name, ".cluster.on")
+			},
+		))
+
 		if err != nil {
 			return err
 		}
 
-		*v = *parameterGroup
+		*v = *output
 
 		return nil
 	}
@@ -2943,15 +2950,21 @@ func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, vers
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameClusterEnabledDefault,
-		)
+		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
+			func(v *elasticache.CacheParameterGroup) bool {
+				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			},
+			func(v *elasticache.CacheParameterGroup) bool {
+				name := aws.StringValue(v.CacheParameterGroupName)
+				return strings.HasPrefix(name, "default.") && strings.HasSuffix(name, ".cluster.on")
+			},
+		))
+
 		if err != nil {
 			return err
 		}
 
-		*v = *parameterGroup
+		*v = *output
 
 		return nil
 	}

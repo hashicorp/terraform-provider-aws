@@ -16,8 +16,9 @@ var (
 	ResourceUserGroupAssociation   = resourceUserGroupAssociation
 
 	FindCacheClusterByID                 = findCacheClusterByID
-	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
+	FindCacheParameterGroup              = findCacheParameterGroup
 	FindCacheParameterGroupByName        = findCacheParameterGroupByName
+	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
 	FindGlobalReplicationGroupByID       = findGlobalReplicationGroupByID
 	FindReplicationGroupByID             = findReplicationGroupByID
 	FindServerlessCacheByID              = findServerlessCacheByID
