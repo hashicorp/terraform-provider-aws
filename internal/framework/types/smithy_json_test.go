@@ -76,7 +76,7 @@ func TestSmithyJSONValidateAttribute(t *testing.T) {
 		"valid SmithyJSON": { // lintignore:AWSAT003,AWSAT005
 			val: fwtypes.SmithyJSONValue[smithyjson.JSONStringer](`{"test": "value"}`, nil), // lintignore:AWSAT003,AWSAT005
 		},
-		"invalid ARN": {
+		"invalid SmithyJSON": {
 			val:         fwtypes.SmithyJSONValue[smithyjson.JSONStringer]("not ok", nil),
 			expectError: true,
 		},
