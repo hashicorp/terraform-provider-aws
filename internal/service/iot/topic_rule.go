@@ -1405,7 +1405,7 @@ func findTopicRuleByName(ctx context.Context, conn *iot.Client, name string) (*i
 	// GetTopicRule returns unhelpful errors such as
 	//	"An error occurred (UnauthorizedException) when calling the GetTopicRule operation: Access to topic rule 'xxxxxxxx' was denied"
 	// when querying for a rule that doesn't exist.
-	var rule *awstypes.TopicRuleListItem
+	var rule awstypes.TopicRuleListItem
 
 	out, err := conn.ListTopicRules(ctx, &iot.ListTopicRulesInput{})
 
@@ -1418,7 +1418,7 @@ func findTopicRuleByName(ctx context.Context, conn *iot.Client, name string) (*i
 
 	for _, v := range out.Rules {
 		if aws.ToString(v.RuleName) == name {
-			rule = &v
+			rule = v
 		}
 	}
 
@@ -1426,7 +1426,7 @@ func findTopicRuleByName(ctx context.Context, conn *iot.Client, name string) (*i
 		return nil, err
 	}
 
-	if rule == nil {
+	if rule.RuleName == nil {
 		return nil, tfresource.NewEmptyResultError(name)
 	}
 
