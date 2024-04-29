@@ -26,6 +26,10 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			"filter":      testAccView_filter,
 			"tags":        testAccView_tags,
 		},
+		"SearchDataSource": {
+			"basic":     testAccSearchDataSource_basic,
+			"indexType": testAccSearchDataSource_IndexType,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

@@ -215,10 +215,6 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		return append(diags, create.DiagError(names.RDS, create.ErrActionCreating, ResNameCustomDBEngineVersion, fmt.Sprintf("%s:%s", aws.StringValue(output.Engine), aws.StringValue(output.EngineVersion)), err)...)
 	}
 
-	if output == nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionCreating, ResNameCustomDBEngineVersion, fmt.Sprintf("%s:%s", aws.StringValue(output.Engine), aws.StringValue(output.EngineVersion)), errors.New("empty output"))...)
-	}
-
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Engine), aws.StringValue(output.EngineVersion)))
 
 	if _, err := waitCustomDBEngineVersionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {

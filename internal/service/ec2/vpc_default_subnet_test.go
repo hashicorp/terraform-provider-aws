@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPreCheckDefaultSubnetExists(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.BuildAttributeFilterList(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": "true",
 			},
@@ -47,7 +48,7 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.BuildAttributeFilterList(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": "true",
 			},
@@ -88,7 +89,7 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultSubnetDestroyExists(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultSubnetDestroyNotFound(ctx),
 		Steps: []resource.TestStep{
@@ -161,7 +162,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultSubnetDestroyNotFound(ctx),
 		Steps: []resource.TestStep{
@@ -208,7 +209,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultSubnetDestroyExists(ctx),
 		Steps: []resource.TestStep{
@@ -255,7 +256,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetNotFound(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultSubnetDestroyExists(ctx),
 		Steps: []resource.TestStep{
@@ -301,7 +302,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultSubnetNotFound(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultSubnetDestroyNotFound(ctx),
 		Steps: []resource.TestStep{
@@ -392,7 +393,7 @@ func testAccCreateMissingDefaultSubnets(ctx context.Context) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.DescribeAvailabilityZonesWithContext(ctx, &ec2.DescribeAvailabilityZonesInput{
-		Filters: tfec2.BuildAttributeFilterList(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"opt-in-status": "opt-in-not-required",
 				"state":         "available",

@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/jmespath/go-jmespath"
 )
 
@@ -157,6 +157,7 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 				for _, v := range value.([]interface{}) {
 					values = append(values, v.(string))
 				}
+				sort.Strings(values)
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
 			default:
 				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
@@ -269,12 +270,12 @@ func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	for _, principal := range principals {
 		switch x := principal.(type) {
 		case string:
-			if !isValidPolicyAWSPrincipal(x) {
+			if !IsValidPolicyAWSPrincipal(x) {
 				return false, nil
 			}
 		case []string:
 			for _, s := range x {
-				if !isValidPolicyAWSPrincipal(s) {
+				if !IsValidPolicyAWSPrincipal(s) {
 					return false, nil
 				}
 			}
@@ -284,9 +285,9 @@ func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	return true, nil
 }
 
-// isValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// IsValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
 // That is: either an ARN, an AWS account ID, or `*`
-func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+func IsValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
 	if principal == "*" {
 		return true
 	}

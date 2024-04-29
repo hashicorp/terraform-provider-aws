@@ -82,6 +82,10 @@ func DataSourceOrganization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_account_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"non_master_accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -171,6 +175,14 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID
 	isDelegatedAdministrator := true
 	accounts, err := findAccounts(ctx, conn)
+
+	managementAccountName := ""
+	for _, v := range accounts {
+		if aws.StringValue(v.Id) == managementAccountID {
+			managementAccountName = aws.StringValue(v.Name)
+		}
+	}
+	d.Set("master_account_name", managementAccountName)
 
 	if err != nil {
 		if isManagementAccount || !tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccessDeniedException) {

@@ -21,7 +21,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{

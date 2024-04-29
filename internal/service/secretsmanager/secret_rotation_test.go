@@ -33,7 +33,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccSecretsManagerSecretRotation_upgradePreRotateImmediately(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		CheckDestroy: testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +111,7 @@ func TestAccSecretsManagerSecretRotation_rotateImmediately(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +149,7 @@ func TestAccSecretsManagerSecretRotation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestAccSecretsManagerSecretRotation_Disappears_secret(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -206,7 +206,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,7 +253,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +302,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -350,7 +350,7 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{

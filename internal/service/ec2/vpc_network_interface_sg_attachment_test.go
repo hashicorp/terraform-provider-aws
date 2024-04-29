@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,9 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -27,7 +27,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -49,14 +49,14 @@ func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +72,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -81,7 +81,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_multiple(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName1 := "aws_security_group.test.0"
@@ -112,7 +112,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInterfaceSGAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

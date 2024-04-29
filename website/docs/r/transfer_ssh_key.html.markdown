@@ -13,10 +13,15 @@ Provides a AWS Transfer User SSH Key resource.
 ## Example Usage
 
 ```terraform
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_transfer_ssh_key" "example" {
   server_id = aws_transfer_server.example.id
   user_name = aws_transfer_user.example.user_name
-  body      = "... SSH key ..."
+  body      = trimspace(tls_private_key.example.public_key_openssh)
 }
 
 resource "aws_transfer_server" "example" {

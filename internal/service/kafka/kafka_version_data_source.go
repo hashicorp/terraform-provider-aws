@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -52,7 +51,7 @@ func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, met
 	if v, ok := d.GetOk("preferred_versions"); ok && len(v.([]interface{})) > 0 {
 		preferredVersions = flex.ExpandStringValueList(v.([]interface{}))
 	} else if v, ok := d.GetOk("version"); ok {
-		preferredVersions = tfslices.Of(v.(string))
+		preferredVersions = []string{v.(string)}
 	}
 
 	kafkaVersion, err := findKafkaVersion(ctx, conn, preferredVersions)

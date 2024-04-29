@@ -6,8 +6,20 @@ package grafana_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.GrafanaServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Active marketplace agreement not found",
+	)
+}
 
 func TestAccGrafana_serial(t *testing.T) {
 	t.Parallel()

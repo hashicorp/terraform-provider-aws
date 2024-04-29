@@ -74,7 +74,7 @@ func ResourceEventSubscription() *schema.Resource {
 			"source_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"source_type": {
@@ -103,10 +103,13 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-		SourceIds:        flex.ExpandStringSet(d.Get("source_ids").(*schema.Set)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("source_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateEventSubscriptionWithContext(ctx, input)

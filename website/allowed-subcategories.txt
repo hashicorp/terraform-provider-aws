@@ -5,6 +5,7 @@ AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
 Account Management
+Agents for Amazon Bedrock
 Amazon Bedrock
 Amazon Q Business
 Amplify
@@ -21,6 +22,7 @@ Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)
@@ -33,6 +35,7 @@ Cloud Map
 Cloud9
 CloudFormation
 CloudFront
+CloudFront KeyValueStore
 CloudHSM
 CloudSearch
 CloudTrail
@@ -63,13 +66,16 @@ Connect
 Connect Cases
 Connect Customer Profiles
 Control Tower
+Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
 Data Exchange
 Data Pipeline
 DataSync
+DataZone
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
@@ -151,6 +157,7 @@ Managed Streaming for Kafka Connect
 MemoryDB for Redis
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
@@ -160,6 +167,7 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Payment Cryptography Control Plane
 Pinpoint
 Polly
 Pricing Calculator
@@ -172,6 +180,7 @@ Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
+Rekognition
 Resource Explorer
 Resource Groups
 Resource Groups Tagging

@@ -35,7 +35,7 @@ func dataSourceClusterAuth() *schema.Resource {
 
 func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).STSConn(ctx)
+	conn := meta.(*conns.AWSClient).STSClient(ctx)
 
 	name := d.Get("name").(string)
 	generator, err := NewGenerator(false, false)

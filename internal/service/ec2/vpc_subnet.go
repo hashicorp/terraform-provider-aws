@@ -369,7 +369,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	tflog.Info(ctx, "Deleting EC2 Subnet")
 
-	if err := deleteLingeringENIs(ctx, conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 

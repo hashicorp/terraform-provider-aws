@@ -87,7 +87,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": DefaultSecurityGroupName,
 			},
@@ -95,13 +95,13 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	} else {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"description": "default group",
 			},

@@ -29,7 +29,7 @@ func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPreparedStatementDestroy(ctx),
 		Steps: []resource.TestStep{

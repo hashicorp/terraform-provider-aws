@@ -25,15 +25,11 @@ This resource supports the following arguments:
 
 * `application_id` - (Required) Id of the Q Business application.
 * `display_name` - (Required) Index display name.
-* `capacity_configuration` - (Optional) The number of additional storage units for the Amazon Q index.
+* `capacity_configuration` - (Required) The number of additional storage units for the Amazon Q index.
 * `description` - (Optional) The description for the Amazon Q index.
-* `document_attribute_configurations` - (Optional) Configuration information for document metadata or fields.
+* `document_attribute_configuration` - (Optional) Configuration information for document metadata or fields.
 
-`attachments_configuration` supports the following:
-
-* `attribute` - (Required) Configuration information for document metadata or fields. Min 1, maximum 50 elements.
-
-`attribute` supports the following:
+`document_attribute_configuration` supports the following:
 
 * `name` - (Required) The name of the document attribute.
 * `search` - (Required) Information about whether the document attribute can be used by an end user to search for information on their web experience. Valid values are `ENABLED` and `DISABLED`

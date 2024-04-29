@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppAutoScalingTarget_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +96,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,7 +144,7 @@ func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -173,7 +174,7 @@ func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -205,7 +206,7 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,7 +240,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{

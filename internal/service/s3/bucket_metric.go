@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_metric")
-func ResourceBucketMetric() *schema.Resource {
+// @SDKResource("aws_s3_bucket_metric", name="Bucket Metric")
+func resourceBucketMetric() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketMetricPut,
 		ReadWithoutTimeout:   resourceBucketMetricRead,
@@ -47,16 +48,22 @@ func ResourceBucketMetric() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"access_point": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
+						},
 						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
+							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
 						},
 						"tags": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
-							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
+							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
 						},
 					},
 				},
@@ -187,6 +194,11 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.MetricsFilter {
+	var accessPoint string
+	if v, ok := m["access_point"]; ok {
+		accessPoint = v.(string)
+	}
+
 	var prefix string
 	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
@@ -199,7 +211,29 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 
 	var metricsFilter types.MetricsFilter
 
-	if prefix != "" && len(tags) > 0 {
+	if accessPoint != "" && prefix != "" && len(tags) > 0 {
+		metricsFilter = &types.MetricsFilterMemberAnd{
+			Value: types.MetricsAndOperator{
+				AccessPointArn: aws.String(accessPoint),
+				Prefix:         aws.String(prefix),
+				Tags:           tags,
+			},
+		}
+	} else if accessPoint != "" && prefix != "" {
+		metricsFilter = &types.MetricsFilterMemberAnd{
+			Value: types.MetricsAndOperator{
+				AccessPointArn: aws.String(accessPoint),
+				Prefix:         aws.String(prefix),
+			},
+		}
+	} else if accessPoint != "" && len(tags) > 0 {
+		metricsFilter = &types.MetricsFilterMemberAnd{
+			Value: types.MetricsAndOperator{
+				AccessPointArn: aws.String(accessPoint),
+				Tags:           tags,
+			},
+		}
+	} else if prefix != "" && len(tags) > 0 {
 		metricsFilter = &types.MetricsFilterMemberAnd{
 			Value: types.MetricsAndOperator{
 				Prefix: aws.String(prefix),
@@ -216,6 +250,10 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 		metricsFilter = &types.MetricsFilterMemberTag{
 			Value: tags[0],
 		}
+	} else if accessPoint != "" {
+		metricsFilter = &types.MetricsFilterMemberAccessPointArn{
+			Value: accessPoint,
+		}
 	} else {
 		metricsFilter = &types.MetricsFilterMemberPrefix{
 			Value: prefix,
@@ -229,12 +267,17 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 
 	switch v := metricsFilter.(type) {
 	case *types.MetricsFilterMemberAnd:
+		if v := v.Value.AccessPointArn; v != nil {
+			m["access_point"] = aws.ToString(v)
+		}
 		if v := v.Value.Prefix; v != nil {
 			m["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
 			m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
+	case *types.MetricsFilterMemberAccessPointArn:
+		m["access_point"] = v.Value
 	case *types.MetricsFilterMemberPrefix:
 		m["prefix"] = v.Value
 	case *types.MetricsFilterMemberTag:

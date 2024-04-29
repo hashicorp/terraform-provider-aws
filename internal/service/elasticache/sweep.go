@@ -281,38 +281,47 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.ElastiCacheConn(ctx)
+	input := &elasticache.DescribeCacheSubnetGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, &elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
-		if len(page.CacheSubnetGroups) == 0 {
-			log.Print("[DEBUG] No ElastiCache Subnet Groups to sweep")
-			return false
+	err = conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, subnetGroup := range page.CacheSubnetGroups {
-			name := aws.StringValue(subnetGroup.CacheSubnetGroupName)
+		for _, v := range page.CacheSubnetGroups {
+			name := aws.StringValue(v.CacheSubnetGroupName)
 
 			if name == "default" {
 				log.Printf("[INFO] Skipping ElastiCache Subnet Group: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting ElastiCache Subnet Group: %s", name)
-			_, err := conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
-				CacheSubnetGroupName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete ElastiCache Subnet Group (%s): %s", name, err)
-			}
+			r := resourceSubnetGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ElastiCache Subnet Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ElastiCache Subnet Groups: %w", err)
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ElastiCache Subnet Group sweep for %s: %s", region, err)
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error listing ElastiCache Subnet Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ElastiCache Subnet Groups (%s): %w", region, err)
+	}
+
 	return nil
 }
 

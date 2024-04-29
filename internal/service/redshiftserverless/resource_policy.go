@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_redshiftserverless_resource_policy")
-func ResourceResourcePolicy() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_resource_policy", name="Resource Policy")
+func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
@@ -86,7 +86,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	out, err := FindResourcePolicyByARN(ctx, conn, d.Id())
+	out, err := findResourcePolicyByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")

@@ -15,7 +15,7 @@ import (
 func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []*string {
 	var output []*string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -23,7 +23,7 @@ func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []
 func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuable) []string {
 	var output []string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -39,7 +39,7 @@ func FlattenFrameworkStringList(ctx context.Context, v []*string) types.List {
 
 	var output types.List
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -67,7 +67,7 @@ func FlattenFrameworkStringValueList[T ~string](ctx context.Context, v []T) type
 
 	var output types.List
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }

@@ -37,7 +37,7 @@ func TestAccTranscribeVocabulary_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func TestAccTranscribeVocabulary_basicPhrases(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,7 +111,7 @@ func TestAccTranscribeVocabulary_updateS3URI(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +151,7 @@ func TestAccTranscribeVocabulary_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -200,7 +200,7 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccVocabulariesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{

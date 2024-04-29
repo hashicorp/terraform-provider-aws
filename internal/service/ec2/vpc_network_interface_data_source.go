@@ -5,21 +5,24 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_network_interface")
-func DataSourceNetworkInterface() *schema.Resource {
+// @SDKDataSource("aws_network_interface", name="Network Interface")
+// @Tags
+func dataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInterfaceRead,
 
@@ -100,7 +103,7 @@ func DataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -153,7 +156,7 @@ func DataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -164,33 +167,32 @@ func DataSourceNetworkInterface() *schema.Resource {
 
 func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.NetworkInterfaceIds = []*string{aws.String(v.(string))}
+		input.NetworkInterfaceIds = []string{v.(string)}
 	}
 
-	eni, err := FindNetworkInterface(ctx, conn, input)
+	eni, err := findNetworkInterfaceV2(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Interface", err))
 	}
 
-	d.SetId(aws.StringValue(eni.NetworkInterfaceId))
-	ownerID := aws.StringValue(eni.OwnerId)
+	d.SetId(aws.ToString(eni.NetworkInterfaceId))
+	ownerID := aws.ToString(eni.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   "ec2",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
-		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
+		Resource:  "network-interface/" + d.Id(),
 	}.String()
 	d.Set("arn", arn)
 	if eni.Association != nil {
@@ -209,7 +211,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("availability_zone", eni.AvailabilityZone)
 	d.Set("description", eni.Description)
-	d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups))
+	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
@@ -217,19 +219,17 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("owner_id", ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
-	d.Set("private_ips", FlattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses))
+	d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("vpc_id", eni.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, eni.TagSet)
 
 	return diags
 }
 
-func flattenNetworkInterfaceAttachmentForDataSource(apiObject *ec2.NetworkInterfaceAttachment) map[string]interface{} {
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -237,19 +237,19 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *ec2.NetworkInterf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AttachmentId; v != nil {
-		tfMap["attachment_id"] = aws.StringValue(v)
+		tfMap["attachment_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.DeviceIndex; v != nil {
-		tfMap["device_index"] = aws.Int64Value(v)
+		tfMap["device_index"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.StringValue(v)
+		tfMap["instance_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.InstanceOwnerId; v != nil {
-		tfMap["instance_owner_id"] = aws.StringValue(v)
+		tfMap["instance_owner_id"] = aws.ToString(v)
 	}
 
 	return tfMap
