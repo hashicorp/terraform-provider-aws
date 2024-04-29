@@ -112,8 +112,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserGroupAssociation,
+			Factory:  resourceUserGroupAssociation,
 			TypeName: "aws_elasticache_user_group_association",
+			Name:     "User Group Association",
 		},
 	}
 }
