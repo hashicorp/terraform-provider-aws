@@ -1,0 +1,5 @@
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `custom_image` argument to `default_user_settings.code_editor_app_settings`
+resource/aws_sagemaker_user_profile: Add `custom_image` argument to `user_settings.code_editor_app_settings`
+```
