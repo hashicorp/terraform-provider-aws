@@ -35,7 +35,7 @@ func TestSmithyJSONTypeValueFromTerraform(t *testing.T) {
 			val:      tftypes.NewValue(tftypes.String, `{"test": "value"}`),                      // lintignore:AWSAT003,AWSAT005
 			expected: fwtypes.SmithyJSONValue[smithyjson.JSONStringer](`{"test": "value"}`, nil), // lintignore:AWSAT003,AWSAT005
 		},
-		"invalid ARN": {
+		"invalid SmithyJSON": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
 			expected: fwtypes.SmithyJSONUnknown[smithyjson.JSONStringer](),
 		},
