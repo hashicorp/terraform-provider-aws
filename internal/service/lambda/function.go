@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1283,7 +1284,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
+func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
 		d.HasChange("source_code_hash") ||
 		d.HasChange("s3_bucket") ||
@@ -1293,7 +1294,7 @@ func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("architectures")
 }
 
-func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
+func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("description") ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||

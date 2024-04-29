@@ -155,7 +155,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 	d.Set("policy", layerVersionPolicyOutput.Policy)
 	d.Set("revision_id", layerVersionPolicyOutput.RevisionId)
 
-	if policyDoc != nil && len(policyDoc.Statements) > 0 {
+	if len(policyDoc.Statements) > 0 {
 		d.Set("statement_id", policyDoc.Statements[0].Sid)
 
 		if actions := policyDoc.Statements[0].Actions; actions != nil {
