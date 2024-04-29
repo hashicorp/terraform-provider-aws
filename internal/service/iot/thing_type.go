@@ -6,7 +6,6 @@ package iot
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -196,7 +195,7 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, 10*time.Minute,
+	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteThingType(ctx, &iot.DeleteThingTypeInput{
 				ThingTypeName: aws.String(d.Id()),

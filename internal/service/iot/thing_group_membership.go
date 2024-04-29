@@ -139,7 +139,7 @@ func findThingGroupMembership(ctx context.Context, conn *iot.Client, thingGroupN
 		ThingName: aws.String(thingName),
 	}
 
-	var v *awstypes.GroupNameAndArn
+	var v awstypes.GroupNameAndArn
 
 	output, err := conn.ListThingGroupsForThing(ctx, input)
 
@@ -160,18 +160,18 @@ func findThingGroupMembership(ctx context.Context, conn *iot.Client, thingGroupN
 
 	for _, group := range output.ThingGroups {
 		if aws.ToString(group.GroupName) == thingGroupName {
-			v = &group
+			v = group
 		}
 	}
 
-	if v == nil {
+	if v.GroupName == nil {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return v, nil
+	return &v, nil
 }
 
 const thingGroupMembershipResourceIDSeparator = "/"

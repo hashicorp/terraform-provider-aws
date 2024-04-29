@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -124,12 +123,10 @@ func FindAttachedPolicyByTwoPartKey(ctx context.Context, conn *iot.Client, polic
 		Target:    aws.String(target),
 	}
 
-	return findAttachedPolicy(ctx, conn, input, func(v *awstypes.Policy) bool {
-		return aws.ToString(v.PolicyName) == policyName
-	})
+	return findAttachedPolicy(ctx, conn, input)
 }
 
-func findAttachedPolicy(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput, filter tfslices.Predicate[*awstypes.Policy]) (*awstypes.Policy, error) {
+func findAttachedPolicy(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput) (*awstypes.Policy, error) {
 	output, err := findAttachedPolicies(ctx, conn, input)
 
 	if err != nil {

@@ -203,9 +203,16 @@ func resourceTopicRuleDestinationDelete(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	log.Printf("[INFO] Deleting IoT Topic Rule Destination: %s", d.Id())
+
+	// DeleteTopicRuleDestination returns unhelpful errors such as
+	// "UnauthorizedException: Access to TopicRuleDestination 'xxx' was denied" when querying for a rule destination that doesn't exist.
 	_, err := conn.DeleteTopicRuleDestination(ctx, &iot.DeleteTopicRuleDestinationInput{
 		Arn: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.UnauthorizedException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IoT Topic Rule Destination: %s", err)
@@ -222,7 +229,7 @@ func findTopicRuleDestinationByARN(ctx context.Context, conn *iot.Client, arn st
 	// GetTopicRuleDestination returns unhelpful errors such as
 	//	"UnauthorizedException: Access to TopicRuleDestination 'arn:aws:iot:us-west-2:123456789012:ruledestination/vpc/f267138a-7383-4670-9e44-a7fe2f48af5e' was denied"
 	// when querying for a rule destination that doesn't exist.
-	var destination *awstypes.TopicRuleDestinationSummary
+	var destination awstypes.TopicRuleDestinationSummary
 
 	out, err := conn.ListTopicRuleDestinations(ctx, &iot.ListTopicRuleDestinationsInput{})
 
@@ -235,11 +242,11 @@ func findTopicRuleDestinationByARN(ctx context.Context, conn *iot.Client, arn st
 
 	for _, v := range out.DestinationSummaries {
 		if aws.ToString(v.Arn) == arn {
-			destination = &v
+			destination = v
 		}
 	}
 
-	if destination == nil {
+	if destination.Arn == nil {
 		return nil, tfresource.NewEmptyResultError(destination)
 	}
 
