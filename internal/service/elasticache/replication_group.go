@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -377,7 +378,7 @@ func resourceReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			CustomizeDiffValidateReplicationGroupAutomaticFailover,
+			customizeDiffValidateReplicationGroupAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("num_cache_clusters") ||
@@ -1346,10 +1347,13 @@ func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 		return nil, err
 	}
 
-	clusters, err := FindCacheClustersByID(ctx, conn, aws.StringValueSlice(rg.MemberClusters))
+	ids := aws.StringValueSlice(rg.MemberClusters)
+	clusters, err := findCacheClusters(ctx, conn, &elasticache.DescribeCacheClustersInput{}, func(v *elasticache.CacheCluster) bool {
+		return slices.Contains(ids, aws.StringValue(v.CacheClusterId))
+	})
 
 	if err != nil {
-		return clusters, err
+		return nil, err
 	}
 
 	if len(clusters) == 0 {

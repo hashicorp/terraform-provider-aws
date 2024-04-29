@@ -9,81 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// FindCacheClusterByID retrieves an ElastiCache Cache Cluster by id.
-func FindCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
-	input := &elasticache.DescribeCacheClustersInput{
-		CacheClusterId: aws.String(id),
-	}
-	return FindCacheCluster(ctx, conn, input)
-}
-
-// FindCacheClusterWithNodeInfoByID retrieves an ElastiCache Cache Cluster with Node Info by id.
-func FindCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
-	input := &elasticache.DescribeCacheClustersInput{
-		CacheClusterId:    aws.String(id),
-		ShowCacheNodeInfo: aws.Bool(true),
-	}
-	return FindCacheCluster(ctx, conn, input)
-}
-
-// FindCacheCluster retrieves an ElastiCache Cache Cluster using DescribeCacheClustersInput.
-func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheClustersInput) (*elasticache.CacheCluster, error) {
-	result, err := conn.DescribeCacheClustersWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if result == nil || len(result.CacheClusters) == 0 || result.CacheClusters[0] == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "empty result",
-			LastRequest: input,
-		}
-	}
-
-	return result.CacheClusters[0], nil
-}
-
-// FindCacheClustersByID retrieves a list of ElastiCache Cache Clusters by id.
-// Order of the clusters is not guaranteed.
-func FindCacheClustersByID(ctx context.Context, conn *elasticache.ElastiCache, idList []string) ([]*elasticache.CacheCluster, error) {
-	var results []*elasticache.CacheCluster
-	ids := make(map[string]bool)
-	for _, v := range idList {
-		ids[v] = true
-	}
-
-	input := &elasticache.DescribeCacheClustersInput{}
-	err := conn.DescribeCacheClustersPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheClustersOutput, _ bool) bool {
-		if page == nil || page.CacheClusters == nil || len(page.CacheClusters) == 0 {
-			return true
-		}
-
-		for _, v := range page.CacheClusters {
-			if ids[aws.StringValue(v.CacheClusterId)] {
-				results = append(results, v)
-				delete(ids, aws.StringValue(v.CacheClusterId))
-				if len(ids) == 0 {
-					break
-				}
-			}
-		}
-
-		return len(ids) != 0
-	})
-
-	return results, err
-}
 
 type redisParameterGroupFilter func(group *elasticache.CacheParameterGroup) bool
 

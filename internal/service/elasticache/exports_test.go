@@ -5,6 +5,7 @@ package elasticache
 
 // Exports for use in tests only.
 var (
+	ResourceCluster                = resourceCluster
 	ResourceGlobalReplicationGroup = resourceGlobalReplicationGroup
 	ResourceParameterGroup         = resourceParameterGroup
 	ResourceReplicationGroup       = resourceReplicationGroup
@@ -14,6 +15,7 @@ var (
 	ResourceUserGroup              = resourceUserGroup
 	ResourceUserGroupAssociation   = resourceUserGroupAssociation
 
+	FindCacheClusterByID                 = findCacheClusterByID
 	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
 	FindCacheParameterGroupByName        = findCacheParameterGroupByName
 	FindGlobalReplicationGroupByID       = findGlobalReplicationGroupByID
@@ -24,5 +26,6 @@ var (
 	FindUserGroupAssociationByTwoPartKey = findUserGroupAssociationByTwoPartKey
 	ParameterChanges                     = parameterChanges
 	ParameterHash                        = parameterHash
+	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 )

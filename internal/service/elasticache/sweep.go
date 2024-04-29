@@ -106,7 +106,10 @@ func sweepClusters(region string) error {
 				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))
 			}
-			_, err = WaitCacheClusterDeleted(ctx, conn, id, CacheClusterDeletedTimeout)
+			const (
+				timeout = 40 * time.Minute
+			)
+			_, err = waitCacheClusterDeleted(ctx, conn, id, timeout)
 			if err != nil {
 				log.Printf("[ERROR] Failed waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): waiting for completion: %w", id, err))

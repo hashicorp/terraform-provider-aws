@@ -177,7 +177,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
-	cluster, err := FindCacheClusterWithNodeInfoByID(ctx, conn, clusterID)
+	cluster, err := findCacheClusterWithNodeInfoByID(ctx, conn, clusterID)
 	if tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again")
 	}
