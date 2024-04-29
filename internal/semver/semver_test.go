@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package verify
+package semver
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ func TestSemVerLessThan(t *testing.T) {
 		{"2", "10", true},
 		{"abc", "xyz", false},
 	} {
-		lt := SemVerLessThan(tc.s1, tc.s2)
+		lt := LessThan(tc.s1, tc.s2)
 		if tc.lt != lt {
 			t.Fatalf("SemVerLessThan(%q, %q) should be: %t", tc.s1, tc.s2, tc.lt)
 		}
@@ -42,7 +42,7 @@ func TestSemVerGreaterThanOrEqual(t *testing.T) {
 		{"2", "10", false},
 		{"abc", "xyz", false},
 	} {
-		lt := SemVerGreaterThanOrEqual(tc.s1, tc.s2)
+		lt := GreaterThanOrEqual(tc.s1, tc.s2)
 		if tc.lt != lt {
 			t.Fatalf("SemVerGreaterThanOrEqual(%q, %q) should be: %t", tc.s1, tc.s2, tc.lt)
 		}

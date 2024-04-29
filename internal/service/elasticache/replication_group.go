@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -391,7 +392,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			customdiff.ForceNewIf("transit_encryption_enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// For Redis engine versions < 7.0.5, transit_encryption_enabled can only
 				// be configured during creation of the cluster.
-				return verify.SemVerLessThan(d.Get("engine_version_actual").(string), "7.0.5")
+				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			verify.SetTagsDiff,
 		),
