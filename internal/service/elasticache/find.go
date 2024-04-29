@@ -140,31 +140,6 @@ func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
-	input := elasticache.DescribeCacheParameterGroupsInput{
-		CacheParameterGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
-
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSinglePtrResult(output.CacheParameterGroups)
-}
-
 type redisParameterGroupFilter func(group *elasticache.CacheParameterGroup) bool
 
 func FindParameterGroupByFilter(ctx context.Context, conn *elasticache.ElastiCache, filters ...redisParameterGroupFilter) (*elasticache.CacheParameterGroup, error) {

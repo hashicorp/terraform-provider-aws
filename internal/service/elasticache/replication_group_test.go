@@ -2779,7 +2779,7 @@ func testAccCheckReplicationGroupParameterGroup(ctx context.Context, rg *elastic
 
 		paramGroupName := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
 
-		group, err := tfelasticache.FindParameterGroupByName(ctx, conn, paramGroupName)
+		group, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, paramGroupName)
 		if err != nil {
 			return fmt.Errorf("error retrieving parameter group (%s): %w", paramGroupName, err)
 		}
@@ -2796,7 +2796,7 @@ func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.C
 
 		paramGroupName := aws.StringValue(pg.CacheParameterGroupName)
 
-		_, err := tfelasticache.FindParameterGroupByName(ctx, conn, paramGroupName)
+		_, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, paramGroupName)
 		if tfresource.NotFound(err) {
 			return nil
 		}

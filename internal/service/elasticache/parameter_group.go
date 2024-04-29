@@ -4,9 +4,7 @@
 package elasticache
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -18,9 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +28,7 @@ import (
 
 // @SDKResource("aws_elasticache_parameter_group", name="Parameter Group")
 // @Tags(identifierAttribute="arn")
-func ResourceParameterGroup() *schema.Resource {
+func resourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
 		ReadWithoutTimeout:   resourceParameterGroupRead,
@@ -79,7 +78,7 @@ func ResourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: ParameterHash,
+				Set: parameterHash,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -124,7 +123,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	parameterGroup, err := FindParameterGroupByName(ctx, conn, d.Id())
+	parameterGroup, err := findCacheParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Parameter Group (%s) not found, removing from state", d.Id())
@@ -153,7 +152,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameter", FlattenParameters(output.Parameters))
+	d.Set("parameter", flattenParameters(output.Parameters))
 
 	return diags
 }
@@ -164,10 +163,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
-		toRemove, toAdd := ParameterChanges(o, n)
-
-		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
-		log.Printf("[DEBUG] Parameters to add or update: %#v", toAdd)
+		toRemove, toAdd := parameterChanges(o, n)
 
 		// We can only modify 20 parameters at a time, so walk them until
 		// we've got them all.
@@ -318,23 +314,17 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, na
 	return err
 }
 
-func ParameterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
+var (
+	parameterHash = sdkv2.SimpleSchemaSetFunc("name", "value")
+)
 
-	return create.StringHashcode(buf.String())
-}
-
-func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.ParameterNameValue) {
+func parameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.ParameterNameValue) {
 	if o == nil {
 		o = new(schema.Set)
 	}
 	if n == nil {
 		n = new(schema.Set)
 	}
-
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
 
@@ -395,23 +385,73 @@ func resourceModifyParameterGroup(ctx context.Context, conn *elasticache.ElastiC
 	return err
 }
 
-// Flattens an array of Parameters into a []map[string]interface{}
-func FlattenParameters(list []*elasticache.Parameter) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
-	for _, i := range list {
-		if i.ParameterValue != nil {
-			result = append(result, map[string]interface{}{
-				"name":  strings.ToLower(aws.StringValue(i.ParameterName)),
-				"value": aws.StringValue(i.ParameterValue),
+func findCacheParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
+	input := &elasticache.DescribeCacheParameterGroupsInput{
+		CacheParameterGroupName: aws.String(name),
+	}
+
+	return findCacheParameterGroup(ctx, conn, input, tfslices.PredicateTrue[*elasticache.CacheParameterGroup]())
+}
+
+func findCacheParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[*elasticache.CacheParameterGroup]) (*elasticache.CacheParameterGroup, error) {
+	output, err := findCacheParameterGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findCacheParameterGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[*elasticache.CacheParameterGroup]) ([]*elasticache.CacheParameterGroup, error) {
+	var output []*elasticache.CacheParameterGroup
+
+	err := conn.DescribeCacheParameterGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.CacheParameterGroups {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func expandParameter(tfMap map[string]interface{}) *elasticache.ParameterNameValue {
+	return &elasticache.ParameterNameValue{
+		ParameterName:  aws.String(tfMap["name"].(string)),
+		ParameterValue: aws.String(tfMap["value"].(string)),
+	}
+}
+
+func flattenParameters(apiObjects []*elasticache.Parameter) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		if apiObject.ParameterValue != nil {
+			tfList = append(tfList, map[string]interface{}{
+				"name":  strings.ToLower(aws.StringValue(apiObject.ParameterName)),
+				"value": aws.StringValue(apiObject.ParameterValue),
 			})
 		}
 	}
-	return result
-}
 
-func expandParameter(param map[string]interface{}) *elasticache.ParameterNameValue {
-	return &elasticache.ParameterNameValue{
-		ParameterName:  aws.String(param["name"].(string)),
-		ParameterValue: aws.String(param["value"].(string)),
-	}
+	return tfList
 }
