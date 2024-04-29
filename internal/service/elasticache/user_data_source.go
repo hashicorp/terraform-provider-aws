@@ -71,7 +71,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	user, err := FindUserByID(ctx, conn, d.Get("user_id").(string))
+	user, err := findUserByID(ctx, conn, d.Get("user_id").(string))
 	if tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): Not found. Please change your search criteria and try again: %s", d.Get("user_id").(string), err)
 	}

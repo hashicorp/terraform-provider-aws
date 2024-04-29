@@ -348,7 +348,7 @@ func sweepUsers(region string) error {
 				continue
 			}
 
-			r := ResourceUser()
+			r := resourceUser()
 			d := r.Data(nil)
 			d.SetId(id)
 

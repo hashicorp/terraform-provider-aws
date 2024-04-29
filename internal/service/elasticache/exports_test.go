@@ -7,8 +7,10 @@ package elasticache
 var (
 	ResourceServerlessCache = newServerlessCacheResource
 	ResourceSubnetGroup     = resourceSubnetGroup
+	ResourceUser            = resourceUser
 
 	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
 	FindServerlessCacheByID              = findServerlessCacheByID
+	FindUserByID                         = findUserByID
 	ReplicationGroupAvailableModifyDelay = replicationGroupAvailableModifyDelay
 )
