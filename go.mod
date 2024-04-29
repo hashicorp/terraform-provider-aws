@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.29
+	github.com/aws/aws-sdk-go v1.51.30
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.25.4
-	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.26.4
+	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.7
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.1
-	github.com/aws/aws-sdk-go-v2/service/oam v1.10.1
+	github.com/aws/aws-sdk-go-v2/service/oam v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.0
@@ -130,7 +130,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
-	github.com/aws/aws-sdk-go-v2/service/rds v1.77.3
+	github.com/aws/aws-sdk-go-v2/service/rds v1.78.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.5
