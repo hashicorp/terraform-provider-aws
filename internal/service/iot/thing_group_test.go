@@ -225,11 +225,7 @@ func testAccCheckThingGroupExists(ctx context.Context, n string, v *iot.Describe
 
 		_, err := tfiot.FindThingGroupByName(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -174,11 +174,7 @@ func testAccCheckBillingGroupExists(ctx context.Context, n string, v *iot.Descri
 
 		_, err := tfiot.FindBillingGroupByName(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
