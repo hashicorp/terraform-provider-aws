@@ -102,8 +102,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Invocation",
 		},
 		{
-			Factory:  ResourceLayerVersion,
+			Factory:  resourceLayerVersion,
 			TypeName: "aws_lambda_layer_version",
+			Name:     "Layer Version",
 		},
 		{
 			Factory:  ResourceLayerVersionPermission,

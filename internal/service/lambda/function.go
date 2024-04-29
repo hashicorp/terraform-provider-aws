@@ -1313,10 +1313,12 @@ func readFileContents(v string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	fileContent, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
+
 	return fileContent, nil
 }
 
