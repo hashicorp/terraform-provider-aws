@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,7 +58,7 @@ func dataSourceMesh() *schema.Resource {
 
 func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get("name").(string)
@@ -68,12 +68,12 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", meshName, err)
 	}
 
-	d.SetId(aws.StringValue(mesh.MeshName))
-	arn := aws.StringValue(mesh.Metadata.Arn)
+	d.SetId(aws.ToString(mesh.MeshName))
+	arn := aws.ToString(mesh.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
+	meshOwner := aws.ToString(mesh.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {

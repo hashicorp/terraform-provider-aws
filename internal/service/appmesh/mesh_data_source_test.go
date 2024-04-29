@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appmesh"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ func testAccMeshDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -51,7 +50,7 @@ func testAccMeshDataSource_meshOwner(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -81,7 +80,7 @@ func testAccMeshDataSource_specAndTagsSet(t *testing.T) {
 	dataSourceName := "data.aws_appmesh_mesh.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -114,7 +113,7 @@ func testAccMeshDataSource_shared(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),

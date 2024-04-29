@@ -16,6 +16,7 @@ import (
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
+	appmesh_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appmesh"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -165,7 +166,6 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
-	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
@@ -307,8 +307,8 @@ func (c *AWSClient) AppIntegrationsClient(ctx context.Context) *appintegrations_
 	return errs.Must(client[*appintegrations_sdkv2.Client](ctx, c, names.AppIntegrations, make(map[string]any)))
 }
 
-func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
-	return errs.Must(conn[*appmesh_sdkv1.AppMesh](ctx, c, names.AppMesh, make(map[string]any)))
+func (c *AWSClient) AppMeshClient(ctx context.Context) *appmesh_sdkv2.Client {
+	return errs.Must(client[*appmesh_sdkv2.Client](ctx, c, names.AppMesh, make(map[string]any)))
 }
 
 func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client {

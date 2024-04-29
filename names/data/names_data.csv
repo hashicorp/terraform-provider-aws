@@ -13,7 +13,7 @@ apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,
 apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,,apigatewaymanagementapi,,,APIGatewayManagementAPI,ApiGatewayManagementApi,,1,,,aws_apigatewaymanagementapi_,,apigatewaymanagementapi_,API Gateway Management API,Amazon,,x,,,,,ApiGatewayManagementApi,,,
 apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,,2,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,ApiGatewayV2,GetApis,,
 appfabric,appfabric,appfabric,appfabric,,appfabric,,,AppFabric,AppFabric,,,2,,aws_appfabric_,,appfabric_,AppFabric,AWS,,,,,,,AppFabric,ListAppBundles,,
-appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,App Mesh,ListMeshes,,
+appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,,2,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,App Mesh,ListMeshes,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,,2,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,AppRunner,ListConnections,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,,,,No SDK support
 appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,AppConfig,ListApplications,,

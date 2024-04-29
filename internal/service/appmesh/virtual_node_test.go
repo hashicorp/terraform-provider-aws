@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,13 +22,13 @@ import (
 
 func testAccVirtualNode_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -65,13 +65,13 @@ func testAccVirtualNode_basic(t *testing.T) {
 
 func testAccVirtualNode_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -90,7 +90,7 @@ func testAccVirtualNode_disappears(t *testing.T) {
 
 func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	var ca acmpca_types.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_node.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
@@ -100,7 +100,7 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -179,13 +179,13 @@ func testAccVirtualNode_backendClientPolicyACM(t *testing.T) {
 
 func testAccVirtualNode_backendClientPolicyFile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -296,13 +296,13 @@ func testAccVirtualNode_backendClientPolicyFile(t *testing.T) {
 
 func testAccVirtualNode_backendDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -386,13 +386,13 @@ func testAccVirtualNode_backendDefaults(t *testing.T) {
 
 func testAccVirtualNode_backendDefaultsCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -449,7 +449,7 @@ func testAccVirtualNode_backendDefaultsCertificate(t *testing.T) {
 
 func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	nsResourceName := "aws_service_discovery_http_namespace.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -458,7 +458,7 @@ func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -505,13 +505,13 @@ func testAccVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 
 func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -601,13 +601,13 @@ func testAccVirtualNode_listenerConnectionPool(t *testing.T) {
 
 func testAccVirtualNode_listenerHealthChecks(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -712,13 +712,13 @@ func testAccVirtualNode_listenerHealthChecks(t *testing.T) {
 
 func testAccVirtualNode_listenerOutlierDetection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -809,13 +809,13 @@ func testAccVirtualNode_listenerOutlierDetection(t *testing.T) {
 
 func testAccVirtualNode_listenerTimeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -907,7 +907,7 @@ func testAccVirtualNode_listenerTimeout(t *testing.T) {
 
 func testAccVirtualNode_listenerTLS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	var ca acmpca_types.CertificateAuthority
 	resourceName := "aws_appmesh_virtual_node.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
@@ -918,7 +918,7 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -1040,13 +1040,13 @@ func testAccVirtualNode_listenerTLS(t *testing.T) {
 
 func testAccVirtualNode_listenerValidation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -1161,13 +1161,13 @@ func testAccVirtualNode_listenerValidation(t *testing.T) {
 
 func testAccVirtualNode_multiListenerValidation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -1346,13 +1346,13 @@ func testAccVirtualNode_multiListenerValidation(t *testing.T) {
 
 func testAccVirtualNode_logging(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -1416,13 +1416,13 @@ func testAccVirtualNode_logging(t *testing.T) {
 
 func testAccVirtualNode_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vn appmesh.VirtualNodeData
+	var vn awstypes.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
@@ -1464,7 +1464,7 @@ func testAccVirtualNode_tags(t *testing.T) {
 
 func testAccCheckVirtualNodeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_virtual_node" {
@@ -1488,9 +1488,9 @@ func testAccCheckVirtualNodeDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckVirtualNodeExists(ctx context.Context, n string, v *appmesh.VirtualNodeData) resource.TestCheckFunc {
+func testAccCheckVirtualNodeExists(ctx context.Context, n string, v *awstypes.VirtualNodeData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

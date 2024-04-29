@@ -11,14 +11,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appmesh"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -213,9 +215,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 								"method": {
-									Type:         schema.TypeString,
-									Optional:     true,
-									ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
+									Type:             schema.TypeString,
+									Optional:         true,
+									ValidateDiagFunc: enum.Validate[awstypes.HttpMethod](),
 								},
 								"path": {
 									Type:     schema.TypeList,
@@ -276,9 +278,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 								"scheme": {
-									Type:         schema.TypeString,
-									Optional:     true,
-									ValidateFunc: validation.StringInSlice(appmesh.HttpScheme_Values(), false),
+									Type:             schema.TypeString,
+									Optional:         true,
+									ValidateDiagFunc: enum.Validate[awstypes.HttpScheme](),
 								},
 							},
 						},
@@ -308,9 +310,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"unit": {
-												Type:         schema.TypeString,
-												Required:     true,
-												ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+												Type:             schema.TypeString,
+												Required:         true,
+												ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 											},
 											"value": {
 												Type:     schema.TypeInt,
@@ -343,9 +345,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"unit": {
-												Type:         schema.TypeString,
-												Required:     true,
-												ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+												Type:             schema.TypeString,
+												Required:         true,
+												ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 											},
 											"value": {
 												Type:     schema.TypeInt,
@@ -362,9 +364,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"unit": {
-												Type:         schema.TypeString,
-												Required:     true,
-												ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+												Type:             schema.TypeString,
+												Required:         true,
+												ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 											},
 											"value": {
 												Type:     schema.TypeInt,
@@ -559,9 +561,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"unit": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
 													"value": {
 														Type:     schema.TypeInt,
@@ -594,9 +596,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"unit": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
 													"value": {
 														Type:     schema.TypeInt,
@@ -613,9 +615,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"unit": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
 													"value": {
 														Type:     schema.TypeInt,
@@ -718,9 +720,9 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"unit": {
-														Type:         schema.TypeString,
-														Required:     true,
-														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.DurationUnit](),
 													},
 													"value": {
 														Type:     schema.TypeInt,
@@ -742,7 +744,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateRouteInput{
@@ -757,20 +759,20 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateRouteWithContext(ctx, input)
+	output, err := conn.CreateRoute(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating App Mesh Route (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Route.Metadata.Uid))
+	d.SetId(aws.ToString(output.Route.Metadata.Uid))
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), d.Get("name").(string))
@@ -786,8 +788,8 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", d.Id(), err)
 	}
 
-	route := outputRaw.(*appmesh.RouteData)
-	arn := aws.StringValue(route.Metadata.Arn)
+	route := outputRaw.(*awstypes.RouteData)
+	arn := aws.ToString(route.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
@@ -805,7 +807,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateRouteInput{
@@ -819,7 +821,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.MeshOwner = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateRouteWithContext(ctx, input)
+		_, err := conn.UpdateRoute(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating App Mesh Route (%s): %s", d.Id(), err)
@@ -831,7 +833,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
 	input := &appmesh.DeleteRouteInput{
@@ -844,9 +846,9 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteRouteWithContext(ctx, input)
+	_, err := conn.DeleteRoute(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -867,7 +869,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	virtualRouterName := parts[1]
 	name := parts[2]
 
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	route, err := findRouteByFourPartKey(ctx, conn, meshName, "", virtualRouterName, name)
 
@@ -875,7 +877,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(route.Metadata.Uid))
+	d.SetId(aws.ToString(route.Metadata.Uid))
 	d.Set("mesh_name", route.MeshName)
 	d.Set("name", route.RouteName)
 	d.Set("virtual_router_name", route.VirtualRouterName)
@@ -883,7 +885,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	return []*schema.ResourceData{d}, nil
 }
 
-func findRouteByFourPartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, virtualRouterName, name string) (*appmesh.RouteData, error) {
+func findRouteByFourPartKey(ctx context.Context, conn *appmesh.Client, meshName, meshOwner, virtualRouterName, name string) (*awstypes.RouteData, error) {
 	input := &appmesh.DescribeRouteInput{
 		MeshName:          aws.String(meshName),
 		RouteName:         aws.String(name),
@@ -899,9 +901,9 @@ func findRouteByFourPartKey(ctx context.Context, conn *appmesh.AppMesh, meshName
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status.Status); status == appmesh.RouteStatusCodeDeleted {
+	if output.Status.Status == awstypes.RouteStatusCodeDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(output.Status.Status),
 			LastRequest: input,
 		}
 	}
@@ -909,10 +911,10 @@ func findRouteByFourPartKey(ctx context.Context, conn *appmesh.AppMesh, meshName
 	return output, nil
 }
 
-func findRoute(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeRouteInput) (*appmesh.RouteData, error) {
-	output, err := conn.DescribeRouteWithContext(ctx, input)
+func findRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.DescribeRouteInput) (*awstypes.RouteData, error) {
+	output, err := conn.DescribeRoute(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

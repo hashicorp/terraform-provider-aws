@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,7 +66,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 
 func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	gatewayRouteName := d.Get("name").(string)
@@ -76,13 +76,13 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", gatewayRouteName, err)
 	}
 
-	d.SetId(aws.StringValue(gatewayRoute.GatewayRouteName))
-	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
+	d.SetId(aws.ToString(gatewayRoute.GatewayRouteName))
+	arn := aws.ToString(gatewayRoute.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", gatewayRoute.MeshName)
-	meshOwner := aws.StringValue(gatewayRoute.Metadata.MeshOwner)
+	meshOwner := aws.ToString(gatewayRoute.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set("name", gatewayRoute.GatewayRouteName)
 	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)

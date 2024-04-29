@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func dataSourceVirtualRouter() *schema.Resource {
 
 func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualRouterName := d.Get("name").(string)
@@ -72,13 +72,13 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Router (%s): %s", virtualRouterName, err)
 	}
 
-	d.SetId(aws.StringValue(vr.VirtualRouterName))
-	arn := aws.StringValue(vr.Metadata.Arn)
+	d.SetId(aws.ToString(vr.VirtualRouterName))
+	arn := aws.ToString(vr.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", vr.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
-	meshOwner := aws.StringValue(vr.Metadata.MeshOwner)
+	meshOwner := aws.ToString(vr.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set("name", vr.VirtualRouterName)
 	d.Set("resource_owner", vr.Metadata.ResourceOwner)

@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func dataSourceVirtualService() *schema.Resource {
 
 func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualServiceName := d.Get("name").(string)
@@ -72,13 +72,13 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)
 	}
 
-	d.SetId(aws.StringValue(vs.VirtualServiceName))
-	arn := aws.StringValue(vs.Metadata.Arn)
+	d.SetId(aws.ToString(vs.VirtualServiceName))
+	arn := aws.ToString(vs.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
-	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
+	meshOwner := aws.ToString(vs.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set("name", vs.VirtualServiceName)
 	d.Set("resource_owner", vs.Metadata.ResourceOwner)

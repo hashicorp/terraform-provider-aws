@@ -10,14 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appmesh"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -142,7 +143,7 @@ func resourceVirtualServiceSpecSchema() *schema.Schema {
 
 func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateVirtualServiceInput{
@@ -156,20 +157,20 @@ func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, m
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVirtualServiceWithContext(ctx, input)
+	output, err := conn.CreateVirtualService(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating App Mesh Virtual Service (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.VirtualService.Metadata.Uid))
+	d.SetId(aws.ToString(output.VirtualService.Metadata.Uid))
 
 	return append(diags, resourceVirtualServiceRead(ctx, d, meta)...)
 }
 
 func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
@@ -185,9 +186,9 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", d.Id(), err)
 	}
 
-	vs := outputRaw.(*appmesh.VirtualServiceData)
+	vs := outputRaw.(*awstypes.VirtualServiceData)
 
-	arn := aws.StringValue(vs.Metadata.Arn)
+	arn := aws.ToString(vs.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
@@ -204,7 +205,7 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualServiceInput{
@@ -217,7 +218,7 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.MeshOwner = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateVirtualServiceWithContext(ctx, input)
+		_, err := conn.UpdateVirtualService(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Service (%s): %s", d.Id(), err)
@@ -229,7 +230,7 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Service: %s", d.Id())
 	input := &appmesh.DeleteVirtualServiceInput{
@@ -241,9 +242,9 @@ func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, m
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteVirtualServiceWithContext(ctx, input)
+	_, err := conn.DeleteVirtualService(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -260,7 +261,7 @@ func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, m
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 	meshName := parts[0]
 	name := parts[1]
 
@@ -270,14 +271,14 @@ func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(vs.Metadata.Uid))
+	d.SetId(aws.ToString(vs.Metadata.Uid))
 	d.Set("mesh_name", vs.MeshName)
 	d.Set("name", vs.VirtualServiceName)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func findVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualServiceData, error) {
+func findVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.Client, meshName, meshOwner, name string) (*awstypes.VirtualServiceData, error) {
 	input := &appmesh.DescribeVirtualServiceInput{
 		MeshName:           aws.String(meshName),
 		VirtualServiceName: aws.String(name),
@@ -292,9 +293,9 @@ func findVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.AppMesh
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status.Status); status == appmesh.VirtualServiceStatusCodeDeleted {
+	if output.Status.Status == awstypes.VirtualServiceStatusCodeDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(output.Status.Status),
 			LastRequest: input,
 		}
 	}
@@ -302,10 +303,10 @@ func findVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.AppMesh
 	return output, nil
 }
 
-func findVirtualService(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeVirtualServiceInput) (*appmesh.VirtualServiceData, error) {
-	output, err := conn.DescribeVirtualServiceWithContext(ctx, input)
+func findVirtualService(ctx context.Context, conn *appmesh.Client, input *appmesh.DescribeVirtualServiceInput) (*awstypes.VirtualServiceData, error) {
+	output, err := conn.DescribeVirtualService(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -240,12 +240,20 @@ func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
 }
 
+func FlattenInt32ValueSet(list []int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(list))
+}
+
 // Takes the result of flatmap.Expand for an array of int32
 // and returns a []int32
 func ExpandInt32ValueList(configured []interface{}) []int32 {
 	return tfslices.ApplyToAll(configured, func(v any) int32 {
 		return int32(v.(int))
 	})
+}
+
+func ExpandInt32ValueSet(configured *schema.Set) []int32 {
+	return ExpandInt32ValueList(configured.List())
 }
 
 // Takes the result of flatmap.Expand for an array of int64

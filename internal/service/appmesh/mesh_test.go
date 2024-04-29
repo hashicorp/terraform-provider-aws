@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,12 +22,12 @@ import (
 
 func testAccMesh_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mesh appmesh.MeshData
+	var mesh awstypes.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
@@ -56,12 +56,12 @@ func testAccMesh_basic(t *testing.T) {
 
 func testAccMesh_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mesh appmesh.MeshData
+	var mesh awstypes.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
@@ -80,12 +80,12 @@ func testAccMesh_disappears(t *testing.T) {
 
 func testAccMesh_egressFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mesh appmesh.MeshData
+	var mesh awstypes.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
@@ -123,12 +123,12 @@ func testAccMesh_egressFilter(t *testing.T) {
 
 func testAccMesh_serviceDiscovery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mesh appmesh.MeshData
+	var mesh awstypes.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
@@ -172,12 +172,12 @@ func testAccMesh_serviceDiscovery(t *testing.T) {
 
 func testAccMesh_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mesh appmesh.MeshData
+	var mesh awstypes.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppMeshEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
@@ -218,7 +218,7 @@ func testAccMesh_tags(t *testing.T) {
 
 func testAccCheckMeshDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_mesh" {
@@ -242,9 +242,9 @@ func testAccCheckMeshDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMeshExists(ctx context.Context, n string, v *appmesh.MeshData) resource.TestCheckFunc {
+func testAccCheckMeshExists(ctx context.Context, n string, v *awstypes.MeshData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

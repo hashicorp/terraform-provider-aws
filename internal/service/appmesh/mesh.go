@@ -8,14 +8,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appmesh"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -91,10 +93,10 @@ func resourceMeshSpecSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"type": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      appmesh.EgressFilterTypeDropAll,
-								ValidateFunc: validation.StringInSlice(appmesh.EgressFilterType_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.EgressFilterTypeDropAll,
+								ValidateDiagFunc: enum.Validate[awstypes.EgressFilterType](),
 							},
 						},
 					},
@@ -107,9 +109,9 @@ func resourceMeshSpecSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"ip_preference": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringInSlice(appmesh.IpPreference_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IpPreference](),
 							},
 						},
 					},
@@ -121,7 +123,7 @@ func resourceMeshSpecSchema() *schema.Schema {
 
 func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateMeshInput{
@@ -130,7 +132,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:     getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateMeshWithContext(ctx, input)
+	_, err := conn.CreateMesh(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating App Mesh Service Mesh (%s): %s", name, err)
@@ -143,7 +145,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return findMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
@@ -159,8 +161,8 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", d.Id(), err)
 	}
 
-	mesh := outputRaw.(*appmesh.MeshData)
-	arn := aws.StringValue(mesh.Metadata.Arn)
+	mesh := outputRaw.(*awstypes.MeshData)
+	arn := aws.ToString(mesh.Metadata.Arn)
 	d.Set("arn", arn)
 	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
@@ -176,7 +178,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateMeshInput{
@@ -184,7 +186,7 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
 		}
 
-		_, err := conn.UpdateMeshWithContext(ctx, input)
+		_, err := conn.UpdateMesh(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating App Mesh Service Mesh (%s): %s", d.Id(), err)
@@ -196,14 +198,14 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Service Mesh: %s", d.Id())
-	_, err := conn.DeleteMeshWithContext(ctx, &appmesh.DeleteMeshInput{
+	_, err := conn.DeleteMesh(ctx, &appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -214,7 +216,7 @@ func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func findMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owner string) (*appmesh.MeshData, error) {
+func findMeshByTwoPartKey(ctx context.Context, conn *appmesh.Client, name, owner string) (*awstypes.MeshData, error) {
 	input := &appmesh.DescribeMeshInput{
 		MeshName: aws.String(name),
 	}
@@ -228,9 +230,9 @@ func findMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owne
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status.Status); status == appmesh.MeshStatusCodeDeleted {
+	if output.Status.Status == awstypes.MeshStatusCodeDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(output.Status.Status),
 			LastRequest: input,
 		}
 	}
@@ -238,10 +240,10 @@ func findMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owne
 	return output, nil
 }
 
-func findMesh(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeMeshInput) (*appmesh.MeshData, error) {
-	output, err := conn.DescribeMeshWithContext(ctx, input)
+func findMesh(ctx context.Context, conn *appmesh.Client, input *appmesh.DescribeMeshInput) (*awstypes.MeshData, error) {
+	output, err := conn.DescribeMesh(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
