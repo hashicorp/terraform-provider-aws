@@ -126,7 +126,7 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	groupID := d.Get("replication_group_id").(string)
 
-	rg, err := FindReplicationGroupByID(ctx, conn, groupID)
+	rg, err := findReplicationGroupByID(ctx, conn, groupID)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", groupID, err)
 	}

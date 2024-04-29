@@ -80,7 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceReplicationGroup,
+			Factory:  resourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
 			Name:     "Replication Group",
 			Tags: &types.ServicePackageResourceTags{

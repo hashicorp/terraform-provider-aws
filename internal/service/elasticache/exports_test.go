@@ -5,6 +5,7 @@ package elasticache
 
 // Exports for use in tests only.
 var (
+	ResourceReplicationGroup     = resourceReplicationGroup
 	ResourceServerlessCache      = newServerlessCacheResource
 	ResourceSubnetGroup          = resourceSubnetGroup
 	ResourceUser                 = resourceUser
@@ -12,9 +13,10 @@ var (
 	ResourceUserGroupAssociation = resourceUserGroupAssociation
 
 	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
+	FindReplicationGroupByID             = findReplicationGroupByID
 	FindServerlessCacheByID              = findServerlessCacheByID
 	FindUserByID                         = findUserByID
 	FindUserGroupByID                    = findUserGroupByID
 	FindUserGroupAssociationByTwoPartKey = findUserGroupAssociationByTwoPartKey
-	ReplicationGroupAvailableModifyDelay = replicationGroupAvailableModifyDelay
+	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 )

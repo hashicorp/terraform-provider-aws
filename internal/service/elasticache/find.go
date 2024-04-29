@@ -15,52 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindReplicationGroupByID retrieves an ElastiCache Replication Group by id.
-func FindReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.ReplicationGroup, error) {
-	input := &elasticache.DescribeReplicationGroupsInput{
-		ReplicationGroupId: aws.String(id),
-	}
-	output, err := conn.DescribeReplicationGroupsWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.ReplicationGroups) == 0 || output.ReplicationGroups[0] == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.ReplicationGroups[0], nil
-}
-
-// FindReplicationGroupMemberClustersByID retrieves all of an ElastiCache Replication Group's MemberClusters by the id of the Replication Group.
-func FindReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticache.ElastiCache, id string) ([]*elasticache.CacheCluster, error) {
-	rg, err := FindReplicationGroupByID(ctx, conn, id)
-	if err != nil {
-		return nil, err
-	}
-
-	clusters, err := FindCacheClustersByID(ctx, conn, aws.StringValueSlice(rg.MemberClusters))
-	if err != nil {
-		return clusters, err
-	}
-	if len(clusters) == 0 {
-		return clusters, &retry.NotFoundError{
-			Message: fmt.Sprintf("No Member Clusters found in Replication Group (%s)", id),
-		}
-	}
-
-	return clusters, nil
-}
-
 // FindCacheClusterByID retrieves an ElastiCache Cache Cluster by id.
 func FindCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{

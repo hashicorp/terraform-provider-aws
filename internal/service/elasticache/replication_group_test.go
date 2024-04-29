@@ -4369,7 +4369,10 @@ func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Elast
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
 
-	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout, tfelasticache.ReplicationGroupAvailableModifyDelay)
+	const (
+		delay = 30 * time.Second
+	)
+	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout, delay)
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}

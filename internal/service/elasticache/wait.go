@@ -12,93 +12,9 @@ import (
 )
 
 const (
-	ReplicationGroupDefaultCreatedTimeout = 60 * time.Minute
-	ReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
-	ReplicationGroupDefaultDeletedTimeout = 40 * time.Minute
-
-	replicationGroupAvailableMinTimeout  = 10 * time.Second
-	replicationGroupAvailableCreateDelay = 30 * time.Second
-	replicationGroupAvailableModifyDelay = 30 * time.Second
-	replicationGroupAvailableReadDelay   = 0 * time.Second
-
-	replicationGroupDeletedMinTimeout = 10 * time.Second
-	replicationGroupDeletedDelay      = 30 * time.Second
-)
-
-// WaitReplicationGroupAvailable waits for a ReplicationGroup to return Available
-func WaitReplicationGroupAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration, delay time.Duration) (*elasticache.ReplicationGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ReplicationGroupStatusCreating,
-			ReplicationGroupStatusModifying,
-			ReplicationGroupStatusSnapshotting,
-		},
-		Target:     []string{ReplicationGroupStatusAvailable},
-		Refresh:    StatusReplicationGroup(ctx, conn, replicationGroupID),
-		Timeout:    timeout,
-		MinTimeout: replicationGroupAvailableMinTimeout,
-		Delay:      delay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if v, ok := outputRaw.(*elasticache.ReplicationGroup); ok {
-		return v, err
-	}
-	return nil, err
-}
-
-// WaitReplicationGroupDeleted waits for a ReplicationGroup to be deleted
-func WaitReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) (*elasticache.ReplicationGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ReplicationGroupStatusCreating,
-			ReplicationGroupStatusAvailable,
-			ReplicationGroupStatusDeleting,
-		},
-		Target:     []string{},
-		Refresh:    StatusReplicationGroup(ctx, conn, replicationGroupID),
-		Timeout:    timeout,
-		MinTimeout: replicationGroupDeletedMinTimeout,
-		Delay:      replicationGroupDeletedDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if v, ok := outputRaw.(*elasticache.ReplicationGroup); ok {
-		return v, err
-	}
-	return nil, err
-}
-
-// WaitReplicationGroupMemberClustersAvailable waits for all of a ReplicationGroup's Member Clusters to return Available
-func WaitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) ([]*elasticache.CacheCluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			CacheClusterStatusCreating,
-			CacheClusterStatusDeleting,
-			CacheClusterStatusModifying,
-			CacheClusterStatusSnapshotting,
-		},
-		Target:     []string{CacheClusterStatusAvailable},
-		Refresh:    StatusReplicationGroupMemberClusters(ctx, conn, replicationGroupID),
-		Timeout:    timeout,
-		MinTimeout: cacheClusterAvailableMinTimeout,
-		Delay:      cacheClusterAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if v, ok := outputRaw.([]*elasticache.CacheCluster); ok {
-		return v, err
-	}
-	return nil, err
-}
-
-const (
 	CacheClusterCreatedTimeout = 40 * time.Minute
 	CacheClusterUpdatedTimeout = 80 * time.Minute
 	CacheClusterDeletedTimeout = 40 * time.Minute
-
-	cacheClusterAvailableMinTimeout = 10 * time.Second
-	cacheClusterAvailableDelay      = 30 * time.Second
 
 	cacheClusterDeletedMinTimeout = 10 * time.Second
 	cacheClusterDeletedDelay      = 30 * time.Second
@@ -108,16 +24,16 @@ const (
 func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			CacheClusterStatusCreating,
-			CacheClusterStatusModifying,
-			CacheClusterStatusSnapshotting,
-			CacheClusterStatusRebootingClusterNodes,
+			cacheClusterStatusCreating,
+			cacheClusterStatusModifying,
+			cacheClusterStatusSnapshotting,
+			cacheClusterStatusRebootingClusterNodes,
 		},
-		Target:     []string{CacheClusterStatusAvailable},
+		Target:     []string{cacheClusterStatusAvailable},
 		Refresh:    StatusCacheCluster(ctx, conn, cacheClusterID),
 		Timeout:    timeout,
-		MinTimeout: cacheClusterAvailableMinTimeout,
-		Delay:      cacheClusterAvailableDelay,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -131,13 +47,13 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCach
 func WaitCacheClusterDeleted(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			CacheClusterStatusCreating,
-			CacheClusterStatusAvailable,
-			CacheClusterStatusModifying,
-			CacheClusterStatusDeleting,
-			CacheClusterStatusIncompatibleNetwork,
-			CacheClusterStatusRestoreFailed,
-			CacheClusterStatusSnapshotting,
+			cacheClusterStatusCreating,
+			cacheClusterStatusAvailable,
+			cacheClusterStatusModifying,
+			cacheClusterStatusDeleting,
+			cacheClusterStatusIncompatibleNetwork,
+			cacheClusterStatusRestoreFailed,
+			cacheClusterStatusSnapshotting,
 		},
 		Target:     []string{},
 		Refresh:    StatusCacheCluster(ctx, conn, cacheClusterID),

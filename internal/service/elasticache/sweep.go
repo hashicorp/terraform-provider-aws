@@ -241,7 +241,7 @@ func sweepReplicationGroups(region string) error {
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
-			r := ResourceReplicationGroup()
+			r := resourceReplicationGroup()
 			d := r.Data(nil)
 
 			if replicationGroup.GlobalReplicationGroupInfo != nil {

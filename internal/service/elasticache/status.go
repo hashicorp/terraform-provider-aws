@@ -13,63 +13,15 @@ import (
 )
 
 const (
-	ReplicationGroupStatusCreating     = "creating"
-	ReplicationGroupStatusAvailable    = "available"
-	ReplicationGroupStatusModifying    = "modifying"
-	ReplicationGroupStatusDeleting     = "deleting"
-	ReplicationGroupStatusCreateFailed = "create-failed"
-	ReplicationGroupStatusSnapshotting = "snapshotting"
-)
-
-// StatusReplicationGroup fetches the Replication Group and its Status
-func StatusReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		rg, err := FindReplicationGroupByID(ctx, conn, replicationGroupID)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return rg, aws.StringValue(rg.Status), nil
-	}
-}
-
-// StatusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
-// NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func StatusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		clusters, err := FindReplicationGroupMemberClustersByID(ctx, conn, replicationGroupID)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		status := CacheClusterStatusAvailable
-		for _, v := range clusters {
-			clusterStatus := aws.StringValue(v.CacheClusterStatus)
-			if clusterStatus != CacheClusterStatusAvailable {
-				status = clusterStatus
-				break
-			}
-		}
-		return clusters, status, nil
-	}
-}
-
-const (
-	CacheClusterStatusAvailable             = "available"
-	CacheClusterStatusCreating              = "creating"
-	CacheClusterStatusDeleted               = "deleted"
-	CacheClusterStatusDeleting              = "deleting"
-	CacheClusterStatusIncompatibleNetwork   = "incompatible-network"
-	CacheClusterStatusModifying             = "modifying"
-	CacheClusterStatusRebootingClusterNodes = "rebooting cluster nodes"
-	CacheClusterStatusRestoreFailed         = "restore-failed"
-	CacheClusterStatusSnapshotting          = "snapshotting"
+	cacheClusterStatusAvailable             = "available"
+	cacheClusterStatusCreating              = "creating"
+	cacheClusterStatusDeleted               = "deleted"
+	cacheClusterStatusDeleting              = "deleting"
+	cacheClusterStatusIncompatibleNetwork   = "incompatible-network"
+	cacheClusterStatusModifying             = "modifying"
+	cacheClusterStatusRebootingClusterNodes = "rebooting cluster nodes"
+	cacheClusterStatusRestoreFailed         = "restore-failed"
+	cacheClusterStatusSnapshotting          = "snapshotting"
 )
 
 // StatusCacheCluster fetches the Cache Cluster and its Status
