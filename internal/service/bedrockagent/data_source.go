@@ -181,11 +181,11 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"max_tokens": schema.NumberAttribute{
-													Optional: true,
+												"max_tokens": schema.Int64Attribute{
+													Required: true,
 												},
-												"overlap_percentage": schema.NumberAttribute{
-													Optional: true,
+												"overlap_percentage": schema.Int64Attribute{
+													Required: true,
 												},
 											},
 										},
@@ -535,7 +535,7 @@ type serverSideEncryptionConfigurationModel struct {
 }
 
 type vectorIngestionConfigurationModel struct {
-	ChunkingConfiguration fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel] `tfsdk:"chunking_Configuration"`
+	ChunkingConfiguration fwtypes.ListNestedObjectValueOf[chunkingConfigurationModel] `tfsdk:"chunking_configuration"`
 }
 
 type chunkingConfigurationModel struct {
@@ -544,6 +544,6 @@ type chunkingConfigurationModel struct {
 }
 
 type fixedSizeChunkingConfigurationModel struct {
-	MaxTokens         types.Number `tfsdk:"max_tokens"`
-	OverlapPercentage types.Number `tfsdk:"overlap_percentage"`
+	MaxTokens         types.Int64 `tfsdk:"max_tokens"`
+	OverlapPercentage types.Int64 `tfsdk:"overlap_percentage"`
 }

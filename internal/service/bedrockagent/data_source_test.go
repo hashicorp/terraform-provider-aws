@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSource_basic(t *testing.T) {
+func testAccDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -36,6 +36,35 @@ func TestAccDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceBaseExists(ctx, resourceName, &dataSource),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDataSource_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource types.DataSource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceBaseExists(ctx, resourceName, &dataSource),
 				),
@@ -126,16 +155,42 @@ func testAccCheckDataSourceBaseExists(ctx context.Context, n string, v *types.Da
 func testAccDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
-name     = %[1]q
-knowledge_base_id = "RFYQS34LF7"
-data_deletion_policy = "RETAIN"
+  name                 = %[1]q
+  knowledge_base_id    = "xxxx"
+  data_deletion_policy = "RETAIN"
 
-data_source_configuration {
-	type = "S3"
-	s3_configuration {
-		bucket_arn = "arn:aws:s3:::aws-security-data-lake-eu-west-1-8rvl0sowjqqdgyw4nhwlqpaimqddah"
-	}
- }
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = "arn:aws:xxxx"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccDataSourceConfig_full(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name                 = %[1]q
+  knowledge_base_id    = "xxx"
+  data_deletion_policy = "RETAIN"
+
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = "arn:aws:s3:::xxxxx"
+    }
+  }
+  vector_ingestion_configuration {
+    chunking_configuration {
+      chunking_strategy = "FIXED_SIZE"
+      fixed_size_chunking_configuration {
+        max_tokens         = 3
+        overlap_percentage = 80
+      }
+    }
+  }
 }
 `, rName)
 }

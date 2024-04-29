@@ -21,8 +21,9 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"updateOpenSearch": testAccKnowledgeBase_updateOpenSearch,
 		},
 		"DataSource": {
-			// "basic":      testAccDataSource_basic,
+			"basic":      testAccDataSource_basic,
 			"disappears": testAccDataSource_disappears,
+			"full":       testAccDataSource_full,
 		},
 	}
 
