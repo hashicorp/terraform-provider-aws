@@ -55,8 +55,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Invocation",
 		},
 		{
-			Factory:  DataSourceLayerVersion,
+			Factory:  dataSourceLayerVersion,
 			TypeName: "aws_lambda_layer_version",
+			Name:     "Layer Version",
 		},
 	}
 }
