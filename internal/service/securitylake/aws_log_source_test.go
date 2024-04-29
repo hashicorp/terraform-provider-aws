@@ -40,8 +40,11 @@ func testAccAWSLogSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "source.0.accounts.#"),
 					acctest.CheckResourceAttrAccountID(resourceName, "source.0.accounts.0"),
+					func(s *terraform.State) error {
+						return resource.TestCheckTypeSetElemAttr(resourceName, "source.0.accounts.*", acctest.AccountID())(s)
+					},
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),

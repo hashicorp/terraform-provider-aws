@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an Amazon Security Lake AWS Log Source.
 
+~> **NOTE:** A single `aws_securitylake_aws_log_source` should be used to configure a log source across all regions and accounts.
+
 ~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_aws_log_source`. Use a `depends_on` statement.
 
 ## Example Usage
@@ -37,7 +39,7 @@ The following arguments are required:
 `source` supports the following:
 
 * `accounts` - (Optional) Specify the AWS account information where you want to enable Security Lake.
-  Defaults to the current account.
+  If not specified, uses all accounts included in the Security Lake.
 * `regions` - (Required) Specify the Regions where you want to enable Security Lake.
 * `source_name` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`.
 * `source_version` - (Optional) The version for a AWS source.
