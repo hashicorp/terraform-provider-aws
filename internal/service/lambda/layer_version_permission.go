@@ -221,6 +221,7 @@ func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.Resourc
 		return diags
 	}
 
+	log.Printf("[INFO] Deleting Lambda Layer Permission Version: %s", d.Id())
 	_, err = conn.RemoveLayerVersionPermission(ctx, &lambda.RemoveLayerVersionPermissionInput{
 		LayerName:     aws.String(layerName),
 		StatementId:   aws.String(d.Get("statement_id").(string)),

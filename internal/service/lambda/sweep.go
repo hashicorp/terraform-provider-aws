@@ -47,7 +47,7 @@ func sweepFunctions(region string) error {
 		}
 
 		for _, v := range page.Functions {
-			r := ResourceFunction()
+			r := resourceFunction()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.FunctionName))
 			d.Set("function_name", v.FunctionName)
@@ -104,7 +104,7 @@ func sweepLayerVersions(region string) error {
 				}
 
 				for _, v := range page.LayerVersions {
-					r := ResourceLayerVersion()
+					r := resourceLayerVersion()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(v.LayerVersionArn))
 					d.Set("layer_name", layerName)

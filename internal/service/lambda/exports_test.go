@@ -14,6 +14,7 @@ var (
 	ResourceInvocation                = resourceInvocation
 	ResourceLayerVersion              = resourceLayerVersion
 	ResourceLayerVersionPermission    = resourceLayerVersionPermission
+	ResourcePermission                = resourcePermission
 
 	FindAliasByTwoPartKey                     = findAliasByTwoPartKey
 	FindCodeSigningConfigByARN                = findCodeSigningConfigByARN
@@ -23,7 +24,10 @@ var (
 	FindFunctionURLByTwoPartKey               = findFunctionURLByTwoPartKey
 	FindLayerVersionByTwoPartKey              = findLayerVersionByTwoPartKey
 	FindLayerVersionPolicyByTwoPartKey        = findLayerVersionPolicyByTwoPartKey
+	FindPolicyStatementByTwoPartKey           = findPolicyStatementByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID  = functionEventInvokeConfigParseResourceID
+	GetFunctionNameFromARN                    = getFunctionNameFromARN
+	GetQualifierFromAliasOrVersionARN         = getQualifierFromAliasOrVersionARN
 	LayerVersionParseResourceID               = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID     = layerVersionPermissionParseResourceID
 	SignerServiceIsAvailable                  = signerServiceIsAvailable

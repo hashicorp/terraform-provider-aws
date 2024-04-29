@@ -44,16 +44,10 @@ func resourceAlias() *schema.Resource {
 				Optional: true,
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Using function name or ARN should not be shown as a diff.
-					// Try to convert the old and new values from ARN to function name
-					oldFunctionName, oldFunctionNameErr := GetFunctionNameFromARN(old)
-					newFunctionName, newFunctionNameErr := GetFunctionNameFromARN(new)
-					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
 			},
 			"function_version": {
 				Type:     schema.TypeString,
@@ -252,4 +246,12 @@ func flattenAliasRoutingConfiguration(apiObject *awstypes.AliasRoutingConfigurat
 	}
 
 	return []interface{}{tfMap}
+}
+
+func suppressEquivalentFunctionNameOrARN(k, old, new string, d *schema.ResourceData) bool {
+	// Using function name or ARN should not be shown as a diff.
+	// Try to convert the old and new values from ARN to function name
+	oldFunctionName, oldFunctionNameErr := getFunctionNameFromARN(old)
+	newFunctionName, newFunctionNameErr := getFunctionNameFromARN(new)
+	return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
 }

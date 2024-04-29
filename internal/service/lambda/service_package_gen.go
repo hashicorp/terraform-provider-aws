@@ -113,8 +113,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Layer Version Permission",
 		},
 		{
-			Factory:  ResourcePermission,
+			Factory:  resourcePermission,
 			TypeName: "aws_lambda_permission",
+			Name:     "Permission",
 		},
 		{
 			Factory:  ResourceProvisionedConcurrencyConfig,
