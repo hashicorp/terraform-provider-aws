@@ -138,7 +138,7 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func FindUserGroupAssociation(ctx context.Context, conn *elasticache.ElastiCache, userGroupID, userID string) error {
-	userGroup, err := FindUserGroupByID(ctx, conn, userGroupID)
+	userGroup, err := findUserGroupByID(ctx, conn, userGroupID)
 
 	if err != nil {
 		return err

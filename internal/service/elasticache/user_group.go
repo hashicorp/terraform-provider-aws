@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_elasticache_user_group", name="User Group")
 // @Tags(identifierAttribute="arn")
-func ResourceUserGroup() *schema.Resource {
+func resourceUserGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupCreate,
 		ReadWithoutTimeout:   resourceUserGroupRead,
@@ -126,7 +126,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	userGroup, err := FindUserGroupByID(ctx, conn, d.Id())
+	userGroup, err := findUserGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User Group (%s) not found, removing from state", d.Id())
@@ -206,12 +206,40 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.UserGroup, error) {
+func findUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(id),
 	}
 
-	output, err := conn.DescribeUserGroupsWithContext(ctx, input)
+	return findUserGroup(ctx, conn, input)
+}
+
+func findUserGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput) (*elasticache.UserGroup, error) {
+	output, err := findUserGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput) ([]*elasticache.UserGroup, error) {
+	var output []*elasticache.UserGroup
+
+	err := conn.DescribeUserGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeUserGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.UserGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -224,20 +252,12 @@ func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id st
 		return nil, err
 	}
 
-	if output == nil || len(output.UserGroups) == 0 || output.UserGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.UserGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.UserGroups[0], nil
+	return output, nil
 }
 
 func statusUserGroup(ctx context.Context, conn *elasticache.ElastiCache, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindUserGroupByID(ctx, conn, id)
+		output, err := findUserGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

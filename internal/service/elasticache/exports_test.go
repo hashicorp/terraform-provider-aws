@@ -8,9 +8,11 @@ var (
 	ResourceServerlessCache = newServerlessCacheResource
 	ResourceSubnetGroup     = resourceSubnetGroup
 	ResourceUser            = resourceUser
+	ResourceUserGroup       = resourceUserGroup
 
 	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
 	FindServerlessCacheByID              = findServerlessCacheByID
 	FindUserByID                         = findUserByID
+	FindUserGroupByID                    = findUserGroupByID
 	ReplicationGroupAvailableModifyDelay = replicationGroupAvailableModifyDelay
 )

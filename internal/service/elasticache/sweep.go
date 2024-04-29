@@ -392,7 +392,7 @@ func sweepUserGroups(region string) error {
 		}
 
 		for _, v := range page.UserGroups {
-			r := ResourceUserGroup()
+			r := resourceUserGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.UserGroupId))
 
