@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_elasticache_user")
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_elasticache_user", name="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -72,28 +72,23 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	user, err := findUserByID(ctx, conn, d.Get("user_id").(string))
-	if tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): Not found. Please change your search criteria and try again: %s", d.Get("user_id").(string), err)
-	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Get("user_id").(string), err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache User", err))
 	}
 
 	d.SetId(aws.StringValue(user.UserId))
-
 	d.Set("access_string", user.AccessString)
-
 	if v := user.Authentication; v != nil {
-		authenticationMode := map[string]interface{}{
+		tfMap := map[string]interface{}{
 			"password_count": aws.Int64Value(v.PasswordCount),
 			"type":           aws.StringValue(v.Type),
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
+		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
-
 	d.Set("engine", user.Engine)
 	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
