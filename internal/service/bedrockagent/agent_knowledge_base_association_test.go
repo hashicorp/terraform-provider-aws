@@ -72,6 +72,63 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var agentknowledgebaseassociation types.AgentKnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
+	agentModel := "anthropic.claude-v2"
+	foundationModel := "amazon.titan-embed-text-v1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test desc"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+			{
+				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc2", "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test desc2"),
+				),
+			},
+		},
+	})
+}
+
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")

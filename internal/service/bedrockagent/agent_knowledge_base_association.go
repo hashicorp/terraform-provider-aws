@@ -126,6 +126,9 @@ func (r *resourceAgentKnowledgeBaseAssociation) Create(ctx context.Context, requ
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base Association empty output", err.Error())
 		return
 	}
+	data.Description = fwflex.StringToFramework(ctx, out.AgentKnowledgeBase.Description)
+	data.KnowledgeBaseId = fwflex.StringToFramework(ctx, out.AgentKnowledgeBase.KnowledgeBaseId)
+	data.KnowledgeBaseState = fwtypes.StringEnumValue[awstypes.KnowledgeBaseState](out.AgentKnowledgeBase.KnowledgeBaseState)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -203,10 +206,9 @@ func (r *resourceAgentKnowledgeBaseAssociation) Update(ctx context.Context, requ
 			)
 			return
 		}
-		response.Diagnostics.Append(fwflex.Flatten(ctx, out.AgentKnowledgeBase, &new)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+		new.Description = fwflex.StringToFramework(ctx, out.AgentKnowledgeBase.Description)
+		new.KnowledgeBaseId = fwflex.StringToFramework(ctx, out.AgentKnowledgeBase.KnowledgeBaseId)
+		new.KnowledgeBaseState = fwtypes.StringEnumValue[awstypes.KnowledgeBaseState](out.AgentKnowledgeBase.KnowledgeBaseState)
 		new.setID()
 	}
 
