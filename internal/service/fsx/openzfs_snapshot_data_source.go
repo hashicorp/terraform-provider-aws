@@ -32,7 +32,7 @@ func DataSourceOpenzfsSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceSnapshotFiltersSchema(),
+			"filter": snapshotFiltersSchema(),
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -71,7 +71,7 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, BuildSnapshotFiltersDataSource(
+	input.Filters = append(input.Filters, newSnapshotFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

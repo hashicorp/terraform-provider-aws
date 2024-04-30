@@ -5,7 +5,9 @@ package fsx
 
 // Exports for use in tests only.
 var (
-	ResourceBackup = resourceBackup
+	ResourceBackup                    = resourceBackup
+	ResourceDataRepositoryAssociation = resourceDataRepositoryAssociation
 
-	FindBackupByID = findBackupByID
+	FindBackupByID                    = findBackupByID
+	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID
 )

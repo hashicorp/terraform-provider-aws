@@ -152,7 +152,7 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
+			"filter": storageVirtualMachineFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -203,7 +203,7 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 		input.StorageVirtualMachineIds = []*string{aws.String(id.(string))}
 	}
 
-	input.Filters = BuildStorageVirtualMachineFiltersDataSource(
+	input.Filters = newStorageVirtualMachineFilterList(
 		d.Get("filter").(*schema.Set),
 	)
 

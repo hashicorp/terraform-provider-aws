@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -629,5 +630,5 @@ func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids
 		AssociationIds: aws.StringSlice(ids),
 	}
 
-	return findDataRepositoryAssociations(ctx, conn, input)
+	return findDataRepositoryAssociations(ctx, conn, input, tfslices.PredicateTrue[*fsx.DataRepositoryAssociation]())
 }

@@ -21,7 +21,7 @@ func DataSourceONTAPStorageVirtualMachines() *schema.Resource {
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachinesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
+			"filter": storageVirtualMachineFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -37,7 +37,7 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
-	input.Filters = BuildStorageVirtualMachineFiltersDataSource(
+	input.Filters = newStorageVirtualMachineFilterList(
 		d.Get("filter").(*schema.Set),
 	)
 
