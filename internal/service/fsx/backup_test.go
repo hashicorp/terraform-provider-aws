@@ -265,25 +265,22 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupExists(ctx context.Context, resourceName string, fs *fsx.Backup) resource.TestCheckFunc {
+func testAccCheckBackupExists(ctx context.Context, n string, v *fsx.Backup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		output, err := tffsx.FindBackupByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("FSx Backup (%s) not found", rs.Primary.ID)
-		}
-
-		*fs = *output
+		*v = *output
 
 		return nil
 	}
@@ -299,6 +296,7 @@ func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tffsx.FindBackupByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -309,32 +307,13 @@ func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			return fmt.Errorf("FSx Backup %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccBackupBaseConfig() string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-}
-`)
-}
-
-func testAccBackupLustreBaseConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseLustre(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
   subnet_ids                  = [aws_subnet.test1.id]
@@ -348,8 +327,8 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, rName))
 }
 
-func testAccBackupONTAPBaseConfig(rName string, vName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseONTAP(rName string, vName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
@@ -377,8 +356,8 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, vName))
 }
 
-func testAccBackupOpenzfsBaseConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseOpenZFS(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   subnet_ids          = [aws_subnet.test1.id]
@@ -393,8 +372,8 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName))
 }
 
-func testAccBackupWindowsBaseConfig(rName string) string {
-	return acctest.ConfigCompose(testAccBackupBaseConfig(), fmt.Sprintf(`
+func testAccBackupConfig_baseWindows(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
   name     = "corp.notexample.com"
@@ -423,7 +402,7 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 
 func testAccBackupConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupLustreBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseLustre(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -435,7 +414,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_ontapBasic(rName string, vName string) string {
-	return acctest.ConfigCompose(testAccBackupONTAPBaseConfig(rName, vName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseONTAP(rName, vName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   volume_id = aws_fsx_ontap_volume.test.id
 
@@ -447,7 +426,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_openZFSBasic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupOpenzfsBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseOpenZFS(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_openzfs_file_system.test.id
 
@@ -459,7 +438,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_windowsBasic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupWindowsBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseWindows(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_windows_file_system.test.id
 
@@ -471,7 +450,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_tags1(rName string, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccBackupLustreBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseLustre(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 
@@ -483,7 +462,7 @@ resource "aws_fsx_backup" "test" {
 }
 
 func testAccBackupConfig_tags2(rName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccBackupLustreBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBackupConfig_baseLustre(rName), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
 

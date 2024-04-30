@@ -12,22 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusBackup(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindBackupByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Lifecycle), nil
-	}
-}
-
 func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findFileCacheByID(ctx, conn, id)

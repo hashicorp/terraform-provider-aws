@@ -14,45 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	backupAvailableTimeout = 10 * time.Minute
-	backupDeletedTimeout   = 10 * time.Minute
-)
-
-func waitBackupAvailable(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.BackupLifecycleCreating, fsx.BackupLifecyclePending, fsx.BackupLifecycleTransferring},
-		Target:  []string{fsx.BackupLifecycleAvailable},
-		Refresh: statusBackup(ctx, conn, id),
-		Timeout: backupAvailableTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.Backup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitBackupDeleted(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{fsx.FileSystemLifecycleDeleting},
-		Target:  []string{},
-		Refresh: statusBackup(ctx, conn, id),
-		Timeout: backupDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*fsx.Backup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitFileCacheCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleCreating},

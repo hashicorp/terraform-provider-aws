@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBackupByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
-	input := &fsx.DescribeBackupsInput{
-		BackupIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := conn.DescribeBackupsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.Backups) == 0 || output.Backups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Backups[0], nil
-}
-
 func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileCache, error) {
 	input := &fsx.DescribeFileCachesInput{
 		FileCacheIds: []*string{aws.String(id)},

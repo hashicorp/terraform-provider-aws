@@ -94,7 +94,7 @@ func sweepBackups(region string) error {
 		}
 
 		for _, fs := range page.Backups {
-			r := ResourceBackup()
+			r := resourceBackup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.BackupId))
 
