@@ -47,7 +47,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the same attributes as mentioned in arguments above:
+This resource exports no additional attributes.
 
 ## Import
 

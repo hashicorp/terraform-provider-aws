@@ -167,7 +167,6 @@ func (r *keyAliasResource) Update(ctx context.Context, request resource.UpdateRe
 			response.Diagnostics.AddError(fmt.Sprintf("reading PaymentCryptography key Alias (%s)", new.ID.String()), err.Error())
 			return
 		}
-
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
