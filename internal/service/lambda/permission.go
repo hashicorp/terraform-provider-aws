@@ -295,9 +295,8 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 
 	var qualifier string
 	if fnParts := strings.Split(functionName, ":"); len(fnParts) == 2 {
-		functionName = fnParts[0]
 		qualifier = fnParts[1]
-		input.Qualifier = &qualifier
+		input.Qualifier = aws.String(qualifier)
 	}
 
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
