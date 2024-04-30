@@ -108,6 +108,7 @@ func resourceEBSSnapshotLockCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Creating EBS snapshot lock: %s", err)
 	}
 
+	d.SetId(d.Get("snapshot_id").(string))
 	d.Set("lock_created_on", resp.LockCreatedOn)
 	d.Set("cool_off_period_expires_on", resp.CoolOffPeriodExpiresOn)
 	d.Set("lock_duration_start_time", resp.LockDurationStartTime)
