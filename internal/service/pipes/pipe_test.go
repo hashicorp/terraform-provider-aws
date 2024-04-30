@@ -1949,7 +1949,7 @@ resource "aws_pipes_pipe" "test" {
   source   = aws_sqs_queue.source.arn
   target   = aws_sqs_queue.target.arn
   log_configuration {
-    level         = "INFO"
+    level = "INFO"
     cloudwatch_logs_log_destination {
       log_group_arn = aws_cloudwatch_log_group.target.arn
     }
@@ -1976,7 +1976,7 @@ resource "aws_pipes_pipe" "test" {
   source   = aws_sqs_queue.source.arn
   target   = aws_sqs_queue.target.arn
   log_configuration {
-    level         = "ERROR"
+    level = "ERROR"
     cloudwatch_logs_log_destination {
       log_group_arn = aws_cloudwatch_log_group.target.arn
     }
