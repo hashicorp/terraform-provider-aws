@@ -1942,11 +1942,10 @@ resource "aws_docdb_subnet_group" "test" {
 resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q
 
-  db_subnet_group_name            = aws_docdb_subnet_group.test.name
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  db_cluster_parameter_group_name = "default.docdb4.0"
-  skip_final_snapshot             = true
+  db_subnet_group_name = aws_docdb_subnet_group.test.name
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
 
   enabled_cloudwatch_logs_exports = [
     "audit",
