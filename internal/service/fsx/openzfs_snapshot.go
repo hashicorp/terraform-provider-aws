@@ -124,6 +124,8 @@ func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("name", snapshot.Name)
 	d.Set("volume_id", snapshot.VolumeId)
 
+	setTagsOut(ctx, snapshot.Tags)
+
 	return diags
 }
 

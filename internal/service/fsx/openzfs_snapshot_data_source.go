@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
+// @Tags
 func dataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenzfsSnapshotRead,
@@ -64,7 +65,6 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
 
@@ -109,17 +109,7 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("snapshot_id", snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 
-	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := listTags(ctx, conn, *snapshot.ResourceARN)
-
-	if tagserr != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }

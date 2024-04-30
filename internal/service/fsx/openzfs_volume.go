@@ -314,6 +314,8 @@ func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("volume_type", volume.VolumeType)
 
+	setTagsOut(ctx, volume.Tags)
+
 	return diags
 }
 
