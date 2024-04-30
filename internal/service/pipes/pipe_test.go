@@ -1902,7 +1902,9 @@ resource "aws_pipes_pipe" "test" {
   target   = aws_sqs_queue.target.arn
   log_configuration {
     level         = "INFO"
-    log_group_arn = aws_cloudwatch_log_group.target.arn
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
   }
 }
 

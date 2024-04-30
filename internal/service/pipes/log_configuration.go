@@ -48,6 +48,32 @@ func logConfigurationSchema() *schema.Schema {
 						},
 					},
 				},
+				"s3_log_destination": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bucket_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"bucket_owner": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"output_format": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.S3OutputFormat](),
+							},
+							"prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -65,17 +91,21 @@ func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.P
 	}
 
 	if v, ok := tfMap["cloudwatch_logs_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudwatchLogsLogDestination = expandCloudwatchLogsLogDestination(v[0].(map[string]interface{}))
+		apiObject.CloudwatchLogsLogDestination = expandCloudwatchLogsLogDestinationParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["firehose_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.FirehoseLogDestination = expandFirehoseLogDestination(v[0].(map[string]interface{}))
+		apiObject.FirehoseLogDestination = expandFirehoseLogDestinationParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3LogDestination = expandS3LogDestinationParameters(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandCloudwatchLogsLogDestination(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
+func expandCloudwatchLogsLogDestinationParameters(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -89,7 +119,7 @@ func expandCloudwatchLogsLogDestination(tfMap map[string]interface{}) *types.Clo
 	return apiObject
 }
 
-func expandFirehoseLogDestination(tfMap map[string]interface{}) *types.FirehoseLogDestinationParameters {
+func expandFirehoseLogDestinationParameters(tfMap map[string]interface{}) *types.FirehoseLogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -98,6 +128,32 @@ func expandFirehoseLogDestination(tfMap map[string]interface{}) *types.FirehoseL
 
 	if v, ok := tfMap["delivery_stream_arn"].(string); ok && v != "" {
 		apiObject.DeliveryStreamArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CloudwatchLogsLogDestinationParameters{}
+
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+		apiObject.BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_owner"].(string); ok && v != "" {
+		apiObject.BucketOwner = aws.String(v)
+	}
+
+	if v, ok := tfMap["output_format"].(string); ok && v != "" {
+		apiObject.OutputFormat = types.S3OutputFormat(v)
+	}
+
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
 	}
 
 	return apiObject
@@ -120,6 +176,10 @@ func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[stri
 
 	if v := apiObject.FirehoseLogDestination; v != nil {
 		tfMap["firehose_log_destination"] = []interface{}{flattenFirehoseLogDestination(v)}
+	}
+
+	if v := apiObject.S3LogDestination; v != nil {
+		tfMap["s3_log_destination"] = []interface{}{flattenS3LogDestination(v)}
 	}
 
 	return tfMap
@@ -148,6 +208,32 @@ func flattenFirehoseLogDestination(apiObject *types.FirehoseLogDestination) map[
 
 	if v := apiObject.DeliveryStreamArn; v != nil {
 		tfMap["delivery_stream_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenS3LogDestination(apiObject *types.flattenS3LogDestination) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.BucketName; v != nil {
+		tfMap["bucket_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.BucketOwner; v != nil {
+		tfMap["bucket_owner"] = aws.ToString(v)
+	}
+
+	if v := apiObject.OutputFormat; v != nil {
+		tfMap["output_format"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap["prefix"] = aws.ToString(v)
 	}
 
 	return tfMap
