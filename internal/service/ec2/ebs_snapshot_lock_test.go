@@ -60,8 +60,8 @@ resource "aws_ebs_snapshot" "test" {
 func testAccEBSSnapshotLockConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotLockBaseConfig(rName), `
 resource "aws_ebs_snapshot_lock" "test" {
-	  snapshot_id = aws_ebs_snapshot.test.id
-	  lock_mode   = "governance"
+  snapshot_id = aws_ebs_snapshot.test.id
+  lock_mode   = "governance"
 }
 `)
 }
