@@ -1245,6 +1245,10 @@ func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*
 		)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return output.(*T), err
 }
 
