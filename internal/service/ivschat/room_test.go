@@ -34,7 +34,7 @@ func TestAccIVSChatRoom_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,7 +148,7 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,7 +191,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,7 +251,7 @@ func TestAccIVSChatRoom_update_remove_messageReviewHandler_uri(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheckRoom(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoomDestroy(ctx),
 		Steps: []resource.TestStep{

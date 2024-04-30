@@ -18,18 +18,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
+var (
+	_ xattr.TypeWithValidate   = (*regexpType)(nil)
+	_ basetypes.StringTypable  = (*regexpType)(nil)
+	_ basetypes.StringValuable = (*Regexp)(nil)
+)
+
 type regexpType struct {
 	basetypes.StringType
 }
 
 var (
 	RegexpType = regexpType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*regexpType)(nil)
-	_ basetypes.StringTypable  = (*regexpType)(nil)
-	_ basetypes.StringValuable = (*Regexp)(nil)
 )
 
 func (t regexpType) Equal(o attr.Type) bool {
@@ -61,7 +61,7 @@ func (t regexpType) ValueFromString(_ context.Context, in types.String) (basetyp
 		return RegexpUnknown(), diags // Must not return validation errors.
 	}
 
-	return RegexpValue(valueString), diags
+	return RegexpValueMust(valueString), diags
 }
 
 func (t regexpType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -128,7 +128,7 @@ func RegexpUnknown() Regexp {
 	return Regexp{StringValue: basetypes.NewStringUnknown()}
 }
 
-func RegexpValue(value string) Regexp {
+func RegexpValueMust(value string) Regexp {
 	return Regexp{
 		StringValue: basetypes.NewStringValue(value),
 		value:       regexache.MustCompile(value),

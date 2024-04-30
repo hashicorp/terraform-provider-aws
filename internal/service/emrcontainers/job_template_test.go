@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,7 +66,7 @@ func TestAccEMRContainersJobTemplate_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{

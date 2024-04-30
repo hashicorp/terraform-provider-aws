@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccBranch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,13 +71,13 @@ func testAccBranch_basic(t *testing.T) {
 
 func testAccBranch_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,13 +95,13 @@ func testAccBranch_disappears(t *testing.T) {
 
 func testAccBranch_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,7 +141,7 @@ func testAccBranch_tags(t *testing.T) {
 
 func testAccBranch_BasicAuthCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -149,7 +150,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,13 +190,13 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 
 func testAccBranch_EnvironmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -234,7 +235,7 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 
 func testAccBranch_OptionalArguments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	environmentName := sdkacctest.RandStringFromCharSet(9, sdkacctest.CharSetAlpha)
 	resourceName := "aws_amplify_branch.test"
@@ -243,7 +244,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -290,32 +291,22 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 	})
 }
 
-func testAccCheckBranchExists(ctx context.Context, resourceName string, v *amplify.Branch) resource.TestCheckFunc {
+func testAccCheckBranchExists(ctx context.Context, resourceName string, v *types.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Amplify Branch ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
-		appID, branchName, err := tfamplify.BranchParseResourceID(rs.Primary.ID)
+		output, err := tfamplify.FindBranchByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["branch_name"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
-
-		branch, err := tfamplify.FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *branch
+		*v = *output
 
 		return nil
 	}
@@ -323,20 +314,14 @@ func testAccCheckBranchExists(ctx context.Context, resourceName string, v *ampli
 
 func testAccCheckBranchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_branch" {
 				continue
 			}
 
-			appID, branchName, err := tfamplify.BranchParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfamplify.FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
+			_, err := tfamplify.FindBranchByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["branch_name"])
 
 			if tfresource.NotFound(err) {
 				continue

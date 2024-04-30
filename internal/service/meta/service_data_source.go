@@ -19,7 +19,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceService{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -126,7 +125,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.ReverseDNSPrefix.IsNull() {
-		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
+		dnsParts := strings.Split(d.Meta().DNSSuffix(ctx), ".")
 		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
 	}
 

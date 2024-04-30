@@ -166,6 +166,10 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -363,9 +367,15 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstanceWithContext(ctx, &neptune.DeleteDBInstanceInput{
+	input := neptune.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
-	})
+	}
+
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	}
+
+	_, err := conn.DeleteDBInstanceWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 		return diags

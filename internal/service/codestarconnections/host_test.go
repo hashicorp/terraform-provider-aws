@@ -32,7 +32,7 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostDestroy(ctx),
 		Steps: []resource.TestStep{

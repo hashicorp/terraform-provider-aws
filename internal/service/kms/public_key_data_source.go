@@ -5,7 +5,6 @@ package kms
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/pem"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKDataSource("aws_kms_public_key")
@@ -90,7 +90,7 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("arn", output.KeyId)
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
 	d.Set("key_usage", output.KeyUsage)
-	d.Set("public_key", base64.StdEncoding.EncodeToString(output.PublicKey))
+	d.Set("public_key", itypes.Base64Encode(output.PublicKey))
 	d.Set("public_key_pem", string(pem.EncodeToMemory(&pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: output.PublicKey,

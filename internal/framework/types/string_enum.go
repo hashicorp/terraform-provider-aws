@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -18,6 +19,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+)
+
+type dummyValueser string
+
+func (dummyValueser) Values() []dummyValueser {
+	return nil
+}
+
+var (
+	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
 )
 
 type customStringTypeWithValidator struct {
@@ -68,20 +82,8 @@ type stringEnumType[T enum.Valueser[T]] struct {
 }
 
 func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
-	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: enum.FrameworkValidate[T]()}}
+	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: stringvalidator.OneOf(tfslices.AppendUnique(enum.Values[T](), "")...)}}
 }
-
-type dummyValueser string
-
-func (dummyValueser) Values() []dummyValueser {
-	return nil
-}
-
-var (
-	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
-	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
-	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
-)
 
 func (t stringEnumType[T]) Equal(o attr.Type) bool {
 	other, ok := o.(stringEnumType[T])
@@ -95,6 +97,7 @@ func (t stringEnumType[T]) Equal(o attr.Type) bool {
 
 func (stringEnumType[T]) String() string {
 	var zero T
+	// The format of this returned value is used inside AutoFlEx.
 	return fmt.Sprintf("StringEnumType[%T]", zero)
 }
 
@@ -177,6 +180,7 @@ func (v StringEnum[T]) ValueEnum() T {
 
 // StringEnumValue is useful if you have a zero value StringEnum but need a
 // way to get a non-zero value such as when flattening.
+// It's called via reflection inside AutoFlEx.
 func (v StringEnum[T]) StringEnumValue(value string) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(value)}
 }

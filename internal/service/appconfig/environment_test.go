@@ -9,15 +9,17 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppConfigEnvironment_basic(t *testing.T) {
@@ -28,7 +30,7 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +63,7 @@ func TestAccAppConfigEnvironment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +87,7 @@ func TestAccAppConfigEnvironment_updateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +121,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,7 +168,7 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -224,7 +226,7 @@ func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -267,7 +269,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -312,7 +314,7 @@ func TestAccAppConfigEnvironment_tagsWithNullValue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -342,7 +344,7 @@ func TestAccAppConfigEnvironment_frameworkMigration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
 		CheckDestroy: testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -373,7 +375,7 @@ func TestAccAppConfigEnvironment_frameworkMigration_monitors(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
 		CheckDestroy: testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -399,7 +401,7 @@ func TestAccAppConfigEnvironment_frameworkMigration_monitors(t *testing.T) {
 
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appconfig_environment" {
@@ -414,9 +416,9 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				EnvironmentId: aws.String(envID),
 			}
 
-			output, err := conn.GetEnvironmentWithContext(ctx, input)
+			output, err := conn.GetEnvironment(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -447,14 +449,14 @@ func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) res
 		appID := rs.Primary.Attributes["application_id"]
 		envID := rs.Primary.Attributes["environment_id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		input := &appconfig.GetEnvironmentInput{
 			ApplicationId: aws.String(appID),
 			EnvironmentId: aws.String(envID),
 		}
 
-		output, err := conn.GetEnvironmentWithContext(ctx, input)
+		output, err := conn.GetEnvironment(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)

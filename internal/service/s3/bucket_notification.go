@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_s3_bucket_notification")
-func ResourceBucketNotification() *schema.Resource {
+// @SDKResource("aws_s3_bucket_notification", name="Bucket Notification")
+func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
@@ -141,6 +141,9 @@ func ResourceBucketNotification() *schema.Resource {
 }
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		filterRulesSliceStartLen = 2
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	bucket := d.Get("bucket").(string)

@@ -304,6 +304,7 @@ func sweepClusterInstances(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("apply_immediately", true)
+			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

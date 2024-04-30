@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesisvideo "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisvideo"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKinesisVideoStream_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisVideoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisVideoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisVideoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -164,7 +165,7 @@ func TestAccKinesisVideoStream_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kinesisvideo.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisvideo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisVideoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{

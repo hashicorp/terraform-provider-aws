@@ -25,8 +25,23 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "AWS Log Source",
 		},
 		{
+			Factory: newCustomLogSourceResource,
+			Name:    "Custom Log Source",
+		},
+		{
 			Factory: newDataLakeResource,
 			Name:    "Data Lake",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newSubscriberNotificationResource,
+			Name:    "Subscriber Notification",
+		},
+		{
+			Factory: newSubscriberResource,
+			Name:    "Subscriber",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},

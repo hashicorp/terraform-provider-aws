@@ -96,6 +96,11 @@ const (
 	CustomerGatewayStatePending   = "pending"
 )
 
+// See https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-address-attribute.html#examples.
+const (
+	PTRUpdateStatusPending = "PENDING"
+)
+
 const (
 	managedPrefixListAddressFamilyIPv4 = "IPv4"
 	managedPrefixListAddressFamilyIPv6 = "IPv6"
@@ -276,13 +281,15 @@ func outsideIPAddressType_Values() []string {
 	}
 }
 
+type securityGroupRuleType string
+
 const (
-	securityGroupRuleTypeEgress  = "egress"
-	securityGroupRuleTypeIngress = "ingress"
+	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
+	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
 )
 
-func securityGroupRuleType_Values() []string {
-	return []string{
+func (securityGroupRuleType) Values() []securityGroupRuleType {
+	return []securityGroupRuleType{
 		securityGroupRuleTypeEgress,
 		securityGroupRuleTypeIngress,
 	}

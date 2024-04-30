@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_resource_server")
-func ResourceResourceServer() *schema.Resource {
+// @SDKResource("aws_cognito_resource_server", name="Resource Server")
+func resourceResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceServerCreate,
 		ReadWithoutTimeout:   resourceResourceServerRead,
@@ -205,17 +205,16 @@ func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 
-	params := &cognitoidentityprovider.DeleteResourceServerInput{
+	_, err = conn.DeleteResourceServerWithContext(ctx, &cognitoidentityprovider.DeleteResourceServerInput{
 		Identifier: aws.String(identifier),
 		UserPoolId: aws.String(userPoolID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
-	_, err = conn.DeleteResourceServerWithContext(ctx, params)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 

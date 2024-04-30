@@ -33,7 +33,7 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccSSOAdminApplicationAccessScope_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAccessScopeDestroy(ctx),
 		Steps: []resource.TestStep{

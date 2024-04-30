@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -94,6 +95,11 @@ func DataSourceTargetGroup() *schema.Resource {
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"load_balancing_algorithm_type": {
 				Type:     schema.TypeString,
@@ -227,6 +233,10 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
+	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
+	d.Set("name", targetGroup.TargetGroupName)
+	d.Set("target_type", targetGroup.TargetType)
+
 	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}

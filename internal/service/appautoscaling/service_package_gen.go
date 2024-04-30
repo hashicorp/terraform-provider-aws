@@ -30,15 +30,16 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_appautoscaling_policy",
+			Name:     "Scaling Policy",
 		},
 		{
-			Factory:  ResourceScheduledAction,
+			Factory:  resourceScheduledAction,
 			TypeName: "aws_appautoscaling_scheduled_action",
 		},
 		{
-			Factory:  ResourceTarget,
+			Factory:  resourceTarget,
 			TypeName: "aws_appautoscaling_target",
 			Name:     "Target",
 			Tags: &types.ServicePackageResourceTags{

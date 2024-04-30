@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_securityhub_action_target")
-func ResourceActionTarget() *schema.Resource {
+// @SDKResource("aws_securityhub_action_target", name="Action Target")
+func resourceActionTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActionTargetCreate,
 		ReadWithoutTimeout:   resourceActionTargetRead,
@@ -94,7 +94,7 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindActionTargetByARN(ctx, conn, d.Id())
+	output, err := findActionTargetByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Action Target %s not found, removing from state", d.Id())
@@ -161,27 +161,44 @@ func actionTargetParseID(arn string) (string, error) {
 	return parts[2], nil
 }
 
-func FindActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
+func findActionTargetByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.ActionTarget, error) {
 	input := &securityhub.DescribeActionTargetsInput{
 		ActionTargetArns: []string{arn},
 	}
 
-	output, err := conn.DescribeActionTargets(ctx, input)
+	return findActionTarget(ctx, conn, input)
+}
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findActionTarget(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) (*types.ActionTarget, error) {
+	output, err := findActionTargets(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findActionTargets(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeActionTargetsInput) ([]types.ActionTarget, error) {
+	var output []types.ActionTarget
+
+	pages := securityhub.NewDescribeActionTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ActionTargets...)
 	}
 
-	return tfresource.AssertSingleValueResult(output.ActionTargets)
+	return output, nil
 }

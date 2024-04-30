@@ -23,7 +23,7 @@ func TestAccEMRSupportedInstanceTypesDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMREndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

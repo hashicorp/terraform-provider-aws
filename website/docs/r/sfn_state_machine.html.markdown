@@ -154,6 +154,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ARN of the state machine.
 * `arn` - The ARN of the state machine.
 * `creation_date` - The date the state machine was created.
+* `state_machine_version_arn` - The ARN of the state machine version.
 * `status` - The current status of the state machine. Either `ACTIVE` or `DELETING`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
