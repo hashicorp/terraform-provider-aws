@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fixed an issue where max_group_prepared_capacity could not be set to 0
+```
