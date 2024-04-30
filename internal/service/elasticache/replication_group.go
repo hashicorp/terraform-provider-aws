@@ -747,9 +747,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				if err := increaseReplicationGroupReplicaCount(ctx, conn, d.Id(), newCacheClusterCount, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
-			} else if newCacheClusterCount < oldCacheClusterCount {
-				// Defer until after all other modifications are made.
-			}
+			} // Else defer until after all other modifications are made.
 		}
 
 		requestUpdate := false
@@ -1346,7 +1344,7 @@ func statusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache
 	}
 }
 
-func waitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) ([]*elasticache.CacheCluster, error) {
+func waitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) ([]*elasticache.CacheCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			cacheClusterStatusCreating,
