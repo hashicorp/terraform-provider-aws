@@ -45,6 +45,12 @@ var x identifier
 -aws.StringValueMap(x)
 +x
 
+# Replace endpoint constants which are not included in the V2 SDK
+@@
+@@
+-acctest.PreCheckPartitionHasService(t, {{ .GoV1Package }}.EndpointsID)
++acctest.PreCheckPartitionHasService(t, names.{{ .GoV1ClientTypeName }}EndpointID)
+
 # Step 2: Convert AWS SDK v1 (service) to v2
 @@
 var x identifier
