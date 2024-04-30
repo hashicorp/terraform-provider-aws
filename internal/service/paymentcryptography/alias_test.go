@@ -32,12 +32,12 @@ func TestAccPaymentCryptographyKeyAlias_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -64,12 +64,12 @@ func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkeyalias.ResourceKeyAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -91,12 +91,12 @@ func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -109,7 +109,7 @@ func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 			{
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -132,12 +132,12 @@ func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_updateName(rOldName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rOldName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -150,7 +150,7 @@ func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 			{
 				Config: testAccKeyAliasConfig_updateName(rNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rNewName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -159,7 +159,7 @@ func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 	})
 }
 
-func testAccCheckPaymentCryptographyKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
 
@@ -185,7 +185,7 @@ func testAccCheckPaymentCryptographyKeyAliasDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckPaymentCryptographyKeyAliasExists(ctx context.Context, n string, v *awstypes.Alias) resource.TestCheckFunc {
+func testAccCheckKeyAliasExists(ctx context.Context, n string, v *awstypes.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
