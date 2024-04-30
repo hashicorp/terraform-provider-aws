@@ -6,6 +6,7 @@ package securitylake
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -188,7 +189,9 @@ func (r *customLogSourceResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	output, err := conn.CreateCustomLogSource(ctx, input)
+	output, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.CreateCustomLogSourceOutput, error) {
+		return conn.CreateCustomLogSource(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Custom Log Source", err.Error())
@@ -270,7 +273,9 @@ func (r *customLogSourceResource) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	_, err := conn.DeleteCustomLogSource(ctx, input)
+	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.DeleteCustomLogSourceOutput, error) {
+		return conn.DeleteCustomLogSource(ctx, input)
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

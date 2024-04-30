@@ -115,6 +115,45 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 	})
 }
 
+func testAccCustomLogSource_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_custom_log_source.test"
+	resourceName2 := "aws_securitylake_custom_log_source.test2"
+	rName := randomCustomLogSourceName()
+	rName2 := randomCustomLogSourceName()
+	var customLogSource, customLogSource2 types.CustomLogSourceResource
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomLogSourceConfig_multiple(rName, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					testAccCheckCustomLogSourceExists(ctx, resourceName2, &customLogSource2),
+
+					resource.TestCheckResourceAttr(resourceName, "source_name", rName),
+
+					resource.TestCheckResourceAttr(resourceName2, "source_name", rName2),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
+			},
+		},
+	})
+}
+
 func testAccCustomLogSource_eventClasses(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
@@ -458,4 +497,87 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
 }
 `, rName, strings.Join(eventClasses, ", ")))
+}
+
+func testAccCustomLogSourceConfig_multiple(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+resource "aws_securitylake_custom_log_source" "test" {
+  source_name   = %[1]q
+
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.test.arn
+    }
+
+    provider_identity {
+      external_id = "%[1]s-test"
+      principal   = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
+}
+
+resource "aws_securitylake_custom_log_source" "test2" {
+  source_name   = %[2]q
+
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.test.arn
+    }
+
+    provider_identity {
+      external_id = "%[2]s-test"
+      principal   = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
+}
+
+resource "aws_iam_role" "test" {
+  name =  %[1]q
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "glue.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name =  %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:PutObject"
+    ],
+    "Resource": "*"
+  }]
+}
+POLICY
+
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
+  role       = aws_iam_role.test.name
+}
+`, rName, rName2))
 }

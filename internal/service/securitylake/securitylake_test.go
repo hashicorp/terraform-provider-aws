@@ -37,8 +37,9 @@ func TestAccSecurityLake_serial(t *testing.T) {
 		"CustomLogSource": {
 			"basic":         testAccCustomLogSource_basic,
 			"disappears":    testAccCustomLogSource_disappears,
-			"sourceVersion": testAccCustomLogSource_sourceVersion,
 			"eventClasses":  testAccCustomLogSource_eventClasses,
+			"multiple":      testAccCustomLogSource_multiple,
+			"sourceVersion": testAccCustomLogSource_sourceVersion,
 		},
 		"DataLake": {
 			"basic":           testAccDataLake_basic,

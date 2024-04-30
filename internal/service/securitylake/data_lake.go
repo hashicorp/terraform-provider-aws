@@ -193,10 +193,9 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
-	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
-
-	output, err := conn.CreateDataLake(ctx, input)
+	output, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.CreateDataLakeOutput, error) {
+		return conn.CreateDataLake(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Data Lake", err.Error())
@@ -300,10 +299,9 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		conns.GlobalMutexKV.Lock(dataLakeMutexKey)
-		defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
-
-		_, err := conn.UpdateDataLake(ctx, input)
+		_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.UpdateDataLakeOutput, error) {
+			return conn.UpdateDataLake(ctx, input)
+		})
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Security Lake Data Lake (%s)", new.ID.ValueString()), err.Error())
@@ -330,18 +328,13 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
-	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+	input := &securitylake.DeleteDataLakeInput{
+		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+	}
 
-	// "ConflictException: The request failed because your Security Lake configuration or resources are currently being updated. Wait a few minutes and then try again."
-	const (
-		timeout = 2 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
-		return conn.DeleteDataLake(ctx, &securitylake.DeleteDataLakeInput{
-			Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
-		})
-	}, "Wait a few minutes and then try again")
+	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.DeleteDataLakeOutput, error) {
+		return conn.DeleteDataLake(ctx, input)
+	})
 
 	// No data lake:
 	// "An error occurred (AccessDeniedException) when calling the DeleteDataLake operation: User: ... is not authorized to perform: securitylake:DeleteDataLake", or
@@ -576,4 +569,14 @@ type dataLakeLifecycleTransitionModel struct {
 type dataLakeReplicationConfigurationModel struct {
 	Regions fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
 	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
+}
+
+func retryDataLakeConflictWithMutex[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+
+	result, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (any, error) {
+		return f()
+	})
+	return result.(T), err
 }

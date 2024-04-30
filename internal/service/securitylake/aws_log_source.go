@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -119,10 +118,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
-	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
-
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, 2*time.Minute, func() (any, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
 	})
 
@@ -220,10 +216,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
-	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
-
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, 2*time.Minute, func() (any, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
 		return conn.DeleteAwsLogSource(ctx, input)
 	})
 
