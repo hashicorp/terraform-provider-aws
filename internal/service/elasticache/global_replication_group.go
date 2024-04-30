@@ -763,10 +763,6 @@ func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.E
 }
 
 const (
-	globalReplicationGroupDisassociationReadyTimeout = 45 * time.Minute
-)
-
-const (
 	globalReplicationGroupMemberStatusAssociated = "associated"
 )
 

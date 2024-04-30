@@ -5,6 +5,7 @@ package elasticache
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -280,35 +281,30 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	err := deleteParameterGroup(ctx, conn, d.Id())
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
-		return diags
+	log.Printf("[INFO] Deleting ElastiCache Parameter Group: %s", d.Id())
+	if err := deleteParameterGroup(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Parameter Group (%s): %s", d.Id(), err)
-	}
+
 	return diags
 }
 
 func deleteParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, name string) error {
-	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
-		CacheParameterGroupName: aws.String(name),
-	}
-	err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
-		_, err := conn.DeleteCacheParameterGroupWithContext(ctx, &deleteOpts)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
-				return nil
-			}
-			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
+	const (
+		timeout = 3 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteCacheParameterGroupWithContext(ctx, &elasticache.DeleteCacheParameterGroupInput{
+			CacheParameterGroupName: aws.String(name),
+		})
+	}, elasticache.ErrCodeInvalidCacheParameterGroupStateFault)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheParameterGroupWithContext(ctx, &deleteOpts)
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting ElastiCache Parameter Group (%s): %s", name, err)
 	}
 
 	return err

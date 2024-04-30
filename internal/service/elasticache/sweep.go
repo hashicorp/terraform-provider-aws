@@ -436,13 +436,9 @@ func DisassociateMembers(ctx context.Context, conn *elasticache.ElastiCache, glo
 		id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
 
 		membersGroup.Go(func() error {
-			if err := DisassociateReplicationGroup(ctx, conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
-				sweeperErr := fmt.Errorf(
-					"error disassociating ElastiCache Replication Group (%s) in %s from Global Group (%s): %w",
-					aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), id, err,
-				)
-				log.Printf("[ERROR] %s", sweeperErr)
-				return sweeperErr
+			if err := disassociateReplicationGroup(ctx, conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
+				log.Printf("[ERROR] %s", err)
+				return err
 			}
 			return nil
 		})
