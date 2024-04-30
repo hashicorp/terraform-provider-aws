@@ -42,8 +42,8 @@ func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.P
 
 	apiObject := &types.PipeLogConfigurationParameters{}
 
-	if v, ok := tfMap["level"]; ok && v != "" {
-		apiObject.Level = aws.StringValue(v)
+	if v, ok := tfMap["level"].(string); ok && v != "" {
+		apiObject.Level = types.LogLevel(v)
 	}
 
 	if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
