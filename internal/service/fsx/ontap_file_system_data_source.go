@@ -15,8 +15,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_fsx_ontap_file_system", name="Ontap File System")
-func DataSourceONTAPFileSystem() *schema.Resource {
+// @SDKDataSource("aws_fsx_ontap_file_system", name="ONTAP File System")
+// @Tags
+func dataSourceONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPFileSystemRead,
 
@@ -169,16 +170,9 @@ func DataSourceONTAPFileSystem() *schema.Resource {
 	}
 }
 
-const (
-	DSNameOntapFileSystem = "Ontap File System Data Source"
-)
-
 func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
 	filesystem, err := findONTAPFileSystemByID(ctx, conn, id)
@@ -222,12 +216,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }
