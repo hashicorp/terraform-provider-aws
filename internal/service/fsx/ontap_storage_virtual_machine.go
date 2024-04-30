@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
 // @Tags(identifierAttribute="arn")
-func ResourceONTAPStorageVirtualMachine() *schema.Resource {
+func resourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceONTAPStorageVirtualMachineCreate,
 		ReadWithoutTimeout:   resourceONTAPStorageVirtualMachineRead,
@@ -50,8 +50,8 @@ func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    ResourceONTAPStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: ResourceONTAPStorageVirtualMachineStateUpgradeV0,
+				Type:    resourceONTAPStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceONTAPStorageVirtualMachineStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -279,7 +279,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	storageVirtualMachine, err := FindStorageVirtualMachineByID(ctx, conn, d.Id())
+	storageVirtualMachine, err := findStorageVirtualMachineByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP Storage Virtual Machine (%s) not found, removing from state", d.Id())
@@ -572,7 +572,7 @@ func flattenSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
 	return []interface{}{m}
 }
 
-func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
+func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
 	input := &fsx.DescribeStorageVirtualMachinesInput{
 		StorageVirtualMachineIds: []*string{aws.String(id)},
 	}
@@ -623,7 +623,7 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.FSx, input *fsx.D
 
 func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStorageVirtualMachineByID(ctx, conn, id)
+		output, err := findStorageVirtualMachineByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

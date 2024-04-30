@@ -237,7 +237,7 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		}
 
 		for _, vm := range page.StorageVirtualMachines {
-			r := ResourceONTAPStorageVirtualMachine()
+			r := resourceONTAPStorageVirtualMachine()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vm.StorageVirtualMachineId))
 

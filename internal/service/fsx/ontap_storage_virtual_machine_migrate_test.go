@@ -1,14 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package fsx_test
+package fsx
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func testOntapStorageVirtualMachineStateDataV0() map[string]interface{} {
@@ -29,7 +28,7 @@ func TestOntapStorageVirtualMachineStateUpgradeV0(t *testing.T) {
 	t.Parallel()
 
 	expected := testOntapStorageVirtualMachineStateDataV1()
-	actual, err := tffsx.ResourceONTAPStorageVirtualMachineStateUpgradeV0(ctx, testOntapStorageVirtualMachineStateDataV0(), nil)
+	actual, err := resourceONTAPStorageVirtualMachineStateUpgradeV0(ctx, testOntapStorageVirtualMachineStateDataV0(), nil)
 
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)

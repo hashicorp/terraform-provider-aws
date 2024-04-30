@@ -45,6 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceOpenzfsSnapshot,
 			TypeName: "aws_fsx_openzfs_snapshot",
 			Name:     "OpenZFS Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceWindowsFileSystem,
@@ -96,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceONTAPStorageVirtualMachine,
+			Factory:  resourceONTAPStorageVirtualMachine,
 			TypeName: "aws_fsx_ontap_storage_virtual_machine",
 			Name:     "ONTAP Storage Virtual Machine",
 			Tags: &types.ServicePackageResourceTags{
