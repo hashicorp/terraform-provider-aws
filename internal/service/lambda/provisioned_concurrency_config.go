@@ -248,7 +248,7 @@ func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client
 	}
 }
 
-func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Client, functionName, qualifier string, timeout time.Duration) (*lambda.GetProvisionedConcurrencyConfigOutput, error) {
+func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Client, functionName, qualifier string, timeout time.Duration) (*lambda.GetProvisionedConcurrencyConfigOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumInProgress),
 		Target:  enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumReady),
