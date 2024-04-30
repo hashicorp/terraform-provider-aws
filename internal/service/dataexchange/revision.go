@@ -9,13 +9,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dataexchange"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,7 +64,7 @@ func ResourceRevision() *schema.Resource {
 
 func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
@@ -71,19 +72,19 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:      getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateRevisionWithContext(ctx, input)
+	out, err := conn.CreateRevision(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataExchange Revision: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(out.DataSetId), aws.StringValue(out.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(out.DataSetId), aws.ToString(out.Id)))
 
 	return append(diags, resourceRevisionRead(ctx, d, meta)...)
 }
 
 func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
@@ -114,7 +115,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateRevisionInput{
@@ -127,7 +128,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Updating DataExchange Revision: %s", d.Id())
-		_, err := conn.UpdateRevisionWithContext(ctx, input)
+		_, err := conn.UpdateRevision(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataExchange Revision (%s): %s", d.Id(), err)
 		}
@@ -138,7 +139,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	input := &dataexchange.DeleteRevisionInput{
 		RevisionId: aws.String(d.Get("revision_id").(string)),
@@ -146,9 +147,9 @@ func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Deleting DataExchange Revision: %s", d.Id())
-	_, err := conn.DeleteRevisionWithContext(ctx, input)
+	_, err := conn.DeleteRevision(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting DataExchange Revision: %s", err)
