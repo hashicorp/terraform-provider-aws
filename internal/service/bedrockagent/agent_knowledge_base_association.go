@@ -6,8 +6,6 @@ package bedrockagent
 import (
 	"context"
 	"errors"
-	"time"
-
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -37,10 +35,6 @@ import (
 func newAgentKnowledgeBaseAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAgentKnowledgeBaseAssociation{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -54,7 +48,6 @@ const (
 
 type resourceAgentKnowledgeBaseAssociation struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceAgentKnowledgeBaseAssociation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
