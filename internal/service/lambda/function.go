@@ -1198,7 +1198,7 @@ type functionCU interface {
 	lambda.CreateFunctionOutput | lambda.UpdateFunctionConfigurationOutput
 }
 
-func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) { //nolint:unparam
+func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
 		func() (interface{}, error) {
 			return f()
