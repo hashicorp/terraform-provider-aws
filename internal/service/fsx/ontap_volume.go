@@ -328,7 +328,6 @@ func ResourceONTAPVolume() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				Default:      fsx.VolumeStyleFlexvol,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
 			},
 			"volume_type": {
