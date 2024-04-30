@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCheckPaymentCryptographyKeyAlias_basic(t *testing.T) {
+func TestAccPaymentCryptographyKeyAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
@@ -35,7 +35,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPaymentCryptographyKeyAliasConfig_basic(rName),
+				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
@@ -51,7 +51,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccCheckPaymentCryptographyKeyAlias_disappears(t *testing.T) {
+func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
@@ -67,7 +67,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPaymentCryptographyKeyAliasConfig_basic(rName),
+				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkeyalias.ResourceKeyAlias, resourceName),
@@ -78,7 +78,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCheckPaymentCryptographyKeyAlias_update(t *testing.T) {
+func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
@@ -94,7 +94,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_update(t *testing.T) {
 		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPaymentCryptographyKeyAliasConfig_update(rName),
+				Config: testAccKeyAliasConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
@@ -107,7 +107,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckPaymentCryptographyKeyAliasConfig_basic(rName),
+				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
@@ -118,7 +118,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_update(t *testing.T) {
 	})
 }
 
-func TestAccCheckPaymentCryptographyKeyAlias_updateName(t *testing.T) {
+func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	rOldName := sdkacctest.RandomWithPrefix("alias/")
 	rNewName := sdkacctest.RandomWithPrefix("alias/")
@@ -135,7 +135,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 		CheckDestroy:             testAccCheckPaymentCryptographyKeyAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckPaymentCryptographyKeyAliasConfig_updateName(rOldName),
+				Config: testAccKeyAliasConfig_updateName(rOldName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rOldName),
@@ -148,7 +148,7 @@ func TestAccCheckPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckPaymentCryptographyKeyAliasConfig_updateName(rNewName),
+				Config: testAccKeyAliasConfig_updateName(rNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPaymentCryptographyKeyAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rNewName),
@@ -206,7 +206,7 @@ func testAccCheckPaymentCryptographyKeyAliasExists(ctx context.Context, n string
 	}
 }
 
-func testAccCheckPaymentCryptographyKeyAliasConfig_basic(name string) string {
+func testAccKeyAliasConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key" "test" {
   exportable = true
@@ -229,7 +229,7 @@ resource "aws_paymentcryptography_key_alias" "test" {
 `, name)
 }
 
-func testAccCheckPaymentCryptographyKeyAliasConfig_update(name string) string {
+func testAccKeyAliasConfig_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key_alias" "test" {
   alias_name = %[1]q
@@ -253,7 +253,7 @@ resource "aws_paymentcryptography_key" "test" {
 `, name)
 }
 
-func testAccCheckPaymentCryptographyKeyAliasConfig_updateName(name string) string {
+func testAccKeyAliasConfig_updateName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key_alias" "test" {
   alias_name = %[1]q
