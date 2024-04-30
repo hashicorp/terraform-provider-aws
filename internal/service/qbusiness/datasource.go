@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness/document"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,11 +26,55 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// @FrameworkResource("aws_qbusiness_datasource", name="Datasource")
+// @Tags(identifierAttribute="arn")
+func newResourceDatasource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceDatasource{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameDatasource = "Datasource"
+)
+
+type resourceDatasource struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+	framework.WithTimeouts
+}
+
+func (r *resourceDatasource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_qbusiness_datasource"
+}
+
+func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+}
+
+func (r *resourceDatasource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+}
+
+func (r *resourceDatasource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+}
+
+func (r *resourceDatasource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+}
+
+func (r *resourceDatasource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+}
+
+func (r *resourceDatasource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
 
 func keySchema() *schema.Schema {
 	return &schema.Schema{
@@ -124,108 +169,111 @@ func hookConfigurationSchema() *schema.Schema {
 	}
 }
 
+/*
 // @SDKResource("aws_qbusiness_datasource", name="Datasource")
 // @Tags(identifierAttribute="arn")
-func ResourceDatasource() *schema.Resource {
-	return &schema.Resource{
 
-		CreateWithoutTimeout: resourceDatasourceCreate,
-		ReadWithoutTimeout:   resourceDatasourceRead,
-		UpdateWithoutTimeout: resourceDatasourceUpdate,
-		DeleteWithoutTimeout: resourceDatasourceDelete,
+	func ResourceDatasource() *schema.Resource {
+		return &schema.Resource{
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+			CreateWithoutTimeout: resourceDatasourceCreate,
+			ReadWithoutTimeout:   resourceDatasourceRead,
+			UpdateWithoutTimeout: resourceDatasourceUpdate,
+			DeleteWithoutTimeout: resourceDatasourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Delete:  schema.DefaultTimeout(40 * time.Minute),
-			Default: schema.DefaultTimeout(10 * time.Minute),
-		},
+			Importer: &schema.ResourceImporter{
+				StateContext: schema.ImportStatePassthroughContext,
+			},
 
-		Schema: map[string]*schema.Schema{
-			"application_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Identifier of the Amazon Q application the data source will be attached to.",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
-				),
+			Timeouts: &schema.ResourceTimeout{
+				Delete:  schema.DefaultTimeout(40 * time.Minute),
+				Default: schema.DefaultTimeout(10 * time.Minute),
 			},
-			"arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ARN of the Amazon Q datasource.",
-			},
-			"configuration": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Configuration information (JSON) to connect to your data source repository.",
-				ValidateFunc: validation.StringIsJSON,
-			},
-			"datasource_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Datasource identifier",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Description for the data source connector.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1000),
-					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-				),
-			},
-			"display_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name for the data source connector.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
-				),
-			},
-			"document_enrichment_configuration": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				MaxItems:    1,
-				Description: "Configuration information for altering document metadata and content during the document ingestion process.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"inline_configurations": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							MaxItems:    1,
-							Description: "Information to alter document attributes or metadata fields and content when ingesting documents into Amazon Q",
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"configuration": {
-										Type:     schema.TypeList,
-										MinItems: 1,
-										MaxItems: 100,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"condition": documentAttributeConditionSchema(),
-												"document_content_operator": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.DocumentContentOperator](),
-												},
-												"target": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"key": keySchema(),
-															"attribute_value_operator": {
-																Type:             schema.TypeString,
-																Required:         true,
-																ValidateDiagFunc: enum.Validate[types.AttributeValueOperator](),
+
+			Schema: map[string]*schema.Schema{
+				"application_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Identifier of the Amazon Q application the data source will be attached to.",
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
+					),
+				},
+				"arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "ARN of the Amazon Q datasource.",
+				},
+				"configuration": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "Configuration information (JSON) to connect to your data source repository.",
+					ValidateFunc: validation.StringIsJSON,
+				},
+				"datasource_id": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Datasource identifier",
+				},
+				"description": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Description for the data source connector.",
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 1000),
+						validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+					),
+				},
+				"display_name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Name for the data source connector.",
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 100),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
+					),
+				},
+				"document_enrichment_configuration": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					MaxItems:    1,
+					Description: "Configuration information for altering document metadata and content during the document ingestion process.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inline_configurations": {
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
+								Description: "Information to alter document attributes or metadata fields and content when ingesting documents into Amazon Q",
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"configuration": {
+											Type:     schema.TypeList,
+											MinItems: 1,
+											MaxItems: 100,
+											Required: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"condition": documentAttributeConditionSchema(),
+													"document_content_operator": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.DocumentContentOperator](),
+													},
+													"target": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"key": keySchema(),
+																"attribute_value_operator": {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.AttributeValueOperator](),
+																},
+																"value": valueSchema(),
 															},
-															"value": valueSchema(),
 														},
 													},
 												},
@@ -234,65 +282,64 @@ func ResourceDatasource() *schema.Resource {
 									},
 								},
 							},
-						},
-						"post_extraction_hook_configuration": hookConfigurationSchema(),
-						"pre_extraction_hook_configuration":  hookConfigurationSchema(),
-					},
-				},
-			},
-			"iam_service_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "ARN of an IAM role with permission to access the data source and required resources.",
-				ValidateFunc: verify.ValidARN,
-			},
-			"index_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Identifier of the index that you want to use with the data source connector.",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
-				),
-			},
-			"sync_schedule": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Frequency for Amazon Q to check the documents in your data source repository and update your index.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 998),
-					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-				),
-			},
-			"vpc_configuration": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Optional:    true,
-				Description: "Information for an VPC to connect to your data source.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MaxItems: 200,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 200,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							"post_extraction_hook_configuration": hookConfigurationSchema(),
+							"pre_extraction_hook_configuration":  hookConfigurationSchema(),
 						},
 					},
 				},
+				"iam_service_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "ARN of an IAM role with permission to access the data source and required resources.",
+					ValidateFunc: verify.ValidARN,
+				},
+				"index_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Identifier of the index that you want to use with the data source connector.",
+					ValidateFunc: validation.All(
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
+					),
+				},
+				"sync_schedule": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Frequency for Amazon Q to check the documents in your data source repository and update your index.",
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 998),
+						validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+					),
+				},
+				"vpc_configuration": {
+					Type:        schema.TypeList,
+					MaxItems:    1,
+					Optional:    true,
+					Description: "Information for an VPC to connect to your data source.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"security_group_ids": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MaxItems: 200,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"subnet_ids": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 200,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		},
-		CustomizeDiff: verify.SetTagsDiff,
+			CustomizeDiff: verify.SetTagsDiff,
+		}
 	}
-}
-
+*/
 func resourceDatasourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 

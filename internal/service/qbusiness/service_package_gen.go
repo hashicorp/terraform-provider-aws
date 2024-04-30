@@ -28,6 +28,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourceDatasource,
+			Name:    "Datasource",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory: newResourceIndex,
 			Name:    "Index",
 			Tags: &types.ServicePackageResourceTags{
