@@ -204,7 +204,6 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("enrichment_parameters", nil)
 	}
-	d.Set("log_configuration", output.LogConfiguration)
 	if v := output.LogConfiguration; !types.IsZero(v) {
 		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
 			return diag.Errorf("setting log_configuration: %s", err)
