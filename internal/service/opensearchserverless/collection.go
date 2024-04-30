@@ -5,7 +5,6 @@ package opensearchserverless
 
 import (
 	"context"
-	// "errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
