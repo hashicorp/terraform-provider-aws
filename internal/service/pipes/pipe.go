@@ -260,6 +260,12 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		}
 
+		if d.HasChange("log_configuration") {
+			if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
 		if d.HasChange("source_parameters") {
 			if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.SourceParameters = expandUpdatePipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
