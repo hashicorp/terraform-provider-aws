@@ -335,7 +335,8 @@ func TestAccPipesPipe_logConfiguration_cloudwatchLogsLogDestination(t *testing.T
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "INFO"),
-					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.log_group_arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.0.log_group_arn"),
 				),
 			},
 			{

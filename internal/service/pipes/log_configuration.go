@@ -228,8 +228,8 @@ func flattenS3LogDestination(apiObject *types.S3LogDestination) map[string]inter
 		tfMap["bucket_owner"] = aws.ToString(v)
 	}
 
-	if v := apiObject.OutputFormat; v != nil {
-		tfMap["output_format"] = aws.ToString(v)
+	if v := apiObject.OutputFormat; v != "" {
+		tfMap["output_format"] = v
 	}
 
 	if v := apiObject.Prefix; v != nil {
