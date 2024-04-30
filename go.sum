@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.51.30 h1:RVFkjn9P0JMwnuZCVH0TlV5k9zepHzlbc4943eZMhGw=
-github.com/aws/aws-sdk-go v1.51.30/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.51.31 h1:4TM+sNc+Dzs7wY1sJ0+J8i60c6rkgnKP1pvPx8ghsSY=
+github.com/aws/aws-sdk-go v1.51.31/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=
 github.com/aws/aws-sdk-go-v2 v1.26.1/go.mod h1:ffIFB97e2yNsv4aTSGkqtHnppsIJzw7G7BReUZ3jCXM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevwDA+vi/wqhp1ct18mVXYN08/93to=
@@ -142,8 +142,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1 h1:ATZ7YBox19+i6YQ
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1/go.mod h1:E9TepV9ij+pOT91235hO6BQze3P5A9/etFlKuFNIGew=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5 h1:MG+levH375vyccYzaEvm7stYH2tWR8X0Y1VYIYSZpWE=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5/go.mod h1:WCD4Psga99kZmdqPGJ88SURa6UMa4WgqpqzY5vP2ZS0=
-github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4 h1:lS/bvU9KJ7tjqjudKA0QwA445FGlz7EXC7neJiePWHk=
-github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4/go.mod h1:xEF/pyPCkEe66/oqBKrGwszTgRiuvS0glA1lGlwklvE=
+github.com/aws/aws-sdk-go-v2/service/connectcases v1.16.0 h1:m4RIHP4urPWZmLFPe3P/D5Olwq3gBd+M15enIY5hv/0=
+github.com/aws/aws-sdk-go-v2/service/connectcases v1.16.0/go.mod h1:xEF/pyPCkEe66/oqBKrGwszTgRiuvS0glA1lGlwklvE=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5 h1:paF2yipmLzmX9ugZqKNFEFN/MqagpcN0nDHbxAJ9hx0=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5/go.mod h1:qwJIgEG0ASp7utTqwiagEW0LOE6AFsNzQL1oOWRsydU=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4 h1:MDEvMVWZZetTacemmH+Z7ScvQkOKxqkEQfFROo//G18=
@@ -212,8 +212,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.32.0 h1:ZNlfPdw849gBo/lvLFbEEvpTJMij
 github.com/aws/aws-sdk-go-v2/service/iam v1.32.0/go.mod h1:aXWImQV0uTW35LM0A/T4wEg6R1/ReXUu4SM6/lUHYK0=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5 h1:c8V6kd9z0D/YpFr+HD9rrYOexzbbNetekj1pZYF01RM=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5/go.mod h1:E2IkFljjGHI/JW/+Jrav9K5hRtR4HNFHrcXTK4n0tws=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4 h1:0cHc8syoJJUzP5N2d6Hhtj3sUIBYUpFYW/p6q91ISko=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4/go.mod h1:tyMGN8hc2UtH6e6y6phOqN/O/L68Q8YYKZG2Ydsk3UI=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.25.0 h1:veyMfC8rRQKlP5yTXl7TgUPp1+ANlpVNs4S0vhMEtYY=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.25.0/go.mod h1:tyMGN8hc2UtH6e6y6phOqN/O/L68Q8YYKZG2Ydsk3UI=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 h1:Ji0DY1xUsUr3I8cHps0G+XM3WWU16lP6yG8qu1GAZAs=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2/go.mod h1:5CsjAbs3NlGQyZNFACh+zztPDI7fU6eW9QsxjfnuBKg=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.7 h1:ZMeFZ5yk+Ek+jNr1+uwCd2tG89t6oTS5yVWpa6yy2es=
@@ -252,8 +252,8 @@ github.com/aws/aws-sdk-go-v2/service/m2 v1.13.0 h1:bnZNLCRE5setkdIW+cJff2qvT27ev
 github.com/aws/aws-sdk-go-v2/service/m2 v1.13.0/go.mod h1:SXzTaRZVpbKXL2i2B/8l63+F5x5ZIzz+fkWj9dSpfPI=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4 h1:ippgTGdCIU+1i8FeH4L3BEONHvUW+Q4f1yNtLyWIN0M=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4/go.mod h1:7nunpxYfSdjrIoPJSOqIsL0XJuGGox5LLxyO6dkmNMg=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.0 h1:NsPIhGtGl4WY/FnwKrDvy3MaCMrpmqW6cgxncoIzJKM=
-github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.0/go.mod h1:MNCdDrgZiyKHuO8xVtwolUgrnaufCSZ8CHZ8EkOXfTA=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.1 h1:6CoOpqJ9u4RKHrhiKNUxGjAEPkMQQZGzo08vSOaY/Kc=
+github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.1/go.mod h1:MNCdDrgZiyKHuO8xVtwolUgrnaufCSZ8CHZ8EkOXfTA=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.51.0 h1:JsNfJmHQ23qPQLa0kg88AoqCkSRJvODvlpL7mLivtn8=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.51.0/go.mod h1:k1NeXDtkzV0gvPmjrXAMaxCTXrewybfukeBs3FAAhXY=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.5 h1:N+br/0GOpxGT5knZ/leCGKRIPyw1Q5briB+5IS1zNeQ=
@@ -360,8 +360,8 @@ github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4 h1:PtuXwk4DrRTFJqr6mb372
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4/go.mod h1:CtnZUmrZdlGPFwvXuFbtuYgIYQZC2FBcG/LxaW90thY=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5 h1:0Ty3j3QkLoqkZ+VagFisIsKYxGAzjv9hIQb84nlt/Jc=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5/go.mod h1:9R1IlrgiivwTCZdbKgMPkseFS+moUM+DLh0TEjO6pvE=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4 h1:5SSnbzdOLeiFe/n38kjIRc5TKglEs7598sZkFYw9X78=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4/go.mod h1:k8u3Uj5KgSM4eUoGXyvLNNf1Y/mLMM7jJM4o9kIazEc=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.0 h1:aDpkV911i+FbYxAcWoe3VrgHppLPnY4JkMVsUB5A2ec=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.0/go.mod h1:k8u3Uj5KgSM4eUoGXyvLNNf1Y/mLMM7jJM4o9kIazEc=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.47.0 h1:0u+kisnXkglzOMqYQd9xmBDzXELJZFgxT653oMGE+Pg=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.47.0/go.mod h1:z3NpUj6ziVpg9XHEMdA0xpD/lgjPuZb9R/PBV6Mieb0=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1 h1:uEKMCWNCbKIEn+en/BqTxJmO/gdMVqzW5VJwhyaG76A=

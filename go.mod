@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.30
+	github.com/aws/aws-sdk-go v1.51.31
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -61,7 +61,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.0
@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.5
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.3
@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.11.0
@@ -164,7 +164,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5
