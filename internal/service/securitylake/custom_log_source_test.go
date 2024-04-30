@@ -300,7 +300,7 @@ func testAccCustomLogSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name   = %[1]q
+  source_name = %[1]q
 
   configuration {
     crawler_configuration {
@@ -317,7 +317,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name =  %[1]q
+  name = %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -335,7 +335,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name =  %[1]q
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
@@ -366,7 +366,7 @@ func testAccCustomLogSourceConfig_sourceVersion(rName, version string) string {
 	return acctest.ConfigCompose(
 		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name   = %[1]q
+  source_name    = %[1]q
   source_version = %[2]q
 
   configuration {
@@ -384,7 +384,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name =  %[1]q
+  name = %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -402,7 +402,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name =  %[1]q
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
@@ -437,7 +437,7 @@ func testAccCustomLogSourceConfig_eventClasses(rName string, eventClasses ...str
 		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_custom_log_source" "test" {
   source_name   = %[1]q
-   event_classes  = [%[2]s]
+  event_classes = [%[2]s]
 
   configuration {
     crawler_configuration {
@@ -454,7 +454,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name =  %[1]q
+  name = %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -472,7 +472,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name =  %[1]q
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
@@ -503,7 +503,7 @@ func testAccCustomLogSourceConfig_multiple(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name   = %[1]q
+  source_name = %[1]q
 
   configuration {
     crawler_configuration {
@@ -520,7 +520,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_securitylake_custom_log_source" "test2" {
-  source_name   = %[2]q
+  source_name = %[2]q
 
   configuration {
     crawler_configuration {
@@ -537,7 +537,7 @@ resource "aws_securitylake_custom_log_source" "test2" {
 }
 
 resource "aws_iam_role" "test" {
-  name =  %[1]q
+  name = %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -555,7 +555,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name =  %[1]q
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
