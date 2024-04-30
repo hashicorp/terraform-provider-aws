@@ -7,24 +7,157 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	sdkchema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @FrameworkResource("aws_qbusiness_retriever", name="Retriever")
+// @Tags(identifierAttribute="arn")
+func newResourceRetriever(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceRetriever{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameRetriever = "Retriever"
+)
+
+type resourceRetriever struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+	framework.WithTimeouts
+}
+
+func (r *resourceRetriever) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_qbusiness_retriever"
+}
+
+func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"application_id": schema.StringAttribute{
+				Description: "Identifier of the Amazon Q application associated with the retriever",
+				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
+				},
+			},
+			"retriever_id": schema.StringAttribute{
+				Computed: true,
+			},
+			"display_name": schema.StringAttribute{
+				Description: "The display name of the Amazon Q retriever.",
+				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 1000),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
+			},
+			"iam_service_role_arn": schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Description: "ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.",
+				Optional:    true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"kendra_index_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ConflictsWith(path.Expressions{path.MatchRoot("native_index_configuration")}...),
+					listvalidator.AtLeastOneOf(path.MatchRoot("kendra_index_configuration"), path.MatchRoot("native_index_configuration")),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"index_id": schema.StringAttribute{
+							Required:    true,
+							Description: "Identifier of the Amazon Kendra index.",
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
+							},
+						},
+					},
+				},
+			},
+			"native_index_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.ConflictsWith(path.Expressions{path.MatchRoot("kendra_index_configuration")}...),
+					listvalidator.AtLeastOneOf(path.MatchRoot("kendra_index_configuration"), path.MatchRoot("native_index_configuration")),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"index_id": schema.StringAttribute{
+							Required:    true,
+							Description: "Identifier for the Amazon Q index.",
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
+							},
+						},
+					},
+				},
+			},
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *resourceRetriever) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+}
+
+func (r *resourceRetriever) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+}
+
+func (r *resourceRetriever) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+}
+
+func (r *resourceRetriever) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+}
+
+func (r *resourceRetriever) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+/*
 // @SDKResource("aws_qbusiness_retriever", name="Retriever")
 // @Tags(identifierAttribute="arn")
 func ResourceRetriever() *schema.Resource {
@@ -120,8 +253,9 @@ func ResourceRetriever() *schema.Resource {
 		},
 	}
 }
+*/
 
-func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRetrieverCreate(ctx context.Context, d *sdkchema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
@@ -156,14 +290,14 @@ func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(application_id + "/" + aws.ToString(output.RetrieverId))
 
-	if _, err := waitRetrieverCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRetrieverCreated(ctx, conn, d.Id(), d.Timeout(sdkchema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness retriever (%s) to be created: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceRetrieverRead(ctx, d, meta)...)
 }
 
-func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRetrieverUpdate(ctx context.Context, d *sdkchema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
@@ -209,7 +343,7 @@ func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRetrieverRead(ctx, d, meta)...)
 }
 
-func resourceRetrieverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRetrieverRead(ctx context.Context, d *sdkchema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
@@ -240,7 +374,7 @@ func resourceRetrieverRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceRetrieverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRetrieverDelete(ctx context.Context, d *sdkchema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
@@ -266,7 +400,7 @@ func resourceRetrieverDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "deleting qbusiness retriever: %s", err)
 	}
 
-	if _, err := waitRetrieverDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitRetrieverDeleted(ctx, conn, d.Id(), d.Timeout(sdkchema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness retriever (%s) to be deleted: %s", d.Id(), err)
 	}
 

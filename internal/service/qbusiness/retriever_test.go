@@ -65,7 +65,7 @@ func TestAccQBusinessRetriever_disappears(t *testing.T) {
 				Config: testAccRetrieverConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceRetriever(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceRetriever, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -179,8 +179,8 @@ func testAccRetrieverConfig_basic(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_qbusiness_retriever" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.application_id
+  display_name   = %[1]q
 
   native_index_configuration {
     index_id = aws_qbusiness_index.test.index_id
@@ -213,12 +213,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.application_id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = %[1]q
+  description = %[1]q
 }
 `, rName)
 }
@@ -228,8 +228,8 @@ func testAccRetrieverConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 s
 data "aws_partition" "current" {}
 
 resource "aws_qbusiness_retriever" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.application_id
+  display_name   = %[1]q
 
   native_index_configuration {
     index_id = aws_qbusiness_index.test.index_id
@@ -267,12 +267,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.application_id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = %[1]q
+  description = %[1]q
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
