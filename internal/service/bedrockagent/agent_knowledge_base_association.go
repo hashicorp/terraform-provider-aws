@@ -34,8 +34,7 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrockagent_agent_knowledge_base_association", name="Agent Knowledge Base Association")
-// @Tags(identifierAttribute="arn")
-func newResourceAgentKnowledgeBaseAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newAgentKnowledgeBaseAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAgentKnowledgeBaseAssociation{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)

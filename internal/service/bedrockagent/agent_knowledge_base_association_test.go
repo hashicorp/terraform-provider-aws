@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,59 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestAgentKnowledgeBaseAssociationExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfbedrockagent.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -80,22 +28,20 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var agentknowledgebaseassociation bedrockagent.DescribeAgentKnowledgeBaseAssociationResponse
+	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName),
+				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, "anthropic.claude-v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -125,22 +71,20 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var agentknowledgebaseassociation bedrockagent.DescribeAgentKnowledgeBaseAssociationResponse
+	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, testAccAgentKnowledgeBaseAssociationVersionNewer),
+				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, "anthropic.claude-v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentKnowledgeBaseAssociation, resourceName),
@@ -160,17 +104,13 @@ func testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx context.Context) resou
 				continue
 			}
 
-			input := &bedrockagent.DescribeAgentKnowledgeBaseAssociationInput{
-				AgentKnowledgeBaseAssociationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeAgentKnowledgeBaseAssociation(ctx, &bedrockagent.DescribeAgentKnowledgeBaseAssociationInput{
-				AgentKnowledgeBaseAssociationId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			_, err := tfbedrockagent.FindAgentKnowledgeBaseAssociationByThreePartID(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["knowledge_base_id"])
+
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, rs.Primary.ID, err)
+				return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, rs.Primary.ID, errors.New("not destroyed"))
@@ -180,7 +120,7 @@ func testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, name string, agentknowledgebaseassociation *bedrockagent.DescribeAgentKnowledgeBaseAssociationResponse) resource.TestCheckFunc {
+func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, name string, agentknowledgebaseassociation *types.AgentKnowledgeBase) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -192,9 +132,7 @@ func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, name s
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
-		resp, err := conn.DescribeAgentKnowledgeBaseAssociation(ctx, &bedrockagent.DescribeAgentKnowledgeBaseAssociationInput{
-			AgentKnowledgeBaseAssociationId: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfbedrockagent.FindAgentKnowledgeBaseAssociationByThreePartID(ctx, conn, rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"], rs.Primary.Attributes["knowledge_base_id"])
 
 		if err != nil {
 			return create.Error(names.BedrockAgent, create.ErrActionCheckingExistence, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, rs.Primary.ID, err)
@@ -206,53 +144,26 @@ func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, name s
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+/*
+	func testAccCheckAgentKnowledgeBaseAssociationNotRecreated(before, after *bedrockagent.GetAgentKnowledgeBaseOutput) resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			if before, after := aws.ToString(before.I), aws.ToString(after.AgentKnowledgeBaseAssociationId); before != after {
+				return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, aws.ToString(before.AgentKnowledgeBaseAssociationId), errors.New("recreated"))
+			}
 
-	input := &bedrockagent.ListAgentKnowledgeBaseAssociationsInput{}
-	_, err := conn.ListAgentKnowledgeBaseAssociations(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckAgentKnowledgeBaseAssociationNotRecreated(before, after *bedrockagent.DescribeAgentKnowledgeBaseAssociationResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.AgentKnowledgeBaseAssociationId), aws.ToString(after.AgentKnowledgeBaseAssociationId); before != after {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, aws.ToString(before.AgentKnowledgeBaseAssociationId), errors.New("recreated"))
+			return nil
 		}
-
-		return nil
 	}
-}
+*/
 
-func testAccAgentKnowledgeBaseAssociationConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
+func testAccAgentKnowledgeBaseAssociationConfig_basic(rName, model string) string {
+	return acctest.ConfigCompose(
+		testAccAgentConfig_basic(rName, model, "basic claude"),
+		testAccKnowledgeBaseConfig_basicOpenSearch(rName, model),
+		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_knowledge_base_association" "test" {
-  agent_knowledge_base_association_name             = %[1]q
-  engine_type             = "ActiveBedrockAgent"
-  engine_version          = %[2]q
-  host_instance_type      = "bedrockagent.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+    
 }
-`, rName, version)
+`, rName),
+	)
 }
