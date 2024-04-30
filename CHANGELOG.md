@@ -1,5 +1,9 @@
 ## 5.48.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_bcmdataexports_export: Including `line_item_resource_id` in the SQL query in `export.0.data_query.0.query_statement` results in an error, `ValidationException: The columns in the query provided are not a subset of the table COST_AND_USAGE_REPORT`; please contact AWS Support to inquire further ([#37189](https://github.com/hashicorp/terraform-provider-aws/issues/37189))
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_target: Add `force_destroy` argument ([#37130](https://github.com/hashicorp/terraform-provider-aws/issues/37130))
