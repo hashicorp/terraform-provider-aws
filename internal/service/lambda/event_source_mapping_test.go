@@ -1205,7 +1205,7 @@ func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"last_modified"},
+				ImportStateVerifyIgnore: []string{"last_modified", "last_processing_result"},
 			},
 		},
 	})
