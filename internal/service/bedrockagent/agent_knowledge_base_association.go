@@ -177,7 +177,6 @@ func (r *resourceAgentKnowledgeBaseAssociation) Update(ctx context.Context, requ
 	if !new.KnowledgeBaseId.Equal(old.KnowledgeBaseId) ||
 		!new.KnowledgeBaseState.Equal(old.KnowledgeBaseState) ||
 		!new.Description.Equal(old.Description) {
-
 		input := &bedrockagent.UpdateAgentKnowledgeBaseInput{}
 
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
