@@ -1,3 +1,0 @@
-```release-note:bug
-r/aws_vpc_endpoint: fix multiple services matched in DynamoDB gateway endpoint tests
-```
