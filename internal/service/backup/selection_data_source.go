@@ -63,10 +63,8 @@ func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
 	d.Set("name", resp.BackupSelection.SelectionName)
 
-	if resp.BackupSelection.Resources != nil {
-		if err := d.Set("resources", resp.BackupSelection.Resources); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
-		}
+	if err := d.Set("resources", resp.BackupSelection.Resources); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
 	return diags

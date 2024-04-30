@@ -328,16 +328,12 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if resp.BackupSelection.Resources != nil {
-		if err := d.Set("resources", resp.BackupSelection.Resources); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
-		}
+	if err := d.Set("resources", resp.BackupSelection.Resources); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
-	if resp.BackupSelection.NotResources != nil {
-		if err := d.Set("not_resources", resp.BackupSelection.NotResources); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
-		}
+	if err := d.Set("not_resources", resp.BackupSelection.NotResources); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
 	}
 
 	return diags
