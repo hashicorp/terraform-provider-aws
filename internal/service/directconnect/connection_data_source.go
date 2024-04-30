@@ -7,9 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,22 +67,22 @@ func DataSourceConnection() *schema.Resource {
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	var connections []*directconnect.Connection
+	var connections []awstypes.Connection
 	input := &directconnect.DescribeConnectionsInput{}
 	name := d.Get("name").(string)
 
 	// DescribeConnections is not paginated.
-	output, err := conn.DescribeConnectionsWithContext(ctx, input)
+	output, err := conn.DescribeConnections(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connections: %s", err)
 	}
 
 	for _, connection := range output.Connections {
-		if aws.StringValue(connection.ConnectionName) == name {
+		if aws.ToString(connection.ConnectionName) == name {
 			connections = append(connections, connection)
 		}
 	}
@@ -96,13 +97,13 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	connection := connections[0]
 
-	d.SetId(aws.StringValue(connection.ConnectionId))
+	d.SetId(aws.ToString(connection.ConnectionId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    aws.StringValue(connection.Region),
+		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
-		AccountID: aws.StringValue(connection.OwnerAccount),
+		AccountID: aws.ToString(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)

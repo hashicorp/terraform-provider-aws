@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,15 +35,15 @@ func ResourceConnectionConfirmation() *schema.Resource {
 
 func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	connectionID := d.Get("connection_id").(string)
 	input := &directconnect.ConfirmConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	}
 
-	log.Printf("[DEBUG] Confirming Direct Connect Connection: %s", input)
-	_, err := conn.ConfirmConnectionWithContext(ctx, input)
+	log.Printf("[DEBUG] Confirming Direct Connect Connection: %#v", input)
+	_, err := conn.ConfirmConnection(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "confirming Direct Connection Connection (%s): %s", connectionID, err)
@@ -60,7 +60,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 
 func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	_, err := FindConnectionByID(ctx, conn, d.Id())
 

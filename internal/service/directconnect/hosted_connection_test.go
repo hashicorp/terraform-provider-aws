@@ -73,7 +73,7 @@ func testAccCheckHostedConnectionEnv() (*testAccDxHostedConnectionEnv, error) {
 func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_hosted_connection" {
@@ -99,7 +99,7 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 
 func testAccCheckHostedConnectionExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

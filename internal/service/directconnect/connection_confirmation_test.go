@@ -9,8 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -64,7 +63,7 @@ func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, 
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
@@ -72,8 +71,8 @@ func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, 
 			return err
 		}
 
-		if state := aws.StringValue(connection.ConnectionState); state != directconnect.ConnectionStateAvailable {
-			return fmt.Errorf("Direct Connect Connection %s in unexpected state: %s", rs.Primary.ID, state)
+		if connection.ConnectionState != awstypes.ConnectionStateAvailable {
+			return fmt.Errorf("Direct Connect Connection %s in unexpected state: %s", rs.Primary.ID, string(connection.ConnectionState))
 		}
 
 		return nil

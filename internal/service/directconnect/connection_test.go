@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccDirectConnectConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -61,7 +61,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 
 func TestAccDirectConnectConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -97,7 +97,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", dxName)
 	}
 
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	ckn := testAccDirecConnectMacSecGenerateHex()
 	cak := testAccDirecConnectMacSecGenerateHex()
@@ -143,7 +143,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 
 func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -179,7 +179,7 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 
 func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -215,7 +215,7 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 
 func TestAccDirectConnectConnection_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -238,7 +238,7 @@ func TestAccDirectConnectConnection_skipDestroy(t *testing.T) {
 
 func TestAccDirectConnectConnection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -290,7 +290,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/31732.
 func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -327,7 +327,7 @@ func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 
 func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 	ctx := acctest.Context(t)
-	var connection directconnect.Connection
+	var connection awstypes.Connection
 	resourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -361,7 +361,7 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection" {
@@ -385,9 +385,9 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckConnectionExists(ctx context.Context, name string, v *directconnect.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, name string, v *awstypes.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -412,7 +412,7 @@ func testAccCheckConnectionExists(ctx context.Context, name string, v *directcon
 
 func testAccCheckConnectionNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection" {

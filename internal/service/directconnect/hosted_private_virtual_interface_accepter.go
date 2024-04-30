@@ -9,12 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,7 +72,7 @@ func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 
 func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
 	dxgwIdRaw, dxgwOk := d.GetOk("dx_gateway_id")
@@ -89,8 +91,8 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d 
 		req.VirtualGatewayId = aws.String(vgwIdRaw.(string))
 	}
 
-	log.Printf("[DEBUG] Accepting Direct Connect hosted private virtual interface: %s", req)
-	_, err := conn.ConfirmPrivateVirtualInterfaceWithContext(ctx, req)
+	log.Printf("[DEBUG] Accepting Direct Connect hosted private virtual interface: %#v", req)
+	_, err := conn.ConfirmPrivateVirtualInterface(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting Direct Connect hosted private virtual interface: %s", err)
 	}
@@ -118,7 +120,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d 
 
 func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -129,10 +131,9 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *s
 		d.SetId("")
 		return diags
 	}
-	vifState := aws.StringValue(vif.VirtualInterfaceState)
-	if vifState != directconnect.VirtualInterfaceStateAvailable &&
-		vifState != directconnect.VirtualInterfaceStateDown {
-		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) is '%s', removing from state", vifState, d.Id())
+	if vif.VirtualInterfaceState != awstypes.VirtualInterfaceStateAvailable &&
+		vif.VirtualInterfaceState != awstypes.VirtualInterfaceStateDown {
+		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) is '%s', removing from state", string(vif.VirtualInterfaceState), d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -162,7 +163,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterDelete(ctx context.Context, d 
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -172,7 +173,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d 
 		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
 	}
 
-	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "private" {
+	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "private" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
@@ -188,16 +189,10 @@ func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d 
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+func hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(ctx context.Context, conn *directconnect.Client, vifId string, timeout time.Duration) error {
 	return virtualInterfaceWaitUntilAvailable(ctx, conn,
 		vifId,
 		timeout,
-		[]string{
-			directconnect.VirtualInterfaceStateConfirming,
-			directconnect.VirtualInterfaceStatePending,
-		},
-		[]string{
-			directconnect.VirtualInterfaceStateAvailable,
-			directconnect.VirtualInterfaceStateDown,
-		})
+		enum.Slice(awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStatePending),
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateDown))
 }

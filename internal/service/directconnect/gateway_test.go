@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccDirectConnectGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directconnect.Gateway
+	var v awstypes.DirectConnectGateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
@@ -50,7 +50,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 
 func TestAccDirectConnectGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directconnect.Gateway
+	var v awstypes.DirectConnectGateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
@@ -75,7 +75,7 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 
 func TestAccDirectConnectGateway_complex(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directconnect.Gateway
+	var v awstypes.DirectConnectGateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
@@ -104,7 +104,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 
 func TestAccDirectConnectGateway_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directconnect.Gateway
+	var v awstypes.DirectConnectGateway
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
@@ -136,7 +136,7 @@ func TestAccDirectConnectGateway_update(t *testing.T) {
 
 func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_gateway" {
@@ -159,7 +159,7 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, name string, v *directconnect.Gateway) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, name string, v *awstypes.DirectConnectGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -170,7 +170,7 @@ func testAccCheckGatewayExists(ctx context.Context, name string, v *directconnec
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		output, err := tfdirectconnect.FindGatewayByID(ctx, conn, rs.Primary.ID)
 

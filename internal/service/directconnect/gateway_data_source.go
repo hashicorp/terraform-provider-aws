@@ -7,8 +7,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,19 +40,19 @@ func DataSourceGateway() *schema.Resource {
 
 func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 	name := d.Get("name").(string)
 
-	gateways := make([]*directconnect.Gateway, 0)
+	gateways := make([]awstypes.DirectConnectGateway, 0)
 	// DescribeDirectConnectGatewaysInput does not have a name parameter for filtering
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	for {
-		output, err := conn.DescribeDirectConnectGatewaysWithContext(ctx, input)
+		output, err := conn.DescribeDirectConnectGateways(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway: %s", err)
 		}
 		for _, gateway := range output.DirectConnectGateways {
-			if aws.StringValue(gateway.DirectConnectGatewayName) == name {
+			if aws.ToString(gateway.DirectConnectGatewayName) == name {
 				gateways = append(gateways, gateway)
 			}
 		}
@@ -71,8 +72,8 @@ func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	gateway := gateways[0]
 
-	d.SetId(aws.StringValue(gateway.DirectConnectGatewayId))
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(gateway.AmazonSideAsn), 10))
+	d.SetId(aws.ToString(gateway.DirectConnectGatewayId))
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(gateway.AmazonSideAsn), 10))
 	d.Set("owner_account_id", gateway.OwnerAccount)
 
 	return diags

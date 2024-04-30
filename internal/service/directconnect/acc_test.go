@@ -7,18 +7,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *awstypes.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -28,7 +29,7 @@ func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *d
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, &directconnect.DescribeVirtualInterfacesInput{
+		resp, err := conn.DescribeVirtualInterfaces(ctx, &directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -36,8 +37,8 @@ func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *d
 		}
 
 		for _, v := range resp.VirtualInterfaces {
-			if aws.StringValue(v.VirtualInterfaceId) == rs.Primary.ID {
-				*vif = *v
+			if aws.ToString(v.VirtualInterfaceId) == rs.Primary.ID {
+				*vif = v
 
 				return nil
 			}
@@ -48,7 +49,7 @@ func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *d
 }
 
 func testAccCheckVirtualInterfaceDestroy(ctx context.Context, s *terraform.State, t string) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != t {
@@ -58,10 +59,10 @@ func testAccCheckVirtualInterfaceDestroy(ctx context.Context, s *terraform.State
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, &directconnect.DescribeVirtualInterfacesInput{
+		resp, err := conn.DescribeVirtualInterfaces(ctx, &directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
+		if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 			continue
 		}
 		if err != nil {
@@ -69,7 +70,7 @@ func testAccCheckVirtualInterfaceDestroy(ctx context.Context, s *terraform.State
 		}
 
 		for _, v := range resp.VirtualInterfaces {
-			if aws.StringValue(v.VirtualInterfaceId) == rs.Primary.ID && aws.StringValue(v.VirtualInterfaceState) != directconnect.VirtualInterfaceStateDeleted {
+			if aws.ToString(v.VirtualInterfaceId) == rs.Primary.ID && v.VirtualInterfaceState != awstypes.VirtualInterfaceStateDeleted {
 				return fmt.Errorf("[DESTROY ERROR] Direct Connect virtual interface (%s) not deleted", rs.Primary.ID)
 			}
 		}

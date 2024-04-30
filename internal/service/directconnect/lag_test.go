@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccDirectConnectLag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lag directconnect.Lag
+	var lag awstypes.Lag
 	resourceName := "aws_dx_lag.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -79,7 +79,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 
 func TestAccDirectConnectLag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lag directconnect.Lag
+	var lag awstypes.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -103,7 +103,7 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 
 func TestAccDirectConnectLag_connectionID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lag directconnect.Lag
+	var lag awstypes.Lag
 	resourceName := "aws_dx_lag.test"
 	connectionResourceName := "aws_dx_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -143,7 +143,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 
 func TestAccDirectConnectLag_providerName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lag directconnect.Lag
+	var lag awstypes.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -182,7 +182,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 
 func TestAccDirectConnectLag_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var lag directconnect.Lag
+	var lag awstypes.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -232,7 +232,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 
 func testAccCheckLagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_lag" {
@@ -256,9 +256,9 @@ func testAccCheckLagDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLagExists(ctx context.Context, name string, v *directconnect.Lag) resource.TestCheckFunc {
+func testAccCheckLagExists(ctx context.Context, name string, v *awstypes.Lag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

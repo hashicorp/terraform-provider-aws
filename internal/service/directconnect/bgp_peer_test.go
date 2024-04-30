@@ -10,8 +10,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -48,7 +49,7 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 
 func testAccCheckBGPPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_bgp_peer" {
@@ -58,14 +59,14 @@ func testAccCheckBGPPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 				VirtualInterfaceId: aws.String(rs.Primary.Attributes["virtual_interface_id"]),
 			}
 
-			resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, input)
+			resp, err := conn.DescribeVirtualInterfaces(ctx, input)
 			if err != nil {
 				return err
 			}
 			for _, peer := range resp.VirtualInterfaces[0].BgpPeers {
-				if aws.StringValue(peer.AddressFamily) == rs.Primary.Attributes["address_family"] &&
-					strconv.Itoa(int(aws.Int64Value(peer.Asn))) == rs.Primary.Attributes["bgp_asn"] &&
-					aws.StringValue(peer.BgpPeerState) != directconnect.BGPPeerStateDeleted {
+				if string(peer.AddressFamily) == rs.Primary.Attributes["address_family"] &&
+					strconv.Itoa(int(peer.Asn)) == rs.Primary.Attributes["bgp_asn"] &&
+					peer.BgpPeerState != awstypes.BGPPeerStateDeleted {
 					return fmt.Errorf("[DESTROY ERROR] Dx BGP peer (%s) not deleted", rs.Primary.ID)
 				}
 			}

@@ -6,7 +6,6 @@ package directconnect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,7 +52,7 @@ func DataSourceLocation() *schema.Resource {
 
 func dataSourceLocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 	locationCode := d.Get("location_code").(string)
 
 	location, err := FindLocationByCode(ctx, conn, locationCode)
@@ -67,9 +66,9 @@ func dataSourceLocationRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(locationCode)
-	d.Set("available_macsec_port_speeds", aws.StringValueSlice(location.AvailableMacSecPortSpeeds))
-	d.Set("available_port_speeds", aws.StringValueSlice(location.AvailablePortSpeeds))
-	d.Set("available_providers", aws.StringValueSlice(location.AvailableProviders))
+	d.Set("available_macsec_port_speeds", location.AvailableMacSecPortSpeeds)
+	d.Set("available_port_speeds", location.AvailablePortSpeeds)
+	d.Set("available_providers", location.AvailableProviders)
 	d.Set("location_code", location.LocationCode)
 	d.Set("location_name", location.LocationName)
 

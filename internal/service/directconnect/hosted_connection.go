@@ -8,8 +8,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -101,7 +101,7 @@ func ResourceHostedConnection() *schema.Resource {
 
 func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.AllocateHostedConnectionInput{
@@ -109,24 +109,24 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 		ConnectionId:   aws.String(d.Get("connection_id").(string)),
 		ConnectionName: aws.String(name),
 		OwnerAccount:   aws.String(d.Get("owner_account_id").(string)),
-		Vlan:           aws.Int64(int64(d.Get("vlan").(int))),
+		Vlan:           int32(d.Get("vlan").(int)),
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Hosted Connection: %s", input)
-	output, err := conn.AllocateHostedConnectionWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Direct Connect Hosted Connection: %#v", input)
+	output, err := conn.AllocateHostedConnection(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Hosted Connection (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectionId))
+	d.SetId(aws.ToString(output.ConnectionId))
 
 	return append(diags, resourceHostedConnectionRead(ctx, d, meta)...)
 }
 
 func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	connection, err := FindHostedConnectionByID(ctx, conn, d.Id())
 
@@ -147,7 +147,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("lag_id", connection.LagId)
-	d.Set("loa_issue_time", aws.TimeValue(connection.LoaIssueTime).Format(time.RFC3339))
+	d.Set("loa_issue_time", aws.ToTime(connection.LoaIssueTime).Format(time.RFC3339))
 	d.Set("location", connection.Location)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
@@ -162,7 +162,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if err := deleteConnection(ctx, conn, d.Id(), waitHostedConnectionDeleted); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

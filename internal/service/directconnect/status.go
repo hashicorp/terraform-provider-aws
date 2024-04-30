@@ -6,13 +6,12 @@ package directconnect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusConnectionState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
+func statusConnectionState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectionByID(ctx, conn, id)
 
@@ -24,11 +23,11 @@ func statusConnectionState(ctx context.Context, conn *directconnect.DirectConnec
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ConnectionState), nil
+		return output, string(output.ConnectionState), nil
 	}
 }
 
-func statusGatewayState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
+func statusGatewayState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGatewayByID(ctx, conn, id)
 
@@ -40,11 +39,11 @@ func statusGatewayState(ctx context.Context, conn *directconnect.DirectConnect, 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.DirectConnectGatewayState), nil
+		return output, string(output.DirectConnectGatewayState), nil
 	}
 }
 
-func statusGatewayAssociationState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
+func statusGatewayAssociationState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGatewayAssociationByID(ctx, conn, id)
 
@@ -56,11 +55,11 @@ func statusGatewayAssociationState(ctx context.Context, conn *directconnect.Dire
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.AssociationState), nil
+		return output, string(output.AssociationState), nil
 	}
 }
 
-func statusHostedConnectionState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
+func statusHostedConnectionState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindHostedConnectionByID(ctx, conn, id)
 
@@ -72,11 +71,11 @@ func statusHostedConnectionState(ctx context.Context, conn *directconnect.Direct
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ConnectionState), nil
+		return output, string(output.ConnectionState), nil
 	}
 }
 
-func statusLagState(ctx context.Context, conn *directconnect.DirectConnect, id string) retry.StateRefreshFunc {
+func statusLagState(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLagByID(ctx, conn, id)
 
@@ -88,6 +87,6 @@ func statusLagState(ctx context.Context, conn *directconnect.DirectConnect, id s
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.LagState), nil
+		return output, string(output.LagState), nil
 	}
 }

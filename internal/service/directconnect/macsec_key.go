@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -74,7 +74,7 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 
 func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	input := &directconnect.AssociateMacSecKeyInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -90,7 +90,7 @@ func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Creating MACSec secret key on Direct Connect Connection: %s", *input.ConnectionId)
-	output, err := conn.AssociateMacSecKeyWithContext(ctx, input)
+	output, err := conn.AssociateMacSecKey(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MACSec secret key on Direct Connect Connection (%s): %s", *input.ConnectionId, err)
@@ -99,7 +99,7 @@ func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	secret_arn := MacSecKeyParseSecretARN(output)
 
 	// Create a composite ID based on connection ID and secret ARN
-	d.SetId(fmt.Sprintf("%s_%s", secret_arn, aws.StringValue(output.ConnectionId)))
+	d.SetId(fmt.Sprintf("%s_%s", secret_arn, aws.ToString(output.ConnectionId)))
 
 	d.Set("secret_arn", secret_arn)
 
@@ -108,7 +108,7 @@ func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	secretArn, connId, err := MacSecKeyParseID(d.Id())
 	if err != nil {
@@ -125,7 +125,7 @@ func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	for _, key := range connection.MacSecKeys {
-		if aws.StringValue(key.SecretARN) == aws.StringValue(&secretArn) {
+		if aws.ToString(key.SecretARN) == aws.ToString(&secretArn) {
 			d.Set("ckn", key.Ckn)
 			d.Set("connection_id", connId)
 			d.Set("secret_arn", key.SecretARN)
@@ -139,7 +139,7 @@ func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceMacSecKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	input := &directconnect.DisassociateMacSecKeyInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -147,7 +147,7 @@ func resourceMacSecKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Disassociating MACSec secret key on Direct Connect Connection: %s", *input.ConnectionId)
-	_, err := conn.DisassociateMacSecKeyWithContext(ctx, input)
+	_, err := conn.DisassociateMacSecKey(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Unable to disassociate MACSec secret key on Direct Connect Connection (%s): %s", *input.ConnectionId, err)
@@ -161,9 +161,7 @@ func MacSecKeyParseSecretARN(output *directconnect.AssociateMacSecKeyOutput) str
 	var result string
 
 	for _, key := range output.MacSecKeys {
-		if key != nil {
-			result = aws.StringValue(key.SecretARN)
-		}
+		result = aws.ToString(key.SecretARN)
 	}
 
 	return result

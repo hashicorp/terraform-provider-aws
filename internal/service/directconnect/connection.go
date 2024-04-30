@@ -9,14 +9,15 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -238,7 +239,7 @@ func ResourceConnection() *schema.Resource {
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateConnectionInput{
@@ -253,20 +254,20 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateConnectionWithContext(ctx, input)
+	output, err := conn.CreateConnection(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Connection (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectionId))
+	d.SetId(aws.ToString(output.ConnectionId))
 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	connection, err := FindConnectionByID(ctx, conn, d.Id())
 
@@ -282,9 +283,9 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    aws.StringValue(connection.Region),
+		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
-		AccountID: aws.StringValue(connection.OwnerAccount),
+		AccountID: aws.ToString(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -313,7 +314,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if d.HasChange("encryption_mode") {
 		input := &directconnect.UpdateConnectionInput{
@@ -321,7 +322,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			EncryptionMode: aws.String(d.Get("encryption_mode").(string)),
 		}
 
-		_, err := conn.UpdateConnectionWithContext(ctx, input)
+		_, err := conn.UpdateConnection(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s): %s", d.Id(), err)
@@ -337,7 +338,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
 		return diags
@@ -350,13 +351,13 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func deleteConnection(ctx context.Context, conn *directconnect.DirectConnect, connectionID string, waiter func(context.Context, *directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
+func deleteConnection(ctx context.Context, conn *directconnect.Client, connectionID string, waiter func(context.Context, *directconnect.Client, string) (*awstypes.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
-	_, err := conn.DeleteConnectionWithContext(ctx, &directconnect.DeleteConnectionInput{
+	_, err := conn.DeleteConnection(ctx, &directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	})
 
-	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
+	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
 		return nil
 	}
 

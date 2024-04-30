@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -42,7 +43,7 @@ func ResourceConnectionAssociation() *schema.Resource {
 
 func resourceConnectionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	connectionID := d.Get("connection_id").(string)
 	lagID := d.Get("lag_id").(string)
@@ -51,21 +52,21 @@ func resourceConnectionAssociationCreate(ctx context.Context, d *schema.Resource
 		LagId:        aws.String(lagID),
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Connection LAG Association: %s", input)
-	output, err := conn.AssociateConnectionWithLagWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Direct Connect Connection LAG Association: %#v", input)
+	output, err := conn.AssociateConnectionWithLag(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Connection (%s) LAG (%s) Association: %s", connectionID, lagID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectionId))
+	d.SetId(aws.ToString(output.ConnectionId))
 
 	return diags
 }
 
 func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	lagID := d.Get("lag_id").(string)
 	err := FindConnectionAssociationExists(ctx, conn, d.Id(), lagID)
@@ -85,7 +86,7 @@ func resourceConnectionAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConnectionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if err := deleteConnectionLAGAssociation(ctx, conn, d.Id(), d.Get("lag_id").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -93,7 +94,7 @@ func resourceConnectionAssociationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.DirectConnect, connectionID, lagID string) error {
+func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Client, connectionID, lagID string) error {
 	input := &directconnect.DisassociateConnectionFromLagInput{
 		ConnectionId: aws.String(connectionID),
 		LagId:        aws.String(lagID),
@@ -101,15 +102,15 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Dir
 
 	_, err := tfresource.RetryWhen(ctx, connectionDisassociatedTimeout,
 		func() (interface{}, error) {
-			return conn.DisassociateConnectionFromLagWithContext(ctx, input)
+			return conn.DisassociateConnectionFromLag(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Connection does not exist") ||
-				tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Lag does not exist") {
+			if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Connection does not exist") ||
+				errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Lag does not exist") {
 				return false, nil
 			}
 
-			if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "is in a transitioning state") {
+			if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "is in a transitioning state") {
 				return true, err
 			}
 

@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -92,7 +93,7 @@ func ResourceLag() *schema.Resource {
 
 func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateLagInput{
@@ -106,27 +107,27 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("connection_id"); ok {
 		connectionIDSpecified = true
 		input.ConnectionId = aws.String(v.(string))
-		input.NumberOfConnections = aws.Int64(1)
+		input.NumberOfConnections = int32(1)
 	} else {
-		input.NumberOfConnections = aws.Int64(1)
+		input.NumberOfConnections = int32(1)
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect LAG: %s", input)
-	output, err := conn.CreateLagWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Direct Connect LAG: %#v", input)
+	output, err := conn.CreateLag(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Direct Connect LAG (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.LagId))
+	d.SetId(aws.ToString(output.LagId))
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		if err := deleteConnection(ctx, conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted); err != nil {
+		if err := deleteConnection(ctx, conn, aws.ToString(output.Connections[0].ConnectionId), waitConnectionDeleted); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -136,7 +137,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	lag, err := FindLagByID(ctx, conn, d.Id())
 
@@ -152,9 +153,9 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    aws.StringValue(lag.Region),
+		Region:    aws.ToString(lag.Region),
 		Service:   "directconnect",
-		AccountID: aws.StringValue(lag.OwnerAccount),
+		AccountID: aws.ToString(lag.OwnerAccount),
 		Resource:  fmt.Sprintf("dxlag/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -171,7 +172,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateLagInput{
@@ -179,8 +180,8 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			LagName: aws.String(d.Get("name").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating Direct Connect LAG: %s", input)
-		_, err := conn.UpdateLagWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating Direct Connect LAG: %#v", input)
+		_, err := conn.UpdateLag(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect LAG (%s): %s", d.Id(), err)
@@ -192,7 +193,7 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		lag, err := FindLagByID(ctx, conn, d.Id())
@@ -202,7 +203,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		for _, connection := range lag.Connections {
-			if err := deleteConnection(ctx, conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted); err != nil {
+			if err := deleteConnection(ctx, conn, aws.ToString(connection.ConnectionId), waitConnectionDeleted); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -213,11 +214,11 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect LAG: %s", d.Id())
-	_, err := conn.DeleteLagWithContext(ctx, &directconnect.DeleteLagInput{
+	_, err := conn.DeleteLag(ctx, &directconnect.DeleteLagInput{
 		LagId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Lag with ID") {
+	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Lag with ID") {
 		return diags
 	}
 

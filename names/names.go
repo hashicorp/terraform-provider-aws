@@ -54,6 +54,7 @@ const (
 	ComprehendEndpointID                 = "comprehend"
 	ConfigServiceEndpointID              = "config"
 	DevOpsGuruEndpointID                 = "devops-guru"
+	DirectConnectEndpointID              = "directconnect"
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"

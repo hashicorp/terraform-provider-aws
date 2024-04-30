@@ -7,8 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,7 +84,7 @@ const (
 func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	routerTypeIdentifier := d.Get("router_type_identifier").(string)
 	virtualInterfaceId := d.Get("virtual_interface_id").(string)
@@ -107,13 +108,13 @@ func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func findRouterConfigurationByTypeAndVif(ctx context.Context, conn *directconnect.DirectConnect, routerTypeIdentifier string, virtualInterfaceId string) (*directconnect.DescribeRouterConfigurationOutput, error) {
+func findRouterConfigurationByTypeAndVif(ctx context.Context, conn *directconnect.Client, routerTypeIdentifier string, virtualInterfaceId string) (*directconnect.DescribeRouterConfigurationOutput, error) {
 	input := &directconnect.DescribeRouterConfigurationInput{
 		RouterTypeIdentifier: aws.String(routerTypeIdentifier),
 		VirtualInterfaceId:   aws.String(virtualInterfaceId),
 	}
 
-	output, err := conn.DescribeRouterConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeRouterConfiguration(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -126,31 +127,31 @@ func findRouterConfigurationByTypeAndVif(ctx context.Context, conn *directconnec
 	return output, nil
 }
 
-func flattenRouter(apiObject *directconnect.RouterType) []interface{} {
+func flattenRouter(apiObject *awstypes.RouterType) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Platform; v != nil {
-		tfMap["platform"] = aws.StringValue(v)
+		tfMap["platform"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RouterTypeIdentifier; v != nil {
-		tfMap["router_type_identifier"] = aws.StringValue(v)
+		tfMap["router_type_identifier"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Software; v != nil {
-		tfMap["software"] = aws.StringValue(v)
+		tfMap["software"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Vendor; v != nil {
-		tfMap["vendor"] = aws.StringValue(v)
+		tfMap["vendor"] = aws.ToString(v)
 	}
 
 	if v := apiObject.XsltTemplateName; v != nil {
-		tfMap["xslt_template_name"] = aws.StringValue(v)
+		tfMap["xslt_template_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.XsltTemplateNameForMacSec; v != nil {
-		tfMap["xslt_template_name_for_mac_sec"] = aws.StringValue(v)
+		tfMap["xslt_template_name_for_mac_sec"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
