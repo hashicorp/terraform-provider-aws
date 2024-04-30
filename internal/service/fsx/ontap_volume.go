@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -133,10 +134,10 @@ func ResourceONTAPVolume() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
 			},
 			"size_in_bytes": {
-				Type:         schema.TypeInt,
+				Type:         nullable.TypeNullableInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 22517998000000000),
+				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 22517998000000000),
 				ExactlyOneOf: []string{"size_in_bytes", "size_in_megabytes"},
 			},
 			"size_in_megabytes": {
@@ -369,12 +370,12 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		ontapConfig.SecurityStyle = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("size_in_megabytes"); ok {
-		ontapConfig.SizeInMegabytes = aws.Int64(int64(v.(int)))
+	if v, null, _ := nullable.Int(d.Get("size_in_bytes").(string)).ValueInt64(); !null && v > 0 {
+		ontapConfig.SizeInBytes = aws.Int64(v)
 	}
 
-	if v, ok := d.GetOk("size_in_bytes"); ok {
-		ontapConfig.SizeInBytes = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk("size_in_megabytes"); ok {
+		ontapConfig.SizeInMegabytes = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -452,8 +453,8 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", volume.Name)
 	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)
 	d.Set("security_style", ontapConfig.SecurityStyle)
+	d.Set("size_in_bytes", flex.Int64ToStringValue(ontapConfig.SizeInBytes))
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
-	d.Set("size_in_bytes", ontapConfig.SizeInBytes)
 	if ontapConfig.SnaplockConfiguration != nil {
 		if err := d.Set("snaplock_configuration", []interface{}{flattenSnaplockConfiguration(ontapConfig.SnaplockConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting snaplock_configuration: %s", err)
@@ -497,12 +498,14 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 			ontapConfig.SecurityStyle = aws.String(d.Get("security_style").(string))
 		}
 
-		if d.HasChange("size_in_megabytes") {
-			ontapConfig.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
+		if d.HasChange("size_in_bytes") {
+			if v, null, _ := nullable.Int(d.Get("size_in_bytes").(string)).ValueInt64(); !null && v > 0 {
+				ontapConfig.SizeInBytes = aws.Int64(v)
+			}
 		}
 
-		if d.HasChange("size_in_bytes") {
-			ontapConfig.SizeInBytes = aws.Int64(int64(d.Get("size_in_bytes").(int)))
+		if d.HasChange("size_in_megabytes") {
+			ontapConfig.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
 		}
 
 		if d.HasChange("snaplock_configuration") {
