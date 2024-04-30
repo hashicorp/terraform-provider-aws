@@ -3150,7 +3150,7 @@ resource "aws_efs_file_system" "test" {
   }
 }
 
-resource "aws_efs_mount_target" "test1" {
+resource "aws_efs_mount_target" "test" {
   file_system_id  = aws_efs_file_system.test.id
   subnet_id       = aws_subnet.subnet_for_lambda.id
   security_groups = [aws_security_group.sg_for_lambda.id]
@@ -3192,7 +3192,7 @@ resource "aws_lambda_function" "test" {
     local_mount_path = "/mnt/efs"
   }
 
-  depends_on = [aws_efs_mount_target.test1]
+  depends_on = [aws_efs_mount_target.test]
 }
 `, rName))
 }
@@ -3207,7 +3207,7 @@ resource "aws_efs_file_system" "test" {
   }
 }
 
-resource "aws_efs_mount_target" "test2" {
+resource "aws_efs_mount_target" "test" {
   file_system_id  = aws_efs_file_system.test.id
   subnet_id       = aws_subnet.subnet_for_lambda_az2.id
   security_groups = [aws_security_group.sg_for_lambda.id]
@@ -3249,7 +3249,7 @@ resource "aws_lambda_function" "test" {
     local_mount_path = "/mnt/lambda"
   }
 
-  depends_on = [aws_efs_mount_target.test2]
+  depends_on = [aws_efs_mount_target.test]
 }
 `, rName))
 }
