@@ -226,7 +226,7 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 
 	plan.Export = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, export)
 
-	log.Printf("[WARN] export arn: %s", export.ExportArn)
+	log.Printf("[INFO] export arn: %s", export.ExportArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitExportCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
