@@ -187,7 +187,7 @@ func resourceEBSSnapshotLockDelete(ctx context.Context, d *schema.ResourceData, 
 		SnapshotId: aws.String(d.Get("snapshot_id").(string)),
 	}
 
-	resp, err := conn.UnlockSnapshot(ctx, input)
+	_, err := conn.UnlockSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Unlock EBS snapshot: %s", err)
