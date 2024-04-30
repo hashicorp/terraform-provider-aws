@@ -91,7 +91,7 @@ func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.P
 	}
 
 	if v, ok := tfMap["cloudwatch_logs_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudwatchLogsLogDestination = expandCloudwatchLogsLogDestinationParameters(v[0].(map[string]interface{}))
+		apiObject.CloudwatchLogsLogDestination = expandCloudWatchLogsLogDestinationParameters(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["firehose_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -105,7 +105,7 @@ func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.P
 	return apiObject
 }
 
-func expandCloudwatchLogsLogDestinationParameters(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
+func expandCloudWatchLogsLogDestinationParameters(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -171,7 +171,7 @@ func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[stri
 	}
 
 	if v := apiObject.CloudwatchLogsLogDestination; v != nil {
-		tfMap["cloudwatch_logs_log_destination"] = []interface{}{flattenCloudwatchLogsLogDestination(v)}
+		tfMap["cloudwatch_logs_log_destination"] = []interface{}{flattenCloudWatchLogsLogDestination(v)}
 	}
 
 	if v := apiObject.FirehoseLogDestination; v != nil {
@@ -185,7 +185,7 @@ func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[stri
 	return tfMap
 }
 
-func flattenCloudwatchLogsLogDestination(apiObject *types.CloudwatchLogsLogDestination) map[string]interface{} {
+func flattenCloudWatchLogsLogDestination(apiObject *types.CloudwatchLogsLogDestination) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
