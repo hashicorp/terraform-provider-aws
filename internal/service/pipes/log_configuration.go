@@ -30,7 +30,7 @@ func logConfigurationSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"log_group_arn": {
 								Type:     schema.TypeString,
-								Optional: true,
+								Required: true,
 							},
 						},
 					},
@@ -43,7 +43,7 @@ func logConfigurationSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"delivery_stream_arn": {
 								Type:     schema.TypeString,
-								Optional: true,
+								Required: true,
 							},
 						},
 					},
