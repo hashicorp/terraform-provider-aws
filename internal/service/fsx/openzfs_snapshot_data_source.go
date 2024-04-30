@@ -19,8 +19,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_fsx_openzfs_snapshot")
-func DataSourceOpenzfsSnapshot() *schema.Resource {
+// @SDKDataSource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
+func dataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenzfsSnapshotRead,
 
