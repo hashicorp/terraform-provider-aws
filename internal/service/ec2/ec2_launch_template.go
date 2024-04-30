@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1207,7 +1207,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).ValueBool(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
 	}
 
@@ -1373,11 +1373,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -1969,15 +1969,15 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	apiObject := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
-	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).ValueBool(); !null {
 		apiObject.AssociateCarrierIpAddress = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).ValueBool(); !null {
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 

@@ -1,15 +1,15 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package verify
+package semver
 
 import (
 	gversion "github.com/hashicorp/go-version"
 )
 
-// SemVerLessThan returns whether or not the first version string is less than the second
+// LessThan returns whether or not the first version string is less than the second
 // according to Semantic Versioning rules (https://semver.org/).
-func SemVerLessThan(s1, s2 string) bool {
+func LessThan(s1, s2 string) bool {
 	v1, v2, err := parseVersions(s1, s2)
 
 	if err != nil {
@@ -19,9 +19,9 @@ func SemVerLessThan(s1, s2 string) bool {
 	return v1.LessThan(v2)
 }
 
-// SemVerGreaterThanOrEqual returns whether or not the first version string is greater than or equal
+// GreaterThanOrEqual returns whether or not the first version string is greater than or equal
 // to the second according to Semantic Versioning rules (https://semver.org/).
-func SemVerGreaterThanOrEqual(s1, s2 string) bool {
+func GreaterThanOrEqual(s1, s2 string) bool {
 	v1, v2, err := parseVersions(s1, s2)
 
 	if err != nil {
@@ -43,5 +43,6 @@ func parseVersions(s1, s2 string) (*gversion.Version, *gversion.Version, error) 
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return v1, v2, nil
 }

@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// @SDKDataSource("aws_redshift_cluster_credentials")
-func DataSourceClusterCredentials() *schema.Resource {
+// @SDKDataSource("aws_redshift_cluster_credentials", name="Cluster Credentials")
+func dataSourceClusterCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterCredentialsRead,
 

@@ -36403,7 +36403,7 @@ var awscnPartition = partition{
 					Region: "cn-northwest-1",
 				}: endpoint{
 					Hostname:  "entitlement-marketplace.cn-northwest-1.amazonaws.com.cn",
-					Protocols: []string{"HTTPS"},
+					Protocols: []string{"https"},
 					CredentialScope: credentialScope{
 						Region: "cn-northwest-1",
 					},
@@ -36847,7 +36847,7 @@ var awscnPartition = partition{
 				endpointKey{
 					Region: "cn-northwest-1",
 				}: endpoint{
-					Hostname: "subscribe.mediaconvert.cn-northwest-1.amazonaws.com.cn",
+					Hostname: "mediaconvert.cn-northwest-1.amazonaws.com.cn",
 					CredentialScope: credentialScope{
 						Region: "cn-northwest-1",
 					},

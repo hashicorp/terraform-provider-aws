@@ -158,7 +158,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &appconfig.GetDeploymentInput{
 		ApplicationId:    aws.String(appID),
-		DeploymentNumber: aws.Int32(int32(deploymentNum)),
+		DeploymentNumber: aws.Int32(deploymentNum),
 		EnvironmentId:    aws.String(envID),
 	}
 
@@ -215,17 +215,17 @@ func resourceDeploymentDelete(ctx context.Context, _ *schema.ResourceData, _ int
 	return diags
 }
 
-func DeploymentParseID(id string) (string, string, int, error) {
+func DeploymentParseID(id string) (string, string, int32, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID:EnvironmentID:DeploymentNumber", id)
 	}
 
-	num, err := strconv.Atoi(parts[2])
+	num, err := strconv.ParseInt(parts[2], 0, 32)
 	if err != nil {
 		return "", "", 0, fmt.Errorf("parsing AppConfig Deployment resource ID deployment_number: %w", err)
 	}
 
-	return parts[0], parts[1], num, nil
+	return parts[0], parts[1], int32(num), nil
 }

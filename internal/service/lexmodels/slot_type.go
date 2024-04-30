@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -125,7 +125,7 @@ func updateComputedAttributesOnSlotTypeCreateVersion(_ context.Context, d *schem
 	return nil
 }
 
-func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
+func hasSlotTypeConfigChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"description",
 		"enumeration_value",

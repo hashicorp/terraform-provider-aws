@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_snapshot_copy_grant", name="Snapshot Copy Grant")
 // @Tags(identifierAttribute="arn")
-func ResourceSnapshotCopyGrant() *schema.Resource {
+func resourceSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyGrantCreate,
 		ReadWithoutTimeout:   resourceSnapshotCopyGrantRead,
@@ -84,7 +84,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(name)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
-		return FindSnapshotCopyGrantByName(ctx, conn, d.Id())
+		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -98,7 +98,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	grant, err := FindSnapshotCopyGrantByName(ctx, conn, d.Id())
+	grant, err := findSnapshotCopyGrantByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Snapshot Copy Grant (%s) not found, removing from state", d.Id())
@@ -152,7 +152,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (any, error) {
-		return FindSnapshotCopyGrantByName(ctx, conn, d.Id())
+		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -162,7 +162,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.SnapshotCopyGrant, error) {
+func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.SnapshotCopyGrant, error) {
 	input := &redshift.DescribeSnapshotCopyGrantsInput{
 		SnapshotCopyGrantName: aws.String(name),
 	}
