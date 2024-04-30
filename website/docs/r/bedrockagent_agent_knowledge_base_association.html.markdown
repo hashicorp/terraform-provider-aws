@@ -15,6 +15,10 @@ Terraform resource for managing an AWS Agents for Amazon Bedrock Agent Knowledge
 
 ```terraform
 resource "aws_bedrockagent_agent_knowledge_base_association" "example" {
+  agent_id             = "012EXAMPLE"
+  description          = "Example Knowledge base"
+  knowledge_base_id    = "345EXAMPLE"
+  knowledge_base_state = "ENABLED"
 }
 ```
 
@@ -22,42 +26,33 @@ resource "aws_bedrockagent_agent_knowledge_base_association" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `agent_id` - (Required) The ID of the agent to associate.
+* `description` - (Required) Description of the association.
+* `knowledge_base_id` - (Required) The ID of the Knowledge Base to associate.
+* `knowledge_base_state` - (Required) State of the association ENABLED or DISABLED.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `agent_version` - (Optional) Agent version to associate the Knowledge Base to, currently only DRAFT.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Agent Knowledge Base Association. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Knowledge Base Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Knowledge Base Association using the `012AGENTID-DRAFT-345678KBID`. For example:
 
 ```terraform
 import {
   to = aws_bedrockagent_agent_knowledge_base_association.example
-  id = "agent_knowledge_base_association-id-12345678"
+  id = "012AGENTID-DRAFT-345678KBID"
 }
 ```
 
-Using `terraform import`, import Agents for Amazon Bedrock Agent Knowledge Base Association using the `example_id_arg`. For example:
+Using `terraform import`, import Agents for Amazon Bedrock Agent Knowledge Base Association using the `012AGENTID-DRAFT-345678KBID`. For example:
 
 ```console
-% terraform import aws_bedrockagent_agent_knowledge_base_association.example agent_knowledge_base_association-id-12345678
+% terraform import aws_bedrockagent_agent_knowledge_base_association.example 012AGENTID-DRAFT-345678KBID
 ```
