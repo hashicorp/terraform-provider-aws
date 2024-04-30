@@ -152,7 +152,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Alias (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceFunctionRead(ctx, d, meta)...)
+	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
 func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
