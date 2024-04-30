@@ -607,7 +607,7 @@ resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
     data_query {
-	  query_statement = %[2]q
+      query_statement = %[2]q
       table_configurations = {
         "COST_AND_USAGE_REPORT" = {
           "TIME_GRANULARITY"                      = "HOURLY",
