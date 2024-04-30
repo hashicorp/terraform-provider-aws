@@ -39,7 +39,6 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Knowledge Base Association using the `012AGENTID-DRAFT-345678KBID`. For example:
