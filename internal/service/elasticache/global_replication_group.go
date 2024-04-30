@@ -766,12 +766,12 @@ const (
 	globalReplicationGroupMemberStatusAssociated = "associated"
 )
 
-func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, replicationGroupID string) (*elasticache.GlobalReplicationGroupMember, error) {
+func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, replicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroupMember, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupMemberStatusAssociated},
 		Target:     []string{},
 		Refresh:    statusGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID),
-		Timeout:    20 * time.Minute,
+		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}

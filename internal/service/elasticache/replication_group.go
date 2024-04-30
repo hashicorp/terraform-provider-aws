@@ -375,7 +375,7 @@ func resourceReplicationGroup() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
-			Delete: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(45 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -963,10 +963,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 
 	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
 	if hasGlobalReplicationGroupID {
-		const (
-			timeout = 45 * time.Minute
-		)
-		if err := disassociateReplicationGroup(ctx, conn, v.(string), d.Id(), meta.(*conns.AWSClient).Region, timeout); err != nil {
+		if err := disassociateReplicationGroup(ctx, conn, v.(string), d.Id(), meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -1033,7 +1030,7 @@ func disassociateReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 		return fmt.Errorf("disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", replicationGroupID, globalReplicationGroupID, err)
 	}
 
-	if _, err := waitGlobalReplicationGroupMemberDetached(ctx, conn, globalReplicationGroupID, replicationGroupID); err != nil {
+	if _, err := waitGlobalReplicationGroupMemberDetached(ctx, conn, globalReplicationGroupID, replicationGroupID, timeout); err != nil {
 		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) detach: %w", replicationGroupID, err)
 	}
 
