@@ -19,7 +19,7 @@ const (
 
 const (
 	iamPropagationTimeout    = 2 * time.Minute
-	lambdaPropagationTimeout = 5 * time.Minute
+	lambdaPropagationTimeout = 5 * time.Minute // nosemgrep:ci.lambda-in-const-name, ci.lambda-in-var-name
 )
 
 type invocationAction string
