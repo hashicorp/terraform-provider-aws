@@ -2160,6 +2160,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 			fallthrough
 		case awstypes.RuntimeRuby25:
 			fallthrough
+		case awstypes.RuntimeNodejs14x:
+			fallthrough
 		case awstypes.RuntimeNodejs12x:
 			fallthrough
 		case awstypes.RuntimeNodejs10x:
