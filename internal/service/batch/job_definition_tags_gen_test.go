@@ -474,11 +474,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -489,11 +490,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -504,13 +506,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1updated"),
-					"providerTagKey2":   config.StringVariable("key2"),
-					"providerTagValue2": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -522,13 +524,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1updated"),
-					"providerTagKey2":   config.StringVariable("key2"),
-					"providerTagValue2": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -539,11 +541,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key2"),
-					"providerTagValue1": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -554,11 +557,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key2"),
-					"providerTagValue1": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -609,11 +613,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("providerkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
@@ -629,11 +634,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("providerkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
@@ -647,11 +653,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("providerkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1updated"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
@@ -670,11 +677,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("providerkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1updated"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
@@ -729,11 +737,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("overlapkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
@@ -748,11 +757,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("overlapkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
@@ -766,13 +776,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("overlapkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
-					"providerTagKey2":   config.StringVariable("overlapkey2"),
-					"providerTagValue2": config.StringVariable("providervalue2"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+						"overlapkey2": config.StringVariable("providervalue2"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
@@ -790,13 +800,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("overlapkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
-					"providerTagKey2":   config.StringVariable("overlapkey2"),
-					"providerTagValue2": config.StringVariable("providervalue2"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+						"overlapkey2": config.StringVariable("providervalue2"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
@@ -811,11 +821,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("overlapkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
@@ -830,11 +841,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("overlapkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
@@ -880,11 +892,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -895,11 +908,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -925,11 +939,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -988,11 +1003,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
@@ -1007,11 +1023,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 					"tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
@@ -1040,12 +1057,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("key1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("key1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1056,12 +1074,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("key1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("key1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("key1"),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1087,12 +1106,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("providerkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("resourcekey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1103,12 +1123,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsNull_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName":             config.StringVariable(rName),
-					"providerTagKey1":   config.StringVariable("providerkey1"),
-					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("resourcekey1"),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

@@ -119,14 +119,12 @@ func main() {
 		if resource.GenerateConfig {
 			testDirPath := path.Join("testdata", resource.Name)
 
-			generateTestConfig(g, testDirPath, "tags", 0, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags", 1, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags", 2, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", 0, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", 1, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", 2, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsNull", 0, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsNull", 1, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags0", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags0", true, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsNull", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsNull", true, configTmplFile, configTmpl)
 		}
 	}
 
@@ -166,9 +164,8 @@ type goImport struct {
 }
 
 type ConfigDatum struct {
-	Name        string
-	Tags        string
-	DefaultTags int
+	Tags            string
+	WithDefaultTags bool
 }
 
 //go:embed test.go.tmpl
@@ -365,14 +362,11 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount int, configTmplFile, configTmpl string) {
-	var testName string
-	if defaultCount > 0 {
-		testName = fmt.Sprintf("%s_default%d", test, defaultCount)
-	} else {
-		testName = fmt.Sprintf("%s", test)
+func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string) {
+	testName := test
+	if withDefaults {
+		testName += "_defaults"
 	}
-
 	dirPath = path.Join(dirPath, testName)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		g.Fatalf("creating test directory %q: %w", dirPath, err)
@@ -392,8 +386,8 @@ func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount 
 	}
 
 	configData := ConfigDatum{
-		Tags:        test,
-		DefaultTags: defaultCount,
+		Tags:            test,
+		WithDefaultTags: withDefaults,
 	}
 	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)

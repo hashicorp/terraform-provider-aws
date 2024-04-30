@@ -5,11 +5,6 @@
 {{ if eq . "tags0" -}}
 {{- else if eq . "tags" }}
   tags = var.tags
-{{- else if eq . "tags2" }}
-  tags = {
-    (var.tagKey1) = var.tagValue1
-    (var.tagKey2) = var.tagValue2
-  }
 {{- else if eq . "tagsNull" }}
   tags = {
     (var.tagKey1) = null
@@ -17,15 +12,10 @@
 {{- end -}}
 {{ end -}}
 
-{{- if gt .DefaultTags 0 -}}
+{{- if .WithDefaultTags -}}
 provider "aws" {
   default_tags {
-    tags = {
-      (var.providerTagKey1) = var.providerTagValue1
-{{- if gt .DefaultTags 1 }}
-      (var.providerTagKey2) = var.providerTagValue2
-{{- end }}
-    }
+    tags = var.provider_tags
   }
 }
 
@@ -52,26 +42,9 @@ variable "tagKey1" {
 }
 {{- end }}
 
-{{ if gt .DefaultTags 0 -}}
-variable "providerTagKey1" {
-  type     = string
+{{ if .WithDefaultTags -}}
+variable "provider_tags" {
+  type     = map(string)
   nullable = false
 }
-
-variable "providerTagValue1" {
-  type     = string
-  nullable = false
-}
-{{ if gt .DefaultTags 1 }}
-
-variable "providerTagKey2" {
-  type     = string
-  nullable = false
-}
-
-variable "providerTagValue2" {
-  type     = string
-  nullable = false
-}
-{{ end -}}
 {{ end -}}
