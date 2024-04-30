@@ -70,6 +70,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.4
+	github.com/aws/aws-sdk-go-v2/service/detective v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.3

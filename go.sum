@@ -160,6 +160,8 @@ github.com/aws/aws-sdk-go-v2/service/datazone v1.8.0 h1:wJ4bVNXoSTJIMfxgebI32qbx
 github.com/aws/aws-sdk-go-v2/service/datazone v1.8.0/go.mod h1:6UUbvwSg1ADRoK5rYXGDWjwzSyy8mElzIhVSqCXwNYE=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.4 h1:S3mvtYjRVVsg1R4EuV1LWZUiD72t+pfnBbK8TL7zEmo=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.4/go.mod h1:ZfNHbSICNHSqX4l5pJ6APeyWdgXgQg3PbuSFS2e5mCo=
+github.com/aws/aws-sdk-go-v2/service/detective v1.27.4 h1:sIIaIrO3qajtFO8wToL1GwxvPvSeFnu6WSGIiD6VyO0=
+github.com/aws/aws-sdk-go-v2/service/detective v1.27.4/go.mod h1:nQtuETgHoFqB/q8Yx7YIiWPgdTkrKyePtfIIgjAZDWk=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4 h1:qnMBNiyAPWwI9XSbtfOPr9rLZMdLFD2GAcZujMqw7Ow=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4/go.mod h1:+ezG+QXnBXCWFp1rCQrxyebQMM5lBAxziL4iuswpxqo=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4 h1:XBgx3sdaA0SoPXsZSNSUL14H0UnYnTSVArieaYNv0EI=

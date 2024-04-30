@@ -62,6 +62,7 @@ import (
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	detective_sdkv2 "github.com/aws/aws-sdk-go-v2/service/detective"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -178,7 +179,6 @@ import (
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
-	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
@@ -550,8 +550,8 @@ func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
 	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy, make(map[string]any)))
 }
 
-func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
-	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective, make(map[string]any)))
+func (c *AWSClient) DetectiveClient(ctx context.Context) *detective_sdkv2.Client {
+	return errs.Must(client[*detective_sdkv2.Client](ctx, c, names.Detective, make(map[string]any)))
 }
 
 func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Client {
