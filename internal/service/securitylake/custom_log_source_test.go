@@ -6,8 +6,10 @@ package securitylake_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,22 +39,28 @@ func testAccCustomLogSource_basic(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.crawler_arn", "glue", "crawler/windows-sysmon"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.database_arn", "glue", fmt.Sprintf("database/amazon_security_lake_glue_db_%s", strings.Replace(acctest.Region(), "-", "_", -1))),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_windows_sysmon", strings.Replace(acctest.Region(), "-", "_", -1))),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", "windows-sysmon-test"),
-					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_classes"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "provider_details.0.location", regexache.MustCompile(fmt.Sprintf(`^s3://aws-security-data-lake-%s-[a-z0-9]{30}/ext/windows-sysmon/$`, acctest.Region()))),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-windows-sysmon-%s", acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "source_name", "windows-sysmon"),
-					resource.TestCheckResourceAttr(resourceName, "source_version", "1.0"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_version"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{"configuration"},
 			},
 		},
 	})
@@ -133,7 +141,25 @@ func testAccCheckCustomLogSourceExists(ctx context.Context, n string, v *types.C
 }
 
 func testAccCustomLogSourceConfig_basic() string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), `
+resource "aws_securitylake_custom_log_source" "test" {
+  source_name   = "windows-sysmon"
+
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.test.arn
+    }
+
+    provider_identity {
+      external_id = "windows-sysmon-test"
+      principal   = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
+}
+
 resource "aws_iam_role" "test" {
   name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   path = "/service-role/"
@@ -176,6 +202,8 @@ POLICY
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = aws_iam_role.test.name
+}
+`)
 }
 
 resource "aws_securitylake_custom_log_source" "test" {
