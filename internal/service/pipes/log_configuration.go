@@ -133,12 +133,12 @@ func expandFirehoseLogDestinationParameters(tfMap map[string]interface{}) *types
 	return apiObject
 }
 
-func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
+func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.S3LogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.CloudwatchLogsLogDestinationParameters{}
+	apiObject := &types.S3LogDestinationParameters{}
 
 	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
@@ -213,7 +213,7 @@ func flattenFirehoseLogDestination(apiObject *types.FirehoseLogDestination) map[
 	return tfMap
 }
 
-func flattenS3LogDestination(apiObject *types.flattenS3LogDestination) map[string]interface{} {
+func flattenS3LogDestination(apiObject *types.S3LogDestination) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
