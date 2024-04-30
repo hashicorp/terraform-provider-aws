@@ -9,11 +9,13 @@ var (
 	ResourceDataRepositoryAssociation = resourceDataRepositoryAssociation
 	ResourceFileCache                 = resourceFileCache
 	ResourceLustreFileSystem          = resourceLustreFileSystem
+	ResourceONTAPFileSystem           = resourceONTAPFileSystem
 	ResourceOpenZFSSnapshot           = resourceOpenZFSSnapshot
 
 	FindBackupByID                    = findBackupByID
 	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID
 	FindFileCacheByID                 = findFileCacheByID
 	FindLustreFileSystemByID          = findLustreFileSystemByID
+	FindONTAPFileSystemByID           = findONTAPFileSystemByID
 	FindSnapshotByID                  = findSnapshotByID
 )

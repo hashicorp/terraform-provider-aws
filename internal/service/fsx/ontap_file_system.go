@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_fsx_ontap_file_system", name="ONTAP File System")
 // @Tags(identifierAttribute="arn")
-func ResourceONTAPFileSystem() *schema.Resource {
+func resourceONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceONTAPFileSystemCreate,
 		ReadWithoutTimeout:   resourceONTAPFileSystemRead,
@@ -344,7 +344,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindONTAPFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := findONTAPFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for NetApp ONTAP File System (%s) not found, removing from state", d.Id())
@@ -559,7 +559,7 @@ func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
 	return []interface{}{m}
 }
 
-func FindONTAPFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findONTAPFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeOntap)
 
 	if err != nil {

@@ -192,7 +192,7 @@ func sweepONTAPFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceONTAPFileSystem()
+			r := resourceONTAPFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
