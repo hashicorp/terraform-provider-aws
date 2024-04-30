@@ -292,7 +292,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting svm_active_directory: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
 	d.Set("arn", storageVirtualMachine.ResourceARN)
 	if err := d.Set("endpoints", flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
