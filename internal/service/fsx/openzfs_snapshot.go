@@ -107,7 +107,7 @@ func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Snapshot (%s) not found, removing from state", d.Id())
@@ -179,7 +179,7 @@ func resourceOpenzfsSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
+func findSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 	input := &fsx.DescribeSnapshotsInput{
 		SnapshotIds: aws.StringSlice([]string{id}),
 	}
@@ -230,7 +230,7 @@ func findSnapshots(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapsh
 
 func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotByID(ctx, conn, id)
+		output, err := findSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

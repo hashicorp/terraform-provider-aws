@@ -143,7 +143,7 @@ func sweepLustreFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceLustreFileSystem()
+			r := resourceLustreFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
