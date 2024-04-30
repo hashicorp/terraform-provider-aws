@@ -3,10 +3,8 @@
 
 {{ define "tags" }}
 {{ if eq . "tags0" -}}
-{{- else if eq . "tags1" }}
-  tags = {
-    (var.tagKey1) = var.tagValue1
-  }
+{{- else if eq . "tags" }}
+  tags = var.tags
 {{- else if eq . "tags2" }}
   tags = {
     (var.tagKey1) = var.tagValue1
@@ -42,34 +40,9 @@ variable "rName" {
   nullable = false
 }
 {{ if eq .Tags "tags0" -}}
-{{ else if eq .Tags "tags1" }}
-variable "tagKey1" {
-  type     = string
-  nullable = false
-}
-
-variable "tagValue1" {
-  type     = string
-  nullable = false
-}
-{{ else if eq .Tags "tags2" }}
-variable "tagKey1" {
-  type     = string
-  nullable = false
-}
-
-variable "tagValue1" {
-  type     = string
-  nullable = false
-}
-
-variable "tagKey2" {
-  type     = string
-  nullable = false
-}
-
-variable "tagValue2" {
-  type     = string
+{{ else if eq .Tags "tags" }}
+variable "tags" {
+  type     = map(string)
   nullable = false
 }
 {{ else if eq .Tags "tagsNull" }}

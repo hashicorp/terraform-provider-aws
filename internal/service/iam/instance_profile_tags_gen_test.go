@@ -26,11 +26,12 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -39,24 +40,25 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1updated"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -66,24 +68,25 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1updated"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key2"),
-					"tagValue1": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -92,11 +95,12 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key2"),
-					"tagValue1": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -193,11 +197,12 @@ func TestAccIAMInstanceProfile_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -206,11 +211,12 @@ func TestAccIAMInstanceProfile_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -233,11 +239,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnCreate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -246,11 +253,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -292,11 +300,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -305,13 +314,13 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -321,24 +330,25 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -347,11 +357,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -374,11 +385,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -387,11 +399,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -400,11 +413,12 @@ func TestAccIAMInstanceProfile_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -550,13 +564,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -569,13 +584,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -583,15 +599,15 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags2_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1updated"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1updated"),
-					"tagKey2":           config.StringVariable("resourcekey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -606,15 +622,15 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags2_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1updated"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1updated"),
-					"tagKey2":           config.StringVariable("resourcekey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -659,13 +675,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_overlapping(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -677,13 +694,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -691,17 +709,17 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags2_default2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
 					"providerTagKey2":   config.StringVariable("overlapkey2"),
 					"providerTagValue2": config.StringVariable("providervalue2"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
-					"tagKey2":           config.StringVariable("overlapkey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -715,17 +733,17 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags2_default2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
 					"providerTagKey2":   config.StringVariable("overlapkey2"),
 					"providerTagValue2": config.StringVariable("providervalue2"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
-					"tagKey2":           config.StringVariable("overlapkey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -733,13 +751,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -751,13 +770,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -780,11 +800,12 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_updateToProviderOnly(t *testing.
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -853,11 +874,12 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_updateToResourceOnly(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -869,11 +891,12 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_updateToResourceOnly(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -896,13 +919,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
 					"providerTagValue1": config.StringVariable("value1"),
-					"tagKey1":           config.StringVariable("key1"),
-					"tagValue1":         config.StringVariable(""),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &v),
@@ -914,13 +938,14 @@ func TestAccIAMInstanceProfile_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags1_default1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/InstanceProfile/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
 					"providerTagValue1": config.StringVariable("value1"),
-					"tagKey1":           config.StringVariable("key1"),
-					"tagValue1":         config.StringVariable(""),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

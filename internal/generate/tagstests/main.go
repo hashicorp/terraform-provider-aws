@@ -119,15 +119,13 @@ func main() {
 		if resource.GenerateConfig {
 			testDirPath := path.Join("testdata", resource.Name)
 
+			generateTestConfig(g, testDirPath, "tags", 0, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags", 1, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags", 2, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags0", 0, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags1", 0, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags2", 0, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsNull", 0, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags0", 1, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags0", 2, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags1", 1, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags2", 1, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags2", 2, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsNull", 0, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsNull", 1, configTmplFile, configTmpl)
 		}
 	}
@@ -331,6 +329,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 					case "config-only":
 						d.GenerateTests = false
+						v.g.Warnf("Only generating configurations for %s.%s: verify tests manually", v.packageName, v.functionName)
 
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

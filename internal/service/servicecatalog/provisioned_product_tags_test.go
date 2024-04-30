@@ -14,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// WARNING: This file is *NOT* generated. It may need to be updated manually
+// to keep it in sync with generated tests.
+
 func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v servicecatalog.ProvisionedProductDetail
@@ -27,11 +30,12 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -40,11 +44,12 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -54,13 +59,13 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1updated"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -70,13 +75,13 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1updated"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable("value2"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -86,11 +91,12 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				},
 			},
 			// {
-			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
-			// 		"rName":     config.StringVariable(rName),
-			// 		"tagKey1":   config.StringVariable("key2"),
-			// 		"tagValue1": config.StringVariable("value2"),
+			// 		"rName": config.StringVariable(rName),
+			// 		"tags": config.MapVariable(map[string]config.Variable{
+			// 			"key2": config.StringVariable("value2"),
+			// 		}),
 			// 	},
 			// 	Check: resource.ComposeAggregateTestCheckFunc(
 			// 		testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -99,11 +105,12 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	),
 			// },
 			// {
-			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
-			// 		"rName":     config.StringVariable(rName),
-			// 		"tagKey1":   config.StringVariable("key2"),
-			// 		"tagValue1": config.StringVariable("value2"),
+			// 		"rName": config.StringVariable(rName),
+			// 		"tags": config.MapVariable(map[string]config.Variable{
+			// 			"key2": config.StringVariable("value2"),
+			// 		}),
 			// 	},
 			// 	ResourceName:      resourceName,
 			// 	ImportState:       true,
@@ -209,11 +216,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -222,11 +230,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -254,11 +263,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -267,11 +277,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -321,11 +332,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -334,13 +346,13 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -350,13 +362,13 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
-					"tagKey2":   config.StringVariable("key2"),
-					"tagValue2": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -366,11 +378,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -379,11 +392,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -411,11 +425,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -424,11 +439,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -437,11 +453,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable(""),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -466,7 +483,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -480,7 +498,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -494,7 +513,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -511,7 +531,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -527,7 +548,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 				},
 			},
 			// {
-			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+			// 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			// 	ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":             config.StringVariable(rName),
 			// 		"providerTagKey1":   config.StringVariable("key2"),
@@ -541,7 +563,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 			// 	),
 			// },
 			// {
-			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+			// 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			// 	ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":             config.StringVariable(rName),
 			// 		"providerTagKey1":   config.StringVariable("key2"),
@@ -595,13 +618,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -613,13 +638,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -629,15 +656,16 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1updated"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1updated"),
-					"tagKey2":           config.StringVariable("resourcekey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -651,15 +679,16 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1updated"),
-					"tagKey1":           config.StringVariable("resourcekey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1updated"),
-					"tagKey2":           config.StringVariable("resourcekey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -709,13 +738,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -726,13 +757,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -742,17 +775,18 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
 					"providerTagKey2":   config.StringVariable("overlapkey2"),
 					"providerTagValue2": config.StringVariable("providervalue2"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
-					"tagKey2":           config.StringVariable("overlapkey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -765,17 +799,18 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags2_default2/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
 					"providerTagKey2":   config.StringVariable("overlapkey2"),
 					"providerTagValue2": config.StringVariable("providervalue2"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue1"),
-					"tagKey2":           config.StringVariable("overlapkey2"),
-					"tagValue2":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -785,13 +820,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -802,13 +839,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
 					"providerTagValue1": config.StringVariable("providervalue1"),
-					"tagKey1":           config.StringVariable("overlapkey1"),
-					"tagValue1":         config.StringVariable("resourcevalue2"),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -834,11 +873,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -849,7 +889,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -863,7 +904,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -892,7 +934,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -907,11 +950,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -923,11 +967,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
-					"tagKey1":   config.StringVariable("key1"),
-					"tagValue1": config.StringVariable("value1"),
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -954,13 +999,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
 					"providerTagValue1": config.StringVariable("value1"),
-					"tagKey1":           config.StringVariable("key1"),
-					"tagValue1":         config.StringVariable(""),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -971,13 +1018,15 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags1_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
 					"providerTagValue1": config.StringVariable("value1"),
-					"tagKey1":           config.StringVariable("key1"),
-					"tagValue1":         config.StringVariable(""),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1002,7 +1051,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -1017,7 +1067,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -1047,7 +1098,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -1062,7 +1114,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
