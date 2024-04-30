@@ -16,7 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_ontap_storage_virtual_machines", name="ONTAP Storage Virtual Machines")
-func DataSourceONTAPStorageVirtualMachines() *schema.Resource {
+func dataSourceONTAPStorageVirtualMachines() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachinesRead,
 
@@ -51,14 +51,10 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machines: %s", err)
 	}
 
-	var svmIDs []string
-
-	for _, svm := range svms {
-		svmIDs = append(svmIDs, aws.StringValue(svm.StorageVirtualMachineId))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", svmIDs)
+	d.Set("ids", tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
+		return aws.StringValue(svm.StorageVirtualMachineId)
+	}))
 
 	return diags
 }
