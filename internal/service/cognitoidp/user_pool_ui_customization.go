@@ -5,7 +5,6 @@ package cognitoidp
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 	"time"
 
@@ -95,7 +94,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("image_file"); ok {
-		v, err := base64.StdEncoding.DecodeString(v.(string))
+		v, err := itypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

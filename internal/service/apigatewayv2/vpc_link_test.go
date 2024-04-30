@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -132,7 +132,7 @@ func TestAccAPIGatewayV2VPCLink_tags(t *testing.T) {
 
 func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_vpc_link" {
@@ -163,7 +163,7 @@ func testAccCheckVPCLinkExists(ctx context.Context, n string, v *apigatewayv2.Ge
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 

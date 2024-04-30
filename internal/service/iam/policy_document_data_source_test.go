@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -336,6 +335,9 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 					),
 				),
 			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_sourcePolicyDocument_emptyString,
+			},
 		},
 	})
 }
@@ -366,7 +368,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.StandardPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -385,7 +387,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, names.USGovCloudPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -1612,5 +1614,31 @@ data "aws_iam_policy_document" "test" {
 var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON = `
 data "aws_iam_policy_document" "test" {
   override_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_sourcePolicyDocument_emptyString = `
+variable "additional_policy_statements" {
+  type        = string
+  description = "additional policy statements that can be added to the role's policy document"
+  default     = ""
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  source_policy_documents = [
+    data.aws_iam_policy_document.partial.json,
+    var.additional_policy_statements
+  ]
+}
+
+data "aws_iam_policy_document" "partial" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
 }
 `

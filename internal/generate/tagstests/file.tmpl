@@ -4,7 +4,7 @@
 	ctx := acctest.Context(t)
 	{{ if .ExistsTypeName -}}
 	var v {{ .ExistsTypeName }}
-	{{- end }}
+	{{ end -}}
 	resourceName := "{{ .TypeName}}.test"
 	{{ if .Generator -}}
 	rName := {{ .Generator }}
@@ -14,7 +14,7 @@
 {{ end }}
 
 {{ define "TestCaseSetup" -}}
-	PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	PreCheck:                 func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
 	ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 	CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
@@ -33,6 +33,10 @@
 },
 {{ end }}
 
+{{ define "testname" -}}
+{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ProviderNameUpper }}{{ .Name }}
+{{- end }}
+
 package {{ .ProviderPackage }}_test
 
 import (
@@ -47,18 +51,42 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	{{ range .GoImports -}}
+	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
+	{{ end }}
 )
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
+{{ if .Serialize }}
+func {{ template "testname" . }}_tagsSerial(t *testing.T) {
+	t.Helper()
+
+	t.Run("basic", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags)
+	t.Run("null", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null)
+	t.Run("AddOnUpdate", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_AddOnUpdate)
+	t.Run("EmptyTag_OnCreate", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate)
+	t.Run("EmptyTag_OnUpdate_Add", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add)
+	t.Run("EmptyTag_OnUpdate_Replace", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace)
+	t.Run("DefaultTags_providerOnly", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly)
+	t.Run("DefaultTags_nonOverlapping", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping)
+	t.Run("DefaultTags_overlapping", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping)
+	t.Run("DefaultTags_updateToProviderOnly", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProviderOnly)
+	t.Run("DefaultTags_updateToResourceOnly", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourceOnly)
+	t.Run("DefaultTags_emptyResourceTag", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTag)
+	t.Run("DefaultTags_nullOverlappingResourceTag", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlappingResourceTag)
+	t.Run("DefaultTags_nullNonOverlappingResourceTag", testAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullNonOverlappingResourceTag)
+}
+{{ end }}
+
+func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -67,7 +95,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -77,7 +105,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key2", "value2"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -86,7 +114,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -95,16 +123,19 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null(t *testing.T) {
+func {{ template "testname" . }}_tags_null(t *testing.T) {
+{{- if eq .Implementation "framework" }}
+	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tagsNull(rName, "key1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -118,23 +149,23 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null(t *testing.T) {
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_AddOnUpdate(t *testing.T) {
+func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -144,16 +175,19 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate(t *testing.T) {
+func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
@@ -162,7 +196,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate(t *testin
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -171,16 +205,19 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate(t *testin
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -188,7 +225,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				Config: testAcc{{ .Name }}Config_tags2(rName, "key1", "value1", "key2", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
@@ -198,7 +235,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -208,16 +245,19 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -225,7 +265,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace(t
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
@@ -235,10 +275,10 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace(t
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +287,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -260,7 +300,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
@@ -274,7 +314,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
@@ -287,7 +327,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -297,10 +337,10 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -309,7 +349,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 					testAcc{{ .Name }}Config_tags1(rName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
@@ -324,7 +364,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 					testAcc{{ .Name }}Config_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
@@ -341,7 +381,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -351,10 +391,10 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -363,7 +403,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 					testAcc{{ .Name }}Config_tags1(rName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -377,7 +417,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 					testAcc{{ .Name }}Config_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
@@ -393,7 +433,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 					testAcc{{ .Name }}Config_tags1(rName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -405,16 +445,16 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -427,7 +467,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProvide
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -438,10 +478,10 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProvide
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -450,7 +490,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourc
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -459,7 +499,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourc
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -471,10 +511,13 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourc
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -483,7 +526,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTa
 					testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -495,10 +538,13 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTa
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+{{- if eq .Implementation "framework" }}
+	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -507,7 +553,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlapping
 					testAcc{{ .Name }}Config_tagsNull(rName, "key1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
@@ -518,10 +564,13 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlapping
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+{{- if eq .Implementation "framework" }}
+	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{ end }}
 	{{- template "Init" . }}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -530,7 +579,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullNonOverlapp
 					testAcc{{ .Name }}Config_tagsNull(rName, "resourcekey1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),

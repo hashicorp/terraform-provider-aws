@@ -167,7 +167,7 @@ func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -197,7 +197,7 @@ func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		output, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
+		output, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

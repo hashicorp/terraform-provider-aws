@@ -16,7 +16,6 @@ import (
 func TestAccLambdaAliasDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	dataSourceName := "data.aws_lambda_alias.test"
 	resourceName := "aws_lambda_alias.test"
 
@@ -113,10 +112,10 @@ resource "aws_lambda_alias" "test" {
 }
 
 func testAccAliasDataSourceConfig_basic(rName string) string {
-	return testAccAliasDataSourceConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccAliasDataSourceConfig_base(rName), `
 data "aws_lambda_alias" "test" {
   name          = aws_lambda_alias.test.name
   function_name = aws_lambda_alias.test.function_name
 }
-`
+`)
 }

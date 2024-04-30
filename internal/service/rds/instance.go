@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -152,6 +153,9 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(backupTarget_Values(), false),
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -182,6 +186,22 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+				},
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					for _, conflictAttr := range []string{
+						"replicate_source_db",
+						// s3_import is handled by the schema ConflictsWith
+						"snapshot_identifier",
+						"restore_to_point_in_time",
+					} {
+						if _, ok := d.GetOk(conflictAttr); ok {
+							return true
+						}
+					}
+					return false
+				},
 			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
@@ -211,6 +231,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"dedicated_log_volume": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"delete_automated_backups": {
 				Type:     schema.TypeBool,
@@ -628,6 +653,9 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"username": {
 				Type:          schema.TypeString,
@@ -697,6 +725,23 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var resourceID string // will be assigned depending on how it is created
 
+	if _, ok := d.GetOk("character_set_name"); ok {
+		charSetPath := cty.GetAttrPath("character_set_name")
+		for _, conflictAttr := range []string{
+			"replicate_source_db",
+			// s3_import is handled by the schema ConflictsWith
+			"snapshot_identifier",
+			"restore_to_point_in_time",
+		} {
+			if _, ok := d.GetOk(conflictAttr); ok {
+				diags = append(diags, errs.NewAttributeConflictsWillBeError(
+					charSetPath,
+					cty.GetAttrPath(conflictAttr),
+				))
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		sourceDBInstanceID := v.(string)
 		input := &rds.CreateDBInstanceReadReplicaInput{
@@ -727,6 +772,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -902,15 +951,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
-		if _, ok := d.GetOk("character_set_name"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"character_set_name" doesn't work with restores"`)
-		}
-		if _, ok := d.GetOk("timezone"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
-		}
-		if _, ok := d.GetOk("backup_target"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"backup_target" doesn't work with restores"`)
-		}
 		if diags.HasError() {
 			return diags
 		}
@@ -948,6 +988,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -1127,6 +1171,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("domain"); ok {
@@ -1370,6 +1418,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("domain"); ok {
 			input.Domain = aws.String(v.(string))
 		}
@@ -1552,6 +1604,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("domain"); ok {
@@ -1793,6 +1849,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
+	d.Set("dedicated_log_volume", v.DedicatedLogVolume)
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		v := v.DomainMemberships[0]
@@ -2176,6 +2233,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("db_subnet_group_name") {
 		needsModify = true
 		input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
+	}
+
+	if d.HasChange("dedicated_log_volume") {
+		needsModify = true
+		input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 	}
 
 	if d.HasChange("deletion_protection") {

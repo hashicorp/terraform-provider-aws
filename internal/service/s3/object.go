@@ -6,7 +6,6 @@ package s3
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -31,9 +30,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
@@ -206,7 +207,7 @@ func resourceObject() *schema.Resource {
 										Type:             schema.TypeMap,
 										Optional:         true,
 										Elem:             &schema.Schema{Type: schema.TypeString},
-										ValidateDiagFunc: verify.MapLenBetween(0, 0),
+										ValidateDiagFunc: verify.MapSizeBetween(0, 0),
 									},
 								},
 							},
@@ -481,17 +482,15 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}()
 	} else if v, ok := d.GetOk("content"); ok {
-		content := v.(string)
-		body = bytes.NewReader([]byte(content))
+		body = strings.NewReader(v.(string))
 	} else if v, ok := d.GetOk("content_base64"); ok {
-		content := v.(string)
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		v, err := itypes.Base64Decode(v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		body = bytes.NewReader(contentRaw)
+		body = bytes.NewReader(v)
 	} else {
 		body = bytes.NewReader([]byte{})
 	}
@@ -643,7 +642,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 	return nil
 }
 
-func hasObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
@@ -737,7 +736,7 @@ func sdkv1CompatibleCleanKey(key string) string {
 	return key
 }
 
-func ignoreProviderDefaultTags(ctx context.Context, d verify.ResourceDiffer) bool {
+func ignoreProviderDefaultTags(ctx context.Context, d sdkv2.ResourceDiffer) bool {
 	if v, ok := d.GetOk("override_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if data := expandOverrideProviderModel(ctx, v.([]interface{})[0].(map[string]interface{})); data != nil && data.DefaultTagsConfig != nil {
 			return len(data.DefaultTagsConfig.Tags) == 0

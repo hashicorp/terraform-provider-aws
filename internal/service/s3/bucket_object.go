@@ -10,7 +10,6 @@ package s3
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -29,9 +28,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
@@ -402,7 +403,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		content := v.(string)
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		contentRaw, err := itypes.Base64Decode(content)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
 		}
@@ -535,7 +536,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func hasBucketObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",

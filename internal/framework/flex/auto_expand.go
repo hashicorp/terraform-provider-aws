@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 // Expand  = TF -->  AWS
@@ -262,6 +263,18 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			return diags
 		}
 
+	case reflect.Interface:
+		if s, ok := vFrom.(fwtypes.SmithyJSON[smithyjson.JSONStringer]); ok {
+			v, d := s.ValueInterface()
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(v))
+			return diags
+		}
+
 	case reflect.Ptr:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.String:
@@ -384,7 +397,13 @@ func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.L
 				return diags
 			}
 
-			vTo.Set(reflect.ValueOf(to))
+			// Copy elements individually to enable expansion of lists of
+			// custom string types (AWS enums)
+			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
+			for i := 0; i < len(to); i++ {
+				vals.Index(i).SetString(to[i])
+			}
+			vTo.Set(vals)
 			return diags
 
 		case reflect.Ptr:
@@ -533,7 +552,13 @@ func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.Se
 				return diags
 			}
 
-			vTo.Set(reflect.ValueOf(to))
+			// Copy elements individually to enable expansion of lists of
+			// custom string types (AWS enums)
+			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
+			for i := 0; i < len(to); i++ {
+				vals.Index(i).SetString(to[i])
+			}
+			vTo.Set(vals)
 			return diags
 
 		case reflect.Ptr:
@@ -616,10 +641,24 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 				diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 				return diags
 			}
+
+		case reflect.Interface:
+			//
+			// types.List(OfObject) -> []interface.
+			//
+			// Smithy union type handling not yet implemented. Silently skip.
+			return diags
 		}
+
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
-	diags.AddError("Incompatible types", fmt.Sprintf("nestedObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
+	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 

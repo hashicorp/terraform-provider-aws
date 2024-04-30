@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -891,7 +892,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					input.ElasticsearchClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if verify.SemVerLessThan(d.Get("elasticsearch_version").(string), "7.9") {
+					if semver.LessThan(d.Get("elasticsearch_version").(string), "7.9") {
 						input.ElasticsearchClusterConfig.ColdStorageOptions = nil
 					}
 				}
@@ -1028,7 +1029,7 @@ func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta inte
 // inPlaceEncryptionEnableVersion returns true if, based on version, encryption
 // can be enabled in place (without ForceNew)
 func inPlaceEncryptionEnableVersion(version string) bool {
-	return verify.SemVerGreaterThanOrEqual(version, "6.7")
+	return semver.GreaterThanOrEqual(version, "6.7")
 }
 
 func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) bool {

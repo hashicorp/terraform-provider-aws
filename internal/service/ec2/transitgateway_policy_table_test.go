@@ -17,20 +17,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayPolicyTable_basic(t *testing.T) {
+func testAccTransitGatewayPolicyTable_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableDestroy(ctx),
@@ -54,14 +59,18 @@ func testAccTransitGatewayPolicyTable_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPolicyTable_disappears(t *testing.T) {
+func testAccTransitGatewayPolicyTable_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableDestroy(ctx),
@@ -78,7 +87,7 @@ func testAccTransitGatewayPolicyTable_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
+func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1 ec2.TransitGateway
 	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
@@ -86,8 +95,12 @@ func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableDestroy(ctx),
@@ -105,14 +118,18 @@ func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPolicyTable_tags(t *testing.T) {
+func testAccTransitGatewayPolicyTable_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayPolicyTable1, transitGatewayPolicyTable2, transitGatewayPolicyTable3 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableDestroy(ctx),

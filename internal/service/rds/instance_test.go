@@ -65,6 +65,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
@@ -1043,6 +1044,7 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
 
 					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
@@ -2044,6 +2046,83 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_characterSet_Source(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"manage_master_user_password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2191,6 +2270,49 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T) {
+	t.Skip("Skipping due to upstream error")
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var providers []*schema.Provider
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_s3Import(t *testing.T) {
 	acctest.Skip(t, "RestoreDBInstanceFromS3 cannot restore from MySQL version 5.6")
 
@@ -2255,6 +2377,7 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", sourceDbResourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceDbResourceName, "engine"),
@@ -4103,6 +4226,101 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_dedicatedLogVolume_enableOnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
 				},
 			},
 		},
@@ -6402,6 +6620,23 @@ func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
 	return testAccInstanceConfig_orderableClass("custom-sqlserver-web", "", "gp2")
 }
 
+func testAccInstanceConfig_orderableClassOracleEnterprise() string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = [%[4]s]
+}
+`, tfrds.InstanceEngineOracleEnterprise, "bring-your-own-license", "gp2", strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1))
+}
+
 func testAccInstanceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
@@ -6970,6 +7205,8 @@ resource "aws_db_instance" "test" {
   password                   = "avoid-plaintext-passwords"
   username                   = "tfacctest"
   backup_retention_period    = 0
+
+  character_set_name = "WE8ISO8859P15"
 
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -9599,6 +9836,70 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
+func testAccInstanceConfig_ReplicateSourceDB_characterSet_Source(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassOracleEnterprise(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.identifier
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
+}
+
+resource "aws_db_instance" "source" {
+  identifier              = "%[1]s-source"
+  allocated_storage       = 20
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  db_name                 = "MAINDB"
+  username                = "oadmin"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = 1
+
+  character_set_name = "WE8ISO8859P15"
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassOracleEnterprise(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.identifier
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
+
+  character_set_name = "NE8ISO8859P10"
+}
+
+resource "aws_db_instance" "source" {
+  identifier              = "%[1]s-source"
+  allocated_storage       = 20
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  db_name                 = "MAINDB"
+  username                = "oadmin"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = 1
+
+  character_set_name = "WE8ISO8859P15"
+}
+`, rName))
+}
+
 func testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, replicaMode string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -9774,6 +10075,41 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_instance_classes = [%[3]s]
 }
 `, rName, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), parameters))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccInstanceConfig_orderableClassOracleEnterprise(), fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  provider = "aws"
+
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.arn
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
+}
+
+resource "aws_db_instance" "source" {
+  provider = "awsalternate"
+
+  identifier              = "%[1]s-source"
+  allocated_storage       = 20
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  db_name                 = "MAINDB"
+  username                = "oadmin"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = 1
+
+  character_set_name = "WE8ISO8859P15"
+}
+`, rName))
 }
 
 func testAccInstanceConfig_baseMonitoringRole(rName string) string {
@@ -11146,6 +11482,29 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot                   = true
 }
 `, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName)
+}
+
+func testAccInstanceConfig_dedicatedLogVolumeEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassPostgres(), fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  # Dedicated log volumes do not support PG 16 instances.
+  engine              = "postgres"
+  engine_version      = "15.6"
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+  apply_immediately   = true
+
+  # Minimum amounts required to qualify for IOPS / DedicatedLogVolume
+  allocated_storage = 100
+  storage_type      = "io1"
+  iops              = 1000
+
+  dedicated_log_volume = %[2]t
+}
+`, rName, enabled))
 }
 
 func testAccInstanceConfig_noDeleteAutomatedBackups(rName string) string {

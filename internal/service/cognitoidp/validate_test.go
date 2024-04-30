@@ -51,6 +51,7 @@ func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"{####}" + strings.Repeat("W", 19994), // = 20000
+		"{####}" + strings.Repeat("あ", 19994), // = 20000, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -62,8 +63,10 @@ func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
 
 	invalidValues := []string{
 		"Foo",
+		"あいうえお",
 		"{###}",
 		"{####}" + strings.Repeat("W", 19995), // > 20000
+		"{####}" + strings.Repeat("あ", 19995), // > 20000, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {
@@ -82,6 +85,7 @@ func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\" '(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"Foo Bar", // special whitespace character
 		strings.Repeat("W", 140),
+		strings.Repeat("あ", 140), // UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -92,8 +96,8 @@ func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
 	}
 
 	invalidValues := []string{
-		"Foo",
-		strings.Repeat("W", 141),
+		strings.Repeat("W", 141), // > 140
+		strings.Repeat("あ", 141), // UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {
@@ -143,6 +147,7 @@ func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"{####}" + strings.Repeat("W", 134), // = 140
+		"{####}" + strings.Repeat("あ", 134), // = 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -154,7 +159,9 @@ func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
 
 	invalidValues := []string{
 		"Foo",
-		"{####}" + strings.Repeat("W", 135),
+		"あいうえお",
+		"{####}" + strings.Repeat("W", 135), // > 140
+		"{####}" + strings.Repeat("あ", 135), // > 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {
@@ -174,6 +181,7 @@ func TestValidUserPoolSMSVerificationMessage(t *testing.T) {
 		"{####} Bar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\"'(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
 		"{####}" + strings.Repeat("W", 134), // = 140
+		"{####}" + strings.Repeat("あ", 134), // = 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -185,7 +193,9 @@ func TestValidUserPoolSMSVerificationMessage(t *testing.T) {
 
 	invalidValues := []string{
 		"Foo",
-		"{####}" + strings.Repeat("W", 135),
+		"あいうえお",
+		"{####}" + strings.Repeat("W", 135), // > 140
+		"{####}" + strings.Repeat("あ", 135), // > 140, UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {

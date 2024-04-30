@@ -27,9 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -775,7 +775,7 @@ func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType strin
 		switch v, nt, k := d.Get(tfAttributeName), attributeInfo.tfNullableType, aws.String(attributeInfo.apiAttributeKey); nt {
 		case schema.TypeBool:
 			v := v.(string)
-			if v, null, _ := nullable.Bool(v).Value(); !null {
+			if v, null, _ := nullable.Bool(v).ValueBool(); !null {
 				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
 					Key:   k,
 					Value: flex.BoolValueToString(v),
@@ -783,7 +783,7 @@ func (m targetGroupAttributeMap) expand(d *schema.ResourceData, targetType strin
 			}
 		case schema.TypeInt:
 			v := v.(string)
-			if v, null, _ := nullable.Int(v).Value(); !null {
+			if v, null, _ := nullable.Int(v).ValueInt64(); !null {
 				apiObjects = append(apiObjects, &elbv2.TargetGroupAttribute{
 					Key:   k,
 					Value: flex.Int64ValueToString(v),

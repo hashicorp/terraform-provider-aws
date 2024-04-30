@@ -57,6 +57,20 @@ func TestFlatten(t *testing.T) {
 			WantErr:  true,
 		},
 		{
+			TestName: "json interface Source string Target",
+			Source: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					Value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target:     &TestFlexTF19{},
+			WantTarget: &TestFlexTF19{Field1: types.StringValue(`{"test":"a"}`)},
+		},
+		{
 			TestName:   "empty struct Source and Target",
 			Source:     TestFlex00{},
 			Target:     &TestFlex00{},
@@ -147,15 +161,14 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTF03{},
 			WantTarget: &TestFlexTF03{
-				Field1: types.StringValue("field1"),
-				Field2: types.StringValue("field2"),
-				Field3: types.Int64Value(3),
-				Field4: types.Int64Value(-4),
-				Field5: types.Int64Value(5),
-				Field6: types.Int64Value(-6),
-				// float32 -> float64 precision problems.
-				Field7:  types.Float64Value(float64(float32(7.7))),
-				Field8:  types.Float64Value(float64(float32(-8.8))),
+				Field1:  types.StringValue("field1"),
+				Field2:  types.StringValue("field2"),
+				Field3:  types.Int64Value(3),
+				Field4:  types.Int64Value(-4),
+				Field5:  types.Int64Value(5),
+				Field6:  types.Int64Value(-6),
+				Field7:  types.Float64Value(7.7),
+				Field8:  types.Float64Value(-8.8),
 				Field9:  types.Float64Value(9.99),
 				Field10: types.Float64Value(-10.101),
 				Field11: types.BoolValue(true),
@@ -376,13 +389,13 @@ func TestFlatten(t *testing.T) {
 			TestName:   "single string Source and single ARN Target",
 			Source:     &TestFlexAWS01{Field1: testARN},
 			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 		},
 		{
 			TestName:   "single *string Source and single ARN Target",
 			Source:     &TestFlexAWS02{Field1: aws.String(testARN)},
 			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 		},
 		{
 			TestName:   "single nil *string Source and single ARN Target",
@@ -886,6 +899,118 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 					},
 				),
 			},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64   `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *float32
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: aws.Float32(0.01)},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Float64 `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field1 float32
+		Field2 *float32
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field1: 1.11, Field2: aws.Float32(-2.22)}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64   `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *float64
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: aws.Float64(0.01)},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Float64 `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field1 float64
+		Field2 *float64
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field1: 1.11, Field2: aws.Float64(-2.22)}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
 		},
 	}
 	runAutoFlattenTestCases(ctx, t, testCases)

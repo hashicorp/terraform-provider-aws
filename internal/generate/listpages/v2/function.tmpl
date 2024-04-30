@@ -1,3 +1,4 @@
+
 func {{ .Name }}Pages(ctx context.Context, conn {{ .RecvType }}, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool) error {
 	for {
 		output, err := conn.{{ .AWSName }}(ctx, input)

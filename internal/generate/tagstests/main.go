@@ -15,6 +15,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -90,6 +91,13 @@ func main() {
 	}
 }
 
+type implementation string
+
+const (
+	implementationFramework implementation = "framework"
+	implementationSDK       implementation = "sdk"
+)
+
 type ResourceDatum struct {
 	ProviderPackage   string
 	ProviderNameUpper string
@@ -100,6 +108,16 @@ type ResourceDatum struct {
 	FileName          string
 	Generator         string
 	ImportIgnore      []string
+	Implementation    implementation
+	Serialize         bool
+	PreCheck          bool
+	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	GoImports         []goImport
+}
+
+type goImport struct {
+	Path  string
+	Alias string
 }
 
 //go:embed file.tmpl
@@ -165,6 +183,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		FileName: v.fileName,
 	}
 	tagged := false
+	skip := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -172,6 +191,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
+				d.Implementation = implementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -183,6 +203,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKResource":
+				d.Implementation = implementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -207,16 +228,73 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ExistsTypeName = typeName
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					d.Generator = attr
+					parts := strings.Split(attr, ";")
+					switch len(parts) {
+					case 1:
+						d.Generator = parts[0]
+
+					case 2:
+						d.Generator = parts[1]
+						d.GoImports = append(d.GoImports, goImport{
+							Path: parts[0],
+						})
+
+					case 3:
+						d.Generator = parts[2]
+						d.GoImports = append(d.GoImports, goImport{
+							Path:  parts[0],
+							Alias: parts[1],
+						})
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid generator value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
-					d.ImportIgnore = strings.Split(attr, ",")
+					d.ImportIgnore = strings.Split(attr, ";")
+				}
+				if attr, ok := args.Keyword["name"]; ok {
+					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["preCheck"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preCheck value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.PreCheck = b
+					}
+				}
+				if attr, ok := args.Keyword["serialize"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.Serialize = b
+					}
+				}
+				if attr, ok := args.Keyword["tagsTest"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if !b {
+						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
+						skip = true
+					}
+				}
+				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SkipEmptyTags = b
+					}
 				}
 			}
 		}
 	}
 
-	if tagged {
+	if tagged && !skip {
 		v.taggedResources = append(v.taggedResources, d)
 	}
 

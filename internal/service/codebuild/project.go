@@ -1563,14 +1563,14 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		apiObject.SourceIdentifier = aws.String(v)
 	}
 
-	// Only valid for BITBUCKET, GITHUB, and GITHUB_ENTERPRISE source types, e.g.
-	// InvalidInputException: Source type NO_SOURCE does not support ReportBuildStatus
-	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise {
+	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE, GITLAB, and GITLAB_SELF_MANAGED source types
+	// e.g., InvalidInputException: Source type NO_SOURCE does not support ReportBuildStatus
+	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise || sourceType == types.SourceTypeGitlab || sourceType == types.SourceTypeGitlabSelfManaged {
 		apiObject.ReportBuildStatus = aws.Bool(tfMap["report_build_status"].(bool))
 	}
 
-	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE, BITBUCKET source types.
-	if sourceType == types.SourceTypeCodecommit || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise || sourceType == types.SourceTypeBitbucket {
+	// Only valid for BITBUCKET, CODECOMMIT, GITHUB, and GITHUB_ENTERPRISE source types
+	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeCodecommit || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise {
 		if v, ok := tfMap["git_submodules_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			tfMap := v[0].(map[string]interface{})
 
@@ -1584,8 +1584,8 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		}
 	}
 
-	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE source types.
-	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise {
+	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE, GITLAB, and GITLAB_SELF_MANAGED source types
+	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise || sourceType == types.SourceTypeGitlab || sourceType == types.SourceTypeGitlabSelfManaged {
 		if v, ok := tfMap["build_status_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			tfMap := v[0].(map[string]interface{})
 

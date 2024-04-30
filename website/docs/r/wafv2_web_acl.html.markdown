@@ -452,7 +452,7 @@ Each `custom_response_body` block supports the following arguments:
 
 The `default_action` block supports the following arguments:
 
-~> **Note** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `default_action`
+~> **Note** One of `allow` or `block` is required when specifying a `default_action`
 
 * `allow` - (Optional) Specifies that AWS WAF should allow requests by default. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Specifies that AWS WAF should block requests by default. See [`block`](#block-block) below for details.
@@ -772,17 +772,32 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `request_inspection` Block
 
+* `address_fields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`address_fields`](#address_fields-block) for more details.
+* `email_field` (Optional) The name of the field in the request payload that contains your customer's email. See [`email_field`](#email_field-block) for more details.
+* `password_field` (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
 * `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `username_field` (Required) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
-* `password_field` (Required) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
+* `phone_number_fields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phone_number_fields`](#phone_number_fields-block) for more details.
+* `username_field` (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
+
+### `address_fields` Block
+
+* `identifier` - (Required) The name of a single primary address field.
+
+### `email_field` Block
+
+* `identifier` - (Required) The name of the field in the request payload that contains your customer's email.
 
 ### `password_field` Block
 
-* `identifier` - (Optional) The name of the password field.
+* `identifier` - (Required) The name of the password field.
+
+### `phone_number_fields` Block
+
+* `identifier` - (Required) The name of a single primary phone number field.
 
 ### `username_field` Block
 
-* `identifier` - (Optional) The name of the username field.
+* `identifier` - (Required) The name of the username field.
 
 ### `response_inspection` Block
 

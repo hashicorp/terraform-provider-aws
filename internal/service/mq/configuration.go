@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -132,7 +133,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("data"); ok {
 		input := &mq.UpdateConfigurationInput{
 			ConfigurationId: aws.String(d.Id()),
-			Data:            aws.String(base64.StdEncoding.EncodeToString([]byte(v.(string)))),
+			Data:            flex.StringValueToBase64String(v.(string)),
 		}
 
 		if v, ok := d.GetOk("description"); ok {

@@ -259,13 +259,13 @@ func TestExpand(t *testing.T) {
 		},
 		{
 			TestName:   "single ARN Source and single string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: testARN},
 		},
 		{
 			TestName:   "single ARN Source and single *string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
 		},
@@ -287,6 +287,18 @@ func TestExpand(t *testing.T) {
 			Target: &TestFlexTimeAWS02{},
 			WantTarget: &TestFlexTimeAWS02{
 				CreationDateTime: testTimeTime,
+			},
+		},
+		{
+			TestName: "string Source to interface Target",
+			Source:   &TestFlexTF20{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Target:   &TestFlexAWS19{},
+			WantTarget: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					Value: map[string]any{
+						"field1": "a",
+					},
+				},
 			},
 		},
 	}
@@ -726,6 +738,74 @@ func TestExpandStringEnum(t *testing.T) {
 			Source:     fwtypes.StringEnumNull[TestEnum](),
 			Target:     &testEnum,
 			WantTarget: &testEnum,
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandListOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.ListValueMust(types.StringType, []attr.Value{}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+		{
+			TestName:   "null value",
+			Source:     types.ListNull(types.StringType),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandSetOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.SetValueMust(types.StringType, []attr.Value{}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+		{
+			TestName:   "null value",
+			Source:     types.SetNull(types.StringType),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
 		},
 	}
 	runAutoExpandTestCases(ctx, t, testCases)

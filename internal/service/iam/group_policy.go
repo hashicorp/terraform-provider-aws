@@ -10,21 +10,22 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_iam_group_policy")
-func ResourceGroupPolicy() *schema.Resource {
+// @SDKResource("aws_iam_group_policy", name="Group Policy")
+func resourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupPolicyPut,
 		ReadWithoutTimeout:   resourceGroupPolicyRead,
@@ -72,7 +73,7 @@ func ResourceGroupPolicy() *schema.Resource {
 
 func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
@@ -87,7 +88,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 		PolicyName:     aws.String(policyName),
 	}
 
-	_, err = conn.PutGroupPolicyWithContext(ctx, request)
+	_, err = conn.PutGroupPolicy(ctx, request)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting IAM Group (%s) Policy (%s): %s", groupName, policyName, err)
@@ -110,7 +111,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	groupName, policyName, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -149,7 +150,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	groupName, policyName, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -157,12 +158,12 @@ func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting IAM Group Policy: %s", d.Id())
-	_, err = conn.DeleteGroupPolicyWithContext(ctx, &iam.DeleteGroupPolicyInput{
+	_, err = conn.DeleteGroupPolicy(ctx, &iam.DeleteGroupPolicyInput{
 		GroupName:  aws.String(groupName),
 		PolicyName: aws.String(policyName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
 	}
 
@@ -173,15 +174,15 @@ func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, groupName, policyName string) (string, error) {
+func FindGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, groupName, policyName string) (string, error) {
 	input := &iam.GetGroupPolicyInput{
 		GroupName:  aws.String(groupName),
 		PolicyName: aws.String(policyName),
 	}
 
-	output, err := conn.GetGroupPolicyWithContext(ctx, input)
+	output, err := conn.GetGroupPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return "", &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -196,7 +197,7 @@ func FindGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, groupName, 
 		return "", tfresource.NewEmptyResultError(input)
 	}
 
-	return aws.StringValue(output.PolicyDocument), nil
+	return aws.ToString(output.PolicyDocument), nil
 }
 
 func GroupPolicyParseID(id string) (groupName, policyName string, err error) {

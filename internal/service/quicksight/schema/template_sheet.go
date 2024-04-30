@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -1284,11 +1284,15 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["row_span"].(int); ok && v != 0 {
 		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, null, _ := nullable.Int(tfMap["column_index"].(string)).Value(); !null {
-		layout.ColumnIndex = aws.Int64(v)
+	if v, ok := tfMap["column_index"].(string); ok && v != "" {
+		if i, null, _ := nullable.Int(v).ValueInt64(); !null {
+			layout.ColumnIndex = aws.Int64(i)
+		}
 	}
-	if v, null, _ := nullable.Int(tfMap["row_index"].(string)).Value(); !null {
-		layout.RowIndex = aws.Int64(v)
+	if v, ok := tfMap["row_index"].(string); ok && v != "" {
+		if i, null, _ := nullable.Int(v).ValueInt64(); !null {
+			layout.RowIndex = aws.Int64(i)
+		}
 	}
 
 	return layout
@@ -1739,7 +1743,7 @@ func flattenFreeFormLayoutCanvasSizeOptions(apiObject *quicksight.FreeFormLayout
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ScreenCanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
+		tfMap["screen_canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
 	}
 
 	return []interface{}{tfMap}

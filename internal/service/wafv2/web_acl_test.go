@@ -746,17 +746,25 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 						"statement.0.managed_rule_group_statement.#":                                                                "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.#": "1",
 						// "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                             "false",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                    "/creation",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                           "/registration",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                             "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.#":               "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":    "/email",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.#":            "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier": "/password",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                "JSON",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.#":            "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier": "/username",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.response_inspection.#":                            "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                            "/creation",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                                   "/registration",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                                     "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.#":                       "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":            "/email",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.#":                    "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier":         "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                        "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.#":                    "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier":         "/username",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.#":               "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.#": "2",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.0": "/phone1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.1": "/phone2",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.#":                    "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.#":      "2",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.0":      "home",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.1":      "work",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.response_inspection.#":                                    "0",
 						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesACFPRuleSet",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
@@ -778,20 +786,26 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                                                                                                                 "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.#":                                                  "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                             "true",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                    "/creation",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                           "/registration",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                             "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.#":               "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":    "/email",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.#":            "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier": "/pass",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                "JSON",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.#":            "1",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier": "/user",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.response_inspection.#":                            "0",
+						"statement.0.managed_rule_group_statement.#":                                                                                                                         "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.#":                                                          "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                                     "true",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                            "/creation",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                                   "/registration",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                                     "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.#":                       "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.email_field.0.identifier":            "/email",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.#":                    "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.password_field.0.identifier":         "/pass",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.payload_type":                        "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.#":                    "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.username_field.0.identifier":         "/user",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.#":               "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.phone_number_fields.0.identifiers.0": "/phone3",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.#":                    "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.#":      "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.0.address_fields.0.identifiers.0":      "mobile",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.response_inspection.#":                                    "0",
 						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesACFPRuleSet",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
@@ -4270,6 +4284,12 @@ resource "aws_wafv2_web_acl" "test" {
               password_field {
                 identifier = "/password"
               }
+              phone_number_fields {
+                identifiers = ["/phone1", "/phone2"]
+              }
+              address_fields {
+                identifiers = ["home", "work"]
+              }
               payload_type = "JSON"
               username_field {
                 identifier = "/username"
@@ -4399,6 +4419,12 @@ resource "aws_wafv2_web_acl" "test" {
               }
               password_field {
                 identifier = "/pass"
+              }
+              phone_number_fields {
+                identifiers = ["/phone3"]
+              }
+              address_fields {
+                identifiers = ["mobile"]
               }
               payload_type = "JSON"
               username_field {
