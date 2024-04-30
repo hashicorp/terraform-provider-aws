@@ -168,10 +168,10 @@ type ConfigDatum struct {
 	WithDefaultTags bool
 }
 
-//go:embed test.go.tmpl
+//go:embed test.go.gtpl
 var testGoTmpl string
 
-//go:embed test.tf.tmpl
+//go:embed test.tf.gtpl
 var testTfTmpl string
 
 // Annotation processing.
