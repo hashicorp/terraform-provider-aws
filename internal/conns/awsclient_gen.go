@@ -59,6 +59,7 @@ import (
 	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	datapipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
@@ -177,7 +178,6 @@ import (
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
-	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
@@ -534,8 +534,8 @@ func (c *AWSClient) DataExchangeConn(ctx context.Context) *dataexchange_sdkv1.Da
 	return errs.Must(conn[*dataexchange_sdkv1.DataExchange](ctx, c, names.DataExchange, make(map[string]any)))
 }
 
-func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.DataPipeline {
-	return errs.Must(conn[*datapipeline_sdkv1.DataPipeline](ctx, c, names.DataPipeline, make(map[string]any)))
+func (c *AWSClient) DataPipelineClient(ctx context.Context) *datapipeline_sdkv2.Client {
+	return errs.Must(client[*datapipeline_sdkv2.Client](ctx, c, names.DataPipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) DataSyncClient(ctx context.Context) *datasync_sdkv2.Client {

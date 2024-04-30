@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -116,8 +117,8 @@ func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
-		resp, err := conn.GetPipelineDefinitionWithContext(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
+		resp, err := conn.GetPipelineDefinition(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return fmt.Errorf("problem checking for DataPipeline Pipeline Definition existence: %w", err)
 		}
@@ -134,17 +135,17 @@ func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName stri
 
 func testAccCheckPipelineDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datapipeline_pipeline_definition" {
 				continue
 			}
 
-			resp, err := conn.GetPipelineDefinitionWithContext(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
+			resp, err := conn.GetPipelineDefinition(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
 
-			if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) ||
-				tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
+			if errs.IsA[*awstypes.PipelineNotFoundException](err) ||
+				errs.IsA[*awstypes.PipelineDeletedException](err) {
 				continue
 			}
 

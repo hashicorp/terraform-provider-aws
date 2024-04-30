@@ -108,7 +108,7 @@ cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagere
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,
-datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,1,,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
+datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,,2,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
 datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,,2,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
 datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_datazone_,,datazone_,DataZone,Amazon,,,,,,,DataZone,ListDomains,,
 ,,,,,,,,,,,,,,,,,Deep Learning AMIs,AWS,x,,,,,,,,,No SDK support

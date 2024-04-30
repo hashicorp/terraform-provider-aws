@@ -6,8 +6,8 @@ package datapipeline
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datapipeline"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -115,14 +115,14 @@ func DataSourcePipelineDefinition() *schema.Resource {
 func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
+	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(pipelineID),
 	}
 
-	resp, err := conn.GetPipelineDefinitionWithContext(ctx, input)
+	resp, err := conn.GetPipelineDefinition(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting DataPipeline Definition (%s): %s", pipelineID, err)
