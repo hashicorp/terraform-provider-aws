@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_fsx_ontap_volume", name="ONTAP Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceONTAPVolume() *schema.Resource {
+func resourceONTAPVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceONTAPVolumeCreate,
 		ReadWithoutTimeout:   resourceONTAPVolumeRead,
@@ -425,7 +425,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	volume, err := FindONTAPVolumeByID(ctx, conn, d.Id())
+	volume, err := findONTAPVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for NetApp ONTAP Volume (%s) not found, removing from state", d.Id())
@@ -889,7 +889,7 @@ func flattenRetentionPeriod(apiObject *fsx.RetentionPeriod) map[string]interface
 	return tfMap
 }
 
-func FindONTAPVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+func findONTAPVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	output, err := findVolumeByIDAndType(ctx, conn, id, fsx.VolumeTypeOntap)
 
 	if err != nil {

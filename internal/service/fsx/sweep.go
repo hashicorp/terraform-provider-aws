@@ -289,7 +289,7 @@ func sweepONTAPVolumes(region string) error {
 				continue
 			}
 
-			r := ResourceONTAPVolume()
+			r := resourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 			d.Set("bypass_snaplock_enterprise_retention", true)
