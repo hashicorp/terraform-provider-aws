@@ -47,8 +47,10 @@ This resource supports the following arguments:
     * `provider_identity` - (Required) The identity of the log provider for the third-party custom source.
         * `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
         * `principal` - (Required) The AWS identity principal.
-* `event_classes` - (Required) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
-* `source_name` - (Required) Specify the name for a third-party custom source. This must be a Regionally unique value.
+* `event_classes` - (Optional) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
+* `source_name` - (Required) Specify the name for a third-party custom source.
+  This must be a Regionally unique value.
+  Has a maximum length of 20.
 * `source_version` - (Optional) Specify the source version for the third-party custom source, to limit log collection to a specific version of custom data source.
 
 ## Attribute Reference

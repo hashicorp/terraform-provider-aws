@@ -35,8 +35,10 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"sourceVersion": testAccAWSLogSource_sourceVersion,
 		},
 		"CustomLogSource": {
-			"basic":      testAccCustomLogSource_basic,
-			"disappears": testAccCustomLogSource_disappears,
+			"basic":         testAccCustomLogSource_basic,
+			"disappears":    testAccCustomLogSource_disappears,
+			"sourceVersion": testAccCustomLogSource_sourceVersion,
+			"eventClasses":  testAccCustomLogSource_eventClasses,
 		},
 		"DataLake": {
 			"basic":           testAccDataLake_basic,

@@ -188,7 +188,7 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 func testAccAWSLogSource_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_aws_log_source.test"
-	resource2Name := "aws_securitylake_aws_log_source.test2"
+	resourceName2 := "aws_securitylake_aws_log_source.test2"
 	var logSource, logSource2 types.AwsLogSourceConfiguration
 
 	resource.Test(t, resource.TestCase{
@@ -205,15 +205,15 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 				Config: testAccAWSLogSourceConfig_multiple(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource2),
+					testAccCheckAWSLogSourceExists(ctx, resourceName2, &logSource2),
 
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
 
-					resource.TestCheckResourceAttr(resource2Name, "source.#", "1"),
-					resource.TestCheckResourceAttr(resource2Name, "source.0.source_name", "S3_DATA"),
-					resource.TestCheckResourceAttr(resource2Name, "source.0.source_version", "2.0"),
+					resource.TestCheckResourceAttr(resourceName2, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "source.0.source_name", "S3_DATA"),
+					resource.TestCheckResourceAttr(resourceName2, "source.0.source_version", "2.0"),
 				),
 			},
 			{

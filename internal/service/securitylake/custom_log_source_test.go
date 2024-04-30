@@ -11,11 +11,13 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,6 +25,7 @@ import (
 func testAccCustomLogSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
+	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
 
 	resource.Test(t, resource.TestCase{
@@ -36,23 +39,23 @@ func testAccCustomLogSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLogSourceConfig_basic(),
+				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.crawler_arn", "glue", "crawler/windows-sysmon"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.crawler_arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.database_arn", "glue", fmt.Sprintf("database/amazon_security_lake_glue_db_%s", strings.Replace(acctest.Region(), "-", "_", -1))),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_windows_sysmon", strings.Replace(acctest.Region(), "-", "_", -1))),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_%s", strings.Replace(acctest.Region(), "-", "_", -1), strings.Replace(rName, "-", "_", -1))),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", "windows-sysmon-test"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", fmt.Sprintf("%s-test", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_classes"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "provider_details.0.location", regexache.MustCompile(fmt.Sprintf(`^s3://aws-security-data-lake-%s-[a-z0-9]{30}/ext/windows-sysmon/$`, acctest.Region()))),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-windows-sysmon-%s", acctest.Region())),
-					resource.TestCheckResourceAttr(resourceName, "source_name", "windows-sysmon"),
+					resource.TestMatchResourceAttr(resourceName, "provider_details.0.location", regexache.MustCompile(fmt.Sprintf(`^s3://aws-security-data-lake-%s-[a-z0-9]{30}/ext/%s/$`, acctest.Region(), rName))),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-%s-%s", rName, acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "source_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "source_version"),
 				),
 			},
@@ -66,9 +69,10 @@ func testAccCustomLogSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCustomLogSource_disappears(t *testing.T) {
+func testAccCustomLogSource_sourceVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
+	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
 
 	resource.Test(t, resource.TestCase{
@@ -82,7 +86,116 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLogSourceConfig_basic(),
+				Config: testAccCustomLogSourceConfig_sourceVersion(rName, "1.5"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "source_version", "1.5"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
+			},
+			{
+				Config: testAccCustomLogSourceConfig_sourceVersion(rName, "2.5"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "source_version", "2.5"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
+			},
+		},
+	})
+}
+
+func testAccCustomLogSource_eventClasses(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_custom_log_source.test"
+	rName := randomCustomLogSourceName()
+	var customLogSource types.CustomLogSourceResource
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomLogSourceConfig_eventClasses(rName, "FILE_ACTIVITY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+			},
+			{
+				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY", "FILE_ACTIVITY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "MEMORY_ACTIVITY"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+			},
+			{
+				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "MEMORY_ACTIVITY"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+			},
+		},
+	})
+}
+
+func testAccCustomLogSource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_custom_log_source.test"
+	rName := randomCustomLogSourceName()
+	var customLogSource types.CustomLogSourceResource
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceCustomLogSource, resourceName),
@@ -91,6 +204,10 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func randomCustomLogSourceName() string {
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(20-(len(acctest.ResourcePrefix)+1)))
 }
 
 func testAccCheckCustomLogSourceDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -140,11 +257,11 @@ func testAccCheckCustomLogSourceExists(ctx context.Context, n string, v *types.C
 	}
 }
 
-func testAccCustomLogSourceConfig_basic() string {
+func testAccCustomLogSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), `
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name   = "windows-sysmon"
+  source_name   = %[1]q
 
   configuration {
     crawler_configuration {
@@ -152,7 +269,7 @@ resource "aws_securitylake_custom_log_source" "test" {
     }
 
     provider_identity {
-      external_id = "windows-sysmon-test"
+      external_id = "%[1]s-test"
       principal   = data.aws_caller_identity.current.account_id
     }
   }
@@ -161,7 +278,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  name =  %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -179,7 +296,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  name =  %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
@@ -203,13 +320,15 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = aws_iam_role.test.name
 }
-`)
+`, rName))
 }
 
+func testAccCustomLogSourceConfig_sourceVersion(rName, version string) string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = "windows-sysmon"
-  source_version = "1.0"
-  event_classes  = ["FILE_ACTIVITY"]
+  source_name   = %[1]q
+  source_version = %[2]q
 
   configuration {
     crawler_configuration {
@@ -217,12 +336,126 @@ resource "aws_securitylake_custom_log_source" "test" {
     }
 
     provider_identity {
-      external_id = "windows-sysmon-test"
+      external_id = "%[1]s-test"
       principal   = data.aws_caller_identity.current.account_id
     }
   }
 
   depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
 }
-`)
+
+resource "aws_iam_role" "test" {
+  name =  %[1]q
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "glue.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name =  %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:PutObject"
+    ],
+    "Resource": "*"
+  }]
+}
+POLICY
+
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
+  role       = aws_iam_role.test.name
+}
+`, rName, version))
+}
+
+func testAccCustomLogSourceConfig_eventClasses(rName string, eventClasses ...string) string {
+	eventClasses = slices.ApplyToAll(eventClasses, func(s string) string {
+		return fmt.Sprintf(`"%s"`, s)
+	})
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+resource "aws_securitylake_custom_log_source" "test" {
+  source_name   = %[1]q
+   event_classes  = [%[2]s]
+
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.test.arn
+    }
+
+    provider_identity {
+      external_id = "%[1]s-test"
+      principal   = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
+}
+
+resource "aws_iam_role" "test" {
+  name =  %[1]q
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "glue.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name =  %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:PutObject"
+    ],
+    "Resource": "*"
+  }]
+}
+POLICY
+
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
+  role       = aws_iam_role.test.name
+}
+`, rName, strings.Join(eventClasses, ", ")))
 }
