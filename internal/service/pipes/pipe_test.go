@@ -348,6 +348,53 @@ func TestAccPipesPipe_logConfiguration_cloudwatchLogsLogDestination(t *testing.T
 	})
 }
 
+func TestAccPipesPipe_update_logConfiguration_cloudwatchLogsLogDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipe pipes.DescribePipeOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_logConfiguration_cloudwatchLogsLogDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.0.log_group_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_logConfiguration_update_cloudwatchLogsLogDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexache.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.cloudwatch_logs_log_destination.0.log_group_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
@@ -1903,6 +1950,33 @@ resource "aws_pipes_pipe" "test" {
   target   = aws_sqs_queue.target.arn
   log_configuration {
     level         = "INFO"
+    cloudwatch_logs_log_destination {
+      log_group_arn = aws_cloudwatch_log_group.target.arn
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "target" {
+  name = "%[1]s-target"
+}
+`, rName))
+}
+
+func testAccPipeConfig_logConfiguration_update_cloudwatchLogsLogDestination(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base(rName),
+		testAccPipeConfig_baseSQSSource(rName),
+		testAccPipeConfig_baseSQSTarget(rName),
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  source   = aws_sqs_queue.source.arn
+  target   = aws_sqs_queue.target.arn
+  log_configuration {
+    level         = "ERROR"
     cloudwatch_logs_log_destination {
       log_group_arn = aws_cloudwatch_log_group.target.arn
     }
