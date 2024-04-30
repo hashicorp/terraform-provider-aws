@@ -1752,31 +1752,59 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrat
 		return err
 	}
 
-	for _, task := range tasks {
-		_, err := conn.TestConnectionWithContext(ctx, &dms.TestConnectionInput{
-			EndpointArn:            aws.String(arn),
-			ReplicationInstanceArn: task.ReplicationInstanceArn,
-		})
-
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "already being tested") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("testing connection: %w", err)
-		}
-
-		err = conn.WaitUntilTestConnectionSucceedsWithContext(ctx, &dms.DescribeConnectionsInput{
+	successfulConnections := map[string]bool{}
+	err := conn.DescribeConnectionsPagesWithContext(
+		ctx,
+		&dms.DescribeConnectionsInput{
 			Filters: []*dms.Filter{
 				{
 					Name:   aws.String("endpoint-arn"),
 					Values: aws.StringSlice([]string{arn}),
 				},
 			},
-		})
+		},
+		func(page *dms.DescribeConnectionsOutput, lastPage bool) bool {
+			for _, epConnection := range page.Connections {
+				if aws.StringValue(epConnection.Status) == "successful" {
+					successfulConnections[aws.StringValue(epConnection.ReplicationInstanceArn)] = true
+				}
+			}
+			return true
+		},
+	)
+	if err != nil {
+		return err
+	}
 
-		if err != nil {
-			return fmt.Errorf("waiting until test connection succeeds: %w", err)
+	for _, task := range tasks {
+		if _, ok := successfulConnections[aws.StringValue(task.ReplicationInstanceArn)]; !ok {
+			_, err := conn.TestConnectionWithContext(ctx, &dms.TestConnectionInput{
+				EndpointArn:            aws.String(arn),
+				ReplicationInstanceArn: task.ReplicationInstanceArn,
+			})
+
+			if err != nil && !tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "already being tested") {
+				return fmt.Errorf("testing connection: %w", err)
+			}
+
+			err = conn.WaitUntilTestConnectionSucceedsWithContext(ctx, &dms.DescribeConnectionsInput{
+				Filters: []*dms.Filter{
+					{
+						Name:   aws.String("endpoint-arn"),
+						Values: aws.StringSlice([]string{arn}),
+					},
+					{
+						Name:   aws.String("replication-instance-arn"),
+						Values: aws.StringSlice([]string{*task.ReplicationInstanceArn}),
+					},
+				},
+			})
+
+			if err != nil {
+				return fmt.Errorf("waiting until test connection succeeds: %w", err)
+			}
+
+			successfulConnections[aws.StringValue(task.ReplicationInstanceArn)] = true
 		}
 
 		if err := startReplicationTask(ctx, conn, aws.StringValue(task.ReplicationTaskIdentifier)); err != nil {
