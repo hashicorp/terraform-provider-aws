@@ -323,19 +323,20 @@ func ResourceONTAPVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"volume_style": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				Default:      fsx.VolumeStyleFlexvol,
+				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
+			},
 			"volume_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      fsx.VolumeTypeOntap,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeType_Values(), false),
-			},
-			"volume_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      fsx.VolumeStyleFlexvol,
-				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
 			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
@@ -473,8 +474,8 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("tiering_policy", nil)
 	}
 	d.Set("uuid", ontapConfig.UUID)
-	d.Set("volume_type", volume.VolumeType)
 	d.Set("volume_style", ontapConfig.VolumeStyle)
+	d.Set("volume_type", volume.VolumeType)
 
 	return diags
 }
@@ -640,7 +641,7 @@ func expandTieringPolicy(tfMap map[string]interface{}) *fsx.TieringPolicy {
 
 	// Cooling period only accepts a minimum of 2 but int will return 0 not nil if unset.
 	// Therefore we only set it if it is 2 or more.
-	if tfMap["name"].(string) == "AUTO" || tfMap["name"].(string) == "SNAPSHOT_ONLY" {
+	if tfMap["name"].(string) == fsx.TieringPolicyNameAuto || tfMap["name"].(string) == fsx.TieringPolicyNameSnapshotOnly {
 		if v, ok := tfMap["cooling_period"].(int); ok && v >= minTieringPolicyCoolingPeriod {
 			apiObject.CoolingPeriod = aws.Int64(int64(v))
 		}
