@@ -13,39 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileCache, error) {
-	input := &fsx.DescribeFileCachesInput{
-		FileCacheIds: []*string{aws.String(id)},
-	}
-	var fileCaches []*fsx.FileCache
-
-	err := conn.DescribeFileCachesPagesWithContext(ctx, input, func(page *fsx.DescribeFileCachesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-		fileCaches = append(fileCaches, page.FileCaches...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	if len(fileCaches) == 0 || fileCaches[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-	if count := len(fileCaches); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-	return fileCaches[0], nil
-}
-
 func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 	input := &fsx.DescribeSnapshotsInput{
 		SnapshotIds: aws.StringSlice([]string{id}),

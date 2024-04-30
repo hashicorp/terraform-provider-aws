@@ -7,7 +7,9 @@ package fsx
 var (
 	ResourceBackup                    = resourceBackup
 	ResourceDataRepositoryAssociation = resourceDataRepositoryAssociation
+	ResourceFileCache                 = resourceFileCache
 
 	FindBackupByID                    = findBackupByID
 	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID
+	FindFileCacheByID                 = findFileCacheByID
 )

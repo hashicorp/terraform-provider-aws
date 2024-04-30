@@ -5,21 +5,19 @@ package fsx_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,7 +47,7 @@ func testAccFileCache_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.DescribeFileCachesOutput
+	var filecache fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -94,7 +92,7 @@ func testAccFileCache_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.DescribeFileCachesOutput
+	var filecache fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -126,7 +124,7 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1 fsx.DescribeFileCachesOutput
+	var filecache1 fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -159,7 +157,7 @@ func testAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.DescribeFileCachesOutput
+	var filecache fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -191,7 +189,7 @@ func testAccFileCache_dataRepositoryAssociation_nfs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.DescribeFileCachesOutput
+	var filecache fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -227,7 +225,7 @@ func testAccFileCache_dataRepositoryAssociation_s3(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache fsx.DescribeFileCachesOutput
+	var filecache fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -262,7 +260,7 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1, filecache2 fsx.DescribeFileCachesOutput
+	var filecache1, filecache2 fsx.FileCache
 	kmsKeyResourceName1 := "aws_kms_key.test1"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
 	resourceName := "aws_fsx_file_cache.test"
@@ -310,7 +308,7 @@ func testAccFileCache_securityGroupId(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1 fsx.DescribeFileCachesOutput
+	var filecache1 fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -342,7 +340,7 @@ func testAccFileCache_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1, filecache2 fsx.DescribeFileCachesOutput
+	var filecache1, filecache2 fsx.FileCache
 	resourceName := "aws_fsx_file_cache.test"
 
 	resource.Test(t, resource.TestCase{
@@ -396,64 +394,58 @@ func testAccCheckFileCacheDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeFileCachesWithContext(ctx, &fsx.DescribeFileCachesInput{
-				FileCacheIds: []*string{aws.String(rs.Primary.ID)},
-			})
+			_, err := tffsx.FindFileCacheByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.FSx, create.ErrActionCheckingDestroyed, tffsx.ResNameFileCache, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("FSx for Lustre File Cache %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFileCacheExists(ctx context.Context, name string, filecache *fsx.DescribeFileCachesOutput) resource.TestCheckFunc {
+func testAccCheckFileCacheExists(ctx context.Context, n string, v *fsx.FileCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
-		resp, err := conn.DescribeFileCachesWithContext(ctx, &fsx.DescribeFileCachesInput{
-			FileCacheIds: []*string{aws.String(rs.Primary.ID)},
-		})
+		output, err := tffsx.FindFileCacheByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, rs.Primary.ID, err)
+			return err
 		}
 
-		*filecache = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckFileCacheNotRecreated(i, j *fsx.DescribeFileCachesOutput) resource.TestCheckFunc {
+func testAccCheckFileCacheNotRecreated(i, j *fsx.FileCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.FileCaches[0].FileCacheId) != aws.StringValue(j.FileCaches[0].FileCacheId) {
-			return fmt.Errorf("FSx File System (%s) recreated", aws.StringValue(i.FileCaches[0].FileCacheId))
+		if aws.StringValue(i.FileCacheId) != aws.StringValue(j.FileCacheId) {
+			return fmt.Errorf("FSx File System (%s) recreated", aws.StringValue(i.FileCacheId))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFileCacheRecreated(i, j *fsx.DescribeFileCachesOutput) resource.TestCheckFunc {
+func testAccCheckFileCacheRecreated(i, j *fsx.FileCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.FileCaches[0].FileCacheId) == aws.StringValue(j.FileCaches[0].FileCacheId) {
-			return fmt.Errorf("FSx File System (%s) not recreated", aws.StringValue(i.FileCaches[0].FileCacheId))
+		if aws.StringValue(i.FileCacheId) == aws.StringValue(j.FileCacheId) {
+			return fmt.Errorf("FSx File System (%s) not recreated", aws.StringValue(i.FileCacheId))
 		}
 
 		return nil
