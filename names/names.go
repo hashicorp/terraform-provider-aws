@@ -53,6 +53,7 @@ const (
 	CognitoIdentityEndpointID            = "cognito-identity"
 	ComprehendEndpointID                 = "comprehend"
 	ConfigServiceEndpointID              = "config"
+	DeviceFarmEndpointID                 = "devicefarm"
 	DevOpsGuruEndpointID                 = "devops-guru"
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
