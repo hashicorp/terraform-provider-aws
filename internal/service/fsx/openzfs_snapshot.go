@@ -5,6 +5,7 @@ package fsx
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -14,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,12 +29,13 @@ import (
 
 // @SDKResource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
 // @Tags(identifierAttribute="arn")
-func ResourceOpenzfsSnapshot() *schema.Resource {
+func resourceOpenZFSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenzfsSnapshotCreate,
 		ReadWithoutTimeout:   resourceOpenzfsSnapshotRead,
 		UpdateWithoutTimeout: resourceOpenzfsSnapshotUpdate,
 		DeleteWithoutTimeout: resourceOpenzfsSnapshotDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -84,16 +88,16 @@ func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		VolumeId:           aws.String(d.Get("volume_id").(string)),
 	}
 
-	result, err := conn.CreateSnapshotWithContext(ctx, input)
+	output, err := conn.CreateSnapshotWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx OpenZFS Snapshot: %s", err)
 	}
 
-	d.SetId(aws.StringValue(result.Snapshot.SnapshotId))
+	d.SetId(aws.StringValue(output.Snapshot.SnapshotId))
 
-	log.Println("[DEBUG] Waiting for FSx OpenZFS Snapshot to become available")
 	if _, err := waitSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Snapshot (%s) to be available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Snapshot (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOpenzfsSnapshotRead(ctx, d, meta)...)
@@ -104,6 +108,7 @@ func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -115,12 +120,9 @@ func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("arn", snapshot.ResourceARN)
-	d.Set("volume_id", snapshot.VolumeId)
+	d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339))
 	d.Set("name", snapshot.Name)
-
-	if err := d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
-	}
+	d.Set("volume_id", snapshot.VolumeId)
 
 	return diags
 }
@@ -157,24 +159,153 @@ func resourceOpenzfsSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	request := &fsx.DeleteSnapshotInput{
+	log.Printf("[INFO] Deleting FSx Snapshot: %s", d.Id())
+	_, err := conn.DeleteSnapshotWithContext(ctx, &fsx.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
+		return diags
 	}
 
-	log.Printf("[INFO] Deleting FSx Snapshot: %s", d.Id())
-	_, err := conn.DeleteSnapshotWithContext(ctx, request)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting FSx Snapshot (%s): %s", d.Id(), err)
 	}
 
-	log.Println("[DEBUG] Waiting for snapshot to delete")
 	if _, err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Snapshot (%s) to deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Snapshot (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
+	input := &fsx.DescribeSnapshotsInput{
+		SnapshotIds: aws.StringSlice([]string{id}),
+	}
+
+	return findSnapshot(ctx, conn, input, tfslices.PredicateTrue[*fsx.Snapshot]())
+}
+
+func findSnapshot(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*fsx.Snapshot]) (*fsx.Snapshot, error) {
+	output, err := findSnapshots(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findSnapshots(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapshotsInput, filter tfslices.Predicate[*fsx.Snapshot]) ([]*fsx.Snapshot, error) {
+	var output []*fsx.Snapshot
+
+	err := conn.DescribeSnapshotsPagesWithContext(ctx, input, func(page *fsx.DescribeSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Snapshots {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSnapshotByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Lifecycle), nil
+	}
+}
+
+func waitSnapshotCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.SnapshotLifecycleCreating, fsx.SnapshotLifecyclePending},
+		Target:  []string{fsx.SnapshotLifecycleAvailable},
+		Refresh: statusSnapshot(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+		if output.LifecycleTransitionReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.SnapshotLifecyclePending},
+		Target:  []string{fsx.SnapshotLifecycleAvailable},
+		Refresh: statusSnapshot(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   150 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+		if output.LifecycleTransitionReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSnapshotDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.SnapshotLifecyclePending, fsx.SnapshotLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusSnapshot(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.Snapshot); ok {
+		if output.LifecycleTransitionReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

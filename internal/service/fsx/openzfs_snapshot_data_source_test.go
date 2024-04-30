@@ -26,7 +26,7 @@ func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotDataSourceConfig_basic(rName),

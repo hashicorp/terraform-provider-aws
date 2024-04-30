@@ -8,6 +8,7 @@ var (
 	ResourceBackup                    = resourceBackup
 	ResourceDataRepositoryAssociation = resourceDataRepositoryAssociation
 	ResourceFileCache                 = resourceFileCache
+	ResourceOpenZFSSnapshot           = resourceOpenZFSSnapshot
 
 	FindBackupByID                    = findBackupByID
 	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID

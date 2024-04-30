@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -79,7 +80,7 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	snapshots, err := FindSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*fsx.Snapshot]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshots: %s", err)
@@ -101,16 +102,12 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	snapshot := snapshots[0]
-
 	d.SetId(aws.StringValue(snapshot.SnapshotId))
 	d.Set("arn", snapshot.ResourceARN)
+	d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339))
 	d.Set("name", snapshot.Name)
 	d.Set("snapshot_id", snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
-
-	if err := d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
-	}
 
 	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
 	tags, tagserr := listTags(ctx, conn, *snapshot.ResourceARN)
