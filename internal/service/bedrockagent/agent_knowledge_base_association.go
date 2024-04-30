@@ -87,7 +87,7 @@ func (r *resourceAgentKnowledgeBaseAssociation) Schema(ctx context.Context, requ
 					stringvalidator.LengthBetween(1, 200),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"knowledge_base_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -124,10 +124,6 @@ func (r *resourceAgentKnowledgeBaseAssociation) Create(ctx context.Context, requ
 	}
 	if out == nil || out.AgentKnowledgeBase == nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base Association empty output", err.Error())
-		return
-	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out.AgentKnowledgeBase, &data)...)
-	if response.Diagnostics.HasError() {
 		return
 	}
 	data.setID()

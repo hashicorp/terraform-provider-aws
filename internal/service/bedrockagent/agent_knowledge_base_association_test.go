@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -31,6 +35,8 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
+	agentModel := "anthropic.claude-v2"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,21 +44,20 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, "anthropic.claude-v2"),
+				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "bedrockagent", regexache.MustCompile(`agentknowledgebaseassociation:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test desc"),
 				),
 			},
 			{
@@ -65,7 +70,12 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 	})
 }
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -74,6 +84,8 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 	var agentknowledgebaseassociation types.AgentKnowledgeBase
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_knowledge_base_association.test"
+	agentModel := "anthropic.claude-v2"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -81,10 +93,16 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckAgentKnowledgeBaseAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, "anthropic.claude-v2"),
+				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentKnowledgeBaseAssociationExists(ctx, resourceName, &agentknowledgebaseassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentKnowledgeBaseAssociation, resourceName),
@@ -144,26 +162,17 @@ func testAccCheckAgentKnowledgeBaseAssociationExists(ctx context.Context, name s
 	}
 }
 
-/*
-	func testAccCheckAgentKnowledgeBaseAssociationNotRecreated(before, after *bedrockagent.GetAgentKnowledgeBaseOutput) resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			if before, after := aws.ToString(before.I), aws.ToString(after.AgentKnowledgeBaseAssociationId); before != after {
-				return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNameAgentKnowledgeBaseAssociation, aws.ToString(before.AgentKnowledgeBaseAssociationId), errors.New("recreated"))
-			}
-
-			return nil
-		}
-	}
-*/
-
-func testAccAgentKnowledgeBaseAssociationConfig_basic(rName, model string) string {
+func testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, embeddingModel, description, state string) string {
 	return acctest.ConfigCompose(
-		testAccAgentConfig_basic(rName, model, "basic claude"),
-		testAccKnowledgeBaseConfig_basicOpenSearch(rName, model),
+		testAccAgentConfig_basic(rName, agentModel, description),
+		testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_knowledge_base_association" "test" {
-    
+  agent_id             = aws_bedrockagent_agent.test.id
+  description          = %[1]q
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
+  knowledge_base_state = %[2]q
 }
-`, rName),
+`, description, state),
 	)
 }
