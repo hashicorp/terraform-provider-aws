@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -133,6 +134,63 @@ func TestAccSecretsManagerSecret_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecret_secretValues(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretConfig_secretString(rName, "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "value1"),
+				),
+			},
+			{
+				Config: testAccSecretConfig_secretString(rName, "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "value2"),
+				),
+			},
+			{
+				Config: testAccSecretConfig_secretBinary(rName, itypes.Base64EncodeOnce([]byte("value3"))),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", itypes.Base64EncodeOnce([]byte("value3"))),
+				),
+			},
+			{
+				Config: testAccSecretConfig_secretBinary(rName, itypes.Base64EncodeOnce([]byte("value4"))),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", itypes.Base64EncodeOnce([]byte("value4"))),
+				),
+			},
+			{
+				Config: testAccSecretConfig_secretString(rName, "value6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "value6"),
 				),
 			},
 			{
@@ -437,6 +495,24 @@ resource "aws_secretsmanager_secret" "test" {
   name        = %[2]q
 }
 `, description, rName)
+}
+
+func testAccSecretConfig_secretString(rName, secretString string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  secret_string = %[1]q
+  name          = %[2]q
+}
+`, secretString, rName)
+}
+
+func testAccSecretConfig_secretBinary(rName, secretBinary string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  secret_binary = %[1]q
+  name          = %[2]q
+}
+`, secretBinary, rName)
 }
 
 func testAccSecretConfig_basicReplica(rName string) string {
