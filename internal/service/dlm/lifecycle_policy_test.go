@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dlm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dlm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dlm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -526,7 +527,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -537,9 +538,9 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 				PolicyId: aws.String(rs.Primary.ID),
 			}
 
-			out, err := conn.GetLifecyclePolicyWithContext(ctx, &input)
+			out, err := conn.GetLifecyclePolicy(ctx, &input)
 
-			if tfawserr.ErrCodeEquals(err, dlm.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 
@@ -563,13 +564,13 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
 		input := dlm.GetLifecyclePolicyInput{
 			PolicyId: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetLifecyclePolicyWithContext(ctx, &input)
+		_, err := conn.GetLifecyclePolicy(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
@@ -580,11 +581,11 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 
-	_, err := conn.GetLifecyclePoliciesWithContext(ctx, input)
+	_, err := conn.GetLifecyclePolicies(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
