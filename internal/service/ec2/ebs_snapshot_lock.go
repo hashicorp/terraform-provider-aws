@@ -112,9 +112,9 @@ func resourceEBSSnapshotLockCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(d.Get("snapshot_id").(string))
-	d.Set("lock_created_on", resp.LockCreatedOn)
-	d.Set("cool_off_period_expires_on", resp.CoolOffPeriodExpiresOn)
-	d.Set("lock_duration_start_time", resp.LockDurationStartTime)
+	d.Set("lock_created_on", aws.ToTime(resp.LockCreatedOn))
+	d.Set("cool_off_period_expires_on", aws.ToTime(resp.CoolOffPeriodExpiresOn))
+	d.Set("lock_duration_start_time", aws.ToTime(resp.LockDurationStartTime))
 	d.Set("lock_state", resp.LockState)
 
 	return append(diags, resourceEBSSnapshotLockRead(ctx, d, meta)...)
