@@ -642,7 +642,7 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
-			TestName: "map of map of string",
+			TestName: "map of map of string pointer",
 			Source: &TestFlexAWS22{
 				Field1: map[string]map[string]*string{
 					"x": {
