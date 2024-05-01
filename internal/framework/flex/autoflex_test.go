@@ -349,3 +349,15 @@ type TestFlexTF19 struct {
 type TestFlexTF20 struct {
 	Field1 fwtypes.SmithyJSON[smithyjson.JSONStringer] `tfsdk:"field1"`
 }
+
+type TestFlexTF21 struct {
+	Field1 fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"field1"`
+}
+
+type TestFlexAWS21 struct {
+	Field1 map[string]map[string]string
+}
+
+type TestFlexAWS22 struct {
+	Field1 map[string]map[string]*string
+}

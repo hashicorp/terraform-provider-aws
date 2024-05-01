@@ -641,35 +641,69 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					return diags
 				}
 
-				from := vFrom.Interface().(map[string]map[string]string)
-				elements := make(map[string]attr.Value, len(from))
-				for k, v := range from {
-					innerElements := make(map[string]attr.Value, len(v))
-					for ik, iv := range v {
-						innerElements[ik] = types.StringValue(iv)
+				switch tMapElem.Elem().Kind() {
+				case reflect.String:
+					from := vFrom.Interface().(map[string]map[string]string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						innerElements := make(map[string]attr.Value, len(v))
+						for ik, iv := range v {
+							innerElements[ik] = types.StringValue(iv)
+						}
+						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						elements[k] = innerMap
 					}
-					innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
 					diags.Append(d...)
 					if diags.HasError() {
 						return diags
 					}
 
-					elements[k] = innerMap
-				}
-				map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
-				diags.Append(d...)
-				if diags.HasError() {
+					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+
+				case reflect.Ptr:
+					from := vFrom.Interface().(map[string]map[string]*string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						innerElements := make(map[string]attr.Value, len(v))
+						for ik, iv := range v {
+							innerElements[ik] = types.StringValue(*iv)
+						}
+						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						elements[k] = innerMap
+					}
+					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
-
-				to, d := tTo.ValueFromMap(ctx, map_.MapValue)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
 			}
 
 		case reflect.Ptr:

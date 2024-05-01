@@ -10,8 +10,6 @@ description: |-
 
 Terraform resource for managing an AWS BCM Data Exports Export.
 
-~> **NOTE:** Including `line_item_resource_id` in the SQL query in `export.0.data_query.0.query_statement` results in an error, `ValidationException: The columns in the query provided are not a subset of the table COST_AND_USAGE_REPORT`. Based on [AWS Documentation](https://docs.aws.amazon.com/cur/latest/userguide/data-dictionary.html), `line_item_resource_id` should be a valid column but is currently causing errors.
-
 ## Example Usage
 
 ### Basic Usage

@@ -1,3 +1,0 @@
-```release-note:note
-resource/aws_bcmdataexports_export: Including `line_item_resource_id` in the SQL query in `export.0.data_query.0.query_statement` results in an error, `ValidationException: The columns in the query provided are not a subset of the table COST_AND_USAGE_REPORT`; please contact AWS Support to inquire further
-```
