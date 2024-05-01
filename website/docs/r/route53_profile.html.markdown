@@ -1,12 +1,12 @@
 ---
 subcategory: "Route53"
 layout: "aws"
-page_title: "AWS: aws_route53_profile"
+page_title: "AWS: aws_route53profiles_profile"
 description: |-
   Manages Route53 Profile
 ---
 
-# Resource: aws_route53_profile
+# Resource: aws_route53profiles_profile
 
 Manages Route53 Profile
 
@@ -15,12 +15,12 @@ Manages Route53 Profile
 ### Basic Usage
 
 ```terraform
-resource "aws_route53_profile" "example" {
+resource "aws_route53profiles_profile" "example" {
     name = "example"
 }
 
 output "profile_id" {
-    value = aws_route53_profile.example.id
+    value = aws_route53profiles_profile.example.id
 }
 ```
 
