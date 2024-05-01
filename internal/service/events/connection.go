@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func connectionHTTPParameterSchema(parent string) *schema.Resource {
+func connectionHttpParameterSchema(parent string) *schema.Resource {
 	atLeastOneOf := []string{
 		fmt.Sprintf("%s.body", parent),
 		fmt.Sprintf("%s.header", parent),
