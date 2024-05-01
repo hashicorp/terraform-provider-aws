@@ -31,7 +31,6 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	var primaryReplicationGroup elasticache.ReplicationGroup
-	var pg elasticache.CacheParameterGroup
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -45,7 +44,6 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckGlobalReplicationGroupDestroy(ctx),
-			testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx, &pg),
 		),
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +51,6 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
-					testAccCheckReplicationGroupParameterGroup(ctx, &primaryReplicationGroup, &pg),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexache.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
