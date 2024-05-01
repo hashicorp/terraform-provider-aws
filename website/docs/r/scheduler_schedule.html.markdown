@@ -128,7 +128,7 @@ The following arguments are optional:
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`.
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. One of: `TASK_DEFINITION`.
 * `reference_id` - (Optional) Reference ID to use for the task.
-* `tags` - (Optional) The metadata that you apply to the task. Each tag consists of a key and an optional value. For more information, see [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) in the Amazon ECS API Reference.
+* `tags` - (Optional) Map of tags to apply to the task.
 * `task_count` - (Optional) The number of tasks to create. Ranges from `1` (default) to `10`.
 
 ##### capacity_provider_strategy Configuration Block
