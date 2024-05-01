@@ -415,24 +415,22 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckServerlessCacheExists(ctx context.Context, resourceName string, v *awstypes.ServerlessCache) resource.TestCheckFunc {
+func testAccCheckServerlessCacheExists(ctx context.Context, n string, v *awstypes.ServerlessCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ElastiCache Serverless ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
-		out, err := tfelasticache.FindServerlessCacheByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfelasticache.FindServerlessCacheByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("retrieving ElastiCache Serverlesss (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		*v = out
+		*v = *output
 
 		return nil
 	}
@@ -448,6 +446,7 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 			}
 
 			_, err := tfelasticache.FindServerlessCacheByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -455,7 +454,7 @@ func testAccCheckServerlessCacheDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			return fmt.Errorf("ElastiCache Serverless (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("ElastiCache Serverless Cache (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
