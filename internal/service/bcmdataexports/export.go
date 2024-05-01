@@ -249,7 +249,7 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ID = flex.StringToFramework(ctx, out.ExportArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outRaw, err := waitExportCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	outputRaw, err := waitExportCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForCreation, ResNameExport, plan.ID.String(), err),
@@ -258,7 +258,7 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, outRaw, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, outputRaw, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
