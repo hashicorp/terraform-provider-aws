@@ -23,6 +23,7 @@ import (
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
@@ -72,6 +73,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
@@ -129,6 +131,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
