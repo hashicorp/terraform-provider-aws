@@ -392,7 +392,7 @@ func sweepOpenZFSVolume(region string) error {
 				continue
 			}
 
-			r := ResourceOpenZFSVolume()
+			r := resourceOpenZFSVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 

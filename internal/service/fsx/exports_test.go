@@ -14,6 +14,7 @@ var (
 	ResourceONTAPVolume                = resourceONTAPVolume
 	ResourceOpenZFSFileSystem          = resourceOpenZFSFileSystem
 	ResourceOpenZFSSnapshot            = resourceOpenZFSSnapshot
+	ResourceOpenZFSVolume              = resourceOpenZFSVolume
 
 	FindBackupByID                    = findBackupByID
 	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID
@@ -22,6 +23,7 @@ var (
 	FindONTAPFileSystemByID           = findONTAPFileSystemByID
 	FindONTAPVolumeByID               = findONTAPVolumeByID
 	FindOpenZFSFileSystemByID         = findOpenZFSFileSystemByID
+	FindOpenZFSVolumeByID             = findOpenZFSVolumeByID
 	FindStorageVirtualMachineByID     = findStorageVirtualMachineByID
 	FindSnapshotByID                  = findSnapshotByID
 )

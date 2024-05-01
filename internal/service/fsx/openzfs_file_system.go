@@ -516,7 +516,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 	setTagsOut(ctx, filesystem.Tags)
 
-	rootVolume, err := FindOpenZFSVolumeByID(ctx, conn, rootVolumeID)
+	rootVolume, err := findOpenZFSVolumeByID(ctx, conn, rootVolumeID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx for OpenZFS File System (%s) root volume (%s): %s", d.Id(), rootVolumeID, err)

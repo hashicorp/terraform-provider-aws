@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_fsx_openzfs_volume", name="OpenZFS Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceOpenZFSVolume() *schema.Resource {
+func resourceOpenZFSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenZFSVolumeCreate,
 		ReadWithoutTimeout:   resourceOpenZFSVolumeRead,
@@ -61,7 +61,7 @@ func ResourceOpenZFSVolume() *schema.Resource {
 			"data_compression_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "NONE",
+				Default:      fsx.OpenZFSDataCompressionTypeNone,
 				ValidateFunc: validation.StringInSlice(fsx.OpenZFSDataCompressionType_Values(), false),
 			},
 			"delete_volume_options": {
@@ -197,9 +197,9 @@ func ResourceOpenZFSVolume() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"volume_type": {
 				Type:         schema.TypeString,
-				Default:      fsx.VolumeTypeOpenzfs,
 				Optional:     true,
 				ForceNew:     true,
+				Default:      fsx.VolumeTypeOpenzfs,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeType_Values(), false),
 			},
 		},
@@ -280,7 +280,7 @@ func resourceOpenZFSVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	volume, err := FindOpenZFSVolumeByID(ctx, conn, d.Id())
+	volume, err := findOpenZFSVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for OpenZFS Volume (%s) not found, removing from state", d.Id())
@@ -593,7 +593,7 @@ func flattenOpenZFSOriginSnapshotConfiguration(rs *fsx.OpenZFSOriginSnapshotConf
 	return []interface{}{m}
 }
 
-func FindOpenZFSVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+func findOpenZFSVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	output, err := findVolumeByIDAndType(ctx, conn, id, fsx.VolumeTypeOpenzfs)
 
 	if err != nil {
