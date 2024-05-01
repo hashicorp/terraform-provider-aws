@@ -240,7 +240,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig_oauthHTTPParametersEmpty(
+				Config: testAccConnectionConfig_oauthHttpParametersEmpty(
 					nameModified,
 					descriptionModified,
 					authorizationType,
