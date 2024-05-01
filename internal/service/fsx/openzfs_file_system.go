@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
 // @Tags(identifierAttribute="arn")
-func ResourceOpenZFSFileSystem() *schema.Resource {
+func resourceOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenZFSFileSystemCreate,
 		ReadWithoutTimeout:   resourceOpenZFSFileSystemRead,
@@ -474,7 +474,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindOpenZFSFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := findOpenZFSFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
@@ -787,7 +787,7 @@ func flattenOpenZFSFileSystemRootVolume(rs *fsx.Volume) []interface{} {
 	return []interface{}{m}
 }
 
-func FindOpenZFSFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeOpenzfs)
 
 	if err != nil {

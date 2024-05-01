@@ -340,7 +340,7 @@ func sweepOpenZFSFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceOpenZFSFileSystem()
+			r := resourceOpenZFSFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 

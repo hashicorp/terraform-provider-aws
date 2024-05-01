@@ -12,6 +12,7 @@ var (
 	ResourceONTAPFileSystem            = resourceONTAPFileSystem
 	ResourceONTAPStorageVirtualMachine = resourceONTAPStorageVirtualMachine
 	ResourceONTAPVolume                = resourceONTAPVolume
+	ResourceOpenZFSFileSystem          = resourceOpenZFSFileSystem
 	ResourceOpenZFSSnapshot            = resourceOpenZFSSnapshot
 
 	FindBackupByID                    = findBackupByID
@@ -20,6 +21,7 @@ var (
 	FindLustreFileSystemByID          = findLustreFileSystemByID
 	FindONTAPFileSystemByID           = findONTAPFileSystemByID
 	FindONTAPVolumeByID               = findONTAPVolumeByID
+	FindOpenZFSFileSystemByID         = findOpenZFSFileSystemByID
 	FindStorageVirtualMachineByID     = findStorageVirtualMachineByID
 	FindSnapshotByID                  = findSnapshotByID
 )
