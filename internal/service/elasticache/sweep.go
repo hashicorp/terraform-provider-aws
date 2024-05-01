@@ -159,10 +159,8 @@ func sweepGlobalReplicationGroups(region string) error {
 
 				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
 				err := deleteGlobalReplicationGroup(ctx, conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout, globalReplicationGroupDefaultDeletedTimeout)
-				if err != nil {
-					return err
-				}
-				return nil
+
+				return err
 			})
 		}
 
