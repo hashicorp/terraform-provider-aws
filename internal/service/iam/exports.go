@@ -5,8 +5,7 @@ package iam
 
 // Exports for use in other packages.
 var (
-	ResourceRole = resourceRole
-
+	ResourceRole            = NewResourceRole
 	DeleteServiceLinkedRole = deleteServiceLinkedRole
 	FindRoleByName          = findRoleByName
 	ListGroupsForUserPages  = listGroupsForUserPages

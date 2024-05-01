@@ -462,7 +462,7 @@ func sweepRoles(region string) error {
 	for _, roleName := range roles {
 		log.Printf("[DEBUG] Deleting IAM Role (%s)", roleName)
 
-		err := deleteRole(ctx, conn, roleName, true, true, true)
+		err := DeleteRole(ctx, conn, roleName, true, true, true)
 
 		if tfawserr.ErrCodeContains(err, "AccessDenied") {
 			log.Printf("[WARN] Skipping IAM Role (%s): %s", roleName, err)

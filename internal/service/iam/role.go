@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"reflect"
+	"regexp"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,17 +17,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -35,316 +50,759 @@ import (
 )
 
 const (
-	roleNameMaxLen       = 64
-	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
+	roleNameMaxLen        = 64
+	roleNamePrefixMaxLen  = roleNameMaxLen - id.UniqueIDSuffixLength
+	ResNameRole           = "IAM Role"
+	MaxSessionDurationMin = 3600
+	MaxSessionDurationMax = 43200
 )
 
-// @SDKResource("aws_iam_role", name="Role")
+// @FrameworkResource(name="Role")
 // @Tags(identifierAttribute="id", resourceType="Role")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.Role")
-func resourceRole() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceRoleCreate,
-		ReadWithoutTimeout:   resourceRoleRead,
-		UpdateWithoutTimeout: resourceRoleUpdate,
-		DeleteWithoutTimeout: resourceRoleDelete,
+func NewResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceIamRole{}
+	r.SetMigratedFromPluginSDK(true)
+	return r, nil
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRoleImport,
-		},
+type resourceIamRole struct {
+	framework.ResourceWithConfigure
+}
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assume_role_policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1000),
-					validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
-					validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
-				),
-			},
-			"force_detach_policies": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"inline_policy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc: validation.All(
-								validation.StringIsNotEmpty,
-								validRolePolicyName,
-							),
-						},
-						"policy": {
-							Type:                  schema.TypeString,
-							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc:          verify.ValidIAMPolicyJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v interface{}) string {
-								json, _ := verify.LegacyPolicyNormalize(v)
-								return json
-							},
-						},
-					},
-				},
-				DiffSuppressFunc: func(k, _, _ string, d *schema.ResourceData) bool {
-					if d.Id() == "" {
-						return false
-					}
+func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_iam_role"
+}
 
-					return !inlinePoliciesActualDiff(d)
-				},
-			},
-			"managed_policy_arns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
-				},
-			},
-			"max_session_duration": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3600,
-				ValidateFunc: validation.IntBetween(3600, 43200),
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validResourceName(roleNameMaxLen),
-			},
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
-			},
-			"path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
+// TODO: should stringvalidator have something like `RegexNotMatches`? Making custom one for now that's opposite of given one
+// From terraform-plugin-framework, just the opposite implementation
+// https://github.com/hashicorp/terraform-plugin-framework-validators/blob/main/stringvalidator/regex_matches.go
+func RegexNotMatches(regexp *regexp.Regexp, message string) validator.String {
+	return regexNotMatchesValidator{
+		regexp:  regexp,
+		message: message,
 	}
 }
 
-func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+type regexNotMatchesValidator struct {
+	regexp  *regexp.Regexp
+	message string
+}
 
-	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)
+// Description describes the validation in plain text formatting.
+func (v regexNotMatchesValidator) Description(_ context.Context) string {
+	return fmt.Sprintf("value must not match regular expression '%s'", v.regexp)
+}
+
+// MarkdownDescription describes the validation in Markdown formatting.
+func (v regexNotMatchesValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+// Validate performs the validation.
+func (v regexNotMatchesValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
 	}
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	value := request.ConfigValue.ValueString()
+
+	if v.regexp.MatchString(value) {
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueMatchDiagnostic(
+			request.Path,
+			v.Description(ctx),
+			value,
+		))
+	}
+}
+
+// As this is map and logic a little more complex, felt appropriate to make it's own planmodifier
+func EditPlanForSameReorderedPolicies() planmodifier.Map {
+	return editPlanForSameReorderedPolicies{}
+}
+
+type editPlanForSameReorderedPolicies struct{}
+
+func (m editPlanForSameReorderedPolicies) Description(_ context.Context) string {
+	return "If plan and state of inline policy is the same equivalent policy, do not include in plan"
+}
+
+func (m editPlanForSameReorderedPolicies) MarkdownDescription(_ context.Context) string {
+	return "If plan and state of inline policy is the same equivalent policy, do not include in plan"
+}
+
+func (m editPlanForSameReorderedPolicies) PlanModifyMap(ctx context.Context, req planmodifier.MapRequest, resp *planmodifier.MapResponse) {
+	if req.PlanValue.IsUnknown() || req.PlanValue.IsNull() {
+		return
+	}
+
+	if req.StateValue.IsUnknown() || req.StateValue.IsNull() {
+		return
+	}
+
+	planInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, req.PlanValue)
+
+	if len(planInlinePoliciesMap) == 0 {
+		return
+	}
+	stateInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, req.StateValue)
+
+	// If policies match, set plan for policy to use state version so that we don't see if diff bc ordering does not matter
+	for name, planPolicyDoc := range planInlinePoliciesMap {
+		if statePolicyDoc, ok := stateInlinePoliciesMap[name]; ok {
+			if verify.PolicyStringsEquivalent(planPolicyDoc, statePolicyDoc) {
+				planInlinePoliciesMap[name] = statePolicyDoc
+			}
+		}
+	}
+
+	resp.PlanValue = flex.FlattenFrameworkStringValueMap(ctx, planInlinePoliciesMap)
+}
+
+func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Version: 1,
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"id": framework.IDAttribute(),
+			"assume_role_policy": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.IAMPolicyType,
+			},
+			"create_date": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 1000),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+					RegexNotMatches(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+				},
+			},
+			"force_detach_policies": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"inline_policies": schema.MapAttribute{
+				ElementType: fwtypes.IAMPolicyType,
+				Optional:    true,
+				PlanModifiers: []planmodifier.Map{
+					EditPlanForSameReorderedPolicies(),
+				},
+				Validators: []validator.Map{
+					mapvalidator.KeysAre(stringvalidator.LengthBetween(1, rolePolicyNameMaxLen)),
+					mapvalidator.KeysAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]")),
+				},
+			},
+			"managed_policy_arns": schema.SetAttribute{
+				Optional:    true,
+				ElementType: fwtypes.ARNType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"max_session_duration": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(MaxSessionDurationMin),
+				Validators: []validator.Int64{
+					int64validator.Between(MaxSessionDurationMin, MaxSessionDurationMax),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNameMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name_prefix"),
+					),
+				},
+			},
+			"name_prefix": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name"),
+					),
+				},
+			},
+			"path": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("/"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 512),
+				},
+			},
+			"permissions_boundary": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"unique_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+	}
+}
+
+type resourceIamRoleData struct {
+	ARN                 fwtypes.ARN       `tfsdk:"arn"`
+	AssumeRolePolicy    fwtypes.IAMPolicy `tfsdk:"assume_role_policy"`
+	CreateDate          types.String      `tfsdk:"create_date"`
+	ID                  types.String      `tfsdk:"id"`
+	Description         types.String      `tfsdk:"description"`
+	ForceDetachPolicies types.Bool        `tfsdk:"force_detach_policies"`
+	MaxSessionDuration  types.Int64       `tfsdk:"max_session_duration"`
+	Name                types.String      `tfsdk:"name"`
+	NamePrefix          types.String      `tfsdk:"name_prefix"`
+	Path                types.String      `tfsdk:"path"`
+	PermissionsBoundary fwtypes.ARN       `tfsdk:"permissions_boundary"`
+	InlinePolicies      types.Map         `tfsdk:"inline_policies"`
+	UniqueID            types.String      `tfsdk:"unique_id"`
+	ManagedPolicyArns   types.Set         `tfsdk:"managed_policy_arns"`
+	Tags                types.Map         `tfsdk:"tags"`
+	TagsAll             types.Map         `tfsdk:"tags_all"`
+}
+
+func oldSDKRoleSchema() schema.Schema {
+	return schema.Schema{
+		Version: 0,
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"assume_role_policy": schema.StringAttribute{
+				Required: true,
+			},
+			"create_date": schema.StringAttribute{
+				Computed: true,
+			},
+			"description": schema.StringAttribute{
+				Default: stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 1000),
+				},
+				Optional: true,
+				Computed: true,
+			},
+			"force_detach_policies": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
+			"id": framework.IDAttribute(),
+			"managed_policy_arns": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+			},
+			"max_session_duration": schema.Int64Attribute{
+				Optional: true,
+			},
+			"name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNameMaxLen),
+				},
+			},
+			"name_prefix": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name"),
+					),
+				},
+			},
+			"path": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("/"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"permissions_boundary": schema.StringAttribute{
+				Optional: true,
+			},
+			"tags":     tftags.TagsAttribute(),
+			"tags_all": tftags.TagsAttributeComputedOnly(),
+			"unique_id": schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"inline_policy": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+						},
+						"policy": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := oldSDKRoleSchema()
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeRoleResourceStateV0toV1,
+		},
+	}
+}
+
+func upgradeRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+	type resourceIamRoleDataV0 struct {
+		ARN                 types.String `tfsdk:"arn"`
+		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
+		CreateDate          types.String `tfsdk:"create_date"`
+		Description         types.String `tfsdk:"description"`
+		ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
+		ID                  types.String `tfsdk:"id"`
+		ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
+		MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
+		Name                types.String `tfsdk:"name"`
+		NamePrefix          types.String `tfsdk:"name_prefix"`
+		Path                types.String `tfsdk:"path"`
+		PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
+		Tags                types.Map    `tfsdk:"tags"`
+		TagsAll             types.Map    `tfsdk:"tags_all"`
+		UniqueID            types.String `tfsdk:"unique_id"`
+		InlinePolicy        types.Set    `tfsdk:"inline_policy"`
+	}
+
+	var roleDataV0 resourceIamRoleDataV0
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &roleDataV0)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	roleDataCurrent := resourceIamRoleData{
+		ARN:                 fwtypes.ARNValueMust(roleDataV0.ARN.ValueString()),
+		AssumeRolePolicy:    fwtypes.IAMPolicyValue(roleDataV0.AssumeRolePolicy.ValueString()),
+		CreateDate:          roleDataV0.CreateDate,
+		Description:         roleDataV0.Description,
+		ForceDetachPolicies: roleDataV0.ForceDetachPolicies,
+		ID:                  roleDataV0.ID,
+		MaxSessionDuration:  roleDataV0.MaxSessionDuration,
+		Name:                roleDataV0.Name,
+		NamePrefix:          roleDataV0.NamePrefix,
+		Path:                roleDataV0.Path,
+		UniqueID:            roleDataV0.UniqueID,
+		ManagedPolicyArns:   types.SetNull(fwtypes.ARNType),
+		Tags:                roleDataV0.Tags,
+		TagsAll:             roleDataV0.TagsAll,
+	}
+
+	if roleDataV0.PermissionsBoundary.ValueString() == "" {
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNNull()
+	} else {
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValueMust(roleDataV0.PermissionsBoundary.ValueString())
+	}
+
+	type inlinePolicyData struct {
+		Name   types.String `tfsdk:"name"`
+		Policy types.String `tfsdk:"policy"`
+	}
+
+	var inlinePolicies []inlinePolicyData
+	resp.Diagnostics.Append(roleDataV0.InlinePolicy.ElementsAs(ctx, &inlinePolicies, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	inlinePoliciesMap := make(map[string]string)
+	for _, inlinePolicy := range inlinePolicies {
+		inlinePoliciesMap[inlinePolicy.Name.ValueString()] = inlinePolicy.Policy.ValueString()
+	}
+	roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, inlinePoliciesMap)
+	var policyARNs []string
+
+	resp.Diagnostics.Append(roleDataV0.ManagedPolicyArns.ElementsAs(ctx, &policyARNs, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	roleDataCurrent.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+
+	diags := resp.State.Set(ctx, roleDataCurrent)
+	resp.Diagnostics.Append(diags...)
+}
+
+func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().IAMClient(ctx)
+
+	var plan resourceIamRoleData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	assumeRolePolicy, err := structure.NormalizeJsonString(plan.AssumeRolePolicy.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameRole, plan.AssumeRolePolicy.String(), nil),
+			fmt.Errorf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err).Error(),
+		)
+		return
+	}
+
+	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
-		Path:                     aws.String(d.Get("path").(string)),
+		Path:                     aws.String(plan.Path.ValueString()),
 		RoleName:                 aws.String(name),
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
+	if !plan.Description.IsNull() {
+		input.Description = aws.String(plan.Description.ValueString())
 	}
 
-	if v, ok := d.GetOk("max_session_duration"); ok {
-		input.MaxSessionDuration = aws.Int32(int32(v.(int)))
+	if !plan.MaxSessionDuration.IsNull() {
+		input.MaxSessionDuration = aws.Int32(int32(plan.MaxSessionDuration.ValueInt64()))
 	}
 
-	if v, ok := d.GetOk("permissions_boundary"); ok {
-		input.PermissionsBoundary = aws.String(v.(string))
+	if !plan.PermissionsBoundary.IsNull() {
+		input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
 	}
 
 	output, err := retryCreateRole(ctx, conn, input)
 
-	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		input.Tags = nil
-
-		output, err = retryCreateRole(ctx, conn, input)
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IAM Role (%s): %s", name, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameRole, name, nil),
+			err.Error(),
+		)
+		return
 	}
 
 	roleName := aws.ToString(output.Role.RoleName)
 
-	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
-		policies := expandRoleInlinePolicies(roleName, v.(*schema.Set).List())
-		if err := addRoleInlinePolicies(ctx, conn, policies); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating IAM Role (%s): %s", name, err)
+	if !plan.InlinePolicies.IsNull() && !plan.InlinePolicies.IsUnknown() {
+		inlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
+
+		policies := expandRoleInlinePolicies(roleName, inlinePoliciesMap)
+		if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameRole, name, nil),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	if v, ok := d.GetOk("managed_policy_arns"); ok && v.(*schema.Set).Len() > 0 {
-		managedPolicies := flex.ExpandStringSet(v.(*schema.Set))
-		if err := addRoleManagedPolicies(ctx, conn, roleName, managedPolicies); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating IAM Role (%s): %s", name, err)
+	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
+		var managedPolicies []string
+		resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &managedPolicies, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameRole, name, nil),
+				err.Error(),
+			)
+			return
 		}
 	}
-
-	d.SetId(roleName)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := roleCreateTags(ctx, conn, d.Id(), tags)
+		err := roleCreateTags(ctx, conn, name, tags)
 
+		// TODO: not sure how to convert this to framework
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
-			return append(diags, resourceRoleRead(ctx, d, meta)...)
-		}
+		// if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		// return append(diags, resourceRoleRead(ctx, d, meta)...)
+		// }
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting IAM Role (%s) tags: %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, fmt.Sprintf("%s tags", ResNameRole), name, nil),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceRoleRead(ctx, d, meta)...)
+	plan.ARN = fwtypes.ARNValueMust(*output.Role.Arn)
+	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
+	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
+	plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
+	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.ToString(output.Role.RoleName)))
+	plan.UniqueID = flex.StringToFramework(ctx, output.Role.RoleId)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().IAMClient(ctx)
 
+	var state resourceIamRoleData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	hasInline := false
+	if !state.InlinePolicies.IsNull() && !state.InlinePolicies.IsUnknown() {
+		hasInline = true
+	}
+
+	hasManaged := false
+	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
+		hasManaged = true
+	}
+
+	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionDeleting, state.Name.String(), state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceIamRole) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+}
+
+func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
+		var state, plan resourceIamRoleData
+
+		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if state.Description.ValueString() == plan.Description.ValueString() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("description"), state.Description)...)
+		}
+
+		if state.AssumeRolePolicy.ValueString() == plan.AssumeRolePolicy.ValueString() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("assume_role_policy"), state.AssumeRolePolicy)...)
+		}
+
+		if state.NamePrefix.ValueString() == plan.NamePrefix.ValueString() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)...)
+		}
+	}
+	r.SetTagsAll(ctx, request, response)
+}
+
+func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().IAMClient(ctx)
+
+	var state resourceIamRoleData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	//NOTE: Have to always set this to true? Else not sure what to do
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findRoleByName(ctx, conn, d.Id())
-	}, d.IsNewResource())
+		return FindRoleByName(ctx, conn, state.ID.ValueString())
+	}, true)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	// NOTE: Same issue here, left old conditional here as example, not sure what else can/should be done
+	// if !d.IsNewResource() && tfresource.NotFound(err) {
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionSetting, state.Name.String(), state.ARN.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
 	role := outputRaw.(*awstypes.Role)
 
 	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
-	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
+	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, state.ARN.ValueString(), role); err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionSetting, state.Name.String(), state.ARN.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.Set("arn", role.Arn)
-	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
-	d.Set("description", role.Description)
-	d.Set("max_session_duration", role.MaxSessionDuration)
-	d.Set("name", role.RoleName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(role.RoleName)))
-	d.Set("path", role.Path)
-	if role.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
-	} else {
-		d.Set("permissions_boundary", nil)
+	state.ARN = fwtypes.ARNValueMust(*role.Arn)
+	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
+	state.Path = flex.StringToFramework(ctx, role.Path)
+	state.Name = flex.StringToFramework(ctx, role.RoleName)
+	state.ID = flex.StringToFramework(ctx, role.RoleName)
+	state.Description = flex.StringToFramework(ctx, role.Description)
+	state.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.ToString(role.RoleName)))
+	state.MaxSessionDuration = flex.Int32ValueToFramework(ctx, int32(*role.MaxSessionDuration))
+	state.UniqueID = flex.StringToFramework(ctx, role.RoleId)
+
+	if state.ForceDetachPolicies.IsNull() {
+		state.ForceDetachPolicies = types.BoolValue(false)
 	}
-	d.Set("unique_id", role.RoleId)
+
+	if role.PermissionsBoundary != nil {
+		state.PermissionsBoundary = fwtypes.ARNValueMust(*role.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		state.PermissionsBoundary = fwtypes.ARNNull()
+	}
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), state.AssumeRolePolicy.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
+	policyToSet, err := verify.PolicyToSet(state.AssumeRolePolicy.ValueString(), assumeRolePolicy)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), state.AssumeRolePolicy.String(), err),
+			err.Error(),
+		)
+		return
 	}
+	state.AssumeRolePolicy = fwtypes.IAMPolicyValue(policyToSet)
 
-	d.Set("assume_role_policy", policyToSet)
+	// Unforunately because of `aws_iam_role_policy` and those like it, we have to ignore unless
+	// added via create
+	if !state.InlinePolicies.IsNull() && !state.InlinePolicies.IsUnknown() {
+		inlinePolicies, err := r.readRoleInlinePolicies(ctx, aws.ToString(role.RoleName))
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.InlinePolicies.String(), state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
 
-	inlinePolicies, err := readRoleInlinePolicies(ctx, conn, aws.ToString(role.RoleName))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
-	}
+		var configPoliciesList []*iam.PutRolePolicyInput
+		inlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+		configPoliciesList = expandRoleInlinePolicies(aws.ToString(role.RoleName), inlinePoliciesMap)
 
-	var configPoliciesList []*iam.PutRolePolicyInput
-	if v := d.Get("inline_policy").(*schema.Set); v.Len() > 0 {
-		configPoliciesList = expandRoleInlinePolicies(aws.ToString(role.RoleName), v.List())
-	}
-
-	if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
-		if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
+		if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
+			state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
 		}
 	}
 
-	policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
+	// like Inline policies, only reading if set in state already via updates, create, etc
+	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
+		policyARNs, err := findRoleAttachedPolicies(ctx, conn, state.ID.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ManagedPolicyArns.String(), state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if len(policyARNs) == 0 {
+			state.ManagedPolicyArns = types.SetValueMust(fwtypes.ARNType, []attr.Value{})
+		} else {
+			state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+		}
 	}
-	d.Set("managed_policy_arns", policyARNs)
-
 	setTagsOut(ctx, role.Tags)
 
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().IAMClient(ctx)
 
-	if d.HasChange("assume_role_policy") {
-		assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+	var plan, state resourceIamRoleData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.AssumeRolePolicy.Equal(state.AssumeRolePolicy) {
+		assumeRolePolicy, err := structure.NormalizeJsonString(plan.AssumeRolePolicy.ValueString())
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.AssumeRolePolicy.String(), plan.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 
 		input := &iam.UpdateAssumeRolePolicyInput{
-			RoleName:       aws.String(d.Id()),
+			RoleName:       aws.String(state.ID.ValueString()),
 			PolicyDocument: aws.String(assumeRolePolicy),
 		}
 
@@ -362,149 +820,289 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) assume role policy: %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.AssumeRolePolicy.String(), state.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	if d.HasChange("description") {
+	if !plan.Description.Equal(state.Description) {
 		input := &iam.UpdateRoleDescriptionInput{
-			RoleName:    aws.String(d.Id()),
-			Description: aws.String(d.Get("description").(string)),
+			RoleName:    aws.String(state.ID.ValueString()),
+			Description: aws.String(plan.Description.ValueString()),
 		}
 
 		_, err := conn.UpdateRoleDescription(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) description: %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), plan.Description.String(), err),
+				err.Error(),
+			)
+			return
 		}
+
+		state.Description = plan.Description
 	}
 
-	if d.HasChange("max_session_duration") {
+	if !plan.MaxSessionDuration.Equal(state.MaxSessionDuration) {
 		input := &iam.UpdateRoleInput{
-			RoleName:           aws.String(d.Id()),
-			MaxSessionDuration: aws.Int32(int32(d.Get("max_session_duration").(int))),
+			RoleName:           aws.String(state.ID.ValueString()),
+			MaxSessionDuration: aws.Int32(int32(plan.MaxSessionDuration.ValueInt64())),
 		}
 
 		_, err := conn.UpdateRole(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.MaxSessionDuration.String(), err),
+				err.Error(),
+			)
+			return
 		}
+		state.MaxSessionDuration = plan.MaxSessionDuration
 	}
 
-	if d.HasChange("permissions_boundary") {
-		permissionsBoundary := d.Get("permissions_boundary").(string)
-		if permissionsBoundary != "" {
+	if !plan.PermissionsBoundary.Equal(state.PermissionsBoundary) {
+		if !plan.PermissionsBoundary.IsNull() {
 			input := &iam.PutRolePermissionsBoundaryInput{
-				PermissionsBoundary: aws.String(permissionsBoundary),
-				RoleName:            aws.String(d.Id()),
+				PermissionsBoundary: aws.String(plan.PermissionsBoundary.ValueString()),
+				RoleName:            aws.String(state.ID.ValueString()),
 			}
 
 			_, err := conn.PutRolePermissionsBoundary(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) permissions boundary: %s", d.Id(), err)
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.PermissionsBoundary.String(), err),
+					err.Error(),
+				)
+				return
 			}
 		} else {
 			input := &iam.DeleteRolePermissionsBoundaryInput{
-				RoleName: aws.String(d.Id()),
+				RoleName: aws.String(state.ID.ValueString()),
 			}
 
 			_, err := conn.DeleteRolePermissionsBoundary(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting IAM Role (%s) permissions boundary: %s", d.Id(), err)
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.IAM, create.ErrActionDeleting, state.ID.String(), plan.PermissionsBoundary.String(), err),
+					err.Error(),
+				)
+				return
 			}
 		}
+
+		state.PermissionsBoundary = plan.PermissionsBoundary
 	}
 
-	if d.HasChange("inline_policy") && inlinePoliciesActualDiff(d) {
-		roleName := d.Get("name").(string)
+	if !plan.InlinePolicies.Equal(state.InlinePolicies) && inlinePoliciesActualDiff(ctx, &plan, &state) {
+		oldInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+		newInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 
-		o, n := d.GetChange("inline_policy")
-
-		if o == nil {
-			o = new(schema.Set)
+		var removePolicyNames []string
+		for k := range oldInlinePoliciesMap {
+			if _, ok := newInlinePoliciesMap[k]; !ok {
+				removePolicyNames = append(removePolicyNames, k)
+			}
 		}
 
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		remove := os.Difference(ns).List()
-		add := ns.Difference(os).List()
-
-		var policyNames []string
-		for _, policy := range remove {
-			tfMap, ok := policy.(map[string]interface{})
-
+		// need set like object to store policy names we want to add
+		addPolicyNames := make(map[string]int64)
+		for k, v := range newInlinePoliciesMap {
+			val, ok := oldInlinePoliciesMap[k]
+			// If the key exists
 			if !ok {
+				addPolicyNames[k] = 0
 				continue
 			}
 
-			if v, ok := tfMap["name"].(string); ok && v != "" {
-				policyNames = append(policyNames, tfMap["name"].(string))
+			if !verify.PolicyStringsEquivalent(v, val) {
+				addPolicyNames[k] = 0
 			}
 		}
-		if err := deleteRoleInlinePolicies(ctx, conn, roleName, policyNames); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+
+		roleName := state.Name.ValueString()
+		nsPolicies := expandRoleInlinePolicies(roleName, newInlinePoliciesMap)
+
+		// getting policy objects we want to add based on add_policy_names map
+		var addPolicies []*iam.PutRolePolicyInput
+		for _, val := range nsPolicies {
+			if _, ok := addPolicyNames[*val.PolicyName]; ok {
+				addPolicies = append(addPolicies, val)
+			}
 		}
 
-		policies := expandRoleInlinePolicies(roleName, add)
-		if err := addRoleInlinePolicies(ctx, conn, policies); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+		// Always add before delete
+		if err := r.addRoleInlinePolicies(ctx, addPolicies); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.InlinePolicies.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		if err := deleteRoleInlinePolicies(ctx, conn, roleName, removePolicyNames); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.InlinePolicies.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	if d.HasChange("managed_policy_arns") {
-		o, n := d.GetChange("managed_policy_arns")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
-
-		if err := deleteRolePolicyAttachments(ctx, conn, d.Id(), del); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+	if !plan.ManagedPolicyArns.Equal(state.ManagedPolicyArns) {
+		var oldManagedARNs, newManagedARNs []string
+		resp.Diagnostics.Append(state.ManagedPolicyArns.ElementsAs(ctx, &oldManagedARNs, false)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if err := addRoleManagedPolicies(ctx, conn, d.Id(), add); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+		resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &newManagedARNs, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		var add, del []string
+
+		oldPolicyArnMap := make(map[string]int64)
+		for _, v := range oldManagedARNs {
+			oldPolicyArnMap[v] = 0
+		}
+
+		for _, v := range newManagedARNs {
+			if _, ok := oldPolicyArnMap[v]; !ok {
+				add = append(add, v)
+			}
+		}
+
+		newPolicyArnMap := make(map[string]int64)
+		for _, v := range newManagedARNs {
+			newPolicyArnMap[v] = 0
+		}
+
+		for _, v := range oldManagedARNs {
+			if _, ok := newPolicyArnMap[v]; !ok {
+				del = append(del, v)
+			}
+		}
+
+		if err := r.addRoleManagedPolicies(ctx, state.ID.ValueString(), add); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.ManagedPolicyArns.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		if err := deleteRolePolicyAttachments(ctx, conn, state.ID.ValueString(), del); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.ManagedPolicyArns.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceRoleRead(ctx, d, meta)...)
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		err := roleUpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll)
+
+		// Some partitions (e.g. ISO) may not support tagging.
+		parition := r.Meta().Partition
+		if errs.IsUnsupportedOperationInPartitionError(parition, err) {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.TagsAll.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.TagsAll.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	}
+	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(plan.Name.ValueString()))
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-
-	hasInline := false
-	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
-		hasInline = true
+func findRoleByName(ctx context.Context, conn *iam.Client, name string) (*awstypes.Role, error) {
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(name),
 	}
 
-	hasManaged := false
-	if v, ok := d.GetOk("managed_policy_arns"); ok && v.(*schema.Set).Len() > 0 {
-		hasManaged = true
-	}
+	return findRole(ctx, conn, input)
+}
 
-	err := deleteRole(ctx, conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
+func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*awstypes.Role, error) {
+	output, err := conn.GetRole(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Role (%s): %s", d.Id(), err)
+		return nil, err
 	}
 
-	return diags
+	if output == nil || output.Role == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Role, nil
 }
 
-func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("force_detach_policies", false)
-	return []*schema.ResourceData{d}, nil
+func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateRole(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.MalformedPolicyDocumentException](err, "Invalid principal in policy") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output, ok := outputRaw.(*iam.CreateRoleOutput)
+	if !ok || output == nil || aws.ToString(output.Role.RoleName) == "" {
+		return nil, fmt.Errorf("create IAM role (%s) returned an empty result", aws.ToString(input.RoleName))
+	}
+
+	return output, err
 }
 
-func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDetach, hasInline, hasManaged bool) error {
+func (r resourceIamRole) addRoleManagedPolicies(ctx context.Context, roleName string, policies []string) error {
+	conn := r.Meta().IAMClient(ctx)
+	var errs []error
+
+	for _, arn := range policies {
+		if err := attachPolicyToRole(ctx, conn, roleName, arn); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func DeleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDetach, hasInline, hasManaged bool) error {
 	if err := deleteRoleInstanceProfiles(ctx, conn, roleName); err != nil {
 		return err
 	}
@@ -582,61 +1180,6 @@ func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.Client, roleName 
 	return errors.Join(errsList...)
 }
 
-func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.CreateRole(ctx, input)
-		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.MalformedPolicyDocumentException](err, "Invalid principal in policy") {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	output, ok := outputRaw.(*iam.CreateRoleOutput)
-	if !ok || output == nil || aws.ToString(output.Role.RoleName) == "" {
-		return nil, fmt.Errorf("create IAM role (%s) returned an empty result", aws.ToString(input.RoleName))
-	}
-
-	return output, err
-}
-
-func findRoleByName(ctx context.Context, conn *iam.Client, name string) (*awstypes.Role, error) {
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(name),
-	}
-
-	return findRole(ctx, conn, input)
-}
-
-func findRole(ctx context.Context, conn *iam.Client, input *iam.GetRoleInput) (*awstypes.Role, error) {
-	output, err := conn.GetRole(ctx, input)
-
-	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Role == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Role, nil
-}
-
 func findRoleAttachedPolicies(ctx context.Context, conn *iam.Client, roleName string) ([]string, error) {
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: aws.String(roleName),
@@ -666,6 +1209,29 @@ func findRoleAttachedPolicies(ctx context.Context, conn *iam.Client, roleName st
 	}
 
 	return output, nil
+}
+
+func deleteRolePolicyAttachments(ctx context.Context, conn *iam.Client, roleName string, policyARNs []string) error {
+	var errsList []error
+
+	for _, policyARN := range policyARNs {
+		input := &iam.DetachRolePolicyInput{
+			PolicyArn: aws.String(policyARN),
+			RoleName:  aws.String(roleName),
+		}
+
+		_, err := conn.DetachRolePolicy(ctx, input)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			continue
+		}
+
+		if err != nil {
+			errsList = append(errsList, fmt.Errorf("detaching IAM Policy (%s) from Role (%s): %w", policyARN, roleName, err))
+		}
+	}
+
+	return errors.Join(errsList...)
 }
 
 func findRolePolicyNames(ctx context.Context, conn *iam.Client, roleName string) ([]string, error) {
@@ -699,29 +1265,6 @@ func findRolePolicyNames(ctx context.Context, conn *iam.Client, roleName string)
 	return output, nil
 }
 
-func deleteRolePolicyAttachments(ctx context.Context, conn *iam.Client, roleName string, policyARNs []string) error {
-	var errsList []error
-
-	for _, policyARN := range policyARNs {
-		input := &iam.DetachRolePolicyInput{
-			PolicyArn: aws.String(policyARN),
-			RoleName:  aws.String(roleName),
-		}
-
-		_, err := conn.DetachRolePolicy(ctx, input)
-
-		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			continue
-		}
-
-		if err != nil {
-			errsList = append(errsList, fmt.Errorf("detaching IAM Policy (%s) from Role (%s): %w", policyARN, roleName, err))
-		}
-	}
-
-	return errors.Join(errsList...)
-}
-
 func deleteRoleInlinePolicies(ctx context.Context, conn *iam.Client, roleName string, policyNames []string) error {
 	var errsList []error
 
@@ -749,78 +1292,15 @@ func deleteRoleInlinePolicies(ctx context.Context, conn *iam.Client, roleName st
 	return errors.Join(errsList...)
 }
 
-func flattenRoleInlinePolicy(apiObject *iam.PutRolePolicyInput) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	tfMap["name"] = aws.ToString(apiObject.PolicyName)
-	tfMap["policy"] = aws.ToString(apiObject.PolicyDocument)
-
-	return tfMap
-}
-
-func flattenRoleInlinePolicies(apiObjects []*iam.PutRolePolicyInput) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenRoleInlinePolicy(apiObject))
-	}
-
-	return tfList
-}
-
-func expandRoleInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.PutRolePolicyInput {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &iam.PutRolePolicyInput{}
-
-	namePolicy := false
-
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		apiObject.PolicyName = aws.String(v)
-		namePolicy = true
-	}
-
-	if v, ok := tfMap["policy"].(string); ok && v != "" {
-		apiObject.PolicyDocument = aws.String(v)
-		namePolicy = true
-	}
-
-	if namePolicy {
-		apiObject.RoleName = aws.String(roleName)
-	}
-
-	return apiObject
-}
-
-func expandRoleInlinePolicies(roleName string, tfList []interface{}) []*iam.PutRolePolicyInput {
-	if len(tfList) == 0 {
+func expandRoleInlinePolicies(roleName string, tfPoliciesMap map[string]string) []*iam.PutRolePolicyInput {
+	if len(tfPoliciesMap) == 0 {
 		return nil
 	}
 
 	var apiObjects []*iam.PutRolePolicyInput
 
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandRoleInlinePolicy(roleName, tfMap)
+	for policyName, policyDocument := range tfPoliciesMap {
+		apiObject := expandRoleInlinePolicy(roleName, policyName, policyDocument)
 
 		if apiObject == nil {
 			continue
@@ -832,7 +1312,18 @@ func expandRoleInlinePolicies(roleName string, tfList []interface{}) []*iam.PutR
 	return apiObjects
 }
 
-func addRoleInlinePolicies(ctx context.Context, conn *iam.Client, policies []*iam.PutRolePolicyInput) error {
+func expandRoleInlinePolicy(roleName string, policyName string, policyDocument string) *iam.PutRolePolicyInput {
+	apiObject := &iam.PutRolePolicyInput{}
+
+	apiObject.PolicyName = aws.String(policyName)
+	apiObject.PolicyDocument = aws.String(policyDocument)
+	apiObject.RoleName = aws.String(roleName)
+
+	return apiObject
+}
+
+func (r resourceIamRole) addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInput) error {
+	conn := r.Meta().IAMClient(ctx)
 	var errs []error
 
 	for _, policy := range policies {
@@ -848,19 +1339,53 @@ func addRoleInlinePolicies(ctx context.Context, conn *iam.Client, policies []*ia
 	return errors.Join(errs...)
 }
 
-func addRoleManagedPolicies(ctx context.Context, conn *iam.Client, roleName string, policies []*string) error {
-	var errsList []error
+func inlinePoliciesActualDiff(ctx context.Context, plan *resourceIamRoleData, state *resourceIamRoleData) bool {
+	roleName := state.Name.ValueString()
 
-	for _, arn := range policies {
-		if err := attachPolicyToRole(ctx, conn, roleName, aws.ToString(arn)); err != nil {
-			errsList = append(errsList, err)
+	oldInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+	newInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
+
+	osPolicies := expandRoleInlinePolicies(roleName, oldInlinePoliciesMap)
+	nsPolicies := expandRoleInlinePolicies(roleName, newInlinePoliciesMap)
+
+	return !inlinePoliciesEquivalent(nsPolicies, osPolicies)
+}
+
+func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyInput) bool {
+	if readPolicies == nil && configPolicies == nil {
+		return true
+	}
+
+	if len(readPolicies) == 0 && len(configPolicies) == 1 {
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(`{}`, aws.ToString(configPolicies[0].PolicyDocument)); err == nil && equivalent {
+			return true
 		}
 	}
 
-	return errors.Join(errsList...)
+	if len(readPolicies) != len(configPolicies) {
+		return false
+	}
+
+	matches := 0
+
+	for _, policyOne := range readPolicies {
+		for _, policyTwo := range configPolicies {
+			if aws.ToString(policyOne.PolicyName) == aws.ToString(policyTwo.PolicyName) {
+				matches++
+				if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.ToString(policyOne.PolicyDocument), aws.ToString(policyTwo.PolicyDocument)); err != nil || !equivalent {
+					return false
+				}
+				break
+			}
+		}
+	}
+
+	return matches == len(readPolicies)
 }
 
-func readRoleInlinePolicies(ctx context.Context, conn *iam.Client, roleName string) ([]*iam.PutRolePolicyInput, error) {
+func (r resourceIamRole) readRoleInlinePolicies(ctx context.Context, roleName string) ([]*iam.PutRolePolicyInput, error) {
+	conn := r.Meta().IAMClient(ctx)
+
 	policyNames, err := findRolePolicyNames(ctx, conn, roleName)
 
 	if err != nil {
@@ -901,55 +1426,22 @@ func readRoleInlinePolicies(ctx context.Context, conn *iam.Client, roleName stri
 	return apiObjects, nil
 }
 
-func inlinePoliciesActualDiff(d *schema.ResourceData) bool {
-	roleName := d.Get("name").(string)
-	o, n := d.GetChange("inline_policy")
-	if o == nil {
-		o = new(schema.Set)
-	}
-	if n == nil {
-		n = new(schema.Set)
+func flattenRoleInlinePolicies(apiObjects []*iam.PutRolePolicyInput) map[string]string {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
+	tfMap := make(map[string]string)
 
-	osPolicies := expandRoleInlinePolicies(roleName, os.List())
-	nsPolicies := expandRoleInlinePolicies(roleName, ns.List())
-
-	return !inlinePoliciesEquivalent(nsPolicies, osPolicies)
-}
-
-func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyInput) bool {
-	if readPolicies == nil && configPolicies == nil {
-		return true
-	}
-
-	if len(readPolicies) == 0 && len(configPolicies) == 1 {
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(`{}`, aws.ToString(configPolicies[0].PolicyDocument)); err == nil && equivalent {
-			return true
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
 		}
+
+		tfMap[aws.ToString(apiObject.PolicyName)] = aws.ToString(apiObject.PolicyDocument)
 	}
 
-	if len(readPolicies) != len(configPolicies) {
-		return false
-	}
-
-	matches := 0
-
-	for _, policyOne := range readPolicies {
-		for _, policyTwo := range configPolicies {
-			if aws.ToString(policyOne.PolicyName) == aws.ToString(policyTwo.PolicyName) {
-				matches++
-				if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.ToString(policyOne.PolicyDocument), aws.ToString(policyTwo.PolicyDocument)); err != nil || !equivalent {
-					return false
-				}
-				break
-			}
-		}
-	}
-
-	return matches == len(readPolicies)
+	return tfMap
 }
 
 func roleTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {

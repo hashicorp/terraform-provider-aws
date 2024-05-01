@@ -177,7 +177,7 @@ func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), "aws_iam_role.test"),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole, "aws_iam_role.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
