@@ -254,6 +254,11 @@ func resourceTarget() *schema.Resource {
 				ValidateFunc: validBusNameOrARN,
 				Default:      DefaultEventBusName,
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"http_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -541,6 +546,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("arn", target.Arn)
 	d.Set("event_bus_name", eventBusName)
+	d.Set("force_destroy", d.Get("force_destroy").(bool))
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
 	d.Set("role_arn", target.RoleArn)
@@ -621,16 +627,18 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := expandPutTargetsInput(ctx, d)
+	if d.HasChangesExcept("force_destroy") {
+		input := expandPutTargetsInput(ctx, d)
 
-	output, err := conn.PutTargets(ctx, input)
+		output, err := conn.PutTargets(ctx, input)
 
-	if err == nil && output != nil {
-		err = putTargetsError(output.FailedEntries)
-	}
+		if err == nil && output != nil {
+			err = putTargetsError(output.FailedEntries)
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EventBridge Target (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Target (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
@@ -647,6 +655,10 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		input.EventBusName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("force_destroy"); ok {
+		input.Force = v.(bool)
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())

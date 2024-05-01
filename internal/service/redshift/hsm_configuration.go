@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
 // @Tags(identifierAttribute="arn")
-func ResourceHSMConfiguration() *schema.Resource {
+func resourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,
 		ReadWithoutTimeout:   resourceHSMConfigurationRead,
@@ -109,7 +109,7 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	hsmConfiguration, err := FindHSMConfigurationByID(ctx, conn, d.Id())
+	hsmConfiguration, err := findHSMConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift HSM Configuration (%s) not found, removing from state", d.Id())

@@ -47,8 +47,8 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:    "902366379725",
 }
 
-// @SDKDataSource("aws_redshift_service_account")
-func DataSourceServiceAccount() *schema.Resource {
+// @SDKDataSource("aws_redshift_service_account", name="Service Account")
+func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 

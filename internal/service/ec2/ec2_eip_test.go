@@ -36,6 +36,7 @@ func TestAccEC2EIP_basic(t *testing.T) {
 				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
 					resource.TestCheckResourceAttr(resourceName, "ptr_record", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),

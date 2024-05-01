@@ -25,7 +25,8 @@ import (
 )
 
 // @SDKResource("aws_servicecatalog_product", name="Product")
-// @Tags(identifierAttribute="id")
+// @Tags
+// @Testing(skipEmptyTags=true, importIgnore="accept_language;provisioning_artifact_parameters.0.disable_template_validation")
 func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
@@ -266,50 +267,62 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &servicecatalog.UpdateProductInput{
-			Id: aws.String(d.Id()),
+	input := &servicecatalog.UpdateProductInput{
+		Id: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("accept_language"); ok {
+		input.AcceptLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("distributor"); ok {
+		input.Distributor = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("owner"); ok {
+		input.Owner = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("support_description"); ok {
+		input.SupportDescription = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("support_email"); ok {
+		input.SupportEmail = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("support_url"); ok {
+		input.SupportUrl = aws.String(v.(string))
+	}
+
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
+		oldTags := tftags.New(ctx, o)
+		newTags := tftags.New(ctx, n)
+
+		if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.ServiceCatalog); len(removedTags) > 0 {
+			input.RemoveTags = aws.StringSlice(removedTags.Keys())
 		}
 
-		if v, ok := d.GetOk("accept_language"); ok {
-			input.AcceptLanguage = aws.String(v.(string))
+		if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
+			input.AddTags = Tags(updatedTags)
 		}
+	}
 
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		return conn.UpdateProductWithContext(ctx, input)
+	}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
 
-		if v, ok := d.GetOk("distributor"); ok {
-			input.Distributor = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("name"); ok {
-			input.Name = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("owner"); ok {
-			input.Owner = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("support_description"); ok {
-			input.SupportDescription = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("support_email"); ok {
-			input.SupportEmail = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("support_url"); ok {
-			input.SupportUrl = aws.String(v.(string))
-		}
-
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.UpdateProductWithContext(ctx, input)
-		}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Service Catalog Product (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Product (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceProductRead(ctx, d, meta)...)

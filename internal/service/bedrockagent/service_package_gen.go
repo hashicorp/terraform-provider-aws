@@ -38,6 +38,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "agent_arn",
 			},
 		},
+		{
+			Factory: newKnowledgeBaseResource,
+			Name:    "Knowledge Base",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 

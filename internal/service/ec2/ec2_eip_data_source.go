@@ -30,6 +30,10 @@ func dataSourceEIP() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -132,7 +136,9 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if eip.Domain == types.DomainTypeVpc {
-		d.SetId(aws.ToString(eip.AllocationId))
+		allocationID := aws.ToString(eip.AllocationId)
+		d.SetId(allocationID)
+		d.Set("arn", eipARN(meta.(*conns.AWSClient), allocationID))
 
 		addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
 
@@ -146,6 +152,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else {
 		d.SetId(aws.ToString(eip.PublicIp))
+		d.Set("arn", nil)
 		d.Set("ptr_record", nil)
 	}
 	d.Set("association_id", eip.AssociationId)

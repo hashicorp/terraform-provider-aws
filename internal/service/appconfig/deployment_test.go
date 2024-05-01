@@ -222,7 +222,7 @@ func testAccCheckDeploymentExists(ctx context.Context, resourceName string) reso
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),
-			DeploymentNumber: aws.Int32(int32(deploymentNum)),
+			DeploymentNumber: aws.Int32(deploymentNum),
 			EnvironmentId:    aws.String(envID),
 		}
 

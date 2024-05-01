@@ -96,7 +96,7 @@ func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context) resource
 			input := &appconfig.GetHostedConfigurationVersionInput{
 				ApplicationId:          aws.String(appID),
 				ConfigurationProfileId: aws.String(confProfID),
-				VersionNumber:          aws.Int32(int32(versionNumber)),
+				VersionNumber:          aws.Int32(versionNumber),
 			}
 
 			output, err := conn.GetHostedConfigurationVersion(ctx, input)
@@ -140,7 +140,7 @@ func testAccCheckHostedConfigurationVersionExists(ctx context.Context, resourceN
 		output, err := conn.GetHostedConfigurationVersion(ctx, &appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
-			VersionNumber:          aws.Int32(int32(versionNumber)),
+			VersionNumber:          aws.Int32(versionNumber),
 		})
 
 		if err != nil {

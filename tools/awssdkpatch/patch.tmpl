@@ -45,6 +45,12 @@ var x identifier
 -aws.StringValueMap(x)
 +x
 
+# Replace endpoint constants which are not included in the V2 SDK
+@@
+@@
+-acctest.PreCheckPartitionHasService(t, {{ .GoV1Package }}.EndpointsID)
++acctest.PreCheckPartitionHasService(t, names.{{ .GoV1ClientTypeName }}EndpointID)
+
 # Step 2: Convert AWS SDK v1 (service) to v2
 @@
 var x identifier
@@ -94,6 +100,8 @@ awstypes.x
 +{{ $funcName }}
 {{ end }}
 
+# Step 3: Prefer the internal errs package when checking error codes
+#
 # gopatch doesn't understand generics yet. See https://github.com/uber-go/gopatch/issues/61.
 # for now we do our best with some simple substitutions but this will leave
 # tfresource.RetryWhenAWSErrMessageContains(...) still to convert to
@@ -107,7 +115,7 @@ awstypes.x
 @@
 var x identifier
 @@
--tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, x)
+-tfawserr.ErrMessageContains(err, awstypes.ErrCode{{ $exceptionName }}, x)
 +errs.IsAErrorMessageContains[*awstypes.{{ $exceptionName }}](err, x)
 {{ end }}
 
