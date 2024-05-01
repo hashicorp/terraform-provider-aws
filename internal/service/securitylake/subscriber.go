@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -70,7 +69,9 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 			"access_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("S3"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"arn":                framework.ARNAttributeComputedOnly(),
 			"resource_share_arn": framework.ARNAttributeComputedOnly(),
@@ -113,10 +114,11 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"source_name": schema.StringAttribute{
-										Optional: true,
+										Required: true,
 									},
 									"source_version": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -155,10 +157,11 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 										},
 									},
 									"source_name": schema.StringAttribute{
-										Optional: true,
+										Required: true,
 									},
 									"source_version": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -218,7 +221,7 @@ func (r *subscriberResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Additional fields
-	if !data.AccessTypes.IsNull() {
+	if !data.AccessTypes.IsUnknown() && !data.AccessTypes.IsNull() {
 		input.AccessTypes = []awstypes.AccessType{awstypes.AccessType(data.AccessTypes.ValueString())}
 	}
 	input.Sources = sources
@@ -276,12 +279,11 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	subscriber := output
-	data.ID = fwflex.StringToFramework(ctx, subscriber.SubscriberId)
-	data.SubscriberArn = fwflex.StringToFramework(ctx, subscriber.SubscriberArn)
+	data.ID = fwflex.StringToFramework(ctx, output.SubscriberId)
+	data.SubscriberArn = fwflex.StringToFramework(ctx, output.SubscriberArn)
 
 	var subscriberIdentity subscriberIdentityModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, subscriber.SubscriberIdentity, &subscriberIdentity)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.SubscriberIdentity, &subscriberIdentity)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -290,7 +292,7 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 		setTagsOut(ctx, Tags(tags))
 	}
 
-	response.Diagnostics.Append(data.refreshFromOutput(ctx, subscriberIdentity, subscriber)...)
+	response.Diagnostics.Append(data.refreshFromOutput(ctx, subscriberIdentity, output)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 

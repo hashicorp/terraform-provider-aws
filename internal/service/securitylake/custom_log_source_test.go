@@ -351,8 +351,6 @@ resource "aws_iam_role_policy" "test" {
   }]
 }
 POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -418,8 +416,6 @@ resource "aws_iam_role_policy" "test" {
   }]
 }
 POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -488,8 +484,6 @@ resource "aws_iam_role_policy" "test" {
   }]
 }
 POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -571,8 +565,6 @@ resource "aws_iam_role_policy" "test" {
   }]
 }
 POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_iam_role_policy_attachment" "test" {

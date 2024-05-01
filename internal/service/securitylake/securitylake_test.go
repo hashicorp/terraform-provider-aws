@@ -50,6 +50,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"replication":     testAccDataLake_replication,
 		},
 		"Subscriber": {
+			"accessType": testAccSubscriber_accessType,
 			"basic":      testAccSubscriber_basic,
 			"customLogs": testAccSubscriber_customLogSource,
 			"disappears": testAccSubscriber_disappears,

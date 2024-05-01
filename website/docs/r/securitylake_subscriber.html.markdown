@@ -17,7 +17,6 @@ Terraform resource for managing an AWS Security Lake Subscriber.
 ```terraform
 resource "aws_securitylake_subscriber" "example" {
   subscriber_name = "example-name"
-  source_version  = "1.0"
   access_type     = "S3"
 
   source {
@@ -55,14 +54,14 @@ Sources support the following:
 * `aws_log_source_resource` - (Optional) Amazon Security Lake supports log and event collection for natively supported AWS services.
 * `custom_log_source_resource` - (Optional) Amazon Security Lake supports custom source types.
 
-Aws Log Source Resource support the following:
+AWS Log Source Resource support the following:
 
-* `source_name` - (Optional) Provides data expiration details of Amazon Security Lake object.
+* `source_name` - (Required) Provides data expiration details of Amazon Security Lake object.
 * `source_version` - (Optional) Provides data storage transition details of Amazon Security Lake object.
 
 Custom Log Source Resource support the following:
 
-* `source_name` - (Optional) The name for a third-party custom source. This must be a Regionally unique value.
+* `source_name` - (Required) The name for a third-party custom source. This must be a Regionally unique value.
 * `source_version` - (Optional) The version for a third-party custom source. This must be a Regionally unique value.
 
 ## Attribute Reference

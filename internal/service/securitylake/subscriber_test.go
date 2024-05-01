@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,19 +43,37 @@ func testAccSubscriber_basic(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
+					func(s *terraform.State) error {
+						id := aws.ToString(subscriber.SubscriberId)
+						return acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "securitylake", fmt.Sprintf("subscriber/%s", id))(s)
+					},
+					resource.TestCheckResourceAttr(resourceName, "resource_share_arn", ""),
+					func(s *terraform.State) error {
+						id := aws.ToString(subscriber.SubscriberId)
+						return acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-%s", id))(s)
+					},
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "s3_bucket_arn", "s3", regexache.MustCompile(fmt.Sprintf(`aws-security-data-lake-%s-[a-z0-9]{30}$`, acctest.Region()))),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					func(s *terraform.State) error {
+						id := aws.ToString(subscriber.SubscriberId)
+						return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
+					},
+					resource.TestCheckNoResourceAttr(resourceName, "subscriber_description"),
+					resource.TestCheckNoResourceAttr(resourceName, "resource_share_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "subscriber_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "2.0"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -80,14 +100,6 @@ func testAccSubscriber_disappears(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,15 +132,45 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_log_source_resource.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.custom_log_source_resource.0.source_name", "aws_securitylake_custom_log_source.test", "source_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.custom_log_source_resource.0.source_version", "aws_securitylake_custom_log_source.test", "source_version"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSubscriber_accessType(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_subscriber.test"
+	var subscriber types.SubscriberResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberConfig_accessType(rName, "S3"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
+					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -159,10 +201,9 @@ func testAccSubscriber_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSubscriberConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -216,10 +257,9 @@ func testAccSubscriber_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSubscriberConfig_update(rName),
@@ -236,10 +276,9 @@ func testAccSubscriber_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -293,14 +332,13 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 }
 
 func testAccSubscriberConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[1]q
-  access_type     = "S3"
   source {
     aws_log_source_resource {
       source_name    = "ROUTE53"
-      source_version = "1.0"
     }
   }
   subscriber_identity {
@@ -316,7 +354,6 @@ resource "aws_securitylake_aws_log_source" "test" {
     accounts       = [data.aws_caller_identity.current.account_id]
     regions        = [data.aws_region.current.name]
     source_name    = "ROUTE53"
-    source_version = "1.0"
   }
   depends_on = [aws_securitylake_data_lake.test]
 }
@@ -345,9 +382,7 @@ resource "aws_securitylake_subscriber" "test" {
 }
 
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = "windows-sysmon"
-  source_version = "1.0"
-  event_classes  = ["FILE_ACTIVITY"]
+  source_name    = %[1]q
 
   configuration {
     crawler_configuration {
@@ -355,7 +390,7 @@ resource "aws_securitylake_custom_log_source" "test" {
     }
 
     provider_identity {
-      external_id = "windows-sysmon-test"
+      external_id = "%[1]s-test"
       principal   = data.aws_caller_identity.current.account_id
     }
   }
@@ -364,7 +399,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  name = %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -382,7 +417,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
@@ -398,8 +433,6 @@ resource "aws_iam_role_policy" "test" {
 }]
 }
 POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -407,6 +440,38 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
 }
 `, rName))
+}
+
+func testAccSubscriberConfig_accessType(rName, accessType string) string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+resource "aws_securitylake_subscriber" "test" {
+  subscriber_name = %[1]q
+  access_type     = %[2]q
+  source {
+    aws_log_source_resource {
+      source_name    = "ROUTE53"
+    }
+  }
+  subscriber_identity {
+    external_id = "example"
+    principal   = data.aws_caller_identity.current.account_id
+  }
+
+  depends_on = [aws_securitylake_aws_log_source.test]
+}
+
+resource "aws_securitylake_aws_log_source" "test" {
+  source {
+    accounts       = [data.aws_caller_identity.current.account_id]
+    regions        = [data.aws_region.current.name]
+    source_name    = "ROUTE53"
+  }
+  depends_on = [aws_securitylake_data_lake.test]
+}
+
+data "aws_region" "current" {}
+`, rName, accessType))
 }
 
 func testAccSubscriberConfig_tags1(rName, tag1Key, tag1Value string) string {
