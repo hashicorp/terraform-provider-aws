@@ -35,6 +35,7 @@ type TemplateData struct {
 	InputOutputTypes   []string
 	ContextFunctions   []string
 	Exceptions         []string
+	EnumTypes          []string
 }
 
 func main() {
@@ -133,6 +134,10 @@ func getPackageData(sd data.ServiceRecord) (TemplateData, error) {
 
 			if o.Kind == ast.Typ && strings.HasSuffix(n, "Exception") {
 				td.Exceptions = append(td.Exceptions, strings.TrimPrefix(n, "ErrCode"))
+			}
+
+			if o.Kind == ast.Fun && strings.HasSuffix(n, "_Values") {
+				td.EnumTypes = append(td.EnumTypes, strings.TrimSuffix(n, "_Values"))
 			}
 		}
 	}

@@ -117,10 +117,35 @@ var x identifier
 @@
 -tfawserr.ErrMessageContains(err, awstypes.ErrCode{{ $exceptionName }}, x)
 +errs.IsAErrorMessageContains[*awstypes.{{ $exceptionName }}](err, x)
-{{ end }}
+{{- end }}
 
 @@
 var x identifier
 @@
 +import "github.com/hashicorp/terraform-provider-aws/internal/errs"
 errs.x
+
+# Step 4: Migrate enum validation
+#
+# This will only be partially correct. The enum.Validate function implements
+# ValidateDiagFunc, while StringInSliace implements ValidateFunc. Due to
+# limitiations with how gopatch handles multiple matches within an elision, we
+# cannot replace all instances of ValidateFunc inside the schema defintion (just
+# the first one). Instead, we'll insert the proper validation function and
+# ValidateFunc can be changed to ValidateDiagFunc manually.
+#
+# Ref: https://github.com/uber-go/gopatch/issues/10
+{{- range $enum := .EnumTypes }}
+# Replace enum validation for {{ $enum }}. Assign this to ValidateDiagFunc (instead of ValidateFunc) once patched.
+@@
+@@
+-validation.StringInSlice(awstypes.{{ $enum }}_Values(), false)
++enum.Validate[awstypes.{{ $enum }}]()
+{{- end }}
+
+
+@@
+var x identifier
+@@
++import "github.com/hashicorp/terraform-provider-aws/internal/enum"
+enum.x
