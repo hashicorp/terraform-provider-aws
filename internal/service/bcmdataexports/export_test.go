@@ -143,8 +143,6 @@ func TestAccBCMDataExportsExport_update(t *testing.T) {
 	})
 }
 
-// TestAccBCMDataExportsExport_curSubset should work without "line_item_resource_id" being commented
-// out. However, there is a problem.
 // https://github.com/hashicorp/terraform-provider-aws/issues/37126
 func TestAccBCMDataExportsExport_curSubset(t *testing.T) {
 	ctx := acctest.Context(t)
