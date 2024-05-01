@@ -1156,6 +1156,60 @@ func TestAccDMSEndpoint_MySQL_update(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_MySQL_settings_source(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLSourceSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SET character_set_connection = latin1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.events_poll_interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.execute_timeout", "100"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.server_timezone", "UTC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MySQL_settings_target(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLSourceSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.after_connect_script", "SET character_set_connection = latin1"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.clean_source_metadata_on_mismatch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.max_file_size", "65536"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.parallel_load_threads", "3"),
+					resource.TestCheckResourceAttr(resourceName, "mysql_settings.0.target_db_type", "specific-database"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -3773,6 +3827,56 @@ resource "aws_dms_endpoint" "test" {
     Name   = %[1]q
     Update = "updated"
     Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_mySQLSourceSettings(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "mysql"
+  server_name                 = "tftest-new-server_name"
+  port                        = 3307
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  mysql_settings {
+    after_connect_script              = "SET character_set_connection = latin1"
+    clean_source_metadata_on_mismatch = true
+    events_poll_interval              = 5
+    execute_timeout                   = 100
+		server_timezone										= "UTC"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_mySQLTargetSettings(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "postgres"
+  server_name                 = "tftest"
+  port                        = 5432
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "require"
+  extra_connection_attributes = ""
+
+  mysql_settings {
+    after_connect_script              = "SET character_set_connection = latin1"
+    clean_source_metadata_on_mismatch = false
+		max_file_size                     = 65536
+		parallel_load_threads             = 3
+		target_db_type										= "specific-database"
   }
 }
 `, rName)
