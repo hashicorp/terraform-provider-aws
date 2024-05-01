@@ -441,7 +441,7 @@ func sweepWindowsFileSystems(region string) error {
 				continue
 			}
 
-			r := ResourceWindowsFileSystem()
+			r := resourceWindowsFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 			d.Set("skip_final_backup", true)

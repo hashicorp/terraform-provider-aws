@@ -26,4 +26,5 @@ var (
 	FindOpenZFSVolumeByID             = findOpenZFSVolumeByID
 	FindStorageVirtualMachineByID     = findStorageVirtualMachineByID
 	FindSnapshotByID                  = findSnapshotByID
+	FindWindowsFileSystemByID         = findWindowsFileSystemByID
 )

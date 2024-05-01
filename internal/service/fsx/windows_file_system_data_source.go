@@ -173,7 +173,7 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
-	filesystem, err := FindWindowsFileSystemByID(ctx, conn, id)
+	filesystem, err := findWindowsFileSystemByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Windows File Server File System (%s): %s", id, err)
