@@ -7,14 +7,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -71,7 +70,7 @@ func ResourceAlias() *schema.Resource {
 
 func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
@@ -85,13 +84,11 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// KMS is eventually consistent.
-	log.Printf("[DEBUG] Creating KMS Alias: %v", input)
-
-	var NotFoundException = &awstypes.NotFoundException{}
+	log.Printf("[DEBUG] Creating KMS Alias: %s", input)
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, KeyRotationUpdatedTimeout, func() (interface{}, error) {
-		return conn.CreateAlias(ctx, input)
-	}, NotFoundException.ErrorCode())
+		return conn.CreateAliasWithContext(ctx, input)
+	}, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating KMS Alias (%s): %s", name, err)
@@ -104,7 +101,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindAliasByName(ctx, conn, d.Id())
@@ -120,9 +117,9 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
 	}
 
-	alias := outputRaw.(*awstypes.AliasListEntry)
-	aliasARN := aws.ToString(alias.AliasArn)
-	targetKeyID := aws.ToString(alias.TargetKeyId)
+	alias := outputRaw.(*kms.AliasListEntry)
+	aliasARN := aws.StringValue(alias.AliasArn)
+	targetKeyID := aws.StringValue(alias.TargetKeyId)
 	targetKeyARN, err := AliasARNToKeyARN(aliasARN, targetKeyID)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
@@ -130,7 +127,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("arn", aliasARN)
 	d.Set("name", alias.AliasName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(alias.AliasName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(alias.AliasName)))
 	d.Set("target_key_arn", targetKeyARN)
 	d.Set("target_key_id", targetKeyID)
 
@@ -139,7 +136,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if d.HasChange("target_key_id") {
 		input := &kms.UpdateAliasInput{
@@ -147,8 +144,8 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating KMS Alias: %v", input)
-		_, err := conn.UpdateAlias(ctx, input)
+		log.Printf("[DEBUG] Updating KMS Alias: %s", input)
+		_, err := conn.UpdateAliasWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating KMS Alias (%s): %s", d.Id(), err)
@@ -160,14 +157,14 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
-	_, err := conn.DeleteAlias(ctx, &kms.DeleteAliasInput{
+	_, err := conn.DeleteAliasWithContext(ctx, &kms.DeleteAliasInput{
 		AliasName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 		return diags
 	}
 

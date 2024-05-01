@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +21,7 @@ import (
 func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var encryptedPayload string
-	var key awstypes.KeyMetadata
+	var key kms.KeyMetadata
 
 	plaintext := "my-plaintext-string"
 	resourceName := "aws_kms_key.test"
@@ -48,7 +48,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 	ctx := acctest.Context(t)
 	var encryptedPayload string
-	var key awstypes.KeyMetadata
+	var key kms.KeyMetadata
 
 	plaintext := "my-plaintext-string"
 	resourceName := "aws_kms_key.test"
@@ -72,19 +72,19 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 	})
 }
 
-func testAccSecretsEncryptDataSource(ctx context.Context, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsEncryptDataSource(ctx context.Context, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
 			Plaintext: []byte(plaintext),
-			EncryptionContext: map[string]string{
-				"name": "value",
+			EncryptionContext: map[string]*string{
+				"name": aws.String("value"),
 			},
 		}
 
-		output, err := conn.Encrypt(ctx, input)
+		output, err := conn.EncryptWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -96,17 +96,17 @@ func testAccSecretsEncryptDataSource(ctx context.Context, key *awstypes.KeyMetad
 	}
 }
 
-func testAccSecretsEncryptDataSourceAsymmetric(ctx context.Context, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsEncryptDataSourceAsymmetric(ctx context.Context, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		input := &kms.EncryptInput{
 			KeyId:               key.Arn,
 			Plaintext:           []byte(plaintext),
-			EncryptionAlgorithm: awstypes.EncryptionAlgorithmSpec("RSAES_OAEP_SHA_1"),
+			EncryptionAlgorithm: aws.String("RSAES_OAEP_SHA_1"),
 		}
 
-		output, err := conn.Encrypt(ctx, input)
+		output, err := conn.EncryptWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func testAccSecretsDecryptDataSource(ctx context.Context, t *testing.T, plaintex
 	}
 }
 
-func testAccSecretsDecryptDataSourceAsym(ctx context.Context, t *testing.T, key *awstypes.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func testAccSecretsDecryptDataSourceAsym(ctx context.Context, t *testing.T, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		dataSourceName := "data.aws_kms_secrets.test"
 		keyid := key.Arn

@@ -6,13 +6,12 @@ package kms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -35,9 +34,9 @@ func DataSourceSecrets() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"encryption_algorithm": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.EncryptionAlgorithmSpec](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(kms.EncryptionAlgorithmSpec_Values(), false),
 						},
 						"grant_tokens": {
 							Type:     schema.TypeList,
@@ -72,7 +71,7 @@ func DataSourceSecrets() *schema.Resource {
 func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	secrets := d.Get("secret").(*schema.Set).List()
 	plaintext := make(map[string]string, len(secrets))
@@ -93,15 +92,15 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v, ok := secret["context"].(map[string]interface{}); ok && len(v) > 0 {
-			input.EncryptionContext = flex.ExpandStringValueMap(v)
+			input.EncryptionContext = flex.ExpandStringMap(v)
 		}
 
 		if v, ok := secret["encryption_algorithm"].(string); ok && v != "" {
-			input.EncryptionAlgorithm = awstypes.EncryptionAlgorithmSpec(v)
+			input.EncryptionAlgorithm = aws.String(v)
 		}
 
 		if v, ok := secret["grant_tokens"].([]interface{}); ok && len(v) > 0 {
-			input.GrantTokens = flex.ExpandStringValueList(v)
+			input.GrantTokens = flex.ExpandStringList(v)
 		}
 
 		if v, ok := secret["key_id"].(string); ok && v != "" {
@@ -109,7 +108,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// decrypt
-		output, err := conn.Decrypt(ctx, input)
+		output, err := conn.DecryptWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "decrypting secret (%s): %s", name, err)

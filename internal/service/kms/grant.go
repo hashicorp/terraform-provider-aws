@@ -12,18 +12,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -116,8 +114,8 @@ func ResourceGrant() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.GrantOperation](),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(kms.GrantOperation_Values(), false),
 				},
 			},
 			"retire_on_delete": {
@@ -141,13 +139,13 @@ func ResourceGrant() *schema.Resource {
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.CreateGrantInput{
 		GranteePrincipal: aws.String(d.Get("grantee_principal").(string)),
 		KeyId:            aws.String(keyID),
-		Operations:       flex.ExpandStringyValueSet[awstypes.GrantOperation](d.Get("operations").(*schema.Set)),
+		Operations:       flex.ExpandStringSet(d.Get("operations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("constraints"); ok && v.(*schema.Set).Len() > 0 {
@@ -159,7 +157,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("grant_creation_tokens"); ok && v.(*schema.Set).Len() > 0 {
-		input.GrantTokens = flex.ExpandStringValueSet(v.(*schema.Set))
+		input.GrantTokens = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -173,19 +171,16 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 	// Under some circumstances a newly created IAM Role doesn't show up and causes
 	// an InvalidArnException to be thrown.
-	var DependencyTimeoutException, InternalException,
-		InvalidARNException = &awstypes.DependencyTimeoutException{},
-		&awstypes.KMSInternalException{}, &awstypes.InvalidArnException{}
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
-		return conn.CreateGrant(ctx, input)
-	}, DependencyTimeoutException.ErrorCode(), InternalException.ErrorCode(), InvalidARNException.ErrorCode())
+		return conn.CreateGrantWithContext(ctx, input)
+	}, kms.ErrCodeDependencyTimeoutException, kms.ErrCodeInternalException, kms.ErrCodeInvalidArnException)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating KMS Grant for Key (%s): %s", keyID, err)
 	}
 
 	output := outputRaw.(*kms.CreateGrantOutput)
-	grantID := aws.ToString(output.GrantId)
+	grantID := aws.StringValue(output.GrantId)
 	GrantCreateResourceID(keyID, grantID)
 	d.SetId(GrantCreateResourceID(keyID, grantID))
 	d.Set("grant_token", output.GrantToken)
@@ -198,7 +193,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		timeout = 3 * time.Minute
 	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -228,10 +223,10 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("grantee_principal", grant.GranteePrincipal)
 	}
 	d.Set("key_id", keyID)
-	if aws.ToString(grant.Name) != "" {
+	if aws.StringValue(grant.Name) != "" {
 		d.Set("name", grant.Name)
 	}
-	d.Set("operations", flex.FlattenStringyValueList[awstypes.GrantOperation](grant.Operations))
+	d.Set("operations", aws.StringValueSlice(grant.Operations))
 	if grant.RetiringPrincipal != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("retiring_principal", grant.RetiringPrincipal)
 	}
@@ -241,7 +236,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID, grantID, err := GrantParseResourceID(d.Id())
 
@@ -251,19 +246,19 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.Get("retire_on_delete").(bool) {
 		log.Printf("[DEBUG] Retiring KMS Grant: %s", d.Id())
-		_, err = conn.RetireGrant(ctx, &kms.RetireGrantInput{
+		_, err = conn.RetireGrantWithContext(ctx, &kms.RetireGrantInput{
 			GrantId: aws.String(grantID),
 			KeyId:   aws.String(keyID),
 		})
 	} else {
 		log.Printf("[DEBUG] Revoking KMS Grant: %s", d.Id())
-		_, err = conn.RevokeGrant(ctx, &kms.RevokeGrantInput{
+		_, err = conn.RevokeGrantWithContext(ctx, &kms.RevokeGrantInput{
 			GrantId: aws.String(grantID),
 			KeyId:   aws.String(keyID),
 		})
 	}
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 		return diags
 	}
 
@@ -282,32 +277,53 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindGrantByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, grantID string) (*awstypes.GrantListEntry, error) {
+func FindGrantByTwoPartKey(ctx context.Context, conn *kms.KMS, keyID, grantID string) (*kms.GrantListEntry, error) {
 	input := &kms.ListGrantsInput{
 		KeyId: aws.String(keyID),
-		Limit: aws.Int32(100),
+		Limit: aws.Int64(100),
 	}
+	var output *kms.GrantListEntry
 
-	pages := kms.NewListGrantsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
+	err := conn.ListGrantsPagesWithContext(ctx, input, func(page *kms.ListGrantsResponse, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.Grants {
-			if aws.ToString(v.GrantId) == grantID {
-				return &v, nil
+			if v == nil {
+				continue
 			}
+
+			if aws.StringValue(v.GrantId) == grantID {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.Client, keyID, grantID string, timeout time.Duration) (*awstypes.GrantListEntry, error) {
-	var output *awstypes.GrantListEntry
+func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, grantID string, timeout time.Duration) (*kms.GrantListEntry, error) {
+	var output *kms.GrantListEntry
 
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		grant, err := FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
@@ -320,13 +336,13 @@ func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.Client, keyID
 			return retry.NonRetryableError(err)
 		}
 
-		if principal := aws.ToString(grant.GranteePrincipal); principal != "" {
+		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
 			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
-		if principal := aws.ToString(grant.RetiringPrincipal); principal != "" {
+		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
 			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
 				return retry.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
@@ -371,20 +387,20 @@ func grantConstraintsIsValid(constraints *schema.Set) bool {
 	return constraintCount <= 1
 }
 
-func expandGrantConstraints(configured *schema.Set) *awstypes.GrantConstraints {
+func expandGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
 	if len(configured.List()) < 1 {
 		return nil
 	}
 
-	var constraint awstypes.GrantConstraints
+	var constraint kms.GrantConstraints
 
 	for _, raw := range configured.List() {
 		data := raw.(map[string]interface{})
 		if contextEq, ok := data["encryption_context_equals"]; ok {
-			constraint.EncryptionContextEquals = flex.ExpandStringValueMap(contextEq.(map[string]interface{}))
+			constraint.SetEncryptionContextEquals(flex.ExpandStringMap(contextEq.(map[string]interface{})))
 		}
 		if contextSub, ok := data["encryption_context_subset"]; ok {
-			constraint.EncryptionContextSubset = flex.ExpandStringValueMap(contextSub.(map[string]interface{}))
+			constraint.SetEncryptionContextSubset(flex.ExpandStringMap(contextSub.(map[string]interface{})))
 		}
 	}
 
@@ -436,7 +452,7 @@ func resourceGrantConstraintsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenGrantConstraints(constraint *awstypes.GrantConstraints) *schema.Set {
+func flattenGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	constraints := schema.NewSet(resourceGrantConstraintsHash, []interface{}{})
 	if constraint == nil {
 		return constraints
@@ -445,12 +461,12 @@ func flattenGrantConstraints(constraint *awstypes.GrantConstraints) *schema.Set 
 	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
-			m["encryption_context_equals"] = constraint.EncryptionContextEquals
+			m["encryption_context_equals"] = flex.FlattenStringMap(constraint.EncryptionContextEquals)
 		}
 	}
 	if constraint.EncryptionContextSubset != nil {
 		if len(constraint.EncryptionContextSubset) > 0 {
-			m["encryption_context_subset"] = constraint.EncryptionContextSubset
+			m["encryption_context_subset"] = flex.FlattenStringMap(constraint.EncryptionContextSubset)
 		}
 	}
 	constraints.Add(m)

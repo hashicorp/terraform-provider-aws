@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +25,7 @@ import (
 
 func TestAccKMSExternalKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
+	var key kms.KeyMetadata
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,7 +67,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 
 func TestAccKMSExternalKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
+	var key kms.KeyMetadata
 	resourceName := "aws_kms_external_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +90,7 @@ func TestAccKMSExternalKey_disappears(t *testing.T) {
 
 func TestAccKMSExternalKey_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
+	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -122,7 +122,7 @@ func TestAccKMSExternalKey_multiRegion(t *testing.T) {
 
 func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2 awstypes.KeyMetadata
+	var key1, key2 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -162,7 +162,7 @@ func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 
 func TestAccKMSExternalKey_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2 awstypes.KeyMetadata
+	var key1, key2 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -202,7 +202,7 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 
 func TestAccKMSExternalKey_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2, key3 awstypes.KeyMetadata
+	var key1, key2, key3 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -251,7 +251,7 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 
 func TestAccKMSExternalKey_keyMaterialBase64(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2 awstypes.KeyMetadata
+	var key1, key2 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -294,7 +294,7 @@ func TestAccKMSExternalKey_keyMaterialBase64(t *testing.T) {
 
 func TestAccKMSExternalKey_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2 awstypes.KeyMetadata
+	var key1, key2 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policy1 := `{"Id":"kms-tf-1","Statement":[{"Action":"kms:*","Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*","Sid":"Enable IAM User Permissions 1"}],"Version":"2012-10-17"}`
 	policy2 := `{"Id":"kms-tf-1","Statement":[{"Action":"kms:*","Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*","Sid":"Enable IAM User Permissions 2"}],"Version":"2012-10-17"}`
@@ -336,7 +336,7 @@ func TestAccKMSExternalKey_policy(t *testing.T) {
 
 func TestAccKMSExternalKey_policyBypass(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
+	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policy := `{"Id":"kms-tf-1","Statement":[{"Action":"kms:*","Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*","Sid":"Enable IAM User Permissions 1"}],"Version":"2012-10-17"}`
 	resourceName := "aws_kms_external_key.test"
@@ -370,7 +370,7 @@ func TestAccKMSExternalKey_policyBypass(t *testing.T) {
 
 func TestAccKMSExternalKey_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2, key3 awstypes.KeyMetadata
+	var key1, key2, key3 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -439,7 +439,7 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 
 func TestAccKMSExternalKey_validTo(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2, key3, key4 awstypes.KeyMetadata
+	var key1, key2, key3, key4 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 	validTo1 := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
@@ -511,7 +511,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(ctx, conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
@@ -519,7 +519,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 			return err
 		}
 
-		actualPolicyText := aws.ToString(output)
+		actualPolicyText := aws.StringValue(output)
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
@@ -536,7 +536,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 
 func testAccCheckExternalKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_external_key" {
@@ -560,7 +560,7 @@ func testAccCheckExternalKeyDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckExternalKeyExists(ctx context.Context, name string, key *awstypes.KeyMetadata) resource.TestCheckFunc {
+func testAccCheckExternalKeyExists(ctx context.Context, name string, key *kms.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -571,7 +571,7 @@ func testAccCheckExternalKeyExists(ctx context.Context, name string, key *awstyp
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
@@ -581,15 +581,15 @@ func testAccCheckExternalKeyExists(ctx context.Context, name string, key *awstyp
 			return err
 		}
 
-		*key = *(outputRaw.(*awstypes.KeyMetadata))
+		*key = *(outputRaw.(*kms.KeyMetadata))
 
 		return nil
 	}
 }
 
-func testAccCheckExternalKeyNotRecreated(i, j *awstypes.KeyMetadata) resource.TestCheckFunc {
+func testAccCheckExternalKeyNotRecreated(i, j *kms.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.ToTime(i.CreationDate).Equal(aws.ToTime(j.CreationDate)) {
+		if !aws.TimeValue(i.CreationDate).Equal(aws.TimeValue(j.CreationDate)) {
 			return fmt.Errorf("KMS External Key recreated")
 		}
 
@@ -597,9 +597,9 @@ func testAccCheckExternalKeyNotRecreated(i, j *awstypes.KeyMetadata) resource.Te
 	}
 }
 
-func testAccCheckExternalKeyRecreated(i, j *awstypes.KeyMetadata) resource.TestCheckFunc {
+func testAccCheckExternalKeyRecreated(i, j *kms.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.ToTime(i.CreationDate).Equal(aws.ToTime(j.CreationDate)) {
+		if aws.TimeValue(i.CreationDate).Equal(aws.TimeValue(j.CreationDate)) {
 			return fmt.Errorf("KMS External Key not recreated")
 		}
 

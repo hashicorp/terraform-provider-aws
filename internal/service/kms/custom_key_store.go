@@ -9,15 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -70,7 +69,7 @@ const (
 func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	in := &kms.CreateCustomKeyStoreInput{
 		CloudHsmClusterId:      aws.String(d.Get("cloud_hsm_cluster_id").(string)),
@@ -79,7 +78,7 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		TrustAnchorCertificate: aws.String(d.Get("trust_anchor_certificate").(string)),
 	}
 
-	out, err := conn.CreateCustomKeyStore(ctx, in)
+	out, err := conn.CreateCustomKeyStoreWithContext(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.KMS, create.ErrActionCreating, ResNameCustomKeyStore, d.Get("custom_key_store_name").(string), err)
 	}
@@ -88,7 +87,7 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.KMS, create.ErrActionCreating, ResNameCustomKeyStore, d.Get("custom_key_store_name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.ToString(out.CustomKeyStoreId))
+	d.SetId(aws.StringValue(out.CustomKeyStoreId))
 
 	return append(diags, resourceCustomKeyStoreRead(ctx, d, meta)...)
 }
@@ -96,7 +95,7 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	in := &kms.DescribeCustomKeyStoresInput{
 		CustomKeyStoreId: aws.String(d.Id()),
@@ -123,7 +122,7 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	update := false
 
@@ -146,7 +145,7 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	_, err := conn.UpdateCustomKeyStore(ctx, in)
+	_, err := conn.UpdateCustomKeyStoreWithContext(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.KMS, create.ErrActionUpdating, ResNameCustomKeyStore, d.Id(), err)
 	}
@@ -157,15 +156,15 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	log.Printf("[INFO] Deleting KMS CustomKeyStore %s", d.Id())
 
-	_, err := conn.DeleteCustomKeyStore(ctx, &kms.DeleteCustomKeyStoreInput{
+	_, err := conn.DeleteCustomKeyStoreWithContext(ctx, &kms.DeleteCustomKeyStoreInput{
 		CustomKeyStoreId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 		return diags
 	}
 

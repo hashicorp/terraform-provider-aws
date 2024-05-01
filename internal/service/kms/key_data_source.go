@@ -7,9 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -166,7 +165,7 @@ func DataSourceKey() *schema.Resource {
 
 func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.DescribeKeyInput{
@@ -174,25 +173,25 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
-		input.GrantTokens = flex.ExpandStringValueList(v.([]interface{}))
+		input.GrantTokens = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	output, err := conn.DescribeKey(ctx, input)
+	output, err := conn.DescribeKeyWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", keyID, err)
 	}
 
 	keyMetadata := output.KeyMetadata
-	d.SetId(aws.ToString(keyMetadata.KeyId))
+	d.SetId(aws.StringValue(keyMetadata.KeyId))
 	d.Set("arn", keyMetadata.Arn)
 	d.Set("aws_account_id", keyMetadata.AWSAccountId)
 	d.Set("cloud_hsm_cluster_id", keyMetadata.CloudHsmClusterId)
-	d.Set("creation_date", aws.ToTime(keyMetadata.CreationDate).Format(time.RFC3339))
-	d.Set("customer_master_key_spec", keyMetadata.KeySpec)
+	d.Set("creation_date", aws.TimeValue(keyMetadata.CreationDate).Format(time.RFC3339))
+	d.Set("customer_master_key_spec", keyMetadata.CustomerMasterKeySpec)
 	d.Set("custom_key_store_id", keyMetadata.CustomKeyStoreId)
 	if keyMetadata.DeletionDate != nil {
-		d.Set("deletion_date", aws.ToTime(keyMetadata.DeletionDate).Format(time.RFC3339))
+		d.Set("deletion_date", aws.TimeValue(keyMetadata.DeletionDate).Format(time.RFC3339))
 	}
 	d.Set("description", keyMetadata.Description)
 	d.Set("enabled", keyMetadata.Enabled)
@@ -212,7 +211,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("origin", keyMetadata.Origin)
 	d.Set("pending_deletion_window_in_days", keyMetadata.PendingDeletionWindowInDays)
 	if keyMetadata.ValidTo != nil {
-		d.Set("valid_to", aws.ToTime(keyMetadata.ValidTo).Format(time.RFC3339))
+		d.Set("valid_to", aws.TimeValue(keyMetadata.ValidTo).Format(time.RFC3339))
 	}
 	if keyMetadata.XksKeyConfiguration != nil {
 		if err := d.Set("xks_key_configuration", []interface{}{flattenXksKeyConfigurationType(keyMetadata.XksKeyConfiguration)}); err != nil {
@@ -225,16 +224,19 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenMultiRegionConfiguration(apiObject *awstypes.MultiRegionConfiguration) map[string]interface{} {
+func flattenMultiRegionConfiguration(apiObject *kms.MultiRegionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["multi_region_key_type"] = apiObject.MultiRegionKeyType
+
+	if v := apiObject.MultiRegionKeyType; v != nil {
+		tfMap["multi_region_key_type"] = aws.StringValue(v)
+	}
 
 	if v := apiObject.PrimaryKey; v != nil {
-		tfMap["primary_key"] = []interface{}{flattenMultiRegionKey(*v)}
+		tfMap["primary_key"] = []interface{}{flattenMultiRegionKey(v)}
 	}
 
 	if v := apiObject.ReplicaKeys; v != nil {
@@ -244,21 +246,25 @@ func flattenMultiRegionConfiguration(apiObject *awstypes.MultiRegionConfiguratio
 	return tfMap
 }
 
-func flattenMultiRegionKey(apiObject awstypes.MultiRegionKey) map[string]interface{} {
+func flattenMultiRegionKey(apiObject *kms.MultiRegionKey) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap["arn"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenMultiRegionKeys(apiObjects []awstypes.MultiRegionKey) []interface{} {
+func flattenMultiRegionKeys(apiObjects []*kms.MultiRegionKey) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -266,13 +272,17 @@ func flattenMultiRegionKeys(apiObjects []awstypes.MultiRegionKey) []interface{} 
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
 		tfList = append(tfList, flattenMultiRegionKey(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenXksKeyConfigurationType(apiObject *awstypes.XksKeyConfigurationType) map[string]interface{} {
+func flattenXksKeyConfigurationType(apiObject *kms.XksKeyConfigurationType) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -280,7 +290,7 @@ func flattenXksKeyConfigurationType(apiObject *awstypes.XksKeyConfigurationType)
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.ToString(v)
+		tfMap["id"] = aws.StringValue(v)
 	}
 
 	return tfMap

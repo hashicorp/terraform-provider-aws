@@ -61,7 +61,6 @@ const (
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
-	KMSEndpointID                        = "kms"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
 	MediaConvertEndpointID               = "mediaconvert"
