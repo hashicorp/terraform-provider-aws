@@ -27,6 +27,11 @@ func DataSourceRules() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
+			"domain_regex": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsValidRegExp,
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -68,6 +73,9 @@ func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta inter
 	err := conn.ListResolverRulesPagesWithContext(ctx, input, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
 		for _, rule := range page.ResolverRules {
 			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.StringValue(rule.Name)) {
+				continue
+			}
+			if v, ok := d.GetOk("domain_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.StringValue(rule.DomainName)) {
 				continue
 			}
 			if v, ok := d.GetOk("owner_id"); ok && aws.StringValue(rule.OwnerId) != v.(string) {

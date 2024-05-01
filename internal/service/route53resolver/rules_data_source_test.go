@@ -101,6 +101,46 @@ func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverRulesDataSource_domainRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	dsResourceName := "data.aws_route53_resolver_rules.test"
+	rCount := 3
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRulesDataSourceConfig_domainRegex(rCount, rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", strconv.Itoa(rCount)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRulesDataSource_nonExistentDomainRegex(t *testing.T) {
+	ctx := acctest.Context(t)
+	dsResourceName := "data.aws_route53_resolver_rules.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRulesDataSourceConfig_nonExistentDomainRegex,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 const testAccRulesDataSourceConfig_basic = `
 # The default Internet Resolver rule.
 data "aws_route53_resolver_rules" "test" {
@@ -169,5 +209,28 @@ data "aws_route53_resolver_rules" "test" {
 const testAccRulesDataSourceConfig_nonExistentNameRegex = `
 data "aws_route53_resolver_rules" "test" {
   name_regex = "dne-regex"
+}
+`
+
+func testAccRulesDataSourceConfig_domainRegex(rCount int, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  count       = %[1]d
+  domain_name = "%[2]s.example.org"
+  name        = "%[2]s-${count.index}-rule"
+  rule_type   = "SYSTEM"
+}
+
+data "aws_route53_resolver_rules" "test" {
+  domain_regex = "%[2]s\\.example\\.org\\."
+
+  depends_on = [aws_route53_resolver_rule.test]
+}
+`, rCount, rName)
+}
+
+const testAccRulesDataSourceConfig_nonExistentDomainRegex = `
+data "aws_route53_resolver_rules" "test" {
+  domain_regex = "dne-regex"
 }
 `
