@@ -31,10 +31,10 @@ import (
 // @Tags(identifierAttribute="arn")
 func resourceOpenZFSSnapshot() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOpenzfsSnapshotCreate,
-		ReadWithoutTimeout:   resourceOpenzfsSnapshotRead,
-		UpdateWithoutTimeout: resourceOpenzfsSnapshotUpdate,
-		DeleteWithoutTimeout: resourceOpenzfsSnapshotDelete,
+		CreateWithoutTimeout: resourceOpenZFSSnapshotCreate,
+		ReadWithoutTimeout:   resourceOpenZFSSnapshotRead,
+		UpdateWithoutTimeout: resourceOpenZFSSnapshotUpdate,
+		DeleteWithoutTimeout: resourceOpenZFSSnapshotDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -77,7 +77,7 @@ func resourceOpenZFSSnapshot() *schema.Resource {
 	}
 }
 
-func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -100,10 +100,10 @@ func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Snapshot (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceOpenzfsSnapshotRead(ctx, d, meta)...)
+	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -124,12 +124,13 @@ func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("name", snapshot.Name)
 	d.Set("volume_id", snapshot.VolumeId)
 
-	setTagsOut(ctx, snapshot.Tags)
+	// Snapshot tags aren't set in the Describe response.
+	// setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }
 
-func resourceOpenzfsSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -154,10 +155,10 @@ func resourceOpenzfsSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return append(diags, resourceOpenzfsSnapshotRead(ctx, d, meta)...)
+	return append(diags, resourceOpenZFSSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 

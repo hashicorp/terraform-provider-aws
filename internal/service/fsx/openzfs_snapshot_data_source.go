@@ -24,7 +24,7 @@ import (
 // @Tags
 func dataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOpenzfsSnapshotRead,
+		ReadWithoutTimeout: dataSourceOpenZFSSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -63,7 +63,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
