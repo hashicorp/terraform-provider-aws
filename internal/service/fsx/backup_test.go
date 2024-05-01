@@ -118,6 +118,7 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
@@ -126,7 +127,7 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupConfig_windowsBasic(rName),
+				Config: testAccBackupConfig_windowsBasic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`backup/.+`)),
@@ -241,6 +242,7 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
@@ -249,11 +251,11 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 		CheckDestroy:             testAccCheckBackupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupConfig_implictTags("key1", "value1"),
+				Config: testAccBackupConfig_implicitTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -313,10 +315,10 @@ func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccBackupConfig_baseLustre(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
-  subnet_ids                  = [aws_subnet.test[0].id]
+  subnet_ids                  = aws_subnet.test[*].id
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = 50
 
@@ -328,12 +330,12 @@ resource "aws_fsx_lustre_file_system" "test" {
 }
 
 func testAccBackupConfig_baseONTAP(rName string, vName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "MULTI_AZ_1"
-  throughput_capacity = 512
+  throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {
@@ -357,10 +359,10 @@ resource "aws_fsx_ontap_volume" "test" {
 }
 
 func testAccBackupConfig_baseOpenZFS(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test[0].id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
   skip_final_backup   = true
@@ -372,20 +374,8 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName))
 }
 
-func testAccBackupConfig_baseWindows(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-resource "aws_directory_service_directory" "test" {
-  edition  = "Standard"
-  name     = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-
-  vpc_settings {
-    subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
-    vpc_id     = aws_vpc.test.id
-  }
-}
-
+func testAccBackupConfig_baseWindows(rName, domain string) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id             = aws_directory_service_directory.test.id
   automatic_backup_retention_days = 0
@@ -437,8 +427,8 @@ resource "aws_fsx_backup" "test" {
 `, rName))
 }
 
-func testAccBackupConfig_windowsBasic(rName string) string {
-	return acctest.ConfigCompose(testAccBackupConfig_baseWindows(rName), fmt.Sprintf(`
+func testAccBackupConfig_windowsBasic(rName, domain string) string {
+	return acctest.ConfigCompose(testAccBackupConfig_baseWindows(rName, domain), fmt.Sprintf(`
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_windows_file_system.test.id
 
@@ -474,32 +464,26 @@ resource "aws_fsx_backup" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccBackupConfig_implictTags(tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
+func testAccBackupConfig_implicitTags(rName string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
-  subnet_ids                  = [aws_subnet.test[0].id]
+  subnet_ids                  = aws_subnet.test[*].id
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = 50
   copy_tags_to_backups        = true
 
   tags = {
-    %[1]q = %[2]q
+    Name = %[1]q
   }
 }
 
 resource "aws_fsx_backup" "test" {
   file_system_id = aws_fsx_lustre_file_system.test.id
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }
-`, tagKey1, tagValue1))
+`, rName))
 }
