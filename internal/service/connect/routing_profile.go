@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -13,22 +16,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	AssociateRoutingProfileQueuesMaxItems    = 10
+	DisassociateRoutingProfileQueuesMaxItems = 10
+	CreateRoutingProfileQueuesMaxItems       = 10
+)
+
+// @SDKResource("aws_connect_routing_profile", name="Routing Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRoutingProfileCreate,
-		ReadContext:   resourceRoutingProfileRead,
-		UpdateContext: resourceRoutingProfileUpdate,
-		// Routing profiles do not support deletion today. NoOp the Delete method.
-		// Users can rename their routing profiles manually if they want.
-		DeleteContext: schema.NoopContext,
+		CreateWithoutTimeout: resourceRoutingProfileCreate,
+		ReadWithoutTimeout:   resourceRoutingProfileRead,
+		UpdateWithoutTimeout: resourceRoutingProfileUpdate,
+		DeleteWithoutTimeout: resourceRoutingProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -76,7 +90,6 @@ func ResourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
-				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"channel": {
@@ -109,98 +122,71 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			// used to update the queue configs by first disassociating the existing set and re-associating them
-			"queue_configs_associated": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"delay": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"routing_profile_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
-
 	input := &connect.CreateRoutingProfileInput{
 		DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		InstanceId:             aws.String(instanceID),
 		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 		Name:                   aws.String(name),
+		Tags:                   getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 && v.(*schema.Set).Len() <= CreateRoutingProfileQueuesMaxItems {
 		input.QueueConfigs = expandRoutingProfileQueueConfigs(v.(*schema.Set).List())
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Connect Routing Profile %s", input)
 	output, err := conn.CreateRoutingProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Routing Profile (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): empty output", name))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Routing Profile (%s): empty output", name)
+	}
+
+	// call the batched association API if the number of queues to associate with the routing profile is > CreateRoutingProfileQueuesMaxItems
+	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > CreateRoutingProfileQueuesMaxItems {
+		queueConfigsUpdateRemove := make([]interface{}, 0)
+		err = updateQueueConfigs(ctx, conn, instanceID, aws.StringValue(output.RoutingProfileId), v.(*schema.Set).List(), queueConfigsUpdateRemove)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.RoutingProfileId)))
 
-	return resourceRoutingProfileRead(ctx, d, meta)
+	return append(diags, resourceRoutingProfileRead(ctx, d, meta)...)
 }
 
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeRoutingProfileWithContext(ctx, &connect.DescribeRoutingProfileInput{
@@ -211,21 +197,21 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Routing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Routing Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.RoutingProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile (%s): empty response", d.Id()))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Routing Profile (%s): empty response", d.Id())
 	}
 
 	routingProfile := resp.RoutingProfile
 
 	if err := d.Set("media_concurrencies", flattenRoutingProfileMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", routingProfile.RoutingProfileArn)
@@ -240,33 +226,25 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", routingProfileID, err))
+		return sdkdiag.AppendErrorf(diags, "finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
 	}
 
 	d.Set("queue_configs", queueConfigs)
-	d.Set("queue_configs_associated", queueConfigs)
 
-	tags := KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, resp.RoutingProfile.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// RoutingProfile has 4 update APIs
@@ -286,7 +264,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		inputConcurrency.MediaConcurrencies = mediaConcurrencies
 		_, err = conn.UpdateRoutingProfileConcurrencyWithContext(ctx, inputConcurrency)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating RoutingProfile Media Concurrency (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -301,7 +279,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileDefaultOutboundQueueWithContext(ctx, inputDefaultOutboundQueue)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating RoutingProfile Default Outbound Queue ID (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -317,7 +295,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Name (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating RoutingProfile Name (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -326,70 +304,102 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	// AssociateRoutingProfileQueues - Associates a set of queues with a routing profile.
 	// DisassociateRoutingProfileQueues - Disassociates a set of queues from a routing profile.
 	// UpdateRoutingProfileQueues - Updates the properties associated with a set of queues for a routing profile.
-	// since the update only updates the existing queues that are associated, we will instead disassociate (if there are any queues)
-	// and then associate all the queues again to ensure new queues can be added and unused queues can be removed
-	inputQueueAssociate := &connect.AssociateRoutingProfileQueuesInput{
-		InstanceId:       aws.String(instanceID),
-		RoutingProfileId: aws.String(routingProfileID),
-	}
-
-	inputQueueDisassociate := &connect.DisassociateRoutingProfileQueuesInput{
-		InstanceId:       aws.String(instanceID),
-		RoutingProfileId: aws.String(routingProfileID),
-	}
-
+	// since the update only updates the existing queues that are associated, we will instead disassociate and associate
+	// the respective queues based on the diff detected
 	if d.HasChange("queue_configs") {
-		// first disassociate all existing queues
-		currentAssociatedQueueReferences := expandRoutingProfileQueueReferences(d.Get("queue_configs_associated").(*schema.Set).List())
-		if currentAssociatedQueueReferences != nil {
-			inputQueueDisassociate.QueueReferences = currentAssociatedQueueReferences
-			_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, inputQueueDisassociate)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
-			}
+		o, n := d.GetChange("queue_configs")
+
+		if o == nil {
+			o = new(schema.Set)
 		}
-		// re-associate the queues
-		updatedQueueConfigs := expandRoutingProfileQueueConfigs(d.Get("queue_configs").(*schema.Set).List())
-		if updatedQueueConfigs != nil {
-			inputQueueAssociate.QueueConfigs = updatedQueueConfigs
-			_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, inputQueueAssociate)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
-			}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		queueConfigsUpdateAdd := ns.Difference(os).List()
+		queueConfigsUpdateRemove := os.Difference(ns).List()
+
+		err = updateQueueConfigs(ctx, conn, instanceID, routingProfileID, queueConfigsUpdateAdd, queueConfigsUpdateRemove)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
-		}
-	}
-
-	return resourceRoutingProfileRead(ctx, d, meta)
+	return append(diags, resourceRoutingProfileRead(ctx, d, meta)...)
 }
 
-// func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn
+func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string, queueConfigsUpdateAdd, queueConfigsUpdateRemove []interface{}) error {
+	// updates to queue configs
+	// There are 3 APIs for this
+	// AssociateRoutingProfileQueues - Associates a set of queues with a routing profile.
+	// DisassociateRoutingProfileQueues - Disassociates a set of queues from a routing profile.
+	// UpdateRoutingProfileQueues - Updates the properties associated with a set of queues for a routing profile.
+	// since the update only updates the existing queues that are associated, we will instead disassociate and associate
+	// the respective queues based on the diff detected
 
-// 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
+	// disassociate first since Queue and channel type combination cannot be duplicated
+	if len(queueConfigsUpdateRemove) > 0 {
+		for i := 0; i < len(queueConfigsUpdateRemove); i += DisassociateRoutingProfileQueuesMaxItems {
+			j := i + DisassociateRoutingProfileQueuesMaxItems
+			if j > len(queueConfigsUpdateRemove) {
+				j = len(queueConfigsUpdateRemove)
+			}
+			_, err := conn.DisassociateRoutingProfileQueuesWithContext(ctx, &connect.DisassociateRoutingProfileQueuesInput{
+				InstanceId:       aws.String(instanceID),
+				QueueReferences:  expandRoutingProfileQueueReferences(queueConfigsUpdateRemove[i:j]),
+				RoutingProfileId: aws.String(routingProfileID),
+			})
+			if err != nil {
+				return fmt.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %s", routingProfileID, err)
+			}
+		}
+	}
 
-// 	if err != nil {
-// 		return diag.FromErr(err)
-// 	}
+	if len(queueConfigsUpdateAdd) > 0 {
+		for i := 0; i < len(queueConfigsUpdateAdd); i += AssociateRoutingProfileQueuesMaxItems {
+			j := i + AssociateRoutingProfileQueuesMaxItems
+			if j > len(queueConfigsUpdateAdd) {
+				j = len(queueConfigsUpdateAdd)
+			}
+			_, err := conn.AssociateRoutingProfileQueuesWithContext(ctx, &connect.AssociateRoutingProfileQueuesInput{
+				InstanceId:       aws.String(instanceID),
+				QueueConfigs:     expandRoutingProfileQueueConfigs(queueConfigsUpdateAdd[i:j]),
+				RoutingProfileId: aws.String(routingProfileID),
+			})
+			if err != nil {
+				return fmt.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %s", routingProfileID, err)
+			}
+		}
+	}
 
-// 	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
-// 		InstanceId:       aws.String(instanceID),
-// 		RoutingProfileId: aws.String(routingProfileID),
-// 	})
+	return nil
+}
 
-// 	if err != nil {
-// 		return diag.FromErr(fmt.Errorf("error deleting RoutingProfile (%s): %w", d.Id(), err))
-// 	}
+func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-// 	return nil
-// }
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+
+	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RoutingProfile (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
 
 func expandRoutingProfileMediaConcurrencies(mediaConcurrencies []interface{}) []*connect.MediaConcurrency {
 	if len(mediaConcurrencies) == 0 {

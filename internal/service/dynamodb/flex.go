@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -7,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func ExpandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
@@ -24,34 +29,58 @@ func ExpandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValu
 func flattenTableItemAttributes(attrs map[string]*dynamodb.AttributeValue) (string, error) {
 	buf := bytes.NewBufferString("")
 	encoder := json.NewEncoder(buf)
-	err := encoder.Encode(attrs)
+
+	a := make(map[string]attributeValue, len(attrs))
+	for k, v := range attrs {
+		a[k] = attributeValue(*v)
+	}
+	err := encoder.Encode(a)
 	if err != nil {
 		return "", fmt.Errorf("Encoding failed: %s", err)
 	}
 
-	var rawData map[string]map[string]interface{}
+	return buf.String(), nil
+}
 
-	// Reserialize so we get rid of the nulls
-	decoder := json.NewDecoder(strings.NewReader(buf.String()))
-	err = decoder.Decode(&rawData)
-	if err != nil {
-		return "", fmt.Errorf("Decoding failed: %s", err)
+type attributeValue dynamodb.AttributeValue
+
+func (f attributeValue) MarshalJSON() ([]byte, error) {
+	thing := map[string]any{}
+
+	if f.B != nil {
+		thing["B"] = f.B
+	}
+	if f.BOOL != nil {
+		thing["BOOL"] = f.BOOL
+	}
+	if f.BS != nil {
+		thing["BS"] = f.BS
+	}
+	if f.L != nil {
+		thing["L"] = slices.ApplyToAll(f.L, func(t *dynamodb.AttributeValue) attributeValue {
+			return attributeValue(*t)
+		})
+	}
+	if f.M != nil {
+		thing["M"] = maps.ApplyToAllValues(f.M, func(t *dynamodb.AttributeValue) attributeValue {
+			return attributeValue(*t)
+		})
+	}
+	if f.N != nil {
+		thing["N"] = f.N
+	}
+	if f.NS != nil {
+		thing["NS"] = f.NS
+	}
+	if f.NULL != nil {
+		thing["NULL"] = f.NULL
+	}
+	if f.S != nil {
+		thing["S"] = f.S
+	}
+	if f.SS != nil {
+		thing["SS"] = f.SS
 	}
 
-	for _, value := range rawData {
-		for typeName, typeVal := range value {
-			if typeVal == nil {
-				delete(value, typeName)
-			}
-		}
-	}
-
-	rawBuffer := bytes.NewBufferString("")
-	rawEncoder := json.NewEncoder(rawBuffer)
-	err = rawEncoder.Encode(rawData)
-	if err != nil {
-		return "", fmt.Errorf("Re-encoding failed: %s", err)
-	}
-
-	return rawBuffer.String(), nil
+	return json.Marshal(thing)
 }

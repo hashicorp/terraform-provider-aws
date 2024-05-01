@@ -1,22 +1,20 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package fis
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_fis_experiment_template", &resource.Sweeper{
 		Name: "aws_fis_experiment_template",
 		F:    sweepExperimentTemplates,
@@ -24,19 +22,20 @@ func init() {
 }
 
 func sweepExperimentTemplates(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).FISConn
+	conn := client.FISClient(ctx)
 	input := &fis.ListExperimentTemplatesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	pg := fis.NewListExperimentTemplatesPaginator(conn, input)
 
 	for pg.HasMorePages() {
-		page, err := pg.NextPage(context.Background())
+		page, err := pg.NextPage(ctx)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error listing FIS Experiment Templates: %w", err)
@@ -54,7 +53,7 @@ func sweepExperimentTemplates(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping FIS Experiment Templates (%s): %w", region, err)

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_grafana_workspace: Allow `grafana_version` to be updated in-place
+```

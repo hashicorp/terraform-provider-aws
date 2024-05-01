@@ -1,27 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ssm_maintenance_window_target")
 func ResourceMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMaintenanceWindowTargetCreate,
-		Read:   resourceMaintenanceWindowTargetRead,
-		Update: resourceMaintenanceWindowTargetUpdate,
-		Delete: resourceMaintenanceWindowTargetDelete,
+		CreateWithoutTimeout: resourceMaintenanceWindowTargetCreate,
+		ReadWithoutTimeout:   resourceMaintenanceWindowTargetRead,
+		UpdateWithoutTimeout: resourceMaintenanceWindowTargetUpdate,
+		DeleteWithoutTimeout: resourceMaintenanceWindowTargetDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
@@ -56,7 +63,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{Z}\p{N}_.:/=\-@]*$|resource-groups:ResourceTypeFilters|resource-groups:Name$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^[\p{L}\p{Z}\p{N}_.:/=\-@]*$|resource-groups:ResourceTypeFilters|resource-groups:Name$`), ""),
 								validation.StringLenBetween(1, 163),
 							),
 						},
@@ -74,7 +81,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
 			},
 
 			"description": {
@@ -93,8 +100,9 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 	}
 }
 
-func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
 
@@ -116,18 +124,19 @@ func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interfac
 		params.OwnerInformation = aws.String(v.(string))
 	}
 
-	resp, err := conn.RegisterTargetWithMaintenanceWindow(params)
+	resp, err := conn.RegisterTargetWithMaintenanceWindowWithContext(ctx, params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SSM Maintenance Window Target: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.WindowTargetId))
 
-	return resourceMaintenanceWindowTargetRead(d, meta)
+	return append(diags, resourceMaintenanceWindowTargetRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	windowID := d.Get("window_id").(string)
 	params := &ssm.DescribeMaintenanceWindowTargetsInput{
@@ -140,14 +149,14 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 		},
 	}
 
-	resp, err := conn.DescribeMaintenanceWindowTargets(params)
+	resp, err := conn.DescribeMaintenanceWindowTargetsWithContext(ctx, params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Target (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting Maintenance Window (%s) Target (%s): %w", windowID, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Maintenance Window (%s) Target (%s): %s", windowID, d.Id(), err)
 	}
 
 	found := false
@@ -162,7 +171,7 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 			d.Set("description", t.Description)
 
 			if err := d.Set("targets", flattenTargets(t.Targets)); err != nil {
-				return fmt.Errorf("Error setting targets: %w", err)
+				return sdkdiag.AppendErrorf(diags, "setting targets: %s", err)
 			}
 
 			break
@@ -172,14 +181,15 @@ func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{
 	if !d.IsNewResource() && !found {
 		log.Printf("[INFO] Maintenance Window Target not found. Removing from state")
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
@@ -201,16 +211,17 @@ func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interfac
 		params.OwnerInformation = aws.String(d.Get("owner_information").(string))
 	}
 
-	_, err := conn.UpdateMaintenanceWindowTarget(params)
+	_, err := conn.UpdateMaintenanceWindowTargetWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error updating SSM Maintenance Window Target (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SSM Maintenance Window Target (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())
 
@@ -219,14 +230,14 @@ func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interfac
 		WindowTargetId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeregisterTargetFromMaintenanceWindow(params)
+	_, err := conn.DeregisterTargetFromMaintenanceWindowWithContext(ctx, params)
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deregistering SSM Maintenance Window Target (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deregistering SSM Maintenance Window Target (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

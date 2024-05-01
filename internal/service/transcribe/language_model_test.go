@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
@@ -18,6 +21,7 @@ import (
 )
 
 func TestAccTranscribeLanguageModel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -28,18 +32,18 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccLanguageModelsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
+			testAccLanguageModelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLanguageModelDestroy,
+		CheckDestroy:             testAccCheckLanguageModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLanguageModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "base_model_name", "NarrowBand"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
@@ -55,6 +59,7 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 }
 
 func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -65,18 +70,18 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccLanguageModelsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
+			testAccLanguageModelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLanguageModelDestroy,
+		CheckDestroy:             testAccCheckLanguageModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLanguageModelConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -84,7 +89,7 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 			{
 				Config: testAccLanguageModelConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -93,7 +98,7 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 			{
 				Config: testAccLanguageModelConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLanguageModelExists(resourceName, &languageModel),
+					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -103,6 +108,7 @@ func TestAccTranscribeLanguageModel_updateTags(t *testing.T) {
 }
 
 func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -113,19 +119,19 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccLanguageModelsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
+			testAccLanguageModelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLanguageModelDestroy,
+		CheckDestroy:             testAccCheckLanguageModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLanguageModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLanguageModelExists(resourceName, &languageModel),
-					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceLanguageModel(), resourceName),
+					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceLanguageModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,29 +139,31 @@ func TestAccTranscribeLanguageModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLanguageModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+func testAccCheckLanguageModelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_transcribe_language_model" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_transcribe_language_model" {
+				continue
+			}
+
+			_, err := tftranscribe.FindLanguageModelByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		_, err := tftranscribe.FindLanguageModelByName(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLanguageModelExists(name string, languageModel *types.LanguageModel) resource.TestCheckFunc {
+func testAccCheckLanguageModelExists(ctx context.Context, name string, languageModel *types.LanguageModel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -166,8 +174,8 @@ func testAccCheckLanguageModelExists(name string, languageModel *types.LanguageM
 			return fmt.Errorf("No Transcribe LanguageModel is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-		resp, err := tftranscribe.FindLanguageModelByName(context.Background(), conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
+		resp, err := tftranscribe.FindLanguageModelByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Transcribe LanguageModel: %s", err.Error())
@@ -179,12 +187,12 @@ func testAccCheckLanguageModelExists(name string, languageModel *types.LanguageM
 	}
 }
 
-func testAccLanguageModelsPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+func testAccLanguageModelsPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient(ctx)
 
 	input := &transcribe.ListLanguageModelsInput{}
 
-	_, err := conn.ListLanguageModels(context.Background(), input)
+	_, err := conn.ListLanguageModels(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

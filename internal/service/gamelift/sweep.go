@@ -1,21 +1,22 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package gamelift
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_gamelift_alias", &resource.Sweeper{
 		Name: "aws_gamelift_alias",
 		Dependencies: []string{
@@ -54,13 +55,14 @@ func init() {
 }
 
 func sweepAliases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	conn := client.GameLiftConn(ctx)
 
-	err = listAliases(&gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
+	err = listAliases(ctx, &gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
 		if len(resp.Aliases) == 0 {
 			log.Print("[DEBUG] No GameLift Aliases to sweep")
 			return nil
@@ -70,7 +72,7 @@ func sweepAliases(region string) error {
 
 		for _, alias := range resp.Aliases {
 			log.Printf("[INFO] Deleting GameLift Alias %q", *alias.AliasId)
-			_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
+			_, err := conn.DeleteAliasWithContext(ctx, &gamelift.DeleteAliasInput{
 				AliasId: alias.AliasId,
 			})
 			if err != nil {
@@ -81,7 +83,7 @@ func sweepAliases(region string) error {
 		return nil
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping GameLift Alias sweep for %s: %s", region, err)
 			return nil
 		}
@@ -92,15 +94,16 @@ func sweepAliases(region string) error {
 }
 
 func sweepBuilds(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	conn := client.GameLiftConn(ctx)
 
-	resp, err := conn.ListBuilds(&gamelift.ListBuildsInput{})
+	resp, err := conn.ListBuildsWithContext(ctx, &gamelift.ListBuildsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
 			return nil
 		}
@@ -116,7 +119,7 @@ func sweepBuilds(region string) error {
 
 	for _, build := range resp.Builds {
 		log.Printf("[INFO] Deleting GameLift Build %q", *build.BuildId)
-		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
+		_, err := conn.DeleteBuildWithContext(ctx, &gamelift.DeleteBuildInput{
 			BuildId: build.BuildId,
 		})
 		if err != nil {
@@ -129,15 +132,16 @@ func sweepBuilds(region string) error {
 }
 
 func sweepScripts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	conn := client.GameLiftConn(ctx)
 
-	resp, err := conn.ListScripts(&gamelift.ListScriptsInput{})
+	resp, err := conn.ListScriptsWithContext(ctx, &gamelift.ListScriptsInput{})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Gamelife Script sweep for %s: %s", region, err)
 			return nil
 		}
@@ -153,7 +157,7 @@ func sweepScripts(region string) error {
 
 	for _, build := range resp.Scripts {
 		log.Printf("[INFO] Deleting GameLift Script %q", *build.ScriptId)
-		_, err := conn.DeleteScript(&gamelift.DeleteScriptInput{
+		_, err := conn.DeleteScriptWithContext(ctx, &gamelift.DeleteScriptInput{
 			ScriptId: build.ScriptId,
 		})
 		if err != nil {
@@ -166,18 +170,19 @@ func sweepScripts(region string) error {
 }
 
 func sweepFleets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.GameLiftConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &gamelift.ListFleetsInput{}
 
 	for {
-		output, err := conn.ListFleets(input)
+		output, err := conn.ListFleetsWithContext(ctx, input)
 
 		for _, fleet := range output.FleetIds {
 			r := ResourceFleet()
@@ -187,7 +192,7 @@ func sweepFleets(region string) error {
 			d.SetId(id)
 
 			if err != nil {
-				err := fmt.Errorf("error reading GameLift Fleet (%s): %w", id, err)
+				err := fmt.Errorf("reading GameLift Fleet (%s): %w", id, err)
 				log.Printf("[ERROR] %s", err)
 				errs = multierror.Append(errs, err)
 				continue
@@ -204,14 +209,14 @@ func sweepFleets(region string) error {
 	}
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing GameLift Fleet for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("listing GameLift Fleet for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping GameLift Fleet for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping GameLift Fleet for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GameLift Fleet sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -220,18 +225,19 @@ func sweepFleets(region string) error {
 }
 
 func sweepGameServerGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.GameLiftConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &gamelift.ListGameServerGroupsInput{}
 
 	for {
-		output, err := conn.ListGameServerGroups(input)
+		output, err := conn.ListGameServerGroupsWithContext(ctx, input)
 
 		for _, gameServerGroup := range output.GameServerGroups {
 			r := ResourceGameServerGroup()
@@ -241,7 +247,7 @@ func sweepGameServerGroups(region string) error {
 			d.SetId(id)
 
 			if err != nil {
-				err := fmt.Errorf("error reading GameLift Game Server Group (%s): %w", id, err)
+				err := fmt.Errorf("reading GameLift Game Server Group (%s): %w", id, err)
 				log.Printf("[ERROR] %s", err)
 				errs = multierror.Append(errs, err)
 				continue
@@ -258,14 +264,14 @@ func sweepGameServerGroups(region string) error {
 	}
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing GameLift Game Server Group for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("listing GameLift Game Server Group for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping GameLift Game Server Group for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping GameLift Game Server Group for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GameLift Game Server Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -274,21 +280,22 @@ func sweepGameServerGroups(region string) error {
 }
 
 func sweepGameSessionQueue(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GameLiftConn
+	conn := client.GameLiftConn(ctx)
 
-	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{})
+	out, err := conn.DescribeGameSessionQueuesWithContext(ctx, &gamelift.DescribeGameSessionQueuesInput{})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing GameLift Session Queue: %s", err)
+		return fmt.Errorf("listing GameLift Session Queue: %s", err)
 	}
 
 	if len(out.GameSessionQueues) == 0 {
@@ -300,11 +307,11 @@ func sweepGameSessionQueue(region string) error {
 
 	for _, queue := range out.GameSessionQueues {
 		log.Printf("[INFO] Deleting GameLift Session Queue %q", *queue.Name)
-		_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
+		_, err := conn.DeleteGameSessionQueueWithContext(ctx, &gamelift.DeleteGameSessionQueueInput{
 			Name: aws.String(*queue.Name),
 		})
 		if err != nil {
-			return fmt.Errorf("error deleting GameLift Session Queue (%s): %s",
+			return fmt.Errorf("deleting GameLift Session Queue (%s): %s",
 				*queue.Name, err)
 		}
 	}
@@ -312,8 +319,8 @@ func sweepGameSessionQueue(region string) error {
 	return nil
 }
 
-func listAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f func(*gamelift.ListAliasesOutput) error) error {
-	resp, err := conn.ListAliases(input)
+func listAliases(ctx context.Context, input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f func(*gamelift.ListAliasesOutput) error) error {
+	resp, err := conn.ListAliasesWithContext(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -323,7 +330,7 @@ func listAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f fu
 	}
 
 	if resp.NextToken != nil {
-		return listAliases(input, conn, f)
+		return listAliases(ctx, input, conn, f)
 	}
 	return nil
 }

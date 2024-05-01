@@ -1,12 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 const (
@@ -28,6 +34,8 @@ const (
 	repositoryLDA = "lda"
 	// SageMaker Algorithm Linear Learner
 	repositoryLinearLearner = "linear-learner"
+	// SageMaker Model Monitor
+	repositoryModelMonitor = "sagemaker-model-monitor-analyzer"
 	// SageMaker Algorithm Neural Topic Model
 	repositoryNeuralTopicModel = "ntm"
 	// SageMaker Algorithm Object2Vec
@@ -252,6 +260,7 @@ var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
 // https://github.com/aws/sagemaker-tensorflow-serving-container
 
 var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
+	endpoints.AfSouth1RegionID:     "626614931356",
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
 	endpoints.ApNortheast2RegionID: "763104351884",
@@ -302,9 +311,39 @@ var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
 	endpoints.UsWest2RegionID:  "520713654638",
 }
 
+// https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-pre-built-container.html
+var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
+	endpoints.AfSouth1RegionID:     "875698925577",
+	endpoints.ApEast1RegionID:      "001633400207",
+	endpoints.ApNortheast1RegionID: "574779866223",
+	endpoints.ApNortheast2RegionID: "709848358524",
+	endpoints.ApNortheast3RegionID: "990339680094",
+	endpoints.ApSouth1RegionID:     "126357580389",
+	endpoints.ApSoutheast1RegionID: "245545462676",
+	endpoints.ApSoutheast2RegionID: "563025443158",
+	endpoints.ApSoutheast3RegionID: "669540362728",
+	endpoints.CaCentral1RegionID:   "536280801234",
+	endpoints.CnNorth1RegionID:     "453000072557",
+	endpoints.CnNorthwest1RegionID: "453252182341",
+	endpoints.EuCentral1RegionID:   "048819808253",
+	endpoints.EuNorth1RegionID:     "895015795356",
+	endpoints.EuSouth1RegionID:     "933208885752",
+	endpoints.EuWest1RegionID:      "468650794304",
+	endpoints.EuWest2RegionID:      "749857270468",
+	endpoints.EuWest3RegionID:      "680080141114",
+	endpoints.MeSouth1RegionID:     "607024016150",
+	endpoints.SaEast1RegionID:      "539772159869",
+	endpoints.UsEast1RegionID:      "156813124566",
+	endpoints.UsEast2RegionID:      "777275614652",
+	endpoints.UsGovWest1RegionID:   "362178532790",
+	endpoints.UsWest1RegionID:      "890145073186",
+	endpoints.UsWest2RegionID:      "159807026194",
+}
+
+// @SDKDataSource("aws_sagemaker_prebuilt_ecr_image")
 func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePrebuiltECRImageRead,
+		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
 				Type:     schema.TypeString,
@@ -319,6 +358,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 					repositoryKNearestNeighbor,
 					repositoryLDA,
 					repositoryLinearLearner,
+					repositoryModelMonitor,
 					repositoryMXNetInference,
 					repositoryMXNetInferenceEIA,
 					repositoryMXNetTraining,
@@ -376,13 +416,14 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 	}
 }
 
-func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
 
-	suffix := meta.(*conns.AWSClient).DNSSuffix
+	suffix := meta.(*conns.AWSClient).DNSSuffix(ctx)
 	if v, ok := d.GetOk("dns_suffix"); ok {
 		suffix = v.(string)
 	}
@@ -401,6 +442,8 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 		id = prebuiltECRImageIDByRegion_deepAR[region]
 	case repositoryLDA:
 		id = prebuiltECRImageIDByRegion_lda[region]
+	case repositoryModelMonitor:
+		id = prebuiltECRImageIDByRegion_modelMonitor[region]
 	case repositoryXGBoost:
 		id = prebuiltECRImageIDByRegion_xgBoost[region]
 	case repositoryScikitLearn, repositorySparkML:
@@ -426,13 +469,13 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if id == "" {
-		return fmt.Errorf("no registry ID available for region (%s) and repository (%s)", region, repo)
+		return sdkdiag.AppendErrorf(diags, "no registry ID available for region (%s) and repository (%s)", region, repo)
 	}
 
 	d.SetId(id)
 	d.Set("registry_id", id)
 	d.Set("registry_path", PrebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
-	return nil
+	return diags
 }
 
 func PrebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {

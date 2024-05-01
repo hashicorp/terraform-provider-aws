@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -13,17 +16,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_connect_security_profile", name="Security Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSecurityProfileCreate,
-		ReadContext:   resourceSecurityProfileRead,
-		UpdateContext: resourceSecurityProfileUpdate,
-		DeleteContext: resourceSecurityProfileDelete,
+		CreateWithoutTimeout: resourceSecurityProfileCreate,
+		ReadWithoutTimeout:   resourceSecurityProfileRead,
+		UpdateWithoutTimeout: resourceSecurityProfileUpdate,
+		DeleteWithoutTimeout: resourceSecurityProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,23 +72,23 @@ func ResourceSecurityProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	securityProfileName := d.Get("name").(string)
-
 	input := &connect.CreateSecurityProfileInput{
 		InstanceId:          aws.String(instanceID),
 		SecurityProfileName: aws.String(securityProfileName),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -92,35 +99,31 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Permissions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Connect Security Profile %s", input)
 	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): %w", securityProfileName, err))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): %s", securityProfileName, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Security Profile (%s): empty output", securityProfileName))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): empty output", securityProfileName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
 
-	return resourceSecurityProfileRead(ctx, d, meta)
+	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeSecurityProfileWithContext(ctx, &connect.DescribeSecurityProfileInput{
@@ -131,15 +134,15 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.SecurityProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Security Profile (%s): empty response", d.Id()))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.SecurityProfile.Arn)
@@ -153,34 +156,27 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Security Profile Permissions for Security Profile (%s): %w", securityProfileID, err))
+		return sdkdiag.AppendErrorf(diags, "finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
 	}
 
 	if permissions != nil {
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	tags := KeyValueTags(resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, resp.SecurityProfile.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &connect.UpdateSecurityProfileInput{
@@ -199,26 +195,21 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SecurityProfile (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "updating SecurityProfile (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
-		}
-	}
-
-	return resourceSecurityProfileRead(ctx, d, meta)
+	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteSecurityProfileWithContext(ctx, &connect.DeleteSecurityProfileInput{
@@ -227,10 +218,10 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting SecurityProfile (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting SecurityProfile (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func SecurityProfileParseID(id string) (string, string, error) {

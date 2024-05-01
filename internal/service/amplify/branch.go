@@ -1,30 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceBranch() *schema.Resource {
+// @SDKResource("aws_amplify_branch", name="Branch")
+// @Tags(identifierAttribute="arn")
+func resourceBranch() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBranchCreate,
-		Read:   resourceBranchRead,
-		Update: resourceBranchUpdate,
-		Delete: resourceBranchDelete,
+		CreateWithoutTimeout: resourceBranchCreate,
+		ReadWithoutTimeout:   resourceBranchRead,
+		UpdateWithoutTimeout: resourceBranchUpdate,
+		DeleteWithoutTimeout: resourceBranchDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -35,24 +49,20 @@ func ResourceBranch() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"associated_resources": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"backend_environment_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"basic_auth_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -67,102 +77,87 @@ func ResourceBranch() *schema.Resource {
 					return true
 				},
 			},
-
 			"branch_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
-
 			"custom_domains": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"destination_branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
 			},
-
 			"enable_auto_build": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"enable_basic_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_notification": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_performance_mode": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 			},
-
 			"enable_pull_request_preview": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"framework": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"pull_request_environment_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 20),
 			},
-
 			"source_branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"stage": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(amplify.Stage_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.Stage](),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "NONE" by default.
-					if old == StageNone && new == "" {
+					if old == stageNone && new == "" {
 						return true
 					}
 
 					return old == new
 				},
 			},
-
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -175,26 +170,22 @@ func ResourceBranch() *schema.Resource {
 					return old == new
 				},
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
-	id := BranchCreateResourceID(appID, branchName)
-
+	id := branchCreateResourceID(appID, branchName)
 	input := &amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("backend_environment_arn"); ok {
@@ -230,7 +221,7 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EnvironmentVariables = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.EnvironmentVariables = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("framework"); ok {
@@ -242,59 +233,52 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("stage"); ok {
-		input.Stage = aws.String(v.(string))
+		input.Stage = types.Stage(v.(string))
 	}
 
 	if v, ok := d.GetOk("ttl"); ok {
 		input.Ttl = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Amplify Branch: %s", input)
-	_, err := conn.CreateBranch(input)
+	_, err := conn.CreateBranch(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Amplify Branch (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Amplify Branch (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceBranchRead(d, meta)
+	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, branchName, err := BranchParseResourceID(d.Id())
-
+	appID, branchName, err := branchParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	branch, err := FindBranchByAppIDAndBranchName(conn, appID, branchName)
+	branch, err := findBranchByTwoPartKey(ctx, conn, appID, branchName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Branch (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Amplify Branch (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Amplify Branch (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_id", appID)
 	d.Set("arn", branch.BranchArn)
-	d.Set("associated_resources", aws.StringValueSlice(branch.AssociatedResources))
+	d.Set("associated_resources", branch.AssociatedResources)
 	d.Set("backend_environment_arn", branch.BackendEnvironmentArn)
 	d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
 	d.Set("branch_name", branch.BranchName)
-	d.Set("custom_domains", aws.StringValueSlice(branch.CustomDomains))
+	d.Set("custom_domains", branch.CustomDomains)
 	d.Set("description", branch.Description)
 	d.Set("destination_branch", branch.DestinationBranch)
 	d.Set("display_name", branch.DisplayName)
@@ -303,34 +287,26 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_notification", branch.EnableNotification)
 	d.Set("enable_performance_mode", branch.EnablePerformanceMode)
 	d.Set("enable_pull_request_preview", branch.EnablePullRequestPreview)
-	d.Set("environment_variables", aws.StringValueMap(branch.EnvironmentVariables))
+	d.Set("environment_variables", branch.EnvironmentVariables)
 	d.Set("framework", branch.Framework)
 	d.Set("pull_request_environment_name", branch.PullRequestEnvironmentName)
 	d.Set("source_branch", branch.SourceBranch)
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	tags := KeyValueTags(branch.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, branch.Tags)
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		appID, branchName, err := BranchParseResourceID(d.Id())
-
+		appID, branchName, err := branchParseResourceID(d.Id())
 		if err != nil {
-			return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &amplify.UpdateBranchInput{
@@ -367,7 +343,7 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("enable_performance_mode") {
-			input.EnablePullRequestPreview = aws.Bool(d.Get("enable_performance_mode").(bool))
+			input.EnablePerformanceMode = aws.Bool(d.Get("enable_performance_mode").(bool))
 		}
 
 		if d.HasChange("enable_pull_request_preview") {
@@ -376,9 +352,9 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("environment_variables") {
 			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
-				input.EnvironmentVariables = flex.ExpandStringMap(v)
+				input.EnvironmentVariables = flex.ExpandStringValueMap(v)
 			} else {
-				input.EnvironmentVariables = aws.StringMap(map[string]string{"": ""})
+				input.EnvironmentVariables = map[string]string{"": ""}
 			}
 		}
 
@@ -391,52 +367,90 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("stage") {
-			input.Stage = aws.String(d.Get("stage").(string))
+			input.Stage = types.Stage(d.Get("stage").(string))
 		}
 
 		if d.HasChange("ttl") {
 			input.Ttl = aws.String(d.Get("ttl").(string))
 		}
 
-		_, err = conn.UpdateBranch(input)
+		_, err = conn.UpdateBranch(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Amplify Branch (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Amplify Branch (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceBranchRead(d, meta)
+	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, branchName, err := BranchParseResourceID(d.Id())
-
+	appID, branchName, err := branchParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())
-	_, err = conn.DeleteBranch(&amplify.DeleteBranchInput{
+	_, err = conn.DeleteBranch(ctx, &amplify.DeleteBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Amplify Branch (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Amplify Branch (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
+	input := &amplify.GetBranchInput{
+		AppId:      aws.String(appID),
+		BranchName: aws.String(branchName),
+	}
+
+	output, err := conn.GetBranch(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Branch == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Branch, nil
+}
+
+const branchResourceIDSeparator = "/"
+
+func branchCreateResourceID(appID, branchName string) string {
+	parts := []string{appID, branchName}
+	id := strings.Join(parts, branchResourceIDSeparator)
+
+	return id
+}
+
+func branchParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, branchResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPID%[2]sBRANCHNAME", id, branchResourceIDSeparator)
 }

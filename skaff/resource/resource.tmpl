@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -17,10 +20,7 @@ package {{ .ServicePackage }}
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
 // it.
-//
-// Remember to register this new resource in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.{{- end }}
+{{- end }}
 
 import (
 {{- if .IncludeComments }}
@@ -57,13 +57,17 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+{{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -78,6 +82,14 @@ import (
 // 3. Main resource function with schema
 // 4. Create, read, update, delete functions (in that order)
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
+{{- end }}
+
+// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
+// @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
+{{- if .IncludeTags }}
+// Tagging annotations are used for "transparent tagging".
+// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
+// @Tags(identifierAttribute="id")
 {{- end }}
 func Resource{{ .Resource }}() *schema.Resource {
 	return &schema.Resource{
@@ -96,17 +108,19 @@ func Resource{{ .Resource }}() *schema.Resource {
 		// you'll need a custom import function.
 		//
 		// See more:
-		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#adding-resource-import-support
-		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#implicit-state-passthrough
-		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#virtual-attributes
+		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
+		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
 		{{- end }}
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		{{ if .IncludeComments }}
 		// TIP: ==== CONFIGURABLE TIMEOUTS ====
-		// Users can configure timeout lengths (if you use the times they
-		// provide). These are the defaults if they don't configure timeouts.
+		// Users can configure timeout lengths but you need to use the times they
+		// provide. Access the timeout they configure (or the defaults) using,
+		// e.g., d.Timeout(schema.TimeoutCreate) (see below). The times here are
+		// the defaults if they don't configure timeouts.
 		{{- end }}
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -183,11 +197,14 @@ func Resource{{ .Resource }}() *schema.Resource {
 					},
 				},
 			},
-			"tags":         tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
-			"tags_all":     tftags.TagsSchemaComputed(),
+			{{- if .IncludeTags }}
+			names.AttrTags:    tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			{{- end }}
 		},
-
+		{{- if .IncludeTags }}
 		CustomizeDiff: verify.SetTagsDiff,
+		{{- end }}
 	}
 }
 
@@ -196,6 +213,7 @@ const (
 )
 
 func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE CREATE ====
 	// Generally, the Create function should do the following things. Make
@@ -214,7 +232,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a create input structure
 	{{- end }}
@@ -225,6 +243,15 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		{{- end }}
 		{{ .Resource }}Name: aws.String(d.Get("name").(string)),
 		{{ .Resource }}Type: aws.String(d.Get("type").(string)),
+		{{ if .IncludeComments }}
+		// TIP: Not all resources support tags and tags don't always make sense. If
+		// your resource doesn't need tags, you can remove the tags lines here and
+		// below. Many resources do include tags so this a reminder to include them
+		// where possible.
+		{{- end }}
+		{{- if .IncludeTags }}
+		Tags: getTagsIn(ctx),
+		{{- end }}
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {
@@ -241,18 +268,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		{{- end }}
 		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
 	}
-	{{ if .IncludeComments }}
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
-	{{- end }}
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS create function
 	{{- end }}
@@ -266,30 +282,31 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
 		// in error messages at this point.
 		{{- end }}
-		return create.DiagError(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), errors.New("empty output"))
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
 	// work.
 	{{- end }}
-	d.SetId(aws.ToString(out.{{ .Resource }}.{{ .Resource }}ID))
+	d.SetId({{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.{{ .Resource }}.{{ .Resource }}ID))
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	{{- end }}
 	if _, err := wait{{ .Resource }}Created(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionWaitingForCreation, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForCreation, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Call the Read function in the Create return
 	{{- end }}
-	return resource{{ .Resource }}Read(ctx, d, meta)
+	return append(diags, resource{{ .Resource }}Read(ctx, d, meta)...)
 }
 
 func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
 	// Generally, the Read function should do the following things. Make
@@ -300,13 +317,13 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	// 3. Set ID to empty where resource is not new and not found
 	// 4. Set the arguments and attributes
 	// 5. Set the tags
-	// 6. Return nil
+	// 6. Return diags
 	{{- end }}
 	{{- if .IncludeComments }}
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
@@ -318,11 +335,11 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] {{ .Service }} {{ .Resource }} (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Set the arguments and attributes
@@ -344,62 +361,36 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Policy))
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
 	}
 
 	d.Set("policy", p)
+
 	{{ if .IncludeComments }}
-	// TIP: -- 5. Set the tags
-	//
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
+	// TIP: -- 6. Return diags
 	{{- end }}
-	{{- if .AWSGoSDKV2 }}
-	tags, err := ListTags(ctx, conn, d.Id())
-	{{- else }}
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
-	{{- end }}
-	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
-	}
-	{{ if .IncludeComments }}
-	// TIP: -- 6. Return nil
-	{{- end }}
-	return nil
+	return diags
 }
 
 func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE UPDATE ====
 	// Not all resources have Update functions. There are a few reasons:
@@ -425,7 +416,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a modify input structure and check for changes
 	//
@@ -448,9 +439,9 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	if !update {
 		{{- if .IncludeComments }}
 		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return nil. Otherwise, return a read call, as below.
+		// return diags. Otherwise, return a read call, as below.
 		{{- end }}
-		return nil
+		return diags
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS modify/update function
@@ -462,21 +453,22 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.Update{{ .Resource }}WithContext(ctx, in)
 	{{- end }}
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for update to complete
 	{{- end }}
-	if _, err := wait{{ .Resource }}Updated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, d.Id(), err)
+	if _, err := wait{{ .Resource }}Updated(ctx, conn, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Call the Read function in the Update return
 	{{- end }}
-	return resource{{ .Resource }}Read(ctx, d, meta)
+	return append(diags, resource{{ .Resource }}Read(ctx, d, meta)...)
 }
 
 func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE DELETE ====
 	// Most resources have Delete functions. There are rare situations
@@ -492,13 +484,13 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	// 2. Populate a delete input structure
 	// 3. Call the AWS delete function
 	// 4. Use a waiter to wait for delete to complete
-	// 5. Return nil
+	// 5. Return diags
 	{{- end }}
 	{{- if .IncludeComments }}
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a delete input structure
 	{{- end }}
@@ -520,33 +512,30 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	// resource. If that happens, we don't want it to show up as an error.
 	{{- end }}
 	{{- if .AWSGoSDKV2 }}
+	if errs.IsA[*types.ResourceNotFoundException](err){
+		return diags
+	}
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResNameEndpoint, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{- else }}
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
-
 	if err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for delete to complete
 	{{- end }}
 	if _, err := wait{{ .Resource }}Deleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.{{ .Service }}, create.ErrActionWaitingForDeletion, ResName{{ .Resource }}, d.Id(), err)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForDeletion, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 5. Return nil
+	// TIP: -- 5. Return diags
 	{{- end }}
-	return nil
+	return diags
 }
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
@@ -580,7 +569,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- else }}
 func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   status{{ .Resource }}(ctx, conn, id),
@@ -607,7 +596,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- else }}
 func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
 		Refresh:                   status{{ .Resource }}(ctx, conn, id),
@@ -632,7 +621,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- else }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
 		Refresh:                   status{{ .Resource }}(ctx, conn, id),
@@ -656,9 +645,9 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
 {{ if .AWSGoSDKV2 }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) resource.StateRefreshFunc {
+func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
 {{- else }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) resource.StateRefreshFunc {
+func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) retry.StateRefreshFunc {
 {{- end }}
 	return func() (interface{}, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
@@ -670,7 +659,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Status), nil
 	}
 }
 {{ if .IncludeComments }}
@@ -691,26 +680,23 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 
 	{{- if .AWSGoSDKV2 }}
 	out, err := conn.Get{{ .Resource }}(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	if errs.IsA[*types.ResourceNotFoundException](err){
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
 		}
-
+	}
+	if err != nil {
 		return nil, err
 	}
 	{{- else }}
 	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -733,7 +719,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 // translate from Terraform -> AWS.
 //
 // See more:
-// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
+// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
 func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[string]interface{} {
 	if apiObject == nil {
@@ -743,11 +729,11 @@ func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[
 	m := map[string]interface{}{}
 
 	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
+		m["sub_field_one"] = {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(v)
 	}
 
 	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
+		m["sub_field_two"] = {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(v)
 	}
 
 	return m
@@ -781,7 +767,7 @@ func flattenComplexArguments(apiObjects []*{{ .ServiceLower }}.ComplexArgument) 
 // expanders translate from Terraform -> AWS.
 //
 // See more:
-// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
+// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
 func expandComplexArgument(tfMap map[string]interface{}) *{{ .ServiceLower }}.ComplexArgument {
 	if tfMap == nil {

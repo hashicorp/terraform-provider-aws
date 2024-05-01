@@ -1,43 +1,49 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldProtectionGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationMax),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aggregation", string(awstypes.ProtectionGroupAggregationMax)),
 					resource.TestCheckNoResourceAttr(resourceName, "members"),
-					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternAll),
-					resource.TestCheckNoResourceAttr(resourceName, "resource_type"),
+					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternAll)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -52,24 +58,25 @@ func TestAccShieldProtectionGroup_basic(t *testing.T) {
 }
 
 func TestAccShieldProtectionGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,24 +85,25 @@ func TestAccShieldProtectionGroup_disappears(t *testing.T) {
 }
 
 func TestAccShieldProtectionGroup_aggregation(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionGroupConfig_aggregation(rName, shield.ProtectionGroupAggregationMean),
+				Config: testAccProtectionGroupConfig_aggregation(rName, string(awstypes.ProtectionGroupAggregationMean)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationMean),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aggregation", string(awstypes.ProtectionGroupAggregationMean)),
 				),
 			},
 			{
@@ -104,10 +112,10 @@ func TestAccShieldProtectionGroup_aggregation(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProtectionGroupConfig_aggregation(rName, shield.ProtectionGroupAggregationSum),
+				Config: testAccProtectionGroupConfig_aggregation(rName, string(awstypes.ProtectionGroupAggregationSum)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationSum),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aggregation", string(awstypes.ProtectionGroupAggregationSum)),
 				),
 			},
 			{
@@ -120,26 +128,27 @@ func TestAccShieldProtectionGroup_aggregation(t *testing.T) {
 }
 
 func TestAccShieldProtectionGroup_members(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionGroupConfig_members(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternArbitrary),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternArbitrary)),
 					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexp.MustCompile(`eip-allocation/eipalloc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
 				),
 			},
 			{
@@ -152,24 +161,25 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 }
 
 func TestAccShieldProtectionGroup_protectionGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	testID1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testID2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionGroupConfig_basic(testID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "protection_group_id", testID1),
 				),
 			},
@@ -181,7 +191,7 @@ func TestAccShieldProtectionGroup_protectionGroupID(t *testing.T) {
 			{
 				Config: testAccProtectionGroupConfig_basic(testID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "protection_group_id", testID2),
 				),
 			},
@@ -195,25 +205,26 @@ func TestAccShieldProtectionGroup_protectionGroupID(t *testing.T) {
 }
 
 func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionGroupConfig_resourceType(rName, shield.ProtectedResourceTypeElasticIpAllocation),
+				Config: testAccProtectionGroupConfig_resourceType(rName, string(awstypes.ProtectedResourceTypeElasticIpAllocation)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternByResourceType),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", shield.ProtectedResourceTypeElasticIpAllocation),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternByResourceType)),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", string(awstypes.ProtectedResourceTypeElasticIpAllocation)),
 				),
 			},
 			{
@@ -222,11 +233,11 @@ func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProtectionGroupConfig_resourceType(rName, shield.ProtectedResourceTypeApplicationLoadBalancer),
+				Config: testAccProtectionGroupConfig_resourceType(rName, string(awstypes.ProtectedResourceTypeApplicationLoadBalancer)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternByResourceType),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", shield.ProtectedResourceTypeApplicationLoadBalancer),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternByResourceType)),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", string(awstypes.ProtectedResourceTypeApplicationLoadBalancer)),
 				),
 			},
 			{
@@ -239,23 +250,24 @@ func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 }
 
 func TestAccShieldProtectionGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionGroupDestroy,
+		CheckDestroy:             testAccCheckProtectionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -268,7 +280,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 			{
 				Config: testAccProtectionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -277,7 +289,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 			{
 				Config: testAccProtectionGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -286,50 +298,52 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckProtectionGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+func testAccCheckProtectionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_shield_protection_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_shield_protection_group" {
+				continue
+			}
+
+			input := &shield.DescribeProtectionGroupInput{
+				ProtectionGroupId: aws.String(rs.Primary.ID),
+			}
+
+			resp, err := conn.DescribeProtectionGroup(ctx, input)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && resp.ProtectionGroup != nil && aws.ToString(resp.ProtectionGroup.ProtectionGroupId) == rs.Primary.ID {
+				return fmt.Errorf("The Shield protection group with ID %v still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &shield.DescribeProtectionGroupInput{
-			ProtectionGroupId: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeProtectionGroup(input)
-
-		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.ProtectionGroup != nil && aws.StringValue(resp.ProtectionGroup.ProtectionGroupId) == rs.Primary.ID {
-			return fmt.Errorf("The Shield protection group with ID %v still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckProtectionGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckProtectionGroupExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		input := &shield.DescribeProtectionGroupInput{
 			ProtectionGroupId: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeProtectionGroup(input)
+		_, err := conn.DescribeProtectionGroup(ctx, input)
 
 		return err
 	}

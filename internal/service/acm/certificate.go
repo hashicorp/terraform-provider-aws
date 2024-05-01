@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm
 
 import (
@@ -7,23 +10,32 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/duration"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -35,18 +47,23 @@ const (
 	// This timeout is unrelated to any creation or validation of those assigned DNS records.
 	certificateDNSValidationAssignmentTimeout = 5 * time.Minute
 
+	// CertificateRenewalTimeout is the amount of time to wait for managed renewal of a certificate
+	CertificateRenewalTimeout = 1 * time.Minute
+
 	certificateValidationMethodNone = "NONE"
 )
 
-func ResourceCertificate() *schema.Resource {
+// @SDKResource("aws_acm_certificate", name="Certificate")
+// @Tags(identifierAttribute="id")
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateCreate,
-		Read:   resourceCertificateRead,
-		Update: resourceCertificateUpdate,
-		Delete: resourceCertificateDelete,
+		CreateWithoutTimeout: resourceCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateRead,
+		UpdateWithoutTimeout: resourceCertificateUpdate,
+		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -73,14 +90,11 @@ func ResourceCertificate() *schema.Resource {
 				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
 			},
 			"domain_name": {
-				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-				// trailing period, no longer requiring a custom StateFunc
-				// to prevent ACM API error
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 				ExactlyOneOf:  []string{"domain_name", "private_key"},
 				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 			},
@@ -109,6 +123,20 @@ func ResourceCertificate() *schema.Resource {
 				},
 				Set: domainValidationOptionsHash,
 			},
+			"early_renewal_duration": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validateHybridDuration,
+				ConflictsWith:    []string{"certificate_body", "certificate_chain", "private_key", "validation_method"},
+			},
+			"key_algorithm": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
+				ConflictsWith:    []string{"certificate_body", "certificate_chain", "private_key"},
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -120,34 +148,53 @@ func ResourceCertificate() *schema.Resource {
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"certificate_transparency_logging_preference": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
-							ValidateFunc:  validation.StringInSlice(acm.CertificateTransparencyLoggingPreference_Values(), false),
-							ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.CertificateTransparencyLoggingPreferenceEnabled,
+							ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
+							ConflictsWith:    []string{"certificate_body", "certificate_chain", "private_key"},
 						},
 					},
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if _, ok := d.GetOk("private_key"); ok {
-						// ignore diffs for imported certs; they have a different logging preference
-						// default to requested certs which can't be changed by the ImportCertificate API
-						return true
-					}
-					// behave just like verify.SuppressMissingOptionalConfigurationBlock() for requested certs
-					return old == "1" && new == "0"
-				},
+			},
+			"pending_renewal": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"private_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				ExactlyOneOf: []string{"domain_name", "private_key"},
+			},
+			"renewal_eligibility": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"renewal_summary": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"renewal_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"renewal_status_reason": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"updated_at": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -159,31 +206,32 @@ func ResourceCertificate() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-					// trailing period, no longer requiring a custom StateFunc
-					// to prevent ACM API error
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
 				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"validation_emails": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"validation_method": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringInSlice(append(acm.ValidationMethod_Values(), certificateValidationMethodNone), false),
-				ConflictsWith: []string{"certificate_authority_arn", "certificate_body", "certificate_chain", "private_key"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ValidationMethod](),
+				ConflictsWith:    []string{"certificate_authority_arn", "certificate_body", "certificate_chain", "private_key"},
 			},
 			"validation_option": {
 				Type:     schema.TypeSet,
@@ -208,13 +256,10 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
-				if diff.Get("validation_method").(string) == acm.ValidationMethodDns && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
+				if diff.Get("validation_method").(string) == string(types.ValidationMethodDns) && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
 					domainValidationOptionsList := []interface{}{map[string]interface{}{
-						// AWS Provider 3.0 -- plan-time validation prevents "domain_name"
-						// argument to accept a string with trailing period; thus, trim of trailing period
-						// no longer required here
 						"domain_name": diff.Get("domain_name").(string),
 					}}
 
@@ -227,9 +272,6 @@ func ResourceCertificate() *schema.Resource {
 							}
 
 							m := map[string]interface{}{
-								// AWS Provider 3.0 -- plan-time validation prevents "subject_alternative_names"
-								// argument to accept strings with trailing period; thus, trim of trailing period
-								// no longer required here
 								"domain_name": san,
 							}
 
@@ -238,7 +280,7 @@ func ResourceCertificate() *schema.Resource {
 					}
 
 					if err := diff.SetNew("domain_validation_options", schema.NewSet(domainValidationOptionsHash, domainValidationOptionsList)); err != nil {
-						return fmt.Errorf("error setting new domain_validation_options diff: %w", err)
+						return fmt.Errorf("setting new domain_validation_options diff: %w", err)
 					}
 				}
 
@@ -250,8 +292,32 @@ func ResourceCertificate() *schema.Resource {
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domainName)
 						if err := diff.SetNew("subject_alternative_names", sanSet); err != nil {
-							return fmt.Errorf("error setting new subject_alternative_names diff: %w", err)
+							return fmt.Errorf("setting new subject_alternative_names diff: %w", err)
 						}
+					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				if diff.HasChange("early_renewal_duration") {
+					if duration := diff.Get("early_renewal_duration").(string); duration == "" {
+						if err := diff.SetNew("pending_renewal", false); err != nil {
+							return err
+						}
+					} else {
+						if err := diff.SetNew("pending_renewal", certificateSetPendingRenewal(diff)); err != nil {
+							return err
+						}
+					}
+				} else if diff.Get("pending_renewal").(bool) {
+					// Trigger a diff
+					if err := diff.SetNewComputed("pending_renewal"); err != nil {
+						return err
 					}
 				}
 
@@ -262,104 +328,99 @@ func ResourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if _, ok := d.GetOk("domain_name"); ok {
 		_, v1 := d.GetOk("certificate_authority_arn")
 		_, v2 := d.GetOk("validation_method")
 
 		if !v1 && !v2 {
-			return errors.New("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
+			return sdkdiag.AppendErrorf(diags, "`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
 		}
 
 		domainName := d.Get("domain_name").(string)
 		input := &acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
-			IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
+			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
+			Tags:             getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("certificate_authority_arn"); ok {
 			input.CertificateAuthorityArn = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("key_algorithm"); ok {
+			input.KeyAlgorithm = types.KeyAlgorithm(v.(string))
+		}
+
 		if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Options = expandCertificateOptions(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("subject_alternative_names"); ok {
-			for _, v := range v.(*schema.Set).List() {
-				input.SubjectAlternativeNames = append(input.SubjectAlternativeNames, aws.String(v.(string)))
-			}
+		if v, ok := d.GetOk("subject_alternative_names"); ok && v.(*schema.Set).Len() > 0 {
+			input.SubjectAlternativeNames = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("validation_method"); ok {
-			input.ValidationMethod = aws.String(v.(string))
+			input.ValidationMethod = types.ValidationMethod(v.(string))
 		}
 
 		if v, ok := d.GetOk("validation_option"); ok && v.(*schema.Set).Len() > 0 {
 			input.DomainValidationOptions = expandDomainValidationOptions(v.(*schema.Set).List())
 		}
 
-		if len(tags) > 0 {
-			input.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		log.Printf("[DEBUG] Requesting ACM Certificate: %s", input)
-		output, err := conn.RequestCertificate(input)
+		output, err := conn.RequestCertificate(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("requesting ACM Certificate (%s): %w", domainName, err)
+			return sdkdiag.AppendErrorf(diags, "requesting ACM Certificate (%s): %s", domainName, err)
 		}
 
-		d.SetId(aws.StringValue(output.CertificateArn))
+		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
 		input := &acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
 			PrivateKey:  []byte(d.Get("private_key").(string)),
+			Tags:        getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("certificate_chain"); ok {
 			input.CertificateChain = []byte(v.(string))
 		}
 
-		if len(tags) > 0 {
-			input.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		output, err := conn.ImportCertificate(input)
+		output, err := conn.ImportCertificate(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM Certificate: %w", err)
+			return sdkdiag.AppendErrorf(diags, "importing ACM Certificate: %s", err)
 		}
 
-		d.SetId(aws.StringValue(output.CertificateArn))
+		d.SetId(aws.ToString(output.CertificateArn))
 	}
 
-	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
-		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", d.Id(), err)
+	if _, err := waitCertificateDomainValidationsAvailable(ctx, conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
 	}
 
-	return resourceCertificateRead(d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	certificate, err := FindCertificateByARN(conn, d.Id())
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
+
+	certificate, err := findCertificateByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ACM Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
@@ -367,57 +428,61 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", certificate.CertificateArn)
 	d.Set("certificate_authority_arn", certificate.CertificateAuthorityArn)
 	d.Set("domain_name", certificate.DomainName)
+	d.Set("early_renewal_duration", d.Get("early_renewal_duration"))
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-		return fmt.Errorf("error setting domain_validation_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting domain_validation_options: %s", err)
 	}
-	if certificate.NotBefore != nil {
-		d.Set("not_before", aws.TimeValue(certificate.NotBefore).Format(time.RFC3339))
-	} else {
-		d.Set("not_before", nil)
+	keyAlgorithmValue := string(certificate.KeyAlgorithm)
+	// ACM DescribeCertificate returns hyphenated string values instead of underscore separated
+	// This sets the value to the string in the ACM SDK (i.e. underscore separated)
+	for _, v := range enum.Values[types.KeyAlgorithm]() {
+		if strings.ReplaceAll(keyAlgorithmValue, "-", "_") == strings.ReplaceAll(v, "-", "_") {
+			keyAlgorithmValue = v
+			break
+		}
 	}
+	d.Set("key_algorithm", keyAlgorithmValue)
 	if certificate.NotAfter != nil {
-		d.Set("not_after", aws.TimeValue(certificate.NotAfter).Format(time.RFC3339))
+		d.Set("not_after", aws.ToTime(certificate.NotAfter).Format(time.RFC3339))
 	} else {
 		d.Set("not_after", nil)
 	}
+	if certificate.NotBefore != nil {
+		d.Set("not_before", aws.ToTime(certificate.NotBefore).Format(time.RFC3339))
+	} else {
+		d.Set("not_before", nil)
+	}
 	if certificate.Options != nil {
 		if err := d.Set("options", []interface{}{flattenCertificateOptions(certificate.Options)}); err != nil {
-			return fmt.Errorf("error setting options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
 		d.Set("options", nil)
 	}
+	d.Set("pending_renewal", certificateSetPendingRenewal(d))
+	d.Set("renewal_eligibility", certificate.RenewalEligibility)
+	if certificate.RenewalSummary != nil {
+		if err := d.Set("renewal_summary", []interface{}{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting renewal_summary: %s", err)
+		}
+	} else {
+		d.Set("renewal_summary", nil)
+	}
 	d.Set("status", certificate.Status)
-	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
+	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
+	d.Set("type", certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("listing tags for ACM Certificate (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
-		// Prior to version 3.0.0 of the Terraform AWS Provider, these attributes were stored in state as hashes.
-		// If the changes to these attributes are only changes only match updating the state value, then skip the API call.
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
 		oCCRaw, nCCRaw := d.GetChange("certificate_chain")
 		oPKRaw, nPKRaw := d.GetChange("private_key")
@@ -433,53 +498,71 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 				input.CertificateChain = []byte(chain.(string))
 			}
 
-			_, err := conn.ImportCertificate(input)
+			_, err := conn.ImportCertificate(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("re-importing ACM Certificate (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "importing ACM Certificate (%s): %s", d.Id(), err)
 			}
 		}
-	}
+	} else if d.Get("pending_renewal").(bool) {
+		_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
+			CertificateArn: aws.String(d.Get("arn").(string)),
+		})
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "renewing ACM Certificate (%s): %s", d.Id(), err)
+		}
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if _, err := waitCertificateRenewed(ctx, conn, d.Get("arn").(string), CertificateRenewalTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) renewal: %s", d.Id(), err)
 		}
 	}
 
-	return resourceCertificateRead(d, meta)
+	if d.HasChange("options") {
+		_, n := d.GetChange("options")
+		input := &acm.UpdateCertificateOptionsInput{
+			CertificateArn: aws.String(d.Get("arn").(string)),
+			Options:        expandCertificateOptions(n.([]interface{})[0].(map[string]interface{})),
+		}
+
+		_, err := conn.UpdateCertificateOptions(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ACM Certificate options (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMConn
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(certificateCrossServicePropagationTimeout,
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteCertificate(&acm.DeleteCertificateInput{
+			return conn.DeleteCertificate(ctx, &acm.DeleteCertificateInput{
 				CertificateArn: aws.String(d.Id()),
 			})
-		}, acm.ErrCodeResourceInUseException)
+		})
 
-	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting ACM Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ACM Certificate (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func certificateValidationMethod(certificate *acm.CertificateDetail) string {
-	if aws.StringValue(certificate.Type) == acm.CertificateTypeAmazonIssued {
+func certificateValidationMethod(certificate *types.CertificateDetail) string {
+	if certificate.Type == types.CertificateTypeAmazonIssued {
 		for _, v := range certificate.DomainValidationOptions {
-			if v.ValidationMethod != nil {
-				return aws.StringValue(v.ValidationMethod)
-			}
+			return string(v.ValidationMethod)
 		}
 	}
 
@@ -500,40 +583,65 @@ func domainValidationOptionsHash(v interface{}) int {
 	return 0
 }
 
-func expandCertificateOptions(tfMap map[string]interface{}) *acm.CertificateOptions {
+type resourceGetter interface {
+	Get(key string) any
+}
+
+func certificateSetPendingRenewal(d resourceGetter) bool {
+	if d.Get("renewal_eligibility") != string(types.RenewalEligibilityEligible) {
+		return false
+	}
+
+	notAfterRaw := d.Get("not_after")
+	if notAfterRaw == nil {
+		return false
+	}
+	notAfter, _ := time.Parse(time.RFC3339, notAfterRaw.(string))
+
+	earlyDuration := d.Get("early_renewal_duration").(string)
+
+	duration, null, err := hybridDurationType(earlyDuration).Value()
+	if null || err != nil {
+		return false
+	}
+
+	earlyExpiration := duration.SubFrom(notAfter)
+
+	return time.Now().After(earlyExpiration)
+}
+
+func expandCertificateOptions(tfMap map[string]interface{}) *types.CertificateOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &acm.CertificateOptions{}
+	apiObject := &types.CertificateOptions{}
 
 	if v, ok := tfMap["certificate_transparency_logging_preference"].(string); ok && v != "" {
-		apiObject.CertificateTransparencyLoggingPreference = aws.String(v)
+		apiObject.CertificateTransparencyLoggingPreference = types.CertificateTransparencyLoggingPreference(v)
 	}
 
 	return apiObject
 }
 
-func flattenCertificateOptions(apiObject *acm.CertificateOptions) map[string]interface{} {
+func flattenCertificateOptions(apiObject *types.CertificateOptions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.CertificateTransparencyLoggingPreference; v != nil {
-		tfMap["certificate_transparency_logging_preference"] = aws.StringValue(v)
-	}
+	tfMap["certificate_transparency_logging_preference"] = apiObject.CertificateTransparencyLoggingPreference
 
 	return tfMap
 }
 
-func expandDomainValidationOption(tfMap map[string]interface{}) *acm.DomainValidationOption {
+func expandDomainValidationOption(tfMap map[string]interface{}) *types.DomainValidationOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &acm.DomainValidationOption{}
+	apiObject := &types.DomainValidationOption{}
 
 	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
 		apiObject.DomainName = aws.String(v)
@@ -546,12 +654,12 @@ func expandDomainValidationOption(tfMap map[string]interface{}) *acm.DomainValid
 	return apiObject
 }
 
-func expandDomainValidationOptions(tfList []interface{}) []*acm.DomainValidationOption {
+func expandDomainValidationOptions(tfList []interface{}) []types.DomainValidationOption {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*acm.DomainValidationOption
+	var apiObjects []types.DomainValidationOption
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -566,44 +674,38 @@ func expandDomainValidationOptions(tfList []interface{}) []*acm.DomainValidation
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenDomainValidation(apiObject *acm.DomainValidation) (map[string]interface{}, []string) {
-	if apiObject == nil {
-		return nil, nil
-	}
-
+func flattenDomainValidation(apiObject types.DomainValidation) (map[string]interface{}, []string) {
 	tfMap := map[string]interface{}{}
 	var tfStrings []string
 
 	if v := apiObject.ResourceRecord; v != nil {
 		if v := apiObject.DomainName; v != nil {
-			tfMap["domain_name"] = aws.StringValue(v)
+			tfMap["domain_name"] = aws.ToString(v)
 		}
 
 		if v := v.Name; v != nil {
-			tfMap["resource_record_name"] = aws.StringValue(v)
+			tfMap["resource_record_name"] = aws.ToString(v)
 		}
 
-		if v := v.Type; v != nil {
-			tfMap["resource_record_type"] = aws.StringValue(v)
-		}
+		tfMap["resource_record_type"] = v.Type
 
 		if v := v.Value; v != nil {
-			tfMap["resource_record_value"] = aws.StringValue(v)
+			tfMap["resource_record_value"] = aws.ToString(v)
 		}
 	}
 
-	tfStrings = aws.StringValueSlice(apiObject.ValidationEmails)
+	tfStrings = apiObject.ValidationEmails
 
 	return tfMap, tfStrings
 }
 
-func flattenDomainValidations(apiObjects []*acm.DomainValidation) ([]interface{}, []string) {
+func flattenDomainValidations(apiObjects []types.DomainValidation) ([]interface{}, []string) {
 	if len(apiObjects) == 0 {
 		return nil, nil
 	}
@@ -612,10 +714,6 @@ func flattenDomainValidations(apiObjects []*acm.DomainValidation) ([]interface{}
 	var tfStrings []string
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		v1, v2 := flattenDomainValidation(apiObject)
 
 		if len(v1) > 0 {
@@ -627,6 +725,23 @@ func flattenDomainValidations(apiObjects []*acm.DomainValidation) ([]interface{}
 	}
 
 	return tfList, tfStrings
+}
+
+func flattenRenewalSummary(apiObject *types.RenewalSummary) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	tfMap["renewal_status"] = apiObject.RenewalStatus
+	tfMap["renewal_status_reason"] = apiObject.RenewalStatusReason
+
+	if v := apiObject.UpdatedAt; v != nil {
+		tfMap["updated_at"] = aws.ToTime(v).Format(time.RFC3339)
+	}
+
+	return tfMap
 }
 
 func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
@@ -660,11 +775,11 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
 	return hex.EncodeToString(newCleanVal[:]) == old
 }
 
-func findCertificate(conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.CertificateDetail, error) {
-	output, err := conn.DescribeCertificate(input)
+func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeCertificateInput) (*types.CertificateDetail, error) {
+	output, err := conn.DescribeCertificate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -681,20 +796,20 @@ func findCertificate(conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.C
 	return output.Certificate, nil
 }
 
-func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, error) {
+func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*types.CertificateDetail, error) {
 	input := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(arn),
 	}
 
-	output, err := findCertificate(conn, input)
+	output, err := findCertificate(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status); status == acm.CertificateStatusValidationTimedOut {
-		return nil, &resource.NotFoundError{
-			Message:     status,
+	if status := output.Status; status == types.CertificateStatusValidationTimedOut {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
 			LastRequest: input,
 		}
 	}
@@ -702,9 +817,23 @@ func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, er
 	return output, nil
 }
 
-func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn string) (*types.RenewalSummary, error) {
+	certificate, err := findCertificateByARN(ctx, conn, arn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if certificate.RenewalSummary == nil {
+		return nil, tfresource.NewEmptyResultError(arn)
+	}
+
+	return certificate.RenewalSummary, nil
+}
+
+func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificate, err := FindCertificateByARN(conn, arn)
+		certificate, err := findCertificateByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -716,22 +845,22 @@ func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) reso
 
 		domainValidationsAvailable := true
 
-		switch aws.StringValue(certificate.Type) {
-		case acm.CertificateTypeAmazonIssued:
+		switch certificate.Type {
+		case types.CertificateTypeAmazonIssued:
 			domainValidationsAvailable = false
 
 			for _, v := range certificate.DomainValidationOptions {
-				if v.ResourceRecord != nil || len(v.ValidationEmails) > 0 || (aws.StringValue(v.ValidationStatus) == acm.DomainStatusSuccess) {
+				if v.ResourceRecord != nil || len(v.ValidationEmails) > 0 || (v.ValidationStatus == types.DomainStatusSuccess) {
 					domainValidationsAvailable = true
 
 					break
 				}
 			}
 
-		case acm.CertificateTypePrivate:
+		case types.CertificateTypePrivate:
 			// While ACM PRIVATE certificates do not need to be validated, there is a slight delay for
 			// the API to fill in all certificate details, which is during the PENDING_VALIDATION status.
-			if aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
+			if certificate.Status == types.CertificateStatusPendingValidation {
 				domainValidationsAvailable = false
 			}
 		}
@@ -740,18 +869,108 @@ func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) reso
 	}
 }
 
-func waitCertificateDomainValidationsAvailable(conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
-	stateConf := &resource.StateChangeConf{
+func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
-		Refresh: statusCertificateDomainValidationsAvailable(conn, arn),
+		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
+	if output, ok := outputRaw.(*types.CertificateDetail); ok {
 		return output, err
 	}
 
 	return nil, err
+}
+
+func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCertificateRenewalByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.RenewalStatus), nil
+	}
+}
+
+func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.RenewalSummary, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.RenewalStatusPendingAutoRenewal),
+		Target:  enum.Slice(types.RenewalStatusSuccess),
+		Refresh: statusCertificateRenewal(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RenewalSummary); ok {
+		if output.RenewalStatus == types.RenewalStatusFailed {
+			tfresource.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+var validateHybridDuration = validation.AnyDiag(
+	sdktypes.ValidateDuration,
+	sdktypes.ValidateRFC3339Duration,
+)
+
+type hybridDurationType string
+
+func (d hybridDurationType) IsNull() bool {
+	return d == ""
+}
+
+func (d hybridDurationType) Value() (hybridDurationValue, bool, error) {
+	if d.IsNull() {
+		return nil, true, nil
+	}
+
+	value, err := parseHybridDuration(string(d))
+	if err != nil {
+		return nil, false, err
+	}
+	return value, false, nil
+}
+
+type hybridDurationValue interface {
+	SubFrom(time.Time) time.Time
+}
+
+func parseHybridDuration(s string) (hybridDurationValue, error) {
+	if duration, err := duration.Parse(s); err == nil {
+		return rfc3339HybridDurationValue{d: duration}, nil
+	}
+	if duration, err := time.ParseDuration(s); err == nil {
+		return goHybridDurationValue{d: duration}, nil
+	}
+	return nil, fmt.Errorf("unable to parse: %q", s)
+}
+
+type rfc3339HybridDurationValue struct {
+	d duration.Duration
+}
+
+func (v rfc3339HybridDurationValue) SubFrom(t time.Time) time.Time {
+	return duration.Sub(t, v.d)
+}
+
+type goHybridDurationValue struct {
+	d time.Duration
+}
+
+func (v goHybridDurationValue) SubFrom(t time.Time) time.Time {
+	return t.Add(-v.d)
 }

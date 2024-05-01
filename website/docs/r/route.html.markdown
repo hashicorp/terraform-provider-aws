@@ -18,10 +18,9 @@ Provides a resource to create a routing table entry (a route) in a VPC routing t
 
 ```terraform
 resource "aws_route" "r" {
-  route_table_id            = "rtb-4fbb3ac4"
+  route_table_id            = aws_route_table.testing.id
   destination_cidr_block    = "10.0.1.0/22"
   vpc_peering_connection_id = "pcx-45ff3dc1"
-  depends_on                = [aws_route_table.testing]
 }
 ```
 
@@ -46,7 +45,7 @@ resource "aws_route" "r" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `route_table_id` - (Required) The ID of the routing table.
 
@@ -61,8 +60,7 @@ One of the following target arguments must be supplied:
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
-* `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
-* `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
+* `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway. Specify `local` when updating a previously [imported](#import) local route.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
@@ -72,20 +70,21 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Only the arguments that are configured (one of the above) will be exported as an attribute once the resource is created.
 
 * `id` - Route identifier computed from the routing table identifier and route destination.
+* `instance_id` - Identifier of an EC2 instance.
 * `instance_owner_id` - The AWS account ID of the owner of the EC2 instance.
 * `origin` - How the route was created - `CreateRouteTable`, `CreateRoute` or `EnableVgwRoutePropagation`.
 * `state` - The state of the route - `active` or `blackhole`.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `update` - (Default `2m`)
@@ -93,22 +92,51 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Individual routes can be imported using `ROUTETABLEID_DESTINATION`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
 
-For example, import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16` like this:
+Import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16`:
 
-```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_10.42.0.0/16
+```terraform
+import {
+  to = aws_route.my_route
+  id = "rtb-656C65616E6F72_10.42.0.0/16"
+}
 ```
 
-Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR of `2620:0:2d0:200::8/125` similarly:
+Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR of `2620:0:2d0:200::8/125`:
 
-```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
+```terraform
+import {
+  to = aws_route.my_route
+  id = "rtb-656C65616E6F72_2620:0:2d0:200::8/125"
+}
 ```
 
-Import a route in route table `rtb-656C65616E6F72` with a managed prefix list destination of `pl-0570a1d2d725c16be` similarly:
+Import a route in route table `rtb-656C65616E6F72` with a managed prefix list destination of `pl-0570a1d2d725c16be`:
+
+```terraform
+import {
+  to = aws_route.my_route
+  id = "rtb-656C65616E6F72_pl-0570a1d2d725c16be"
+}
+```
+
+**Using `terraform import` to import** individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
+
+Import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16`:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
+% terraform import aws_route.my_route rtb-656C65616E6F72_10.42.0.0/16
+```
+
+Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR of `2620:0:2d0:200::8/125`:
+
+```console
+% terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
+```
+
+Import a route in route table `rtb-656C65616E6F72` with a managed prefix list destination of `pl-0570a1d2d725c16be`:
+
+```console
+% terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```

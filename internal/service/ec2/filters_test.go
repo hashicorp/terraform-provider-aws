@@ -1,16 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestBuildAttributeFilterList(t *testing.T) {
+func TestNewAttributeFilterList(t *testing.T) {
+	t.Parallel()
+
 	type TestCase struct {
 		Attrs    map[string]string
 		Expected []*ec2.Filter
@@ -46,19 +51,18 @@ func TestBuildAttributeFilterList(t *testing.T) {
 		},
 	}
 
-	for i, testCase := range testCases {
-		result := tfec2.BuildAttributeFilterList(testCase.Attrs)
+	for _, testCase := range testCases {
+		result := tfec2.NewAttributeFilterList(testCase.Attrs)
 
-		if !reflect.DeepEqual(result, testCase.Expected) {
-			t.Errorf(
-				"test case %d: got %#v, but want %#v",
-				i, result, testCase.Expected,
-			)
+		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
 
-func TestBuildTagFilterList(t *testing.T) {
+func TestNewTagFilterList(t *testing.T) {
+	t.Parallel()
+
 	type TestCase struct {
 		Tags     []*ec2.Tag
 		Expected []*ec2.Filter
@@ -88,19 +92,17 @@ func TestBuildTagFilterList(t *testing.T) {
 		},
 	}
 
-	for i, testCase := range testCases {
-		result := tfec2.BuildTagFilterList(testCase.Tags)
+	for _, testCase := range testCases {
+		result := tfec2.NewTagFilterList(testCase.Tags)
 
-		if !reflect.DeepEqual(result, testCase.Expected) {
-			t.Errorf(
-				"test case %d: got %#v, but want %#v",
-				i, result, testCase.Expected,
-			)
+		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
 
-func TestBuildCustomFilterList(t *testing.T) {
+func TestNewCustomFilterList(t *testing.T) {
+	t.Parallel()
 
 	// We need to get a set with the appropriate hash function,
 	// so we'll use the schema to help us produce what would
@@ -147,12 +149,9 @@ func TestBuildCustomFilterList(t *testing.T) {
 			Values: []*string{aws.String("bar"), aws.String("baz")},
 		},
 	}
-	result := tfec2.BuildCustomFilterList(filters)
+	result := tfec2.NewCustomFilterList(filters)
 
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf(
-			"got %#v, but want %#v",
-			result, expected,
-		)
+	if diff := cmp.Diff(result, expected); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 }

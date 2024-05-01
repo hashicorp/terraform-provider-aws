@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver_test
 
 import (
@@ -5,18 +8,19 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ResolverRulesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -31,19 +35,22 @@ func TestAccRoute53ResolverRulesDataSource_basic(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
-	rName1 := fmt.Sprintf("tf-testacc-r53-resolver-%s", sdkacctest.RandString(8))
-	rName2 := fmt.Sprintf("tf-testacc-r53-resolver-%s", sdkacctest.RandString(8))
+	ctx := acctest.Context(t)
+	domainName1 := acctest.RandomDomainName()
+	domainName2 := acctest.RandomDomainName()
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ds1ResourceName := "data.aws_route53_resolver_rules.by_resolver_endpoint_id"
 	ds2ResourceName := "data.aws_route53_resolver_rules.by_resolver_endpoint_id_rule_type_share_status"
 	ds3ResourceName := "data.aws_route53_resolver_rules.by_invalid_owner_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2),
+				Config: testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2, domainName1, domainName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", "1"),
 					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", "1"),
@@ -55,13 +62,14 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRulesDataSource_nameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 	rCount := 3
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -75,11 +83,12 @@ func TestAccRoute53ResolverRulesDataSource_nameRegex(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -101,14 +110,14 @@ data "aws_route53_resolver_rules" "test" {
 }
 `
 
-func testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2 string) string {
-	return testAccRuleConfig_resolverEndpoint(rName1) + fmt.Sprintf(`
+func testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2, domainName1, domainName2 string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName1), fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "forward" {
-  domain_name = "%[1]s.example.com"
+  domain_name = %[3]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -116,7 +125,7 @@ resource "aws_route53_resolver_rule" "forward" {
 }
 
 resource "aws_route53_resolver_rule" "recursive" {
-  domain_name = "%[2]s.example.org"
+  domain_name = %[4]q
   rule_type   = "RECURSIVE"
   name        = %[2]q
 }
@@ -137,7 +146,7 @@ data "aws_route53_resolver_rules" "by_invalid_owner_id" {
   owner_id     = "000000000000"
   share_status = "SHARED_WITH_ME"
 }
-`, rName1, rName2)
+`, rName1, rName2, domainName1, domainName2))
 }
 
 func testAccRulesDataSourceConfig_nameRegex(rCount int, rName string) string {

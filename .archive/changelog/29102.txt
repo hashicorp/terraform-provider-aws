@@ -1,0 +1,35 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix to allow updating of `replica.*.point_in_time_recovery` when a `replica` has `kms_key_arn` set
+```
+
+```release-note:bug
+resource/aws_dynamodb_table: Fix to allow updating of `replica.*.kms_key_arn`
+```
+
+```release-note:bug
+resource/aws_dynamodb_table: Fix perpetual diffs when using default AWS-managed keys
+```
+
+```release-note:note
+resource/aws_dynamodb_table: Updating `replica.*.kms_key_arn` or `replica.*.point_in_time_recovery`, when the `replica`'s `kms_key_arn` is set, requires recreating the replica.
+```
+
+```release-note:note
+resource/aws_dynamodb_table_replica: Updating `kms_key_arn` forces replacement of the replica now as required to re-encrypt the replica
+```
+
+```release-note:note
+resource/aws_dynamodb_table: In the past, in certain situations, `server_side_encryption.0.kms_key_arn` or `replica.*.kms_key_arn` could be populated with the default DynamoDB key `alias/aws/dynamodb`. This was an error because it would then be sent back to AWS and should not be.
+```
+
+```release-note:note
+resource/aws_dynamodb_table: In the past, in certain situations, `kms_key_arn` could be populated with the default DynamoDB key `alias/aws/dynamodb`. This was an error because it would then be sent back to AWS and should not be.
+```
+
+```release-note:bug
+resource/aws_dynamodb_table_replica: Fix to allow updating of `kms_key_arn`
+```
+
+```release-note:bug
+resource/aws_dynamodb_table_replica: Fix to allow creation of the replica without errors when `kms_key_arn` is set
+```

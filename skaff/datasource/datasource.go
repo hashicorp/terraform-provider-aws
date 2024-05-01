@@ -1,20 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasource
 
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/hashicorp/terraform-provider-aws/skaff/resource"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed datasource.tmpl
 var datasourceTmpl string
+
+//go:embed datasourcefw.tmpl
+var datasourceFrameworkTmpl string
 
 //go:embed datasourcetest.tmpl
 var datasourceTestTmpl string
@@ -23,19 +31,23 @@ var datasourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	DataSource          string
-	DataSourceLower     string
-	DataSourceSnake     string
-	IncludeComments     bool
-	ServicePackage      string
-	Service             string
-	ServiceLower        string
-	AWSServiceName      string
-	AWSGoSDKV2          bool
-	HumanDataSourceName string
+	DataSource           string
+	DataSourceLower      string
+	DataSourceSnake      string
+	IncludeComments      bool
+	IncludeTags          bool
+	HumanFriendlyService string
+	ServicePackage       string
+	Service              string
+	ServiceLower         string
+	AWSServiceName       string
+	AWSGoSDKV2           bool
+	PluginFramework      bool
+	HumanDataSourceName  string
+	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, v2 bool) error {
+func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -55,7 +67,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = resource.ToSnakeCase(dsName, snakeName)
+	snakeName = convert.ToSnakeCase(dsName, snakeName)
 
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
@@ -67,21 +79,34 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
-	templateData := TemplateData{
-		DataSource:          dsName,
-		DataSourceLower:     strings.ToLower(dsName),
-		DataSourceSnake:     snakeName,
-		IncludeComments:     comments,
-		ServicePackage:      servicePackage,
-		Service:             s,
-		ServiceLower:        strings.ToLower(s),
-		AWSServiceName:      sn,
-		AWSGoSDKV2:          v2,
-		HumanDataSourceName: fmt.Sprintf("%s Data Source", resource.HumanResName(dsName)),
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
 	}
 
+	templateData := TemplateData{
+		DataSource:           dsName,
+		DataSourceLower:      strings.ToLower(dsName),
+		DataSourceSnake:      snakeName,
+		HumanFriendlyService: hf,
+		IncludeComments:      comments,
+		IncludeTags:          tags,
+		ServicePackage:       servicePackage,
+		Service:              s,
+		ServiceLower:         strings.ToLower(s),
+		AWSServiceName:       sn,
+		AWSGoSDKV2:           v2,
+		PluginFramework:      pluginFramework,
+		HumanDataSourceName:  convert.ToHumanResName(dsName),
+		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
+	}
+
+	tmpl := datasourceTmpl
+	if pluginFramework {
+		tmpl = datasourceFrameworkTmpl
+	}
 	f := fmt.Sprintf("%s_data_source.go", snakeName)
-	if err = writeTemplate("newds", f, datasourceTmpl, force, templateData); err != nil {
+	if err = writeTemplate("newds", f, tmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource template: %w", err)
 	}
 
@@ -100,7 +125,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 

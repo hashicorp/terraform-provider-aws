@@ -1,19 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
-	"fmt"
+	"context"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func DataSourceGroups() *schema.Resource {
+// @SDKDataSource("aws_autoscaling_groups", name="Groups")
+func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupsRead,
+		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -48,13 +55,13 @@ func DataSourceGroups() *schema.Resource {
 	}
 }
 
-func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
-	var filters []*autoscaling.Filter
+func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
+	var filters []awstypes.Filter
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
-		var filterValues []*string
+		var filterValues []string
 		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
+			filterValues = append(filterValues, e.(string))
 		}
 
 		// In previous iterations, users were expected to provide "key" and "value" tag names.
@@ -67,7 +74,7 @@ func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
 		if name == "value" {
 			name = "tag-value"
 		}
-		filters = append(filters, &autoscaling.Filter{
+		filters = append(filters, awstypes.Filter{
 			Name:   aws.String(name),
 			Values: filterValues,
 		})
@@ -75,30 +82,31 @@ func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
 	return filters
 }
 
-func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
 	if v, ok := d.GetOk("names"); ok && len(v.([]interface{})) > 0 {
-		input.AutoScalingGroupNames = flex.ExpandStringList(v.([]interface{}))
+		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
-	groups, err := findGroups(conn, input)
+	groups, err := findGroups(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Groups: %s", err)
 	}
 
 	var arns, names []string
 
 	for _, group := range groups {
-		arns = append(arns, aws.StringValue(group.AutoScalingGroupARN))
-		names = append(names, aws.StringValue(group.AutoScalingGroupName))
+		arns = append(arns, aws.ToString(group.AutoScalingGroupARN))
+		names = append(names, aws.ToString(group.AutoScalingGroupName))
 	}
 
 	sort.Strings(arns)
@@ -108,5 +116,5 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

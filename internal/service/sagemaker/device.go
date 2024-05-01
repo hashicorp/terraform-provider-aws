@@ -1,28 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_sagemaker_device")
 func ResourceDevice() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeviceCreate,
-		Read:   resourceDeviceRead,
-		Update: resourceDeviceUpdate,
-		Delete: resourceDeviceDelete,
+		CreateWithoutTimeout: resourceDeviceCreate,
+		ReadWithoutTimeout:   resourceDeviceRead,
+		UpdateWithoutTimeout: resourceDeviceUpdate,
+		DeleteWithoutTimeout: resourceDeviceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -40,7 +47,7 @@ func ResourceDevice() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"device": {
@@ -72,8 +79,9 @@ func ResourceDevice() *schema.Resource {
 	}
 }
 
-func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.RegisterDevicesInput{
@@ -81,32 +89,33 @@ func resourceDeviceCreate(d *schema.ResourceData, meta interface{}) error {
 		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
-	_, err := conn.RegisterDevices(input)
+	_, err := conn.RegisterDevicesWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Device %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Device %s: %s", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", name, aws.StringValue(input.Devices[0].DeviceName)))
 
-	return resourceDeviceRead(d, meta)
+	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
-func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device (%s): %s", d.Id(), err)
 	}
-	device, err := FindDeviceByName(conn, deviceFleetName, deviceName)
+	device, err := FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Unable to find SageMaker Device (%s); removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Device (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(device.DeviceArn)
@@ -115,18 +124,19 @@ func resourceDeviceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 
 	if err := d.Set("device", flattenDevice(device)); err != nil {
-		return fmt.Errorf("setting device for SageMaker Device (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting device for SageMaker Device (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deviceFleetName, _, err := DecodeDeviceId(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker Device (%s): %s", d.Id(), err)
 	}
 
 	input := &sagemaker.UpdateDevicesInput{
@@ -134,21 +144,22 @@ func resourceDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 		Devices:         expandDevice(d.Get("device").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] sagemaker Device update config: %s", input.String())
-	_, err = conn.UpdateDevices(input)
+	log.Printf("[DEBUG] SageMaker Device update config: %s", input.String())
+	_, err = conn.UpdateDevicesWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("updating SageMaker Device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker Device (%s): %s", d.Id(), err)
 	}
 
-	return resourceDeviceRead(d, meta)
+	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
-func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deviceFleetName, deviceName, err := DecodeDeviceId(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device (%s): %s", d.Id(), err)
 	}
 
 	input := &sagemaker.DeregisterDevicesInput{
@@ -156,15 +167,15 @@ func resourceDeviceDelete(d *schema.ResourceData, meta interface{}) error {
 		DeviceNames:     []*string{aws.String(deviceName)},
 	}
 
-	if _, err := conn.DeregisterDevices(input); err != nil {
+	if _, err := conn.DeregisterDevicesWithContext(ctx, input); err != nil {
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Device with name") ||
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device fleet with name") {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("deleting SageMaker Device (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDevice(l []interface{}) []*sagemaker.Device {

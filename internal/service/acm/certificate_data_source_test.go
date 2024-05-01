@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm_test
 
 import (
@@ -6,15 +9,18 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const certificateRE = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
 
 func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -23,9 +29,9 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	var domain string
 
 	if os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN") != "" {
-		arnRe = regexp.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN")))
+		arnRe = regexache.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_MOST_RECENT_ARN")))
 	} else {
-		arnRe = regexp.MustCompile(certificateRE)
+		arnRe = regexache.MustCompile(certificateRE)
 	}
 
 	if os.Getenv("ACM_CERTIFICATE_SINGLE_ISSUED_DOMAIN") != "" {
@@ -37,8 +43,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -46,23 +52,23 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.CertificateStatusIssued)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
+				Config: testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.CertificateStatusIssued)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
+				Config: testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -80,7 +86,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -89,7 +95,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -102,6 +108,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -110,9 +117,9 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 	var domain string
 
 	if os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN") != "" {
-		arnRe = regexp.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN")))
+		arnRe = regexache.MustCompile(fmt.Sprintf("^%s$", os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_MOST_RECENT_ARN")))
 	} else {
-		arnRe = regexp.MustCompile(certificateRE)
+		arnRe = regexache.MustCompile(certificateRE)
 	}
 
 	if os.Getenv("ACM_CERTIFICATE_MULTIPLE_ISSUED_DOMAIN") != "" {
@@ -124,21 +131,21 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				Config:      testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
+				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -148,14 +155,14 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -166,6 +173,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -173,48 +181,49 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				Config:      testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
+				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 		},
 	})
 }
 
 func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
-	key := acctest.TLSRSAPrivateKeyPEM(4096)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, acctest.RandomDomain().String())
+	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +240,7 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 func testAccCertificateDataSourceConfig_basic(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain = "%s"
+  domain = %[1]q
 }
 `, domain)
 }
@@ -239,8 +248,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_status(domain, status string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain   = "%s"
-  statuses = ["%s"]
+  domain   = %[1]q
+  statuses = [%[2]q]
 }
 `, domain, status)
 }
@@ -248,8 +257,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_types(domain, certType string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain = "%s"
-  types  = ["%s"]
+  domain = %[1]q
+  types  = [%[2]q]
 }
 `, domain, certType)
 }
@@ -257,8 +266,8 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_mostRecent(domain string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "%s"
-  most_recent = %t
+  domain      = %[1]q
+  most_recent = %[2]t
 }
 `, domain, mostRecent)
 }
@@ -266,9 +275,9 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, status string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "%s"
-  statuses    = ["%s"]
-  most_recent = %t
+  domain      = %[1]q
+  statuses    = [%[2]q]
+  most_recent = %[3]t
 }
 `, domain, status, mostRecent)
 }
@@ -276,9 +285,9 @@ data "aws_acm_certificate" "test" {
 func testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, certType string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  domain      = "%s"
-  types       = ["%s"]
-  most_recent = %t
+  domain      = %[1]q
+  types       = [%[2]q]
+  most_recent = %[3]t
 }
 `, domain, certType, mostRecent)
 }

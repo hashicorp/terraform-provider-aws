@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"fmt"
-	"sort"
+	"context"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_rds_certificate")
 func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCertificateRead,
+		ReadWithoutTimeout: dataSourceCertificateRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -56,8 +62,9 @@ func DataSourceCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeCertificatesInput{}
 
@@ -67,7 +74,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 	var certificates []*rds.Certificate
 
-	err := conn.DescribeCertificatesPages(input, func(page *rds.DescribeCertificatesOutput, lastPage bool) bool {
+	err := conn.DescribeCertificatesPagesWithContext(ctx, input, func(page *rds.DescribeCertificatesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -81,33 +88,30 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return !lastPage
 	})
-
 	if err != nil {
-		return fmt.Errorf("error reading RDS Certificates: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Certificates: %s", err)
 	}
 
 	if len(certificates) == 0 {
-		return fmt.Errorf("no RDS Certificates found")
+		return sdkdiag.AppendErrorf(diags, "no RDS Certificates found")
 	}
 
 	// client side filtering
 	var certificate *rds.Certificate
 
 	if d.Get("latest_valid_till").(bool) {
-		sort.Sort(rdsCertificateValidTillSort(certificates))
+		slices.SortFunc(certificates, func(a, b *rds.Certificate) int {
+			return a.ValidTill.Compare(*b.ValidTill)
+		})
 		certificate = certificates[len(certificates)-1]
-	}
-
-	if len(certificates) > 1 {
-		return fmt.Errorf("multiple RDS Certificates match the criteria; try changing search query")
-	}
-
-	if certificate == nil && len(certificates) == 1 {
+	} else {
+		if len(certificates) > 1 {
+			return sdkdiag.AppendErrorf(diags, "multiple RDS Certificates match the criteria; try changing search query")
+		}
+		if len(certificates) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS Certificates match the criteria")
+		}
 		certificate = certificates[0]
-	}
-
-	if certificate == nil {
-		return fmt.Errorf("no RDS Certificates match the criteria")
 	}
 
 	d.SetId(aws.StringValue(certificate.CertificateIdentifier))
@@ -130,21 +134,5 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("valid_till", aws.TimeValue(certificate.ValidTill).Format(time.RFC3339))
 	}
 
-	return nil
-}
-
-type rdsCertificateValidTillSort []*rds.Certificate
-
-func (s rdsCertificateValidTillSort) Len() int      { return len(s) }
-func (s rdsCertificateValidTillSort) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s rdsCertificateValidTillSort) Less(i, j int) bool {
-	if s[i] == nil || s[i].ValidTill == nil {
-		return true
-	}
-
-	if s[j] == nil || s[j].ValidTill == nil {
-		return false
-	}
-
-	return (*s[i].ValidTill).Before(*s[j].ValidTill)
+	return diags
 }

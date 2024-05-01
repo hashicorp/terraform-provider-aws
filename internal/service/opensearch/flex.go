@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -21,7 +24,6 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-
 			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
@@ -77,17 +79,20 @@ func expandEBSOptions(m map[string]interface{}) *opensearchservice.EBSOptions {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
-			if v, ok := m["iops"]; ok && v.(int) > 0 {
-				options.Iops = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["throughput"]; ok && v.(int) > 0 {
-				options.Throughput = aws.Int64(int64(v.(int)))
-			}
 			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
+			var volumeType string
 			if v, ok := m["volume_type"]; ok && v.(string) != "" {
-				options.VolumeType = aws.String(v.(string))
+				volumeType = v.(string)
+				options.VolumeType = aws.String(volumeType)
+			}
+
+			if v, ok := m["iops"]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
+				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 		}
 	}
@@ -103,19 +108,6 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *opensearchservice.Enc
 	}
 	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
 		options.KmsKeyId = aws.String(v.(string))
-	}
-
-	return &options
-}
-
-func expandVPCOptions(m map[string]interface{}) *opensearchservice.VPCOptions {
-	options := opensearchservice.VPCOptions{}
-
-	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	return &options
@@ -211,21 +203,73 @@ func flattenSnapshotOptions(snapshotOptions *opensearchservice.SnapshotOptions) 
 	return []map[string]interface{}{m}
 }
 
-func flattenVPCDerivedInfo(o *opensearchservice.VPCDerivedInfo) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if o.AvailabilityZones != nil {
-		m["availability_zones"] = flex.FlattenStringSet(o.AvailabilityZones)
-	}
-	if o.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(o.SecurityGroupIds)
-	}
-	if o.SubnetIds != nil {
-		m["subnet_ids"] = flex.FlattenStringSet(o.SubnetIds)
-	}
-	if o.VPCId != nil {
-		m["vpc_id"] = aws.StringValue(o.VPCId)
+func expandSoftwareUpdateOptions(in []interface{}) *opensearchservice.SoftwareUpdateOptions {
+	if len(in) == 0 {
+		return nil
 	}
 
-	return []map[string]interface{}{m}
+	m := in[0].(map[string]interface{})
+
+	var out opensearchservice.SoftwareUpdateOptions
+	if v, ok := m["auto_software_update_enabled"].(bool); ok {
+		out.AutoSoftwareUpdateEnabled = aws.Bool(v)
+	}
+
+	return &out
+}
+
+func flattenSoftwareUpdateOptions(softwareUpdateOptions *opensearchservice.SoftwareUpdateOptions) []interface{} {
+	if softwareUpdateOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"auto_software_update_enabled": aws.BoolValue(softwareUpdateOptions.AutoSoftwareUpdateEnabled),
+	}
+
+	return []interface{}{m}
+}
+
+func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.VPCOptions{}
+
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZones; v != nil {
+		tfMap["availability_zones"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SecurityGroupIds; v != nil {
+		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.VPCId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

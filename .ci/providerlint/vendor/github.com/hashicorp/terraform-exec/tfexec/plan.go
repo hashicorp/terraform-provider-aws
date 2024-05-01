@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
 	"context"
 	"fmt"
+	"io"
 	"os/exec"
 	"strconv"
 )
@@ -16,6 +20,7 @@ type planConfig struct {
 	parallelism  int
 	reattachInfo ReattachInfo
 	refresh      bool
+	refreshOnly  bool
 	replaceAddrs []string
 	state        string
 	targets      []string
@@ -64,6 +69,10 @@ func (opt *RefreshOption) configurePlan(conf *planConfig) {
 	conf.refresh = opt.refresh
 }
 
+func (opt *RefreshOnlyOption) configurePlan(conf *planConfig) {
+	conf.refreshOnly = opt.refreshOnly
+}
+
 func (opt *ReplaceOption) configurePlan(conf *planConfig) {
 	conf.replaceAddrs = append(conf.replaceAddrs, opt.address)
 }
@@ -108,6 +117,42 @@ func (tf *Terraform) Plan(ctx context.Context, opts ...PlanOption) (bool, error)
 	return false, err
 }
 
+// PlanJSON executes `terraform plan` with the specified options as well as the
+// `-json` flag and waits for it to complete.
+//
+// Using the `-json` flag will result in
+// [machine-readable](https://developer.hashicorp.com/terraform/internals/machine-readable-ui)
+// JSON being written to the supplied `io.Writer`.
+//
+// The returned boolean is false when the plan diff is empty (no changes) and
+// true when the plan diff is non-empty (changes present).
+//
+// The returned error is nil if `terraform plan` has been executed and exits
+// with either 0 or 2.
+//
+// PlanJSON is likely to be removed in a future major version in favour of
+// Plan returning JSON by default.
+func (tf *Terraform) PlanJSON(ctx context.Context, w io.Writer, opts ...PlanOption) (bool, error) {
+	err := tf.compatible(ctx, tf0_15_3, nil)
+	if err != nil {
+		return false, fmt.Errorf("terraform plan -json was added in 0.15.3: %w", err)
+	}
+
+	tf.SetStdout(w)
+
+	cmd, err := tf.planJSONCmd(ctx, opts...)
+	if err != nil {
+		return false, err
+	}
+
+	err = tf.runTerraformCmd(ctx, cmd)
+	if err != nil && cmd.ProcessState.ExitCode() == 2 {
+		return true, nil
+	}
+
+	return false, err
+}
+
 func (tf *Terraform) planCmd(ctx context.Context, opts ...PlanOption) (*exec.Cmd, error) {
 	c := defaultPlanOptions
 
@@ -115,6 +160,32 @@ func (tf *Terraform) planCmd(ctx context.Context, opts ...PlanOption) (*exec.Cmd
 		o.configurePlan(&c)
 	}
 
+	args, err := tf.buildPlanArgs(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	return tf.buildPlanCmd(ctx, c, args)
+}
+
+func (tf *Terraform) planJSONCmd(ctx context.Context, opts ...PlanOption) (*exec.Cmd, error) {
+	c := defaultPlanOptions
+
+	for _, o := range opts {
+		o.configurePlan(&c)
+	}
+
+	args, err := tf.buildPlanArgs(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	args = append(args, "-json")
+
+	return tf.buildPlanCmd(ctx, c, args)
+}
+
+func (tf *Terraform) buildPlanArgs(ctx context.Context, c planConfig) ([]string, error) {
 	args := []string{"plan", "-no-color", "-input=false", "-detailed-exitcode"}
 
 	// string opts: only pass if set
@@ -135,6 +206,17 @@ func (tf *Terraform) planCmd(ctx context.Context, opts ...PlanOption) (*exec.Cmd
 	args = append(args, "-lock="+strconv.FormatBool(c.lock))
 	args = append(args, "-parallelism="+fmt.Sprint(c.parallelism))
 	args = append(args, "-refresh="+strconv.FormatBool(c.refresh))
+
+	if c.refreshOnly {
+		err := tf.compatible(ctx, tf0_15_4, nil)
+		if err != nil {
+			return nil, fmt.Errorf("refresh-only option was introduced in Terraform 0.15.4: %w", err)
+		}
+		if !c.refresh {
+			return nil, fmt.Errorf("you cannot use refresh=false in refresh-only planning mode")
+		}
+		args = append(args, "-refresh-only")
+	}
 
 	// unary flags: pass if true
 	if c.replaceAddrs != nil {
@@ -162,6 +244,10 @@ func (tf *Terraform) planCmd(ctx context.Context, opts ...PlanOption) (*exec.Cmd
 		}
 	}
 
+	return args, nil
+}
+
+func (tf *Terraform) buildPlanCmd(ctx context.Context, c planConfig, args []string) (*exec.Cmd, error) {
 	// optional positional argument
 	if c.dir != "" {
 		args = append(args, c.dir)

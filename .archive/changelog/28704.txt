@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_dms_s3_endpoint: Fix error with `cdc_path` when used with `aws_dms_replication_task`
+```
+
+```release-note:bug
+resource/aws_dms_replication_task: Fix error with `cdc_path` when used with `aws_dms_s3_endpoint`
+```

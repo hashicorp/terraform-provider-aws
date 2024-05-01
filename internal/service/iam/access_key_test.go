@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -7,33 +10,34 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMAccessKey_basic(t *testing.T) {
-	var conf iam.AccessKeyMetadata
+	ctx := acctest.Context(t)
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "secret"),
@@ -53,21 +57,46 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMAccessKey_encrypted(t *testing.T) {
-	var conf iam.AccessKeyMetadata
+func TestAccIAMAccessKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccessKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMAccessKey_encrypted(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.AccessKeyMetadata
+	resourceName := "aws_iam_access_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_encrypted(rName, testPubKey1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
 					testAccCheckAccessKeyAttributes(&conf, "Active"),
 					testDecryptSecretKeyAndTest(resourceName, testPrivKey1),
 					resource.TestCheckNoResourceAttr(resourceName, "secret"),
@@ -88,21 +117,22 @@ func TestAccIAMAccessKey_encrypted(t *testing.T) {
 }
 
 func TestAccIAMAccessKey_status(t *testing.T) {
-	var conf iam.AccessKeyMetadata
+	ctx := acctest.Context(t)
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessKeyDestroy,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeInactive)),
 				),
 			},
 			{
@@ -112,76 +142,78 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 			{
-				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeActive),
+				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeActive)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeActive),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeActive)),
 				),
 			},
 			{
-				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessKeyExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeInactive)),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAccessKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_access_key" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_access_key" {
+				continue
+			}
+
+			_, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IAM Access Key (%s) still exists", rs.Primary.ID)
 		}
 
-		_, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("IAM Access Key (%s) still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.TestCheckFunc {
+func testAccCheckAccessKeyExists(ctx context.Context, n string, v *awstypes.AccessKeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Access Key ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		output, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 
-		accessKey, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		*res = *accessKey
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckAccessKeyAttributes(accessKeyMetadata *iam.AccessKeyMetadata, status string) resource.TestCheckFunc {
+func testAccCheckAccessKeyAttributes(accessKeyMetadata *awstypes.AccessKeyMetadata, status string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.Contains(*accessKeyMetadata.UserName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad username: %s", *accessKeyMetadata.UserName)
 		}
 
-		if *accessKeyMetadata.Status != status {
-			return fmt.Errorf("Bad status: %s", *accessKeyMetadata.Status)
+		if string(accessKeyMetadata.Status) != status {
+			return fmt.Errorf("Bad status: %s", string(accessKeyMetadata.Status))
 		}
 
 		return nil
@@ -262,19 +294,21 @@ resource "aws_iam_access_key" "test" {
 }
 
 func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Region   string
 		Input    string
 		Expected string
 	}{
-		{endpoints.EuCentral1RegionID, "some+secret+key", "BMXhUYlu5Z3gSXVQORxlVa7XPaz91aGWdfHxvkOZdWZ2"},
-		{endpoints.EuCentral1RegionID, "another+secret+key", "BBbphbrQmrKMx42d1N6+C7VINYEBGI5v9VsZeTxwskfh"},
-		{endpoints.UsWest1RegionID, "some+secret+key", "BH+jbMzper5WwlwUar9E1ySBqHa9whi0GPo+sJ0mVYJj"},
-		{endpoints.UsWest1RegionID, "another+secret+key", "BKVmjjMDFk/qqw8EROW99bjCS65PF8WKvK5bSr4Y6EqF"},
+		{names.EUCentral1RegionID, "some+secret+key", "BMXhUYlu5Z3gSXVQORxlVa7XPaz91aGWdfHxvkOZdWZ2"},
+		{names.EUCentral1RegionID, "another+secret+key", "BBbphbrQmrKMx42d1N6+C7VINYEBGI5v9VsZeTxwskfh"},
+		{names.USWest1RegionID, "some+secret+key", "BH+jbMzper5WwlwUar9E1ySBqHa9whi0GPo+sJ0mVYJj"},
+		{names.USWest1RegionID, "another+secret+key", "BKVmjjMDFk/qqw8EROW99bjCS65PF8WKvK5bSr4Y6EqF"},
 	}
 
 	for _, tc := range cases {
-		actual, err := tfiam.SessmTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
+		actual, err := tfiam.SESSMTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}

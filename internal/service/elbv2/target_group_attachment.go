@@ -1,46 +1,52 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_alb_target_group_attachment")
+// @SDKResource("aws_lb_target_group_attachment")
 func ResourceTargetGroupAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAttachmentCreate,
-		Read:   resourceAttachmentRead,
-		Delete: resourceAttachmentDelete,
+		CreateWithoutTimeout: resourceAttachmentCreate,
+		ReadWithoutTimeout:   resourceAttachmentRead,
+		DeleteWithoutTimeout: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
+			"availability_zone": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 			"target_group_arn": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-
 			"target_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-
 			"port": {
 				Type:     schema.TypeInt,
-				ForceNew: true,
-				Optional: true,
-			},
-
-			"availability_zone": {
-				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
@@ -48,147 +54,160 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 	}
 }
 
-func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
+	targetGroupARN := d.Get("target_group_arn").(string)
+	input := &elbv2.RegisterTargetsInput{
+		TargetGroupArn: aws.String(targetGroupARN),
+		Targets: []*elbv2.TargetDescription{{
+			Id: aws.String(d.Get("target_id").(string)),
+		}},
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
+		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	params := &elbv2.RegisterTargetsInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
+	if v, ok := d.GetOk("port"); ok {
+		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[INFO] Registering Target %s with Target Group %s", d.Get("target_id").(string),
-		d.Get("target_group_arn").(string))
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+		return conn.RegisterTargetsWithContext(ctx, input)
+	}, elbv2.ErrCodeInvalidTargetException)
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.RegisterTargets(params)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return resource.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.RegisterTargets(params)
-	}
 	if err != nil {
-		return fmt.Errorf("Error registering targets with target group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "registering ELBv2 Target Group (%s) target: %s", targetGroupARN, err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
+	d.SetId(id.PrefixedUniqueId(targetGroupARN + "-"))
 
-	return nil
-}
-
-func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
-
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
-	}
-
-	params := &elbv2.DeregisterTargetsInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
-	}
-
-	_, err := conn.DeregisterTargets(params)
-	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		return fmt.Errorf("Error deregistering Targets: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 // resourceAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
-func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	target := &elbv2.TargetDescription{
-		Id: aws.String(d.Get("target_id").(string)),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		target.Port = aws.Int64(int64(v.(int)))
+	targetGroupARN := d.Get("target_group_arn").(string)
+	input := &elbv2.DescribeTargetHealthInput{
+		TargetGroupArn: aws.String(targetGroupARN),
+		Targets: []*elbv2.TargetDescription{{
+			Id: aws.String(d.Get("target_id").(string)),
+		}},
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
-		target.AvailabilityZone = aws.String(v.(string))
+		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
-		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
-		Targets:        []*elbv2.TargetDescription{target},
+	if v, ok := d.GetOk("port"); ok {
+		input.Targets[0].Port = aws.Int64(int64(v.(int)))
+	}
+
+	_, err := FindTargetHealthDescription(ctx, conn, input)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group Attachment (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+
+	targetGroupARN := d.Get("target_group_arn").(string)
+	input := &elbv2.DeregisterTargetsInput{
+		TargetGroupArn: aws.String(targetGroupARN),
+		Targets: []*elbv2.TargetDescription{{
+			Id: aws.String(d.Get("target_id").(string)),
+		}},
+	}
+
+	if v, ok := d.GetOk("availability_zone"); ok {
+		input.Targets[0].AvailabilityZone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		input.Targets[0].Port = aws.Int64(int64(v.(int)))
+	}
+
+	log.Printf("[DEBUG] Deleting ELBv2 Target Group Attachment: %s", d.Id())
+	_, err := conn.DeregisterTargetsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deregistering ELBv2 Target Group (%s) target: %s", targetGroupARN, err)
+	}
+
+	return diags
+}
+
+func FindTargetHealthDescription(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput) (*elbv2.TargetHealthDescription, error) {
+	output, err := findTargetHealthDescriptions(ctx, conn, input, func(v *elbv2.TargetHealthDescription) bool {
+		// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while
+		// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
+		// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
+		if v := v.TargetHealth; v != nil {
+			switch reason := aws.StringValue(v.Reason); reason {
+			case elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress, elbv2.TargetHealthReasonEnumTargetNotRegistered:
+				return false
+			default:
+				return true
+			}
+		}
+
+		return false
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException) {
-			log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading Target Health: %s", err)
+		return nil, err
 	}
 
-	for _, targetDesc := range resp.TargetHealthDescriptions {
-		if targetDesc == nil || targetDesc.Target == nil {
-			continue
-		}
+	return tfresource.AssertSinglePtrResult(output)
+}
 
-		if aws.StringValue(targetDesc.Target.Id) == d.Get("target_id").(string) {
-			// These will catch targets being removed by hand (draining as we plan) or that have been removed for a while
-			// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
-			// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
-			if targetDesc.TargetHealth == nil {
-				continue
-			}
+func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput, filter tfslices.Predicate[*elbv2.TargetHealthDescription]) ([]*elbv2.TargetHealthDescription, error) {
+	var targetHealthDescriptions []*elbv2.TargetHealthDescription
 
-			reason := aws.StringValue(targetDesc.TargetHealth.Reason)
+	output, err := conn.DescribeTargetHealthWithContext(ctx, input)
 
-			if reason == elbv2.TargetHealthReasonEnumTargetNotRegistered || reason == elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress {
-				log.Printf("[WARN] Target Attachment does not exist, recreating attachment")
-				d.SetId("")
-				return nil
-			}
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	if len(resp.TargetHealthDescriptions) != 1 {
-		log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
-		d.SetId("")
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output.TargetHealthDescriptions {
+		if v != nil && filter(v) {
+			targetHealthDescriptions = append(targetHealthDescriptions, v)
+		}
+	}
+
+	return targetHealthDescriptions, nil
 }

@@ -1,29 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_neptune_event_subscription", name="Event Subscription")
+// @Tags(identifierAttribute="arn")
 func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventSubscriptionCreate,
-		Read:   resourceEventSubscriptionRead,
-		Update: resourceEventSubscriptionUpdate,
-		Delete: resourceEventSubscriptionDelete,
+		CreateWithoutTimeout: resourceEventSubscriptionCreate,
+		ReadWithoutTimeout:   resourceEventSubscriptionRead,
+		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -31,10 +42,25 @@ func ResourceEventSubscription() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"customer_aws_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"event_categories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -57,233 +83,129 @@ func ResourceEventSubscription() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"event_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"source_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"source_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"customer_aws_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if v, ok := d.GetOk("name"); ok {
-		d.Set("name", v.(string))
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		d.Set("name", resource.PrefixedUniqueId(v.(string)))
-	} else {
-		d.Set("name", resource.PrefixedUniqueId("tf-"))
-	}
-
-	request := &neptune.CreateEventSubscriptionInput{
-		SubscriptionName: aws.String(d.Get("name").(string)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+	name := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
+	input := &neptune.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             Tags(tags.IgnoreAWS()),
+		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		SubscriptionName: aws.String(name),
+		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("source_ids"); ok {
-		sourceIdsSet := v.(*schema.Set)
-		sourceIds := make([]*string, sourceIdsSet.Len())
-		for i, sourceId := range sourceIdsSet.List() {
-			sourceIds[i] = aws.String(sourceId.(string))
-		}
-		request.SourceIds = sourceIds
+	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
+		input.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("event_categories"); ok {
-		eventCategoriesSet := v.(*schema.Set)
-		eventCategories := make([]*string, eventCategoriesSet.Len())
-		for i, eventCategory := range eventCategoriesSet.List() {
-			eventCategories[i] = aws.String(eventCategory.(string))
-		}
-		request.EventCategories = eventCategories
+	if v, ok := d.GetOk("source_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("source_type"); ok {
-		request.SourceType = aws.String(v.(string))
+		input.SourceType = aws.String(v.(string))
 	}
 
-	log.Println("[DEBUG] Create Neptune Event Subscription:", request)
+	output, err := conn.CreateEventSubscriptionWithContext(ctx, input)
 
-	output, err := conn.CreateEventSubscription(request)
-	if err != nil || output.EventSubscription == nil {
-		return fmt.Errorf("Error creating Neptune Event Subscription %s: %s", d.Get("name").(string), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Event Subscription (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
-	log.Println("[INFO] Waiting for Neptune Event Subscription to be ready")
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"active"},
-		Refresh:    resourceEventSubscriptionRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Neptune Event Subscription state to be \"active\": %s", err)
-	}
-
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	sub, err := resourceEventSubscriptionRetrieve(d.Id(), conn)
-	if err != nil {
-		return fmt.Errorf("Error reading Neptune Event Subscription %s: %s", d.Id(), err)
-	}
+	output, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
-	if sub == nil {
-		log.Printf("[DEBUG] Neptune Event Subscription (%s) not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Neptune Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
-	d.Set("arn", sub.EventSubscriptionArn)
-	d.Set("name", sub.CustSubscriptionId)
-	d.Set("sns_topic_arn", sub.SnsTopicArn)
-	d.Set("enabled", sub.Enabled)
-	d.Set("customer_aws_id", sub.CustomerAwsId)
-
-	if sub.SourceType != nil {
-		d.Set("source_type", sub.SourceType)
-	}
-
-	if sub.SourceIdsList != nil {
-		if err := d.Set("source_ids", flex.FlattenStringList(sub.SourceIdsList)); err != nil {
-			return fmt.Errorf("Error saving Source IDs to state for Neptune Event Subscription (%s): %s", d.Id(), err)
-		}
-	}
-
-	if sub.EventCategoriesList != nil {
-		if err := d.Set("event_categories", flex.FlattenStringList(sub.EventCategoriesList)); err != nil {
-			return fmt.Errorf("Error saving Event Categories to state for Neptune Event Subscription (%s): %s", d.Id(), err)
-		}
-	}
-
-	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Neptune Event Subscription (%s): %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	d.Set("arn", output.EventSubscriptionArn)
+	d.Set("customer_aws_id", output.CustomerAwsId)
+	d.Set("enabled", output.Enabled)
+	d.Set("event_categories", aws.StringValueSlice(output.EventCategoriesList))
+	d.Set("name", output.CustSubscriptionId)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.CustSubscriptionId)))
+	d.Set("sns_topic_arn", output.SnsTopicArn)
+	d.Set("source_ids", aws.StringValueSlice(output.SourceIdsList))
+	d.Set("source_type", output.SourceType)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	requestUpdate := false
-
-	req := &neptune.ModifyEventSubscriptionInput{
-		SubscriptionName: aws.String(d.Id()),
-	}
-
-	if d.HasChange("event_categories") {
-		eventCategoriesSet := d.Get("event_categories").(*schema.Set)
-		req.EventCategories = make([]*string, eventCategoriesSet.Len())
-		for i, eventCategory := range eventCategoriesSet.List() {
-			req.EventCategories[i] = aws.String(eventCategory.(string))
+	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
+		input := &neptune.ModifyEventSubscriptionInput{
+			SubscriptionName: aws.String(d.Id()),
 		}
-		req.SourceType = aws.String(d.Get("source_type").(string))
-		requestUpdate = true
-	}
 
-	if d.HasChange("enabled") {
-		req.Enabled = aws.Bool(d.Get("enabled").(bool))
-		requestUpdate = true
-	}
+		if d.HasChange("enabled") {
+			input.Enabled = aws.Bool(d.Get("enabled").(bool))
+		}
 
-	if d.HasChange("sns_topic_arn") {
-		req.SnsTopicArn = aws.String(d.Get("sns_topic_arn").(string))
-		requestUpdate = true
-	}
+		if d.HasChange("event_categories") {
+			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
+			input.SourceType = aws.String(d.Get("source_type").(string))
+		}
 
-	if d.HasChange("source_type") {
-		req.SourceType = aws.String(d.Get("source_type").(string))
-		requestUpdate = true
-	}
+		if d.HasChange("sns_topic_arn") {
+			input.SnsTopicArn = aws.String(d.Get("sns_topic_arn").(string))
+		}
 
-	log.Printf("[DEBUG] Send Neptune Event Subscription modification request: %#v", requestUpdate)
-	if requestUpdate {
-		log.Printf("[DEBUG] Neptune Event Subscription modification request: %#v", req)
-		_, err := conn.ModifyEventSubscription(req)
+		if d.HasChange("source_type") {
+			input.SourceType = aws.String(d.Get("source_type").(string))
+		}
+
+		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("Modifying Neptune Event Subscription %s failed: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Event Subscription (%s): %s", d.Id(), err)
 		}
 
-		log.Println("[INFO] Waiting for Neptune Event Subscription modification to finish")
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying"},
-			Target:     []string{"active"},
-			Refresh:    resourceEventSubscriptionRefreshFunc(d.Id(), conn),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second,
-		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Neptune Cluster Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
+		if _, err := waitEventSubscriptionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -302,109 +224,189 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		add := flex.ExpandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
-			for _, removing := range remove {
-				log.Printf("[INFO] Removing %s as a Source Identifier from %q", *removing, d.Id())
-				_, err := conn.RemoveSourceIdentifierFromSubscription(&neptune.RemoveSourceIdentifierFromSubscriptionInput{
-					SourceIdentifier: removing,
+			for _, v := range remove {
+				_, err := conn.RemoveSourceIdentifierFromSubscriptionWithContext(ctx, &neptune.RemoveSourceIdentifierFromSubscriptionInput{
+					SourceIdentifier: v,
 					SubscriptionName: aws.String(d.Id()),
 				})
+
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "removing Neptune Event Subscription (%s) source identifier: %s", d.Id(), err)
 				}
 			}
 		}
 
 		if len(add) > 0 {
-			for _, adding := range add {
-				log.Printf("[INFO] Adding %s as a Source Identifier to %q", *adding, d.Id())
-				_, err := conn.AddSourceIdentifierToSubscription(&neptune.AddSourceIdentifierToSubscriptionInput{
-					SourceIdentifier: adding,
+			for _, v := range add {
+				_, err := conn.AddSourceIdentifierToSubscriptionWithContext(ctx, &neptune.AddSourceIdentifierToSubscriptionInput{
+					SourceIdentifier: v,
 					SubscriptionName: aws.String(d.Id()),
 				})
+
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "adding Neptune Event Subscription (%s) source identifier: %s", d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
+	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &neptune.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Neptune Event Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceEventSubscriptionRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
+	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func FindEventSubscriptionByName(ctx context.Context, conn *neptune.Neptune, name string) (*neptune.EventSubscription, error) {
+	input := &neptune.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(name),
+	}
+	output, err := findEventSubscription(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.CustSubscriptionId) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEventSubscription(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeEventSubscriptionsInput) (*neptune.EventSubscription, error) {
+	output, err := findEventSubscriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEventSubscriptions(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeEventSubscriptionsInput) ([]*neptune.EventSubscription, error) {
+	var output []*neptune.EventSubscription
+
+	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.EventSubscriptionsList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusEventSubscription(ctx context.Context, conn *neptune.Neptune, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEventSubscriptionByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusCreating},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if err != nil {
-		return fmt.Errorf("waiting for Neptune Event Subscription (%s) delete: %w", d.Id(), err)
+	if output, ok := outputRaw.(*neptune.EventSubscription); ok {
+		return output, err
 	}
 
-	return nil
+	return nil, err
 }
 
-func resourceEventSubscriptionRefreshFunc(name string, conn *neptune.Neptune) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		sub, err := resourceEventSubscriptionRetrieve(name, conn)
-
-		if err != nil {
-			log.Printf("Error on retrieving Neptune Event Subscription when waiting: %s", err)
-			return nil, "", err
-		}
-
-		if sub == nil {
-			return nil, "", nil
-		}
-
-		if sub.Status != nil {
-			log.Printf("[DEBUG] Neptune Event Subscription status for %s: %s", name, aws.StringValue(sub.Status))
-		}
-
-		return sub, aws.StringValue(sub.Status), nil
+func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func resourceEventSubscriptionRetrieve(name string, conn *neptune.Neptune) (*neptune.EventSubscription, error) {
-
-	request := &neptune.DescribeEventSubscriptionsInput{
-		SubscriptionName: aws.String(name),
+func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
-	describeResp, err := conn.DescribeEventSubscriptions(request)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
-			log.Printf("[DEBUG] Neptune Event Subscription (%s) not found", name)
-			return nil, nil
-		}
-		return nil, err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.EventSubscription); ok {
+		return output, err
 	}
 
-	if len(describeResp.EventSubscriptionsList) != 1 ||
-		aws.StringValue(describeResp.EventSubscriptionsList[0].CustSubscriptionId) != name {
-		return nil, nil
-	}
-
-	return describeResp.EventSubscriptionsList[0], nil
+	return nil, err
 }

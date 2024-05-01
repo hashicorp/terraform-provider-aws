@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -13,18 +16,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_batch_scheduling_policy", name="Scheduling Policy")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.SchedulingPolicyDetail")
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSchedulingPolicyCreate,
-		ReadContext:   resourceSchedulingPolicyRead,
-		UpdateContext: resourceSchedulingPolicyUpdate,
-		DeleteContext: resourceSchedulingPolicyDelete,
+		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
+		ReadWithoutTimeout:   resourceSchedulingPolicyRead,
+		UpdateWithoutTimeout: resourceSchedulingPolicyUpdate,
+		DeleteWithoutTimeout: resourceSchedulingPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -84,145 +96,133 @@ func ResourceSchedulingPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	name := d.Get("name").(string)
-
-	fairsharePolicy := expandFairsharePolicy(d.Get("fair_share_policy").([]interface{}))
-
 	input := &batch.CreateSchedulingPolicyInput{
-		FairsharePolicy: fairsharePolicy,
+		FairsharePolicy: expandFairsharePolicy(d.Get("fair_share_policy").([]interface{})),
 		Name:            aws.String(name),
+		Tags:            getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Batch Scheduling Policy %s", input)
 	output, err := conn.CreateSchedulingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Batch Scheduling Policy (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "creating Batch Scheduling Policy (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Batch Scheduling Policy (%s): empty output", name))
-	}
+	d.SetId(aws.StringValue(output.Arn))
 
-	arn := aws.StringValue(output.Arn)
-	log.Printf("[DEBUG] Scheduling Policy created: %s", arn)
-	d.SetId(arn)
-
-	return resourceSchedulingPolicyRead(ctx, d, meta)
+	return append(diags, resourceSchedulingPolicyRead(ctx, d, meta)...)
 }
 
 func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
 
-	sp, err := GetSchedulingPolicy(ctx, conn, d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if sp == nil {
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+
+	sp, err := FindSchedulingPolicyByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Scheduling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Scheduling Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", sp.Arn)
+	if err := d.Set("fair_share_policy", flattenFairsharePolicy(sp.FairsharePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting fair_share_policy: %s", err)
+	}
 	d.Set("name", sp.Name)
 
-	if err := d.Set("fair_share_policy", flattenFairsharePolicy(sp.FairsharePolicy)); err != nil {
-		return diag.FromErr(err)
-	}
+	setTagsOut(ctx, sp.Tags)
 
-	tags := KeyValueTags(sp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	var diags diag.Diagnostics
 
-	input := &batch.UpdateSchedulingPolicyInput{
-		Arn: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChange("fair_share_policy") {
-		fairsharePolicy := expandFairsharePolicy(d.Get("fair_share_policy").([]interface{}))
-		input.FairsharePolicy = fairsharePolicy
-	}
+		input := &batch.UpdateSchedulingPolicyInput{
+			Arn:             aws.String(d.Id()),
+			FairsharePolicy: expandFairsharePolicy(d.Get("fair_share_policy").([]interface{})),
+		}
 
-	_, err := conn.UpdateSchedulingPolicyWithContext(ctx, input)
+		_, err := conn.UpdateSchedulingPolicyWithContext(ctx, input)
 
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SchedulingPolicy (%s): %w", d.Id(), err))
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Batch Scheduling Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSchedulingPolicyRead(ctx, d, meta)
+	return append(diags, resourceSchedulingPolicyRead(ctx, d, meta)...)
 }
 
 func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	var diags diag.Diagnostics
 
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+
+	log.Printf("[DEBUG] Deleting Batch Scheduling Policy: %s", d.Id())
 	_, err := conn.DeleteSchedulingPolicyWithContext(ctx, &batch.DeleteSchedulingPolicyInput{
 		Arn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting SchedulingPolicy (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Batch Scheduling Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func GetSchedulingPolicy(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
-	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
-		Arns: []*string{aws.String(arn)},
-	})
+func FindSchedulingPolicyByARN(ctx context.Context, conn *batch.Batch, arn string) (*batch.SchedulingPolicyDetail, error) {
+	input := &batch.DescribeSchedulingPoliciesInput{
+		Arns: aws.StringSlice([]string{arn}),
+	}
+
+	output, err := findSchedulingPolicy(ctx, conn, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	numSchedulingPolicies := len(resp.SchedulingPolicies)
-	switch {
-	case numSchedulingPolicies == 0:
-		log.Printf("[DEBUG] Scheduling Policy %q is already gone", arn)
-		return nil, nil
-	case numSchedulingPolicies == 1:
-		return resp.SchedulingPolicies[0], nil
-	case numSchedulingPolicies > 1:
-		return nil, fmt.Errorf("Multiple Scheduling Policy with arn %s", arn)
+	return output, nil
+}
+
+func findSchedulingPolicy(ctx context.Context, conn *batch.Batch, input *batch.DescribeSchedulingPoliciesInput) (*batch.SchedulingPolicyDetail, error) {
+	output, err := conn.DescribeSchedulingPoliciesWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
 	}
-	return nil, nil
+
+	if output == nil || len(output.SchedulingPolicies) == 0 || output.SchedulingPolicies[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.SchedulingPolicies); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.SchedulingPolicies[0], nil
 }
 
 func expandFairsharePolicy(fairsharePolicy []interface{}) *batch.FairsharePolicy {

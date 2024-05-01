@@ -1,23 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ecr_authorization_token.repo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -27,7 +31,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
+					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
 				),
 			},
@@ -39,7 +43,7 @@ func TestAccECRAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
+					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
 				),
 			},

@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceUsers() *schema.Resource {
+// @SDKDataSource("aws_iam_users", name="Users")
+func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUsersRead,
+		ReadWithoutTimeout: dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -36,16 +42,17 @@ func DataSourceUsers() *schema.Resource {
 	}
 }
 
-func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)
 
-	results, err := FindUsers(conn, nameRegex, pathPrefix)
+	results, err := FindUsers(ctx, conn, nameRegex, pathPrefix)
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM users: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM users: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -53,17 +60,17 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	var arns, names []string
 
 	for _, r := range results {
-		names = append(names, aws.StringValue(r.UserName))
-		arns = append(arns, aws.StringValue(r.Arn))
+		names = append(names, aws.ToString(r.UserName))
+		arns = append(arns, aws.ToString(r.Arn))
 	}
 
 	if err := d.Set("names", names); err != nil {
-		return fmt.Errorf("error setting names: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
 	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -300,7 +303,7 @@ func (r *ConfigFieldReader) hasComputedSubKeys(key string, schema *Schema) bool 
 
 	switch t := schema.Elem.(type) {
 	case *Resource:
-		for k, schema := range t.Schema {
+		for k, schema := range t.SchemaMap() {
 			if r.Config.IsComputed(prefix + k) {
 				return true
 			}

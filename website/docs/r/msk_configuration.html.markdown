@@ -26,24 +26,33 @@ PROPERTIES
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_properties` - (Required) Contents of the server.properties file. Supported properties are documented in the [MSK Developer Guide](https://docs.aws.amazon.com/msk/latest/developerguide/msk-configuration-properties.html).
-* `kafka_versions` - (Required) List of Apache Kafka versions which can use this configuration.
+* `kafka_versions` - (Optional) List of Apache Kafka versions which can use this configuration.
 * `name` - (Required) Name of the configuration.
 * `description` - (Optional) Description of the configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the configuration.
 * `latest_revision` - Latest revision of the configuration.
 
 ## Import
 
-MSK configurations can be imported using the configuration ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK configurations using the configuration ARN. For example:
 
+```terraform
+import {
+  to = aws_msk_configuration.example
+  id = "arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+}
 ```
-$ terraform import aws_msk_configuration.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+
+Using `terraform import`, import MSK configurations using the configuration ARN. For example:
+
+```console
+% terraform import aws_msk_configuration.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

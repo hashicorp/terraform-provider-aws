@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -24,7 +28,7 @@ const (
 
 func FleetOnDemandAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
+		slices.RemoveAll(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
 		FleetOnDemandAllocationStrategyLowestPrice,
 	)
 }
@@ -36,10 +40,17 @@ const (
 
 func SpotAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
+		slices.RemoveAll(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
 		SpotAllocationStrategyLowestPrice,
 	)
 }
+
+const (
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-request-status.html#spot-instance-request-status-understand
+	spotInstanceRequestStatusCodeFulfilled          = "fulfilled"
+	spotInstanceRequestStatusCodePendingEvaluation  = "pending-evaluation"
+	spotInstanceRequestStatusCodePendingFulfillment = "pending-fulfillment"
+)
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
@@ -85,6 +96,23 @@ const (
 	CustomerGatewayStatePending   = "pending"
 )
 
+// See https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-address-attribute.html#examples.
+const (
+	PTRUpdateStatusPending = "PENDING"
+)
+
+const (
+	managedPrefixListAddressFamilyIPv4 = "IPv4"
+	managedPrefixListAddressFamilyIPv6 = "IPv6"
+)
+
+func managedPrefixListAddressFamily_Values() []string {
+	return []string{
+		managedPrefixListAddressFamilyIPv4,
+		managedPrefixListAddressFamilyIPv6,
+	}
+}
+
 const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
@@ -108,6 +136,18 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 	return []string{
 		vpnTunnelOptionsIKEVersion1,
 		vpnTunnelOptionsIKEVersion2,
+	}
+}
+
+const (
+	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
+	vpnTunnelCloudWatchLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
 
@@ -200,7 +240,8 @@ func vpnConnectionType_Values() []string {
 }
 
 const (
-	AmazonIPv6PoolID = "Amazon"
+	amazonIPv6PoolID      = "Amazon"
+	ipamManagedIPv6PoolID = "IPAM Managed"
 )
 
 const (
@@ -228,16 +269,6 @@ const (
 	TargetStorageTierStandard = "standard"
 )
 
-func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
-	for i, v := range slice {
-		if v == s {
-			return append(slice[:i], slice[i+1:]...)
-		}
-	}
-
-	return slice
-}
-
 const (
 	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
 	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
@@ -250,14 +281,60 @@ func outsideIPAddressType_Values() []string {
 	}
 }
 
+type securityGroupRuleType string
+
 const (
-	securityGroupRuleTypeEgress  = "egress"
-	securityGroupRuleTypeIngress = "ingress"
+	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
+	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
 )
 
-func securityGroupRuleType_Values() []string {
-	return []string{
+func (securityGroupRuleType) Values() []securityGroupRuleType {
+	return []securityGroupRuleType{
 		securityGroupRuleTypeEgress,
 		securityGroupRuleTypeIngress,
+	}
+}
+
+const (
+	ResInstance      = "Instance"
+	ResInstanceState = "Instance State"
+)
+
+const (
+	gatewayIDLocal      = "local"
+	gatewayIDVPCLattice = "VpcLattice"
+)
+
+const (
+	verifiedAccessAttachmentTypeVPC = "vpc"
+)
+
+func verifiedAccessAttachmentType_Values() []string {
+	return []string{
+		verifiedAccessAttachmentTypeVPC,
+	}
+}
+
+const (
+	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
+	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
+)
+
+func verifiedAccessEndpointType_Values() []string {
+	return []string{
+		verifiedAccessEndpointTypeLoadBalancer,
+		verifiedAccessEndpointTypeNetworkInterface,
+	}
+}
+
+const (
+	verifiedAccessEndpointProtocolHTTP  = "http"
+	verifiedAccessEndpointProtocolHTTPS = "https"
+)
+
+func verifiedAccessEndpointProtocol_Values() []string {
+	return []string{
+		verifiedAccessEndpointProtocolHTTP,
+		verifiedAccessEndpointProtocolHTTPS,
 	}
 }

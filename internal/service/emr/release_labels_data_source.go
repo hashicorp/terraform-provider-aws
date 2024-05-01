@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceReleaseLabels() *schema.Resource {
+// @SDKDataSource("aws_emr_release_labels", name="Release Labels")
+func dataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,
 
@@ -44,7 +48,9 @@ func DataSourceReleaseLabels() *schema.Resource {
 }
 
 func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.ListReleaseLabelsInput{}
 
@@ -52,10 +58,10 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 		input.Filters = expandReleaseLabelsFilters(v.([]interface{}))
 	}
 
-	output, err := findReleaseLabels(conn, input)
+	output, err := findReleaseLabels(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EMR Release Labels: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading EMR Release Labels: %s", err)
 	}
 
 	releaseLabels := aws.StringValueSlice(output)
@@ -67,7 +73,7 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("release_labels", releaseLabels)
 
-	return nil
+	return diags
 }
 
 func expandReleaseLabelsFilters(filters []interface{}) *emr.ReleaseLabelFilter {
@@ -89,10 +95,10 @@ func expandReleaseLabelsFilters(filters []interface{}) *emr.ReleaseLabelFilter {
 	return app
 }
 
-func findReleaseLabels(conn *emr.EMR, input *emr.ListReleaseLabelsInput) ([]*string, error) {
+func findReleaseLabels(ctx context.Context, conn *emr.EMR, input *emr.ListReleaseLabelsInput) ([]*string, error) {
 	var output []*string
 
-	err := conn.ListReleaseLabelsPages(input, func(page *emr.ListReleaseLabelsOutput, lastPage bool) bool {
+	err := conn.ListReleaseLabelsPagesWithContext(ctx, input, func(page *emr.ListReleaseLabelsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

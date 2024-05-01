@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceOriginRequestPolicy() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_origin_request_policy", name="Origin Request Policy")
+func dataSourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOriginRequestPolicyRead,
+		ReadWithoutTimeout: dataSourceOriginRequestPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -111,8 +117,9 @@ func DataSourceOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	var originRequestPolicyID string
 
@@ -122,14 +129,14 @@ func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{})
 		name := d.Get("name").(string)
 		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
-		err := ListOriginRequestPoliciesPages(conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+		err := listOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, policySummary := range page.OriginRequestPolicyList.Items {
-				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.StringValue(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
-					originRequestPolicyID = aws.StringValue(originRequestPolicy.Id)
+				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.ToString(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
+					originRequestPolicyID = aws.ToString(originRequestPolicy.Id)
 
 					return false
 				}
@@ -139,18 +146,18 @@ func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{})
 		})
 
 		if err != nil {
-			return fmt.Errorf("error listing CloudFront Origin Request Policies: %w", err)
+			return sdkdiag.AppendErrorf(diags, "listing CloudFront Origin Request Policies: %s", err)
 		}
 
 		if originRequestPolicyID == "" {
-			return fmt.Errorf("no matching CloudFront Origin Request Policy (%s)", name)
+			return sdkdiag.AppendErrorf(diags, "no matching CloudFront Origin Request Policy (%s)", name)
 		}
 	}
 
-	output, err := FindOriginRequestPolicyByID(conn, originRequestPolicyID)
+	output, err := findOriginRequestPolicyByID(ctx, conn, originRequestPolicyID)
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Origin Request Policy (%s): %w", originRequestPolicyID, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Request Policy (%s): %s", originRequestPolicyID, err)
 	}
 
 	d.SetId(originRequestPolicyID)
@@ -159,7 +166,7 @@ func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{})
 	d.Set("comment", apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
 		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
-			return fmt.Errorf("error setting cookies_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
 		}
 	} else {
 		d.Set("cookies_config", nil)
@@ -167,7 +174,7 @@ func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{})
 	d.Set("etag", output.ETag)
 	if apiObject.HeadersConfig != nil {
 		if err := d.Set("headers_config", []interface{}{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
 		}
 	} else {
 		d.Set("headers_config", nil)
@@ -175,11 +182,11 @@ func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{})
 	d.Set("name", apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
 		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
-			return fmt.Errorf("error setting query_strings_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
 		}
 	} else {
 		d.Set("query_strings_config", nil)
 	}
 
-	return nil
+	return diags
 }

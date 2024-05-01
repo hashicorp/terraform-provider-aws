@@ -23,11 +23,11 @@ resource "aws_ebs_volume" "example" {
 }
 ```
 
-~> **NOTE**: At least one of `size` or `snapshot_id` is required when specifying an EBS volume
+~> **NOTE:** At least one of `size` or `snapshot_id` is required when specifying an EBS volume
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `availability_zone` - (Required) The AZ where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
@@ -42,11 +42,11 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput` - (Optional) The throughput that the volume supports, in MiB/s. Only valid for `type` of `gp3`.
 
-~> **NOTE**: When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
+~> **NOTE:** When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The volume ID (e.g., vol-59fcb34e).
 * `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `update` - (Default `5m`)
@@ -62,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EBS Volumes can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volumes using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ebs_volume.id
+  id = "vol-049df61146c4d7901"
+}
 ```
-$ terraform import aws_ebs_volume.id vol-049df61146c4d7901
+
+Using `terraform import`, import EBS Volumes using the `id`. For example:
+
+```console
+% terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```

@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,23 +13,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_glue_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConnectionCreate,
-		Read:   resourceConnectionRead,
-		Update: resourceConnectionUpdate,
-		Delete: resourceConnectionDelete,
+		CreateWithoutTimeout: resourceConnectionCreate,
+		ReadWithoutTimeout:   resourceConnectionRead,
+		UpdateWithoutTimeout: resourceConnectionUpdate,
+		DeleteWithoutTimeout: resourceConnectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 
@@ -96,16 +105,15 @@ func ResourceConnection() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	var catalogID string
 	if v, ok := d.GetOkExists("catalog_id"); ok {
@@ -118,39 +126,38 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandConnectionInput(d),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
-	_, err := conn.CreateConnection(input)
+	_, err := conn.CreateConnectionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Connection (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Connection (%s): %s", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
 
-	return resourceConnectionRead(d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", d.Id(), err)
 	}
 
-	connection, err := FindConnectionByName(conn, connectionName, catalogID)
+	connection, err := FindConnectionByName(ctx, conn, connectionName, catalogID)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", d.Id(), err)
 	}
 
 	connectionArn := arn.ARN{
@@ -164,45 +171,29 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("catalog_id", catalogID)
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
-		return fmt.Errorf("error setting connection_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
 	}
 	d.Set("connection_type", connection.ConnectionType)
 	d.Set("description", connection.Description)
 	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
-		return fmt.Errorf("error setting match_criteria: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting match_criteria: %s", err)
 	}
 	d.Set("name", connection.Name)
 	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
-		return fmt.Errorf("error setting physical_connection_requirements: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
 
-	tags, err := ListTags(conn, connectionArn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Connection (%s): %w", connectionArn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, connectionName, err := DecodeConnectionID(d.Id())
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating Glue Connection (%s): %s", d.Id(), err)
 		}
 
 		input := &glue.UpdateConnectionInput{
@@ -212,37 +203,31 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Glue Connection: %s", input)
-		_, err = conn.UpdateConnection(input)
+		_, err = conn.UpdateConnectionWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue Connection (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Connection (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return nil
+	return diags
 }
 
-func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Connection (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Connection: %s", d.Id())
-	err = DeleteConnection(conn, catalogID, connectionName)
+	err = DeleteConnection(ctx, conn, catalogID, connectionName)
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Connection (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeConnectionID(id string) (string, string, error) {
@@ -253,13 +238,13 @@ func DecodeConnectionID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func DeleteConnection(conn *glue.Glue, catalogID, connectionName string) error {
+func DeleteConnection(ctx context.Context, conn *glue.Glue, catalogID, connectionName string) error {
 	input := &glue.DeleteConnectionInput{
 		CatalogId:      aws.String(catalogID),
 		ConnectionName: aws.String(connectionName),
 	}
 
-	_, err := conn.DeleteConnection(input)
+	_, err := conn.DeleteConnectionWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
@@ -292,9 +277,8 @@ func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 		connectionInput.MatchCriteria = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("physical_connection_requirements"); ok {
-		physicalConnectionRequirementsList := v.([]interface{})
-		physicalConnectionRequirementsMap := physicalConnectionRequirementsList[0].(map[string]interface{})
+	if v, ok := d.GetOk("physical_connection_requirements"); ok && v.([]interface{})[0] != nil {
+		physicalConnectionRequirementsMap := v.([]interface{})[0].(map[string]interface{})
 		connectionInput.PhysicalConnectionRequirements = expandPhysicalConnectionRequirements(physicalConnectionRequirementsMap)
 	}
 

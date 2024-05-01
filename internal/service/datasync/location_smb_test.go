@@ -1,63 +1,67 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataSyncLocationSMB_basic(t *testing.T) {
-	var locationSmb1 datasync.DescribeLocationSmbOutput
-
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationSMBDestroy,
+		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
 					resource.TestCheckResourceAttr(resourceName, "user", "Guest"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^smb://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^smb://.+/`)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "server_hostname"},
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test2/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
 					resource.TestCheckResourceAttr(resourceName, "user", "Guest"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^smb://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^smb://.+/`)),
 				),
 			},
 		},
@@ -65,21 +69,22 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 }
 
 func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
-	var locationSmb1 datasync.DescribeLocationSmbOutput
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationSMBDestroy,
+		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
-					testAccCheckLocationSMBDisappears(&locationSmb1),
+					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationSMB(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,20 +93,21 @@ func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
 }
 
 func TestAccDataSyncLocationSMB_tags(t *testing.T) {
-	var locationSmb1, locationSmb2, locationSmb3 datasync.DescribeLocationSmbOutput
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationSMBDestroy,
+		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
+					testAccCheckLocationSMBExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -110,13 +116,12 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "server_hostname"},
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
 				Config: testAccLocationSMBConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(resourceName, &locationSmb2),
-					testAccCheckLocationSMBNotRecreated(&locationSmb1, &locationSmb2),
+					testAccCheckLocationSMBExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -125,8 +130,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 			{
 				Config: testAccLocationSMBConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(resourceName, &locationSmb3),
-					testAccCheckLocationSMBNotRecreated(&locationSmb2, &locationSmb3),
+					testAccCheckLocationSMBExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -135,170 +139,55 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationSMBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+func testAccCheckLocationSMBDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datasync_location_smb" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datasync_location_smb" {
+				continue
+			}
+
+			_, err := tfdatasync.FindLocationSMBByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataSync Location SMB %s still exists", rs.Primary.ID)
 		}
 
-		input := &datasync.DescribeLocationSmbInput{
-			LocationArn: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeLocationSmb(input)
-
-		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLocationSMBExists(resourceName string, locationSmb *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
+func testAccCheckLocationSMBExists(ctx context.Context, n string, v *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		input := &datasync.DescribeLocationSmbInput{
-			LocationArn: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
-		output, err := conn.DescribeLocationSmb(input)
+		output, err := tfdatasync.FindLocationSMBByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Location %q does not exist", rs.Primary.ID)
-		}
-
-		*locationSmb = *output
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckLocationSMBDisappears(location *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-
-		input := &datasync.DeleteLocationInput{
-			LocationArn: location.LocationArn,
-		}
-
-		_, err := conn.DeleteLocation(input)
-
-		return err
-	}
-}
-
-func testAccCheckLocationSMBNotRecreated(i, j *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("DataSync Location SMB was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccLocationSMBBaseConfig(rName string) string {
-	return acctest.ConfigCompose(
-		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-# Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
-data "aws_ssm_parameter" "aws_service_datasync_ami" {
-  name = "/aws/service/datasync/ami"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-smb"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-smb"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-smb"
-  }
-}
-
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-smb"
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "tf-acc-test-datasync-smb"
-  }
-}
-
-resource "aws_instance" "test" {
-  depends_on = [aws_default_route_table.test]
-
-  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
-  associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-smb"
-  }
-}
-
+func testAccLocationSMBConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q
@@ -307,7 +196,7 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccLocationSMBConfig_basic(rName, dir string) string {
-	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationSMBConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   password        = "ZaphodBeeblebroxPW"
@@ -315,11 +204,11 @@ resource "aws_datasync_location_smb" "test" {
   subdirectory    = %[1]q
   user            = "Guest"
 }
-`, dir)
+`, dir))
 }
 
 func testAccLocationSMBConfig_tags1(rName, key1, value1 string) string {
-	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationSMBConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   password        = "ZaphodBeeblebroxPW"
@@ -331,11 +220,11 @@ resource "aws_datasync_location_smb" "test" {
     %[1]q = %[2]q
   }
 }
-`, key1, value1)
+`, key1, value1))
 }
 
 func testAccLocationSMBConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationSMBConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   password        = "ZaphodBeeblebroxPW"
@@ -348,5 +237,5 @@ resource "aws_datasync_location_smb" "test" {
     %[3]q = %[4]q
   }
 }
-`, key1, value1, key2, value2)
+`, key1, value1, key2, value2))
 }

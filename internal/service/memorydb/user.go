@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -11,18 +14,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_memorydb_user", name="User")
+// @Tags(identifierAttribute="arn")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserCreate,
-		ReadContext:   resourceUserRead,
-		UpdateContext: resourceUserUpdate,
-		DeleteContext: resourceUserDelete,
+		CreateWithoutTimeout: resourceUserCreate,
+		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
+		DeleteWithoutTimeout: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -47,7 +54,7 @@ func ResourceUser() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"passwords": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							MaxItems: 2,
 							Elem: &schema.Schema{
@@ -73,8 +80,8 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -86,92 +93,47 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	userName := d.Get("user_name").(string)
-
 	input := &memorydb.CreateUserInput{
 		AccessString: aws.String(d.Get("access_string").(string)),
-		AuthenticationMode: &memorydb.AuthenticationMode{
-			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
-			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
-		},
-		Tags:     Tags(tags.IgnoreAWS()),
-		UserName: aws.String(userName),
+		Tags:         getTagsIn(ctx),
+		UserName:     aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB User: %s", input)
+	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MemoryDB User (%s): %s", userName, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB User (%s): %s", userName, err)
 	}
 
 	d.SetId(userName)
 
-	return resourceUserRead(ctx, d, meta)
-}
-
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-
-	if d.HasChangesExcept("tags", "tags_all") {
-		input := &memorydb.UpdateUserInput{
-			UserName: aws.String(d.Id()),
-		}
-
-		if d.HasChange("access_string") {
-			input.AccessString = aws.String(d.Get("access_string").(string))
-		}
-
-		if d.HasChange("authentication_mode") {
-			input.AuthenticationMode = &memorydb.AuthenticationMode{
-				Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
-				Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
-			}
-		}
-
-		log.Printf("[DEBUG] Updating MemoryDB User (%s)", d.Id())
-
-		_, err := conn.UpdateUserWithContext(ctx, input)
-		if err != nil {
-			return diag.Errorf("error updating MemoryDB User (%s): %s", d.Id(), err)
-		}
-
-		if err := waitUserActive(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("error waiting for MemoryDB User (%s) to be modified: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		log.Printf("[DEBUG] Updating MemoryDB User (%s) tags", d.Id())
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating MemoryDB User (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	user, err := FindUserByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB User (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MemoryDB User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB User (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_string", user.AccessString)
@@ -185,35 +147,52 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
-			return diag.Errorf("failed to set authentication_mode of MemoryDB User (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
 
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
 	d.Set("user_name", user.Name)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	return diags
+}
 
-	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB User (%s): %s", d.Id(), err)
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &memorydb.UpdateUserInput{
+			UserName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("access_string") {
+			input.AccessString = aws.String(d.Get("access_string").(string))
+		}
+
+		if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		_, err := conn.UpdateUserWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MemoryDB User (%s): %s", d.Id(), err)
+		}
+
+		if err := waitUserActive(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB User (%s) update: %s", d.Id(), err)
+		}
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for MemoryDB User (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for MemoryDB User (%s): %s", d.Id(), err)
-	}
-
-	return nil
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB User: (%s)", d.Id())
 	_, err := conn.DeleteUserWithContext(ctx, &memorydb.DeleteUserInput{
@@ -221,16 +200,34 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeUserNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MemoryDB User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB User (%s): %s", d.Id(), err)
 	}
 
 	if err := waitUserDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for MemoryDB User (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB User (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func expandAuthenticationMode(tfMap map[string]interface{}) *memorydb.AuthenticationMode {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &memorydb.AuthenticationMode{}
+
+	if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Passwords = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
 }

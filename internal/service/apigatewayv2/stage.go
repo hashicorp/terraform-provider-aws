@@ -1,34 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	defaultStageName = "$default"
-)
-
-func ResourceStage() *schema.Resource {
+// @SDKResource("aws_apigatewayv2_stage", name="Stage")
+// @Tags(identifierAttribute="arn")
+func resourceStage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStageCreate,
-		Read:   resourceStageRead,
-		Update: resourceStageUpdate,
-		Delete: resourceStageDelete,
+		CreateWithoutTimeout: resourceStageCreate,
+		ReadWithoutTimeout:   resourceStageRead,
+		UpdateWithoutTimeout: resourceStageUpdate,
+		DeleteWithoutTimeout: resourceStageDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceStageImport,
+			StateContext: resourceStageImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,14 +98,10 @@ func ResourceStage() *schema.Resource {
 							Default:  false,
 						},
 						"logging_level": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								apigatewayv2.LoggingLevelError,
-								apigatewayv2.LoggingLevelInfo,
-								apigatewayv2.LoggingLevelOff,
-							}, false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LoggingLevel](),
 						},
 						"throttling_burst_limit": {
 							Type:     schema.TypeInt,
@@ -149,14 +155,10 @@ func ResourceStage() *schema.Resource {
 							Default:  false,
 						},
 						"logging_level": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								apigatewayv2.LoggingLevelError,
-								apigatewayv2.LoggingLevelInfo,
-								apigatewayv2.LoggingLevelOff,
-							}, false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LoggingLevel](),
 						},
 						"route_key": {
 							Type:     schema.TypeString,
@@ -178,198 +180,166 @@ func ResourceStage() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiId := d.Get("api_id").(string)
+	apiID := d.Get("api_id").(string)
+	outputGA, err := findAPIByID(ctx, conn, apiID)
 
-	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
-		ApiId: aws.String(apiId),
-	})
 	if err != nil {
-		return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiID, err)
 	}
 
-	protocolType := aws.StringValue(apiOutput.ProtocolType)
-
-	req := &apigatewayv2.CreateStageInput{
-		ApiId:      aws.String(apiId),
+	name := d.Get("name").(string)
+	protocolType := outputGA.ProtocolType
+	input := &apigatewayv2.CreateStageInput{
+		ApiId:      aws.String(apiID),
 		AutoDeploy: aws.Bool(d.Get("auto_deploy").(bool)),
-		StageName:  aws.String(d.Get("name").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
+		StageName:  aws.String(name),
+		Tags:       getTagsIn(ctx),
 	}
+
 	if v, ok := d.GetOk("access_log_settings"); ok {
-		req.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
+		input.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
 	}
+
 	if v, ok := d.GetOk("client_certificate_id"); ok {
-		req.ClientCertificateId = aws.String(v.(string))
+		input.ClientCertificateId = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("default_route_settings"); ok {
-		req.DefaultRouteSettings = expandDefaultRouteSettings(v.([]interface{}), protocolType)
+		input.DefaultRouteSettings = expandDefaultRouteSettings(v.([]interface{}), protocolType)
 	}
+
 	if v, ok := d.GetOk("deployment_id"); ok {
-		req.DeploymentId = aws.String(v.(string))
+		input.DeploymentId = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("route_settings"); ok {
-		req.RouteSettings = expandRouteSettings(v.(*schema.Set).List(), protocolType)
+		input.RouteSettings = expandRouteSettings(v.(*schema.Set).List(), protocolType)
 	}
+
 	if v, ok := d.GetOk("stage_variables"); ok {
-		req.StageVariables = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.StageVariables = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 stage: %s", req)
-	resp, err := conn.CreateStage(req)
+	output, err := conn.CreateStage(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("creating API Gateway v2 stage: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 Stage (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.StageName))
+	d.SetId(aws.ToString(output.StageName))
 
-	return resourceStageRead(d, meta)
+	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	apiId := d.Get("api_id").(string)
-	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
-		ApiId:     aws.String(apiId),
-		StageName: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
-		log.Printf("[WARN] API Gateway v2 stage (%s) not found, removing from state", d.Id())
+	apiID := d.Get("api_id").(string)
+	outputGS, err := findStageByTwoPartKey(ctx, conn, apiID, d.Id())
+
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
+		log.Printf("[WARN] API Gateway v2 Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("reading API Gateway v2 stage (%s): %s", d.Id(), err)
+		return diags
 	}
 
-	stageName := aws.StringValue(resp.StageName)
-	err = d.Set("access_log_settings", flattenAccessLogSettings(resp.AccessLogSettings))
 	if err != nil {
-		return fmt.Errorf("setting access_log_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Stage (%s): %s", d.Id(), err)
 	}
-	region := meta.(*conns.AWSClient).Region
-	resourceArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    region,
-		Resource:  fmt.Sprintf("/apis/%s/stages/%s", apiId, stageName),
-	}.String()
-	d.Set("arn", resourceArn)
-	d.Set("auto_deploy", resp.AutoDeploy)
-	d.Set("client_certificate_id", resp.ClientCertificateId)
-	err = d.Set("default_route_settings", flattenDefaultRouteSettings(resp.DefaultRouteSettings))
-	if err != nil {
-		return fmt.Errorf("setting default_route_settings: %s", err)
+
+	stageName := aws.ToString(outputGS.StageName)
+	if err := d.Set("access_log_settings", flattenAccessLogSettings(outputGS.AccessLogSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set("deployment_id", resp.DeploymentId)
-	d.Set("description", resp.Description)
-	executionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
-	}.String()
-	d.Set("execution_arn", executionArn)
+	d.Set("arn", stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set("auto_deploy", outputGS.AutoDeploy)
+	d.Set("client_certificate_id", outputGS.ClientCertificateId)
+	if err := d.Set("default_route_settings", flattenDefaultRouteSettings(outputGS.DefaultRouteSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting default_route_settings: %s", err)
+	}
+	d.Set("deployment_id", outputGS.DeploymentId)
+	d.Set("description", outputGS.Description)
+	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("name", stageName)
-	err = d.Set("route_settings", flattenRouteSettings(resp.RouteSettings))
+	if err := d.Set("route_settings", flattenRouteSettings(outputGS.RouteSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
+	}
+	d.Set("stage_variables", outputGS.StageVariables)
+
+	setTagsOut(ctx, outputGS.Tags)
+
+	outputGA, err := findAPIByID(ctx, conn, apiID)
+
 	if err != nil {
-		return fmt.Errorf("setting route_settings: %s", err)
-	}
-	err = d.Set("stage_variables", flex.PointersMapToStringList(resp.StageVariables))
-	if err != nil {
-		return fmt.Errorf("setting stage_variables: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiID, err)
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayV2InvokeURL(ctx, outputGA.ProtocolType, apiID, stageName))
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
-		ApiId: aws.String(apiId),
-	})
-	if err != nil {
-		return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
-	}
-
-	switch aws.StringValue(apiOutput.ProtocolType) {
-	case apigatewayv2.ProtocolTypeWebsocket:
-		d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
-	case apigatewayv2.ProtocolTypeHttp:
-		if stageName == defaultStageName {
-			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/", apiId, region))
-		} else {
-			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
-		}
-	}
-
-	return nil
+	return diags
 }
 
-func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
 		"route_settings", "stage_variables") {
-		apiId := d.Get("api_id").(string)
+		apiID := d.Get("api_id").(string)
+		outputGA, err := findAPIByID(ctx, conn, apiID)
 
-		apiOutput, err := conn.GetApi(&apigatewayv2.GetApiInput{
-			ApiId: aws.String(apiId),
-		})
 		if err != nil {
-			return fmt.Errorf("reading API Gateway v2 API (%s): %s", apiId, err)
+			return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiID, err)
 		}
 
-		protocolType := aws.StringValue(apiOutput.ProtocolType)
-
-		req := &apigatewayv2.UpdateStageInput{
-			ApiId:     aws.String(apiId),
+		protocolType := outputGA.ProtocolType
+		input := &apigatewayv2.UpdateStageInput{
+			ApiId:     aws.String(apiID),
 			StageName: aws.String(d.Id()),
 		}
+
 		if d.HasChange("access_log_settings") {
-			req.AccessLogSettings = expandAccessLogSettings(d.Get("access_log_settings").([]interface{}))
+			input.AccessLogSettings = expandAccessLogSettings(d.Get("access_log_settings").([]interface{}))
 		}
+
 		if d.HasChange("auto_deploy") {
-			req.AutoDeploy = aws.Bool(d.Get("auto_deploy").(bool))
+			input.AutoDeploy = aws.Bool(d.Get("auto_deploy").(bool))
 		}
+
 		if d.HasChange("client_certificate_id") {
-			req.ClientCertificateId = aws.String(d.Get("client_certificate_id").(string))
+			input.ClientCertificateId = aws.String(d.Get("client_certificate_id").(string))
 		}
+
 		if d.HasChange("default_route_settings") {
-			req.DefaultRouteSettings = expandDefaultRouteSettings(d.Get("default_route_settings").([]interface{}), protocolType)
+			input.DefaultRouteSettings = expandDefaultRouteSettings(d.Get("default_route_settings").([]interface{}), protocolType)
 		}
+
 		if d.HasChange("deployment_id") {
-			req.DeploymentId = aws.String(d.Get("deployment_id").(string))
+			input.DeploymentId = aws.String(d.Get("deployment_id").(string))
 		}
+
 		if d.HasChange("description") {
-			req.Description = aws.String(d.Get("description").(string))
+			input.Description = aws.String(d.Get("description").(string))
 		}
+
 		if d.HasChange("route_settings") {
 			o, n := d.GetChange("route_settings")
 			os := o.(*schema.Set)
@@ -377,103 +347,130 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			for _, vRouteSetting := range os.Difference(ns).List() {
 				routeKey := vRouteSetting.(map[string]interface{})["route_key"].(string)
-
-				log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s) route settings (%s)", d.Id(), routeKey)
-				_, err := conn.DeleteRouteSettings(&apigatewayv2.DeleteRouteSettingsInput{
+				input := &apigatewayv2.DeleteRouteSettingsInput{
 					ApiId:     aws.String(d.Get("api_id").(string)),
 					RouteKey:  aws.String(routeKey),
 					StageName: aws.String(d.Id()),
-				})
-				if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+				}
+
+				_, err := conn.DeleteRouteSettings(ctx, input)
+
+				if errs.IsA[*awstypes.NotFoundException](err) {
 					continue
 				}
+
 				if err != nil {
-					return fmt.Errorf("deleting API Gateway v2 stage (%s) route settings (%s): %w", d.Id(), routeKey, err)
+					return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 Stage (%s) route settings (%s): %s", d.Id(), routeKey, err)
 				}
 			}
 
-			req.RouteSettings = expandRouteSettings(ns.List(), protocolType)
+			input.RouteSettings = expandRouteSettings(ns.List(), protocolType)
 		}
+
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del, _ := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := flex.DiffStringValueMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
-				del[k] = aws.String("")
+				del[k] = ""
 			}
 			variables := del
 			for k, v := range add {
 				variables[k] = v
 			}
-			req.StageVariables = variables
+			input.StageVariables = variables
 		}
 
-		log.Printf("[DEBUG] Updating API Gateway v2 stage: %s", req)
-		_, err = conn.UpdateStage(req)
+		_, err = conn.UpdateStage(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("updating API Gateway v2 stage (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Stage (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating API Gateway v2 stage (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceStageRead(d, meta)
+	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())
-	_, err := conn.DeleteStage(&apigatewayv2.DeleteStageInput{
+	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
+	_, err := conn.DeleteStage(ctx, &apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("deleting API Gateway v2 stage (%s): %s", d.Id(), err)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 Stage (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceStageImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/stage-name'", d.Id())
 	}
 
-	apiId := parts[0]
+	apiID := parts[0]
 	stageName := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
-		ApiId:     aws.String(apiId),
-		StageName: aws.String(stageName),
-	})
+	output, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
+
 	if err != nil {
 		return nil, err
 	}
 
-	if aws.BoolValue(resp.ApiGatewayManaged) {
-		return nil, fmt.Errorf("API Gateway v2 stage (%s) was created via quick create", stageName)
+	if aws.ToBool(output.ApiGatewayManaged) {
+		return nil, fmt.Errorf("API Gateway v2 Stage (%s) was created via quick create", stageName)
 	}
 
 	d.SetId(stageName)
-	d.Set("api_id", apiId)
+	d.Set("api_id", apiID)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandAccessLogSettings(vSettings []interface{}) *apigatewayv2.AccessLogSettings {
-	settings := &apigatewayv2.AccessLogSettings{}
+func findStageByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, stageName string) (*apigatewayv2.GetStageOutput, error) {
+	input := &apigatewayv2.GetStageInput{
+		ApiId:     aws.String(apiID),
+		StageName: aws.String(stageName),
+	}
+
+	return findStage(ctx, conn, input)
+}
+
+func findStage(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetStageInput) (*apigatewayv2.GetStageOutput, error) {
+	output, err := conn.GetStage(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSettings {
+	settings := &awstypes.AccessLogSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return settings
@@ -490,36 +487,36 @@ func expandAccessLogSettings(vSettings []interface{}) *apigatewayv2.AccessLogSet
 	return settings
 }
 
-func flattenAccessLogSettings(settings *apigatewayv2.AccessLogSettings) []interface{} {
+func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []interface{} {
 	if settings == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{map[string]interface{}{
-		"destination_arn": aws.StringValue(settings.DestinationArn),
-		"format":          aws.StringValue(settings.Format),
+		"destination_arn": aws.ToString(settings.DestinationArn),
+		"format":          aws.ToString(settings.Format),
 	}}
 }
 
-func expandDefaultRouteSettings(vSettings []interface{}, protocolType string) *apigatewayv2.RouteSettings {
-	routeSettings := &apigatewayv2.RouteSettings{}
+func expandDefaultRouteSettings(vSettings []interface{}, protocolType awstypes.ProtocolType) *awstypes.RouteSettings {
+	routeSettings := &awstypes.RouteSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return routeSettings
 	}
 	mSettings := vSettings[0].(map[string]interface{})
 
-	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == apigatewayv2.ProtocolTypeWebsocket {
+	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == awstypes.ProtocolTypeWebsocket {
 		routeSettings.DataTraceEnabled = aws.Bool(vDataTraceEnabled)
 	}
 	if vDetailedMetricsEnabled, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
 		routeSettings.DetailedMetricsEnabled = aws.Bool(vDetailedMetricsEnabled)
 	}
-	if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType == apigatewayv2.ProtocolTypeWebsocket {
-		routeSettings.LoggingLevel = aws.String(vLoggingLevel)
+	if vLoggingLevel, ok := mSettings["logging_level"].(string); ok && vLoggingLevel != "" && protocolType == awstypes.ProtocolTypeWebsocket {
+		routeSettings.LoggingLevel = awstypes.LoggingLevel(vLoggingLevel)
 	}
 	if vThrottlingBurstLimit, ok := mSettings["throttling_burst_limit"].(int); ok {
-		routeSettings.ThrottlingBurstLimit = aws.Int64(int64(vThrottlingBurstLimit))
+		routeSettings.ThrottlingBurstLimit = aws.Int32(int32(vThrottlingBurstLimit))
 	}
 	if vThrottlingRateLimit, ok := mSettings["throttling_rate_limit"].(float64); ok {
 		routeSettings.ThrottlingRateLimit = aws.Float64(vThrottlingRateLimit)
@@ -528,39 +525,39 @@ func expandDefaultRouteSettings(vSettings []interface{}, protocolType string) *a
 	return routeSettings
 }
 
-func flattenDefaultRouteSettings(routeSettings *apigatewayv2.RouteSettings) []interface{} {
+func flattenDefaultRouteSettings(routeSettings *awstypes.RouteSettings) []interface{} {
 	if routeSettings == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{map[string]interface{}{
-		"data_trace_enabled":       aws.BoolValue(routeSettings.DataTraceEnabled),
-		"detailed_metrics_enabled": aws.BoolValue(routeSettings.DetailedMetricsEnabled),
-		"logging_level":            aws.StringValue(routeSettings.LoggingLevel),
-		"throttling_burst_limit":   int(aws.Int64Value(routeSettings.ThrottlingBurstLimit)),
-		"throttling_rate_limit":    aws.Float64Value(routeSettings.ThrottlingRateLimit),
+		"data_trace_enabled":       aws.ToBool(routeSettings.DataTraceEnabled),
+		"detailed_metrics_enabled": aws.ToBool(routeSettings.DetailedMetricsEnabled),
+		"logging_level":            string(routeSettings.LoggingLevel),
+		"throttling_burst_limit":   int(aws.ToInt32(routeSettings.ThrottlingBurstLimit)),
+		"throttling_rate_limit":    aws.ToFloat64(routeSettings.ThrottlingRateLimit),
 	}}
 }
 
-func expandRouteSettings(vSettings []interface{}, protocolType string) map[string]*apigatewayv2.RouteSettings {
-	settings := map[string]*apigatewayv2.RouteSettings{}
+func expandRouteSettings(vSettings []interface{}, protocolType awstypes.ProtocolType) map[string]awstypes.RouteSettings {
+	settings := map[string]awstypes.RouteSettings{}
 
 	for _, v := range vSettings {
-		routeSettings := &apigatewayv2.RouteSettings{}
+		routeSettings := awstypes.RouteSettings{}
 
 		mSettings := v.(map[string]interface{})
 
-		if v, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == apigatewayv2.ProtocolTypeWebsocket {
+		if v, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == awstypes.ProtocolTypeWebsocket {
 			routeSettings.DataTraceEnabled = aws.Bool(v)
 		}
 		if v, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
 			routeSettings.DetailedMetricsEnabled = aws.Bool(v)
 		}
-		if v, ok := mSettings["logging_level"].(string); ok && v != "" && protocolType == apigatewayv2.ProtocolTypeWebsocket {
-			routeSettings.LoggingLevel = aws.String(v)
+		if v, ok := mSettings["logging_level"].(string); ok && v != "" && protocolType == awstypes.ProtocolTypeWebsocket {
+			routeSettings.LoggingLevel = awstypes.LoggingLevel(v)
 		}
 		if v, ok := mSettings["throttling_burst_limit"].(int); ok {
-			routeSettings.ThrottlingBurstLimit = aws.Int64(int64(v))
+			routeSettings.ThrottlingBurstLimit = aws.Int32(int32(v))
 		}
 		if v, ok := mSettings["throttling_rate_limit"].(float64); ok {
 			routeSettings.ThrottlingRateLimit = aws.Float64(v)
@@ -572,19 +569,38 @@ func expandRouteSettings(vSettings []interface{}, protocolType string) map[strin
 	return settings
 }
 
-func flattenRouteSettings(settings map[string]*apigatewayv2.RouteSettings) []interface{} {
+func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []interface{} {
 	vSettings := []interface{}{}
 
 	for k, routeSetting := range settings {
 		vSettings = append(vSettings, map[string]interface{}{
-			"data_trace_enabled":       aws.BoolValue(routeSetting.DataTraceEnabled),
-			"detailed_metrics_enabled": aws.BoolValue(routeSetting.DetailedMetricsEnabled),
-			"logging_level":            aws.StringValue(routeSetting.LoggingLevel),
+			"data_trace_enabled":       aws.ToBool(routeSetting.DataTraceEnabled),
+			"detailed_metrics_enabled": aws.ToBool(routeSetting.DetailedMetricsEnabled),
+			"logging_level":            routeSetting.LoggingLevel,
 			"route_key":                k,
-			"throttling_burst_limit":   int(aws.Int64Value(routeSetting.ThrottlingBurstLimit)),
-			"throttling_rate_limit":    aws.Float64Value(routeSetting.ThrottlingRateLimit),
+			"throttling_burst_limit":   int(aws.ToInt32(routeSetting.ThrottlingBurstLimit)),
+			"throttling_rate_limit":    aws.ToFloat64(routeSetting.ThrottlingRateLimit),
 		})
 	}
 
 	return vSettings
+}
+
+func stageARN(c *conns.AWSClient, apiID, stageName string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  fmt.Sprintf("/apis/%s/stages/%s", apiID, stageName),
+	}.String()
+}
+
+func stageInvokeARN(c *conns.AWSClient, apiID, stageName string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "execute-api",
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  fmt.Sprintf("%s/%s", apiID, stageName),
+	}.String()
 }

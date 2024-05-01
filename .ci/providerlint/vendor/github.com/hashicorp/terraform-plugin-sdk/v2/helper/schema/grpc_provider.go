@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -13,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -24,6 +28,9 @@ import (
 const (
 	newExtraKey = "_new_extra_shim"
 )
+
+// Verify provider server interface implementation.
+var _ tfprotov5.ProviderServer = (*GRPCProviderServer)(nil)
 
 func NewGRPCProviderServer(p *Provider) *GRPCProviderServer {
 	return &GRPCProviderServer{
@@ -64,14 +71,49 @@ func (s *GRPCProviderServer) StopContext(ctx context.Context) context.Context {
 	return stoppable
 }
 
+func (s *GRPCProviderServer) serverCapabilities() *tfprotov5.ServerCapabilities {
+	return &tfprotov5.ServerCapabilities{
+		GetProviderSchemaOptional: true,
+	}
+}
+
+func (s *GRPCProviderServer) GetMetadata(ctx context.Context, req *tfprotov5.GetMetadataRequest) (*tfprotov5.GetMetadataResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Getting provider metadata")
+
+	resp := &tfprotov5.GetMetadataResponse{
+		DataSources:        make([]tfprotov5.DataSourceMetadata, 0, len(s.provider.DataSourcesMap)),
+		Functions:          make([]tfprotov5.FunctionMetadata, 0),
+		Resources:          make([]tfprotov5.ResourceMetadata, 0, len(s.provider.ResourcesMap)),
+		ServerCapabilities: s.serverCapabilities(),
+	}
+
+	for typeName := range s.provider.DataSourcesMap {
+		resp.DataSources = append(resp.DataSources, tfprotov5.DataSourceMetadata{
+			TypeName: typeName,
+		})
+	}
+
+	for typeName := range s.provider.ResourcesMap {
+		resp.Resources = append(resp.Resources, tfprotov5.ResourceMetadata{
+			TypeName: typeName,
+		})
+	}
+
+	return resp, nil
+}
+
 func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfprotov5.GetProviderSchemaRequest) (*tfprotov5.GetProviderSchemaResponse, error) {
 	ctx = logging.InitContext(ctx)
 
 	logging.HelperSchemaTrace(ctx, "Getting provider schema")
 
 	resp := &tfprotov5.GetProviderSchemaResponse{
-		ResourceSchemas:   make(map[string]*tfprotov5.Schema),
-		DataSourceSchemas: make(map[string]*tfprotov5.Schema),
+		DataSourceSchemas:  make(map[string]*tfprotov5.Schema, len(s.provider.DataSourcesMap)),
+		Functions:          make(map[string]*tfprotov5.Function, 0),
+		ResourceSchemas:    make(map[string]*tfprotov5.Schema, len(s.provider.ResourcesMap)),
+		ServerCapabilities: s.serverCapabilities(),
 	}
 
 	resp.Provider = &tfprotov5.Schema{
@@ -546,6 +588,18 @@ func (s *GRPCProviderServer) ConfigureProvider(ctx context.Context, req *tfproto
 	}
 
 	config := terraform.NewResourceConfigShimmed(configVal, schemaBlock)
+
+	// CtyValue is the raw protocol configuration data from newer APIs.
+	//
+	// This field was only added as a targeted fix for passing raw protocol data
+	// through the existing (helper/schema.Provider).Configure() exported method
+	// and is only populated in that situation. The data could theoretically be
+	// set in the NewResourceConfigShimmed() function, however the consequences
+	// of doing this were not investigated at the time the fix was introduced.
+	//
+	// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1270
+	config.CtyValue = configVal
+
 	// TODO: remove global stop context hack
 	// This attaches a global stop synchro'd context onto the provider.Configure
 	// request scoped context. This provides a substitute for the removed provider.StopContext()
@@ -659,20 +713,23 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.PlanResourceChangeResponse{}
 
-	// This is a signal to Terraform Core that we're doing the best we can to
-	// shim the legacy type system of the SDK onto the Terraform type system
-	// but we need it to cut us some slack. This setting should not be taken
-	// forward to any new SDK implementations, since setting it prevents us
-	// from catching certain classes of provider bug that can lead to
-	// confusing downstream errors.
-	resp.UnsafeToUseLegacyTypeSystem = true //nolint:staticcheck
-
 	res, ok := s.provider.ResourcesMap[req.TypeName]
 	if !ok {
 		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
+
+	// This is a signal to Terraform Core that we're doing the best we can to
+	// shim the legacy type system of the SDK onto the Terraform type system
+	// but we need it to cut us some slack. This setting should not be taken
+	// forward to any new SDK implementations, since setting it prevents us
+	// from catching certain classes of provider bug that can lead to
+	// confusing downstream errors.
+	if !res.EnableLegacyTypeSystemPlanErrors {
+		//nolint:staticcheck // explicitly for this SDK
+		resp.UnsafeToUseLegacyTypeSystem = true
+	}
 
 	priorStateVal, err := msgpack.Unmarshal(req.PriorState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
@@ -1072,7 +1129,10 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	// forward to any new SDK implementations, since setting it prevents us
 	// from catching certain classes of provider bug that can lead to
 	// confusing downstream errors.
-	resp.UnsafeToUseLegacyTypeSystem = true //nolint:staticcheck
+	if !res.EnableLegacyTypeSystemApplyErrors {
+		//nolint:staticcheck // explicitly for this SDK
+		resp.UnsafeToUseLegacyTypeSystem = true
+	}
 
 	return resp, nil
 }
@@ -1110,6 +1170,22 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 		// Normalize the value and fill in any missing blocks.
 		newStateVal = objchange.NormalizeObjectFromLegacySDK(newStateVal, schemaBlock)
 
+		// Ensure any timeouts block is null in the imported state. There is no
+		// configuration to read from during import, so it is never valid to
+		// return a known value for the block.
+		//
+		// This is done without modifying HCL2ValueFromFlatmap or
+		// NormalizeObjectFromLegacySDK to prevent other unexpected changes.
+		//
+		// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1145
+		newStateType := newStateVal.Type()
+
+		if newStateVal != cty.NilVal && !newStateVal.IsNull() && newStateType.IsObjectType() && newStateType.HasAttribute(TimeoutsConfigKey) {
+			newStateValueMap := newStateVal.AsValueMap()
+			newStateValueMap[TimeoutsConfigKey] = cty.NullVal(newStateType.AttributeType(TimeoutsConfigKey))
+			newStateVal = cty.ObjectVal(newStateValueMap)
+		}
+
 		newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 		if err != nil {
 			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
@@ -1131,6 +1207,42 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 		}
 
 		resp.ImportedResources = append(resp.ImportedResources, importedResource)
+	}
+
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) MoveResourceState(ctx context.Context, req *tfprotov5.MoveResourceStateRequest) (*tfprotov5.MoveResourceStateResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("MoveResourceState request is nil")
+	}
+
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Returning error for MoveResourceState")
+
+	resp := &tfprotov5.MoveResourceStateResponse{}
+
+	_, ok := s.provider.ResourcesMap[req.TargetTypeName]
+
+	if !ok {
+		resp.Diagnostics = []*tfprotov5.Diagnostic{
+			{
+				Severity: tfprotov5.DiagnosticSeverityError,
+				Summary:  "Unknown Resource Type",
+				Detail:   fmt.Sprintf("The %q resource type is not supported by this provider.", req.TargetTypeName),
+			},
+		}
+
+		return resp, nil
+	}
+
+	resp.Diagnostics = []*tfprotov5.Diagnostic{
+		{
+			Severity: tfprotov5.DiagnosticSeverityError,
+			Summary:  "Move Resource State Not Supported",
+			Detail:   fmt.Sprintf("The %q resource type does not support moving resource state across resource types.", req.TargetTypeName),
+		},
 	}
 
 	return resp, nil
@@ -1198,6 +1310,32 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 	resp.State = &tfprotov5.DynamicValue{
 		MsgPack: newStateMP,
 	}
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) CallFunction(ctx context.Context, req *tfprotov5.CallFunctionRequest) (*tfprotov5.CallFunctionResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Returning error for provider function call")
+
+	resp := &tfprotov5.CallFunctionResponse{
+		Error: &tfprotov5.FunctionError{
+			Text: fmt.Sprintf("Function Not Found: No function named %q was found in the provider.", req.Name),
+		},
+	}
+
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) GetFunctions(ctx context.Context, req *tfprotov5.GetFunctionsRequest) (*tfprotov5.GetFunctionsResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Getting provider functions")
+
+	resp := &tfprotov5.GetFunctionsResponse{
+		Functions: make(map[string]*tfprotov5.Function, 0),
+	}
+
 	return resp, nil
 }
 
@@ -1284,7 +1422,7 @@ func stripResourceModifiers(r *Resource) *Resource {
 	newResource.CustomizeDiff = nil
 	newResource.Schema = map[string]*Schema{}
 
-	for k, s := range r.Schema {
+	for k, s := range r.SchemaMap() {
 		newResource.Schema[k] = stripSchema(s)
 	}
 

@@ -1,23 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsConnection_apiKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -33,10 +39,10 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_apiKey(
@@ -47,7 +53,7 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 					value,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -69,8 +75,8 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 					valueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					testAccCheckConnectionExists(ctx, resourceName, &v2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
@@ -87,7 +93,7 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 					valueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
@@ -100,6 +106,7 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 }
 
 func TestAccEventsConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "BASIC"
@@ -115,10 +122,10 @@ func TestAccEventsConnection_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(
@@ -129,7 +136,7 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					password,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -151,8 +158,8 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					passwordModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					testAccCheckConnectionExists(ctx, resourceName, &v2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
@@ -169,7 +176,7 @@ func TestAccEventsConnection_basic(t *testing.T) {
 					passwordModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
@@ -182,6 +189,7 @@ func TestAccEventsConnection_basic(t *testing.T) {
 }
 
 func TestAccEventsConnection_oAuth(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "OAUTH_CLIENT_CREDENTIALS"
@@ -234,10 +242,10 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.oauth"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_oauth(
@@ -259,7 +267,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 					queryStringIsSecretValue,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -305,8 +313,8 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					testAccCheckConnectionExists(ctx, resourceName, &v2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
@@ -342,7 +350,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
@@ -363,6 +371,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 }
 
 func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -399,10 +408,10 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.invocation_http_parameters"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_invocationHTTPParameters(
@@ -422,7 +431,7 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 					queryStringIsSecretValue,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v1),
+					testAccCheckConnectionExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
@@ -473,7 +482,7 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v2),
+					testAccCheckConnectionExists(ctx, resourceName, &v2),
 					testAccCheckConnectionNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -511,7 +520,7 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 					queryStringIsSecretValueModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v3),
+					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -536,6 +545,7 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 }
 
 func TestAccEventsConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v eventbridge.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -545,10 +555,10 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_apiKey(
@@ -559,8 +569,8 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 					value,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceConnection(), resourceName),
+					testAccCheckConnectionExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -568,40 +578,42 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_connection" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_connection" {
+				continue
+			}
+
+			_, err := tfevents.FindConnectionByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Connection %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfevents.FindConnectionByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EventBridge connection %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckConnectionExists(n string, v *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, n string, v *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		output, err := tfevents.FindConnectionByName(conn, rs.Primary.ID)
+		output, err := tfevents.FindConnectionByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -615,7 +627,7 @@ func testAccCheckConnectionExists(n string, v *eventbridge.DescribeConnectionOut
 
 func testAccCheckConnectionRecreated(i, j *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.ConnectionArn) == aws.StringValue(j.ConnectionArn) {
+		if aws.ToString(i.ConnectionArn) == aws.ToString(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection not recreated")
 		}
 		return nil
@@ -624,7 +636,7 @@ func testAccCheckConnectionRecreated(i, j *eventbridge.DescribeConnectionOutput)
 
 func testAccCheckConnectionNotRecreated(i, j *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.ConnectionArn) != aws.StringValue(j.ConnectionArn) {
+		if aws.ToString(i.ConnectionArn) != aws.ToString(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection was recreated")
 		}
 		return nil

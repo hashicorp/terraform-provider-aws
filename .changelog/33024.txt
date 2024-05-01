@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Adds the `s3_us_east_1_regional_endpoint` attribute to support using the regional S3 API endpoint in `us-east-1`.
+```

@@ -1,148 +1,107 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceVirtualService() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_service", name="Virtual Service")
+func dataSourceVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVirtualServiceRead,
+		ReadWithoutTimeout: dataSourceVirtualServiceRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"mesh_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"spec": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"provider": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"virtual_node": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_node_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-
-									"virtual_router": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"virtual_router_name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-
-			"tags": tftags.TagsSchema(),
+				"created_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_updated_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualServiceSpecSchema()),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
 
-func dataSourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &appmesh.DescribeVirtualServiceInput{
-		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualServiceName: aws.String(d.Get("name").(string)),
-	}
+	virtualServiceName := d.Get("name").(string)
+	vs, err := findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
 
-	if v, ok := d.GetOk("mesh_owner"); ok {
-		req.MeshOwner = aws.String(v.(string))
-	}
-
-	resp, err := conn.DescribeVirtualService(req)
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Virtual Service: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", virtualServiceName, err)
 	}
 
-	arn := aws.StringValue(resp.VirtualService.Metadata.Arn)
-
-	d.SetId(aws.StringValue(resp.VirtualService.VirtualServiceName))
-
-	d.Set("name", resp.VirtualService.VirtualServiceName)
-	d.Set("mesh_name", resp.VirtualService.MeshName)
-	d.Set("mesh_owner", resp.VirtualService.Metadata.MeshOwner)
+	d.SetId(aws.StringValue(vs.VirtualServiceName))
+	arn := aws.StringValue(vs.Metadata.Arn)
 	d.Set("arn", arn)
-	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
-	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
-
-	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
-	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", vs.MeshName)
+	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
+	d.Set("mesh_owner", meshOwner)
+	d.Set("name", vs.VirtualServiceName)
+	d.Set("resource_owner", vs.Metadata.ResourceOwner)
+	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	// https://docs.aws.amazon.com/app-mesh/latest/userguide/sharing.html#sharing-permissions
+	// Owners and consumers can list tags and can tag/untag resources in a mesh that the account created.
+	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
+	var tags tftags.KeyValueTags
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh Virtual Service (%s): %s", arn, err)
+	if meshOwner == meta.(*conns.AWSClient).AccountID {
+		tags, err = listTags(ctx, conn, arn)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Service (%s): %s", arn, err)
+		}
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

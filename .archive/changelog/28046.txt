@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `blue_green_update` argument in support of [RDS Blue/Green Deployments](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html)
+```

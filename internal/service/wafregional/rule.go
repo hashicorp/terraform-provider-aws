@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -9,22 +13,28 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceRule() *schema.Resource {
+// @SDKResource("aws_wafregional_rule", name="Rule")
+// @Tags(identifierAttribute="arn")
+func resourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRuleCreate,
-		Read:   resourceRuleRead,
-		Update: resourceRuleUpdate,
-		Delete: resourceRuleDelete,
+		CreateWithoutTimeout: resourceRuleCreate,
+		ReadWithoutTimeout:   resourceRuleRead,
+		UpdateWithoutTimeout: resourceRuleUpdate,
+		DeleteWithoutTimeout: resourceRuleDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -60,8 +70,8 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -72,61 +82,57 @@ func ResourceRule() *schema.Resource {
 	}
 }
 
-func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	wr := NewRetryer(conn, region)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		params := &waf.CreateRuleInput{
+	name := d.Get("name").(string)
+	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(name),
+			Tags:        getTagsIn(ctx),
 		}
 
-		if len(tags) > 0 {
-			params.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		return conn.CreateRule(params)
+		return conn.CreateRuleWithContext(ctx, input)
 	})
-	if err != nil {
-		return err
-	}
-	resp := out.(*waf.CreateRuleOutput)
-	d.SetId(aws.StringValue(resp.Rule.RuleId))
 
-	newPredicates := d.Get("predicate").(*schema.Set).List()
-	if len(newPredicates) > 0 {
-		noPredicates := []interface{}{}
-		err := updateRuleResource(d.Id(), noPredicates, newPredicates, meta)
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Regional Rule: %s", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Rule (%s): %s", name, err)
+	}
+
+	d.SetId(aws.StringValue(outputRaw.(*waf.CreateRuleOutput).Rule.RuleId))
+
+	if newPredicates := d.Get("predicate").(*schema.Set).List(); len(newPredicates) > 0 {
+		var oldPredicates []interface{}
+
+		if err := updateRuleResource(ctx, conn, region, d.Id(), oldPredicates, newPredicates); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Rule (%s): %s", d.Id(), err)
 		}
 	}
-	return resourceRuleRead(d, meta)
+
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	params := &waf.GetRuleInput{
 		RuleId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetRule(params)
+	resp, err := conn.GetRuleWithContext(ctx, params)
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Rule (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -137,104 +143,82 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 		Service:   "waf-regional",
 	}.String()
 	d.Set("arn", arn)
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Regional Rule (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
 	d.Set("predicate", flattenPredicates(resp.Rule.Predicates))
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
-	return nil
+	return diags
 }
 
-func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("predicate") {
 		o, n := d.GetChange("predicate")
-		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
+		oldPredicates, newPredicates := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRuleResource(d.Id(), oldP, newP, meta)
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		if err := updateRuleResource(ctx, conn, region, d.Id(), oldPredicates, newPredicates); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Rule (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
-		}
-	}
-
-	return resourceRuleRead(d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	oldPredicates := d.Get("predicate").(*schema.Set).List()
-	if len(oldPredicates) > 0 {
-		noPredicates := []interface{}{}
-		err := updateRuleResource(d.Id(), oldPredicates, noPredicates, meta)
+	if oldPredicates := d.Get("predicate").(*schema.Set).List(); len(oldPredicates) > 0 {
+		var newPredicates []interface{}
+
+		err := updateRuleResource(ctx, conn, region, d.Id(), oldPredicates, newPredicates)
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
+
 		if err != nil {
-			return fmt.Errorf("Error Removing WAF Rule Predicates: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Rule (%s): %s", d.Id(), err)
 		}
 	}
 
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.DeleteRuleInput{
+	log.Printf("[INFO] Deleting WAF Regional Rule: %s", d.Id())
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(d.Id()),
 		}
-		log.Printf("[INFO] Deleting WAF Rule")
-		return conn.DeleteRule(req)
+
+		return conn.DeleteRuleWithContext(ctx, input)
 	})
-	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rule: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Rule (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func updateRuleResource(id string, oldP, newP []interface{}, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
-	region := meta.(*conns.AWSClient).Region
-
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.UpdateRuleInput{
+func updateRuleResource(ctx context.Context, conn *wafregional.WAFRegional, region, ruleID string, oldP, newP []interface{}) error {
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateRuleInput{
 			ChangeToken: token,
-			RuleId:      aws.String(id),
+			RuleId:      aws.String(ruleID),
 			Updates:     tfwaf.DiffRulePredicates(oldP, newP),
 		}
 
-		return conn.UpdateRule(req)
+		return conn.UpdateRuleWithContext(ctx, input)
 	})
 
-	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule: %s", err)
-	}
-
-	return nil
+	return err
 }
 
 func flattenPredicates(ts []*waf.Predicate) []interface{} {

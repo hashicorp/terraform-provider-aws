@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strconv"
 	"time"
@@ -9,19 +12,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_gateway")
 func ResourceGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGatewayCreate,
-		Read:   resourceGatewayRead,
-		Delete: resourceGatewayDelete,
+		CreateWithoutTimeout: resourceGatewayCreate,
+		ReadWithoutTimeout:   resourceGatewayRead,
+		UpdateWithoutTimeout: resourceGatewayUpdate,
+		DeleteWithoutTimeout: resourceGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,15 +37,12 @@ func ResourceGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validAmazonSideASN,
+				ValidateFunc: verify.ValidAmazonSideASN,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
-
 			"owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -51,8 +56,9 @@ func ResourceGateway() *schema.Resource {
 	}
 }
 
-func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
@@ -60,68 +66,88 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.Get("amazon_side_asn").(string); ok && v != "" {
-		if v, err := strconv.ParseInt(v, 10, 64); err == nil {
-			input.AmazonSideAsn = aws.Int64(v)
-		}
+		v, _ := strconv.ParseInt(v, 10, 64)
+		input.AmazonSideAsn = aws.Int64(v)
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Gateway: %s", input)
-	resp, err := conn.CreateDirectConnectGateway(input)
+	output, err := conn.CreateDirectConnectGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect Gateway (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Gateway (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.DirectConnectGateway.DirectConnectGatewayId))
+	d.SetId(aws.StringValue(output.DirectConnectGateway.DirectConnectGatewayId))
 
-	if _, err := waitGatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to create: %w", d.Id(), err)
+	if _, err := waitGatewayCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceGatewayRead(d, meta)
+	return append(diags, resourceGatewayRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	output, err := FindGatewayByID(conn, d.Id())
+	output, err := FindGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway (%s): %s", d.Id(), err)
 	}
 
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(output.AmazonSideAsn), 10))
 	d.Set("name", output.DirectConnectGatewayName)
 	d.Set("owner_account_id", output.OwnerAccount)
 
-	return nil
+	return diags
 }
 
-func resourceGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
+
+	if d.HasChange("name") {
+		input := &directconnect.UpdateDirectConnectGatewayInput{
+			DirectConnectGatewayId:      aws.String(d.Id()),
+			NewDirectConnectGatewayName: aws.String(d.Get("name").(string)),
+		}
+
+		_, err := conn.UpdateDirectConnectGatewayWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Gateway (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceGatewayRead(ctx, d, meta)...)
+}
+
+func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGateway(&directconnect.DeleteDirectConnectGatewayInput{
+	_, err := conn.DeleteDirectConnectGatewayWithContext(ctx, &directconnect.DeleteDirectConnectGatewayInput{
 		DirectConnectGatewayId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Direct Connect Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitGatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to delete: %w", d.Id(), err)
+	if _, err := waitGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Gateway (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

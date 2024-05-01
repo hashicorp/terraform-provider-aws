@@ -1,26 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceDomainAssociation() *schema.Resource {
+// @SDKResource("aws_amplify_domain_association", name="Domain Association")
+func resourceDomainAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainAssociationCreate,
-		Read:   resourceDomainAssociationRead,
-		Update: resourceDomainAssociationUpdate,
-		Delete: resourceDomainAssociationDelete,
+		CreateWithoutTimeout: resourceDomainAssociationCreate,
+		ReadWithoutTimeout:   resourceDomainAssociationRead,
+		UpdateWithoutTimeout: resourceDomainAssociationUpdate,
+		DeleteWithoutTimeout: resourceDomainAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,24 +43,25 @@ func ResourceDomainAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"certificate_verification_dns_record": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"domain_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
+			"enable_auto_sub_domain": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"sub_domain": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -73,7 +88,6 @@ func ResourceDomainAssociation() *schema.Resource {
 					},
 				},
 			},
-
 			"wait_for_verification": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -83,138 +97,254 @@ func ResourceDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceDomainAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
 	domainName := d.Get("domain_name").(string)
-	id := DomainAssociationCreateResourceID(appID, domainName)
-
+	id := domainAssociationCreateResourceID(appID, domainName)
 	input := &amplify.CreateDomainAssociationInput{
-		AppId:             aws.String(appID),
-		DomainName:        aws.String(domainName),
-		SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+		AppId:               aws.String(appID),
+		DomainName:          aws.String(domainName),
+		EnableAutoSubDomain: aws.Bool(d.Get("enable_auto_sub_domain").(bool)),
+		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
-	log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
-	_, err := conn.CreateDomainAssociation(input)
+	_, err := conn.CreateDomainAssociation(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Amplify Domain Association (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Amplify Domain Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := waitDomainAssociationCreated(conn, appID, domainName); err != nil {
-		return fmt.Errorf("error waiting for Amplify Domain Association (%s) to create: %w", d.Id(), err)
+	if _, err := waitDomainAssociationCreated(ctx, conn, appID, domainName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) create: %s", d.Id(), err)
 	}
 
 	if d.Get("wait_for_verification").(bool) {
-		if _, err := waitDomainAssociationVerified(conn, appID, domainName); err != nil {
-			return fmt.Errorf("error waiting for Amplify Domain Association (%s) to verify: %w", d.Id(), err)
+		if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDomainAssociationRead(d, meta)
+	return append(diags, resourceDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDomainAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
-
+	appID, domainName, err := domainAssociationParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	domainAssociation, err := FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+	domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Amplify Domain Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Amplify Domain Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_id", appID)
 	d.Set("arn", domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
 	d.Set("domain_name", domainAssociation.DomainName)
+	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
-		return fmt.Errorf("error setting sub_domain: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
-
+	appID, domainName, err := domainAssociationParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChange("sub_domain") {
+	if d.HasChanges("enable_auto_sub_domain", "sub_domain") {
 		input := &amplify.UpdateDomainAssociationInput{
-			AppId:             aws.String(appID),
-			DomainName:        aws.String(domainName),
-			SubDomainSettings: expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
+			AppId:      aws.String(appID),
+			DomainName: aws.String(domainName),
 		}
 
-		log.Printf("[DEBUG] Creating Amplify Domain Association: %s", input)
-		_, err := conn.UpdateDomainAssociation(input)
+		if d.HasChange("enable_auto_sub_domain") {
+			input.EnableAutoSubDomain = aws.Bool(d.Get("enable_auto_sub_domain").(bool))
+		}
+
+		if d.HasChange("sub_domain") {
+			input.SubDomainSettings = expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List())
+		}
+
+		_, err := conn.UpdateDomainAssociation(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Amplify Domain Association (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Amplify Domain Association (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.Get("wait_for_verification").(bool) {
-		if _, err := waitDomainAssociationVerified(conn, appID, domainName); err != nil {
-			return fmt.Errorf("error waiting for Amplify Domain Association (%s) to verify: %w", d.Id(), err)
+		if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDomainAssociationRead(d, meta)
+	return append(diags, resourceDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDomainAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
-
+	appID, domainName, err := domainAssociationParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Domain Association ID: %w", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Domain Association: %s", d.Id())
-	_, err = conn.DeleteDomainAssociation(&amplify.DeleteDomainAssociationInput{
+	_, err = conn.DeleteDomainAssociation(ctx, &amplify.DeleteDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Amplify Domain Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Amplify Domain Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandSubDomainSetting(tfMap map[string]interface{}) *amplify.SubDomainSetting {
+func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
+	input := &amplify.GetDomainAssociationInput{
+		AppId:      aws.String(appID),
+		DomainName: aws.String(domainName),
+	}
+
+	output, err := conn.GetDomainAssociation(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DomainAssociation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DomainAssociation, nil
+}
+
+func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return domainAssociation, string(domainAssociation.DomainStatus), nil
+	}
+}
+
+func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.DomainStatusCreating, types.DomainStatusInProgress, types.DomainStatusRequestingCertificate),
+		Target:  enum.Slice(types.DomainStatusPendingVerification, types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
+		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*types.DomainAssociation); ok {
+		if v.DomainStatus == types.DomainStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+		}
+
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) { //nolint:unparam
+	const (
+		timeout = 15 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.DomainStatusUpdating, types.DomainStatusInProgress, types.DomainStatusPendingVerification),
+		Target:  enum.Slice(types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
+		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*types.DomainAssociation); ok {
+		if v.DomainStatus == types.DomainStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+		}
+
+		return v, err
+	}
+
+	return nil, err
+}
+
+const domainAssociationResourceIDSeparator = "/"
+
+func domainAssociationCreateResourceID(appID, domainName string) string {
+	parts := []string{appID, domainName}
+	id := strings.Join(parts, domainAssociationResourceIDSeparator)
+
+	return id
+}
+
+func domainAssociationParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, domainAssociationResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPID%[2]sDOMAINNAME", id, domainAssociationResourceIDSeparator)
+}
+
+func expandSubDomainSetting(tfMap map[string]interface{}) *types.SubDomainSetting {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &amplify.SubDomainSetting{}
+	apiObject := &types.SubDomainSetting{}
 
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
 		apiObject.BranchName = aws.String(v)
@@ -228,12 +358,12 @@ func expandSubDomainSetting(tfMap map[string]interface{}) *amplify.SubDomainSett
 	return apiObject
 }
 
-func expandSubDomainSettings(tfList []interface{}) []*amplify.SubDomainSetting {
+func expandSubDomainSettings(tfList []interface{}) []types.SubDomainSetting {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*amplify.SubDomainSetting
+	var apiObjects []types.SubDomainSetting
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -248,43 +378,39 @@ func expandSubDomainSettings(tfList []interface{}) []*amplify.SubDomainSetting {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenSubDomain(apiObject *amplify.SubDomain) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DnsRecord; v != nil {
-		tfMap["dns_record"] = aws.StringValue(v)
+		tfMap["dns_record"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SubDomainSetting; v != nil {
 		apiObject := v
 
 		if v := apiObject.BranchName; v != nil {
-			tfMap["branch_name"] = aws.StringValue(v)
+			tfMap["branch_name"] = aws.ToString(v)
 		}
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.StringValue(v)
+			tfMap["prefix"] = aws.ToString(v)
 		}
 	}
 
 	if v := apiObject.Verified; v != nil {
-		tfMap["verified"] = aws.BoolValue(v)
+		tfMap["verified"] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenSubDomains(apiObjects []*amplify.SubDomain) []interface{} {
+func flattenSubDomains(apiObjects []types.SubDomain) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -292,10 +418,6 @@ func flattenSubDomains(apiObjects []*amplify.SubDomain) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenSubDomain(apiObject))
 	}
 

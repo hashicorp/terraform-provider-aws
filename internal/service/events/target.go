@@ -1,167 +1,146 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
-	"regexp"
+	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceTarget() *schema.Resource {
+// @SDKResource("aws_cloudwatch_event_target", name="Target")
+func resourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTargetCreate,
-		Read:   resourceTargetRead,
-		Update: resourceTargetUpdate,
-		Delete: resourceTargetDelete,
+		CreateWithoutTimeout: resourceTargetCreate,
+		ReadWithoutTimeout:   resourceTargetRead,
+		UpdateWithoutTimeout: resourceTargetUpdate,
+		DeleteWithoutTimeout: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetImport,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				busName, ruleName, targetID, err := targetParseImportID(d.Id())
+				if err != nil {
+					return []*schema.ResourceData{}, err
+				}
+
+				id := targetCreateResourceID(busName, ruleName, targetID)
+				d.SetId(id)
+				d.Set("target_id", targetID)
+				d.Set("rule", ruleName)
+				d.Set("event_bus_name", busName)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceTargetV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: TargetStateUpgradeV0,
+				Upgrade: targetStateUpgradeV0,
 				Version: 0,
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-
-			"rule": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRuleName,
-			},
-
-			"target_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateTargetID,
-			},
-
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"input": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringIsJSON,
-					validation.StringLenBetween(0, 8192),
-				),
-				ConflictsWith: []string{"input_path", "input_transformer"},
-				// We could be normalizing the JSON here,
-				// but for built-in targets input may not be JSON
-			},
-
-			"input_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 256),
-				ConflictsWith: []string{"input", "input_transformer"},
-			},
-
-			"role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"run_command_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"values": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-						},
-					},
-				},
-			},
-
-			"http_target": {
+			"batch_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
+						"array_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 10000),
 						},
-						"query_string_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
+						"job_attempts": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 10),
 						},
-						"path_parameter_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"job_definition": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"job_name": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
 			},
-
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"ecs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"capacity_provider_strategy": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"base": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 100000),
+									},
+									"capacity_provider": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"weight": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 1000),
+									},
+								},
+							},
+						},
 						"enable_ecs_managed_tags": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -178,9 +157,9 @@ func ResourceTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(eventbridge.LaunchType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.LaunchType](),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -188,6 +167,11 @@ func ResourceTarget() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"assign_public_ip": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"security_groups": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -198,10 +182,24 @@ func ResourceTarget() *schema.Resource {
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"assign_public_ip": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
+								},
+							},
+						},
+						"ordered_placement_strategy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"field": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 255),
+									},
+									"type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
 									},
 								},
 							},
@@ -217,9 +215,9 @@ func ResourceTarget() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(eventbridge.PlacementConstraintType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
 									},
 								},
 							},
@@ -230,10 +228,9 @@ func ResourceTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 1600),
 						},
 						"propagate_tags": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      eventbridge.PropagateTagsTaskDefinition,
-							ValidateFunc: validation.StringInSlice(eventbridge.PropagateTags_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
 						},
 						"tags": tftags.TagsSchema(),
 						"task_count": {
@@ -250,35 +247,95 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"batch_target": {
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validBusNameOrARN,
+				Default:      DefaultEventBusName,
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"http_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"job_definition": {
-							Type:     schema.TypeString,
-							Required: true,
+						"header_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: validation.AllDiag(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+,.^|~-]+$`), ""), // was "," meant to be included? +-. creates a range including: +,-.
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexache.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
-						"job_name": {
-							Type:     schema.TypeString,
-							Required: true,
+						"path_parameter_values": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"array_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 10000),
-						},
-						"job_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
+						"query_string_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: validation.AllDiag(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexache.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexache.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-
+			"input": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringIsJSON,
+					validation.StringLenBetween(0, 8192),
+				),
+				ConflictsWith: []string{"input_path", "input_transformer"},
+				// We could be normalizing the JSON here,
+				// but for built-in targets input may not be JSON
+			},
+			"input_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringLenBetween(0, 256),
+				ConflictsWith: []string{"input", "input_transformer"},
+			},
+			"input_transformer": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"input", "input_path"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_paths": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							ValidateDiagFunc: validation.AllDiag(
+								verify.MapSizeAtMost(targetInputTransformerMaxInputPaths),
+								verify.MapKeyNoMatch(regexache.MustCompile(`^AWS.*$`), `must not start with "AWS"`),
+							),
+						},
+						"input_template": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 8192),
+						},
+					},
+				},
+			},
 			"kinesis_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -293,7 +350,6 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
 			"redshift_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -332,46 +388,6 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"sqs_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-
-			"input_transformer": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"input", "input_path"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_paths": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ValidateFunc: validation.All(
-								mapMaxItems(targetInputTransformerMaxInputPaths),
-								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
-							),
-						},
-						"input_template": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 8192),
-						},
-					},
-				},
-			},
-
 			"retry_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -391,170 +407,249 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"dead_letter_config": {
+			"role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"rule": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRuleName,
+			},
+			"run_command_targets": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 50,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+					},
+				},
+			},
+			"sagemaker_pipeline_target": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"pipeline_parameter_list": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 200,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"sqs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+						"message_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
+			},
+			"target_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateTargetID,
 			},
 		},
 	}
 }
 
-func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	rule := d.Get("rule").(string)
-
+	ruleName := d.Get("rule").(string)
 	var targetID string
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
 	} else {
-		targetID = resource.UniqueId()
+		targetID = id.UniqueId()
 		d.Set("target_id", targetID)
 	}
-	var busName string
+	var eventBusName string
 	if v, ok := d.GetOk("event_bus_name"); ok {
-		busName = v.(string)
+		eventBusName = v.(string)
+	}
+	id := targetCreateResourceID(eventBusName, ruleName, targetID)
+
+	input := expandPutTargetsInput(ctx, d)
+
+	output, err := conn.PutTargets(ctx, input)
+
+	if err == nil && output != nil {
+		err = putTargetsError(output.FailedEntries)
 	}
 
-	input := buildPutTargetInputStruct(d)
-
-	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
-	out, err := conn.PutTargets(input)
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge Target failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Target (%s): %s", id, err)
 	}
 
-	if len(out.FailedEntries) > 0 {
-		return fmt.Errorf("Creating EventBridge Target failed: %s", out.FailedEntries)
-	}
-
-	id := TargetCreateResourceID(busName, rule, targetID)
 	d.SetId(id)
 
-	log.Printf("[INFO] EventBridge Target (%s) created", d.Id())
-
-	return resourceTargetRead(d, meta)
+	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	busName := d.Get("event_bus_name").(string)
+	eventBusName := d.Get("event_bus_name").(string)
+	target, err := findTargetByThreePartKey(ctx, conn, eventBusName, d.Get("rule").(string), d.Get("target_id").(string))
 
-	t, err := FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) ||
-			regexp.MustCompile(" not found$").MatchString(err.Error())) {
-			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Found Event Target: %s", t)
 
-	d.Set("arn", t.Arn)
-	d.Set("target_id", t.Id)
-	d.Set("input", t.Input)
-	d.Set("input_path", t.InputPath)
-	d.Set("role_arn", t.RoleArn)
-	d.Set("event_bus_name", busName)
+	d.Set("arn", target.Arn)
+	d.Set("event_bus_name", eventBusName)
+	d.Set("force_destroy", d.Get("force_destroy").(bool))
+	d.Set("input", target.Input)
+	d.Set("input_path", target.InputPath)
+	d.Set("role_arn", target.RoleArn)
+	d.Set("target_id", target.Id)
 
-	if t.RunCommandParameters != nil {
-		if err := d.Set("run_command_targets", flattenTargetRunParameters(t.RunCommandParameters)); err != nil {
-			return fmt.Errorf("Error setting run_command_targets error: %w", err)
+	if target.RunCommandParameters != nil {
+		if err := d.Set("run_command_targets", flattenTargetRunParameters(target.RunCommandParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting run_command_targets: %s", err)
 		}
 	}
 
-	if t.HttpParameters != nil {
-		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(t.HttpParameters)}); err != nil {
-			return fmt.Errorf("error setting http_target: %w", err)
+	if target.HttpParameters != nil {
+		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(target.HttpParameters)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting http_target: %s", err)
 		}
 	} else {
 		d.Set("http_target", nil)
 	}
 
-	if t.RedshiftDataParameters != nil {
-		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %w", err)
+	if target.RedshiftDataParameters != nil {
+		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(target.RedshiftDataParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting redshift_target: %s", err)
 		}
 	}
 
-	if t.EcsParameters != nil {
-		if err := d.Set("ecs_target", flattenTargetECSParameters(t.EcsParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %w", err)
+	if target.EcsParameters != nil {
+		if err := d.Set("ecs_target", flattenTargetECSParameters(ctx, target.EcsParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ecs_target: %s", err)
 		}
 	}
 
-	if t.BatchParameters != nil {
-		if err := d.Set("batch_target", flattenTargetBatchParameters(t.BatchParameters)); err != nil {
-			return fmt.Errorf("Error setting batch_target error: %w", err)
+	if target.BatchParameters != nil {
+		if err := d.Set("batch_target", flattenTargetBatchParameters(target.BatchParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting batch_target: %s", err)
 		}
 	}
 
-	if t.KinesisParameters != nil {
-		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(t.KinesisParameters)); err != nil {
-			return fmt.Errorf("Error setting kinesis_target error: %w", err)
+	if target.KinesisParameters != nil {
+		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(target.KinesisParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting kinesis_target: %s", err)
 		}
 	}
 
-	if t.SqsParameters != nil {
-		if err := d.Set("sqs_target", flattenTargetSQSParameters(t.SqsParameters)); err != nil {
-			return fmt.Errorf("Error setting sqs_target error: %w", err)
+	if target.SageMakerPipelineParameters != nil {
+		if err := d.Set("sagemaker_pipeline_target", flattenTargetSageMakerPipelineParameters(target.SageMakerPipelineParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting sagemaker_pipeline_parameters: %s", err)
 		}
 	}
 
-	if t.InputTransformer != nil {
-		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
-			return fmt.Errorf("Error setting input_transformer error: %w", err)
+	if target.SqsParameters != nil {
+		if err := d.Set("sqs_target", flattenTargetSQSParameters(target.SqsParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting sqs_target: %s", err)
 		}
 	}
 
-	if t.RetryPolicy != nil {
-		if err := d.Set("retry_policy", flattenTargetRetryPolicy(t.RetryPolicy)); err != nil {
-			return fmt.Errorf("Error setting retry_policy error: #{err}")
+	if target.InputTransformer != nil {
+		if err := d.Set("input_transformer", flattenInputTransformer(target.InputTransformer)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting input_transformer: %s", err)
 		}
 	}
 
-	if t.DeadLetterConfig != nil {
-		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
-			return fmt.Errorf("Error setting dead_letter_config error: #{err}")
+	if target.RetryPolicy != nil {
+		if err := d.Set("retry_policy", flattenTargetRetryPolicy(target.RetryPolicy)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting retry_policy: %s", err)
 		}
 	}
 
-	return nil
+	if target.DeadLetterConfig != nil {
+		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(target.DeadLetterConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+		}
+	}
+
+	return diags
 }
 
-func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := buildPutTargetInputStruct(d)
+	if d.HasChangesExcept("force_destroy") {
+		input := expandPutTargetsInput(ctx, d)
 
-	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
-	_, err := conn.PutTargets(input)
-	if err != nil {
-		return fmt.Errorf("error updating EventBridge Target (%s): %w", d.Id(), err)
+		output, err := conn.PutTargets(ctx, input)
+
+		if err == nil && output != nil {
+			err = putTargetsError(output.FailedEntries)
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Target (%s): %s", d.Id(), err)
+		}
 	}
 
-	return resourceTargetRead(d, meta)
+	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	input := &eventbridge.RemoveTargetsInput{
-		Ids:  []*string{aws.String(d.Get("target_id").(string))},
+		Ids:  []string{d.Get("target_id").(string)},
 		Rule: aws.String(d.Get("rule").(string)),
 	}
 
@@ -562,110 +657,251 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 		input.EventBusName = aws.String(v.(string))
 	}
 
-	output, err := conn.RemoveTargets(input)
+	if v, ok := d.GetOk("force_destroy"); ok {
+		input.Force = v.(bool)
+	}
+
+	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
+	output, err := conn.RemoveTargets(ctx, input)
+
+	if err == nil && output != nil {
+		err = removeTargetsError(output.FailedEntries)
+	}
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting EventBridge Target (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
-		failedEntry := output.FailedEntries[0]
-		return fmt.Errorf("error deleting EventBridge Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
-	}
-
-	return nil
+	return diags
 }
 
-func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsInput {
-	e := &eventbridge.Target{
+func findTargetByThreePartKey(ctx context.Context, conn *eventbridge.Client, busName, ruleName, targetID string) (*types.Target, error) {
+	input := &eventbridge.ListTargetsByRuleInput{
+		Rule:  aws.String(ruleName),
+		Limit: aws.Int32(100), // Set limit to allowed maximum to prevent API throttling
+	}
+	if busName != "" {
+		input.EventBusName = aws.String(busName)
+	}
+
+	return findTarget(ctx, conn, input, func(v *types.Target) bool {
+		return targetID == aws.ToString(v.Id)
+	})
+}
+
+func findTarget(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, filter tfslices.Predicate[*types.Target]) (*types.Target, error) {
+	output, err := findTargets(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListTargetsByRuleInput, filter tfslices.Predicate[*types.Target]) ([]types.Target, error) {
+	var output []types.Target
+
+	err := listTargetsByRulePages(ctx, conn, input, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Targets {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeValidationException) || errs.IsA[*types.ResourceNotFoundException](err) || (err != nil && regexache.MustCompile(" not found$").MatchString(err.Error())) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
+const (
+	targetResourceIDSeparator = "-"
+	targetImportIDSeparator   = "/"
+)
+
+func targetCreateResourceID(eventBusName, ruleName, targetID string) string {
+	var parts []string
+
+	if eventBusName == "" || eventBusName == DefaultEventBusName {
+		parts = []string{ruleName, targetID}
+	} else {
+		parts = []string{eventBusName, ruleName, targetID}
+	}
+
+	id := strings.Join(parts, targetResourceIDSeparator)
+
+	return id
+}
+
+func targetParseImportID(id string) (string, string, string, error) {
+	parts := strings.Split(id, targetImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return DefaultEventBusName, parts[0], parts[1], nil
+	}
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+	if len(parts) > 3 {
+		iTarget := strings.LastIndex(id, targetImportIDSeparator)
+		targetID := id[iTarget+1:]
+		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
+		eventBusName := id[:iRule]
+		ruleName := id[iRule+1 : iTarget]
+		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sRULENAME%[2]sTARGETID or RULENAME%[2]sTARGETID", id, targetImportIDSeparator)
+}
+
+func putTargetError(apiObject types.PutTargetsResultEntry) error {
+	return errs.APIError(aws.ToString(apiObject.ErrorCode), aws.ToString(apiObject.ErrorMessage))
+}
+
+func putTargetsError(apiObjects []types.PutTargetsResultEntry) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.TargetId), putTargetError(apiObject)))
+	}
+
+	return errors.Join(errs...)
+}
+
+func removeTargetError(apiObject types.RemoveTargetsResultEntry) error {
+	return errs.APIError(aws.ToString(apiObject.ErrorCode), aws.ToString(apiObject.ErrorMessage))
+}
+
+func removeTargetsError(apiObjects []types.RemoveTargetsResultEntry) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.TargetId), removeTargetError(apiObject)))
+	}
+
+	return errors.Join(errs...)
+}
+
+func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbridge.PutTargetsInput {
+	target := types.Target{
 		Arn: aws.String(d.Get("arn").(string)),
 		Id:  aws.String(d.Get("target_id").(string)),
 	}
 
 	if v, ok := d.GetOk("input"); ok {
-		e.Input = aws.String(v.(string))
+		target.Input = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("input_path"); ok {
-		e.InputPath = aws.String(v.(string))
+		target.InputPath = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
-		e.RoleArn = aws.String(v.(string))
+		target.RoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("run_command_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.RunCommandParameters = expandTargetRunParameters(v.([]interface{}))
+		target.RunCommandParameters = expandTargetRunParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.EcsParameters = expandTargetECSParameters(v.([]interface{}))
+		target.EcsParameters = expandTargetECSParameters(ctx, v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.RedshiftDataParameters = expandTargetRedshiftParameters(v.([]interface{}))
+		target.RedshiftDataParameters = expandTargetRedshiftParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("http_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.HttpParameters = expandTargetHTTPParameters(v.([]interface{})[0].(map[string]interface{}))
+		target.HttpParameters = expandTargetHTTPParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("batch_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.BatchParameters = expandTargetBatchParameters(v.([]interface{}))
+		target.BatchParameters = expandTargetBatchParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("kinesis_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.KinesisParameters = expandTargetKinesisParameters(v.([]interface{}))
+		target.KinesisParameters = expandTargetKinesisParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("sqs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.SqsParameters = expandTargetSQSParameters(v.([]interface{}))
+		target.SqsParameters = expandTargetSQSParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("sagemaker_pipeline_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		target.SageMakerPipelineParameters = expandTargetSageMakerPipelineParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("input_transformer"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.InputTransformer = expandTransformerParameters(v.([]interface{}))
+		target.InputTransformer = expandTransformerParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("retry_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.RetryPolicy = expandRetryPolicyParameters(v.([]interface{}))
+		target.RetryPolicy = expandRetryPolicyParameters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
+		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
 	}
 
-	input := eventbridge.PutTargetsInput{
+	input := &eventbridge.PutTargetsInput{
 		Rule:    aws.String(d.Get("rule").(string)),
-		Targets: []*eventbridge.Target{e},
+		Targets: []types.Target{target},
 	}
+
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		input.EventBusName = aws.String(v.(string))
 	}
 
-	return &input
+	return input
 }
 
-func expandTargetRunParameters(config []interface{}) *eventbridge.RunCommandParameters {
-	commands := make([]*eventbridge.RunCommandTarget, 0)
+func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters {
+	commands := make([]types.RunCommandTarget, 0)
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		command := &eventbridge.RunCommandTarget{
+		command := types.RunCommandTarget{
 			Key:    aws.String(param["key"].(string)),
-			Values: flex.ExpandStringList(param["values"].([]interface{})),
+			Values: flex.ExpandStringValueList(param["values"].([]interface{})),
 		}
 		commands = append(commands, command)
 	}
 
-	command := &eventbridge.RunCommandParameters{
+	command := &types.RunCommandParameters{
 		RunCommandTargets: commands,
 	}
 
 	return command
 }
 
-func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftDataParameters {
-	redshiftParameters := &eventbridge.RedshiftDataParameters{}
+func expandTargetRedshiftParameters(config []interface{}) *types.RedshiftDataParameters {
+	redshiftParameters := &types.RedshiftDataParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
 
@@ -673,7 +909,7 @@ func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftD
 		redshiftParameters.Sql = aws.String(param["sql"].(string))
 
 		if val, ok := param["with_event"].(bool); ok {
-			redshiftParameters.WithEvent = aws.Bool(val)
+			redshiftParameters.WithEvent = val
 		}
 
 		if val, ok := param["statement_name"].(string); ok && val != "" {
@@ -692,69 +928,77 @@ func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftD
 	return redshiftParameters
 }
 
-func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters {
-	ecsParameters := &eventbridge.EcsParameters{}
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		tags := tftags.New(param["tags"].(map[string]interface{}))
+func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types.EcsParameters {
+	ecsParameters := &types.EcsParameters{}
+	for _, c := range tfList {
+		tfMap := c.(map[string]interface{})
+		tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
 
-		if val, ok := param["group"].(string); ok && val != "" {
-			ecsParameters.Group = aws.String(val)
+		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
-		if val, ok := param["launch_type"].(string); ok && val != "" {
-			ecsParameters.LaunchType = aws.String(val)
+		if v, ok := tfMap["group"].(string); ok && v != "" {
+			ecsParameters.Group = aws.String(v)
 		}
 
-		if val, ok := param["network_configuration"]; ok {
-			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(val.([]interface{}))
+		if v, ok := tfMap["launch_type"].(string); ok && v != "" {
+			ecsParameters.LaunchType = types.LaunchType(v)
 		}
 
-		if val, ok := param["platform_version"].(string); ok && val != "" {
-			ecsParameters.PlatformVersion = aws.String(val)
+		if v, ok := tfMap["network_configuration"]; ok {
+			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
 		}
 
-		if v, ok := param["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap["platform_version"].(string); ok && v != "" {
+			ecsParameters.PlatformVersion = aws.String(v)
+		}
+
+		if v, ok := tfMap["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.PlacementConstraints = expandTargetPlacementConstraints(v.List())
 		}
 
-		if v, ok := param["propagate_tags"].(string); ok {
-			ecsParameters.PropagateTags = aws.String(v)
+		if v, ok := tfMap["ordered_placement_strategy"]; ok {
+			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
+		}
+
+		if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+			ecsParameters.PropagateTags = types.PropagateTags(v)
 		}
 
 		if len(tags) > 0 {
 			ecsParameters.Tags = Tags(tags.IgnoreAWS())
 		}
 
-		ecsParameters.EnableExecuteCommand = aws.Bool(param["enable_execute_command"].(bool))
-		ecsParameters.EnableECSManagedTags = aws.Bool(param["enable_ecs_managed_tags"].(bool))
-		ecsParameters.TaskCount = aws.Int64(int64(param["task_count"].(int)))
-		ecsParameters.TaskDefinitionArn = aws.String(param["task_definition_arn"].(string))
+		ecsParameters.EnableExecuteCommand = tfMap["enable_execute_command"].(bool)
+		ecsParameters.EnableECSManagedTags = tfMap["enable_ecs_managed_tags"].(bool)
+		ecsParameters.TaskCount = aws.Int32(int32(tfMap["task_count"].(int)))
+		ecsParameters.TaskDefinitionArn = aws.String(tfMap["task_definition_arn"].(string))
 	}
 
 	return ecsParameters
 }
 
-func expandRetryPolicyParameters(rp []interface{}) *eventbridge.RetryPolicy {
-	retryPolicy := &eventbridge.RetryPolicy{}
+func expandRetryPolicyParameters(rp []interface{}) *types.RetryPolicy {
+	retryPolicy := &types.RetryPolicy{}
 
 	for _, v := range rp {
 		params := v.(map[string]interface{})
 
 		if val, ok := params["maximum_event_age_in_seconds"].(int); ok {
-			retryPolicy.MaximumEventAgeInSeconds = aws.Int64(int64(val))
+			retryPolicy.MaximumEventAgeInSeconds = aws.Int32(int32(val))
 		}
 
 		if val, ok := params["maximum_retry_attempts"].(int); ok {
-			retryPolicy.MaximumRetryAttempts = aws.Int64(int64(val))
+			retryPolicy.MaximumRetryAttempts = aws.Int32(int32(val))
 		}
 	}
 
 	return retryPolicy
 }
 
-func expandDeadLetterParametersConfig(dlp []interface{}) *eventbridge.DeadLetterConfig {
-	deadLetterConfig := &eventbridge.DeadLetterConfig{}
+func expandDeadLetterParametersConfig(dlp []interface{}) *types.DeadLetterConfig {
+	deadLetterConfig := &types.DeadLetterConfig{}
 
 	for _, v := range dlp {
 		params := v.(map[string]interface{})
@@ -767,40 +1011,40 @@ func expandDeadLetterParametersConfig(dlp []interface{}) *eventbridge.DeadLetter
 	return deadLetterConfig
 }
 
-func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *eventbridge.NetworkConfiguration {
+func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *types.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
-	awsVpcConfig := &eventbridge.AwsVpcConfiguration{}
+	awsVpcConfig := &types.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
 	if val, ok := raw["security_groups"]; ok {
-		awsVpcConfig.SecurityGroups = flex.ExpandStringSet(val.(*schema.Set))
+		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = flex.ExpandStringSet(raw["subnets"].(*schema.Set))
+	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw["subnets"].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
-		awsVpcConfig.AssignPublicIp = aws.String(eventbridge.AssignPublicIpDisabled)
+		awsVpcConfig.AssignPublicIp = types.AssignPublicIpDisabled
 		if val {
-			awsVpcConfig.AssignPublicIp = aws.String(eventbridge.AssignPublicIpEnabled)
+			awsVpcConfig.AssignPublicIp = types.AssignPublicIpEnabled
 		}
 	}
 
-	return &eventbridge.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+	return &types.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandTargetBatchParameters(config []interface{}) *eventbridge.BatchParameters {
-	batchParameters := &eventbridge.BatchParameters{}
+func expandTargetBatchParameters(config []interface{}) *types.BatchParameters {
+	batchParameters := &types.BatchParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		batchParameters.JobDefinition = aws.String(param["job_definition"].(string))
 		batchParameters.JobName = aws.String(param["job_name"].(string))
 		if v, ok := param["array_size"].(int); ok && v > 1 && v <= 10000 {
-			arrayProperties := &eventbridge.BatchArrayProperties{}
-			arrayProperties.Size = aws.Int64(int64(v))
+			arrayProperties := &types.BatchArrayProperties{}
+			arrayProperties.Size = int32(v)
 			batchParameters.ArrayProperties = arrayProperties
 		}
 		if v, ok := param["job_attempts"].(int); ok && v > 0 && v <= 10 {
-			retryStrategy := &eventbridge.BatchRetryStrategy{}
-			retryStrategy.Attempts = aws.Int64(int64(v))
+			retryStrategy := &types.BatchRetryStrategy{}
+			retryStrategy.Attempts = int32(v)
 			batchParameters.RetryStrategy = retryStrategy
 		}
 	}
@@ -808,8 +1052,8 @@ func expandTargetBatchParameters(config []interface{}) *eventbridge.BatchParamet
 	return batchParameters
 }
 
-func expandTargetKinesisParameters(config []interface{}) *eventbridge.KinesisParameters {
-	kinesisParameters := &eventbridge.KinesisParameters{}
+func expandTargetKinesisParameters(config []interface{}) *types.KinesisParameters {
+	kinesisParameters := &types.KinesisParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		if v, ok := param["partition_key_path"].(string); ok && v != "" {
@@ -820,8 +1064,8 @@ func expandTargetKinesisParameters(config []interface{}) *eventbridge.KinesisPar
 	return kinesisParameters
 }
 
-func expandTargetSQSParameters(config []interface{}) *eventbridge.SqsParameters {
-	sqsParameters := &eventbridge.SqsParameters{}
+func expandTargetSQSParameters(config []interface{}) *types.SqsParameters {
+	sqsParameters := &types.SqsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		if v, ok := param["message_group_id"].(string); ok && v != "" {
@@ -832,216 +1076,12 @@ func expandTargetSQSParameters(config []interface{}) *eventbridge.SqsParameters 
 	return sqsParameters
 }
 
-func expandTargetHTTPParameters(tfMap map[string]interface{}) *eventbridge.HttpParameters {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &eventbridge.HttpParameters{}
-
-	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.HeaderParameters = flex.ExpandStringMap(v)
-	}
-
-	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
-		apiObject.PathParameterValues = flex.ExpandStringList(v)
-	}
-
-	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.QueryStringParameters = flex.ExpandStringMap(v)
-	}
-
-	return apiObject
-}
-
-func expandTransformerParameters(config []interface{}) *eventbridge.InputTransformer {
-	transformerParameters := &eventbridge.InputTransformer{}
-
-	inputPathsMaps := map[string]*string{}
-
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		inputPaths := param["input_paths"].(map[string]interface{})
-
-		for k, v := range inputPaths {
-			inputPathsMaps[k] = aws.String(v.(string))
-		}
-		transformerParameters.InputTemplate = aws.String(param["input_template"].(string))
-	}
-	transformerParameters.InputPathsMap = inputPathsMaps
-
-	return transformerParameters
-}
-
-func flattenTargetRunParameters(runCommand *eventbridge.RunCommandParameters) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-
-	for _, x := range runCommand.RunCommandTargets {
-		config := make(map[string]interface{})
-
-		config["key"] = aws.StringValue(x.Key)
-		config["values"] = flex.FlattenStringList(x.Values)
-
-		result = append(result, config)
-	}
-
-	return result
-}
-
-func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
-	if ecsParameters.Group != nil {
-		config["group"] = aws.StringValue(ecsParameters.Group)
-	}
-
-	if ecsParameters.LaunchType != nil {
-		config["launch_type"] = aws.StringValue(ecsParameters.LaunchType)
-	}
-
-	config["network_configuration"] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
-	if ecsParameters.PlatformVersion != nil {
-		config["platform_version"] = aws.StringValue(ecsParameters.PlatformVersion)
-	}
-
-	if ecsParameters.PropagateTags != nil {
-		config["propagate_tags"] = aws.StringValue(ecsParameters.PropagateTags)
-	}
-
-	if ecsParameters.PlacementConstraints != nil {
-		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
-	}
-
-	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAWS().Map()
-	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
-	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
-	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
-	config["task_definition_arn"] = aws.StringValue(ecsParameters.TaskDefinitionArn)
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetRedshiftParameters(redshiftParameters *eventbridge.RedshiftDataParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
-
-	if redshiftParameters == nil {
-		return []map[string]interface{}{config}
-	}
-
-	config["database"] = aws.StringValue(redshiftParameters.Database)
-	config["db_user"] = aws.StringValue(redshiftParameters.DbUser)
-	config["secrets_manager_arn"] = aws.StringValue(redshiftParameters.SecretManagerArn)
-	config["sql"] = aws.StringValue(redshiftParameters.Sql)
-	config["statement_name"] = aws.StringValue(redshiftParameters.StatementName)
-	config["with_event"] = aws.BoolValue(redshiftParameters.WithEvent)
-
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetECSParametersNetworkConfiguration(nc *eventbridge.NetworkConfiguration) []interface{} {
-	if nc == nil {
-		return nil
-	}
-
-	result := make(map[string]interface{})
-	result["security_groups"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
-	result["subnets"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
-
-	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
-		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == eventbridge.AssignPublicIpEnabled
-	}
-
-	return []interface{}{result}
-}
-
-func flattenTargetBatchParameters(batchParameters *eventbridge.BatchParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
-	config["job_definition"] = aws.StringValue(batchParameters.JobDefinition)
-	config["job_name"] = aws.StringValue(batchParameters.JobName)
-	if batchParameters.ArrayProperties != nil {
-		config["array_size"] = int(aws.Int64Value(batchParameters.ArrayProperties.Size))
-	}
-	if batchParameters.RetryStrategy != nil {
-		config["job_attempts"] = int(aws.Int64Value(batchParameters.RetryStrategy.Attempts))
-	}
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetKinesisParameters(kinesisParameters *eventbridge.KinesisParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
-	config["partition_key_path"] = aws.StringValue(kinesisParameters.PartitionKeyPath)
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetSQSParameters(sqsParameters *eventbridge.SqsParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
-	config["message_group_id"] = aws.StringValue(sqsParameters.MessageGroupId)
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetHTTPParameters(apiObject *eventbridge.HttpParameters) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.HeaderParameters; v != nil {
-		tfMap["header_parameters"] = aws.StringValueMap(v)
-	}
-
-	if v := apiObject.PathParameterValues; v != nil {
-		tfMap["path_parameter_values"] = aws.StringValueSlice(v)
-	}
-
-	if v := apiObject.QueryStringParameters; v != nil {
-		tfMap["query_string_parameters"] = aws.StringValueMap(v)
-	}
-
-	return tfMap
-}
-
-func flattenInputTransformer(inputTransformer *eventbridge.InputTransformer) []map[string]interface{} {
-	config := make(map[string]interface{})
-	inputPathsMap := make(map[string]string)
-	for k, v := range inputTransformer.InputPathsMap {
-		inputPathsMap[k] = aws.StringValue(v)
-	}
-	config["input_template"] = aws.StringValue(inputTransformer.InputTemplate)
-	config["input_paths"] = inputPathsMap
-
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetRetryPolicy(rp *eventbridge.RetryPolicy) []map[string]interface{} {
-	config := make(map[string]interface{})
-
-	config["maximum_event_age_in_seconds"] = aws.Int64Value(rp.MaximumEventAgeInSeconds)
-	config["maximum_retry_attempts"] = aws.Int64Value(rp.MaximumRetryAttempts)
-
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func flattenTargetDeadLetterConfig(dlc *eventbridge.DeadLetterConfig) []map[string]interface{} {
-	config := make(map[string]interface{})
-
-	config["arn"] = aws.StringValue(dlc.Arn)
-
-	result := []map[string]interface{}{config}
-	return result
-}
-
-func expandTargetPlacementConstraints(tfList []interface{}) []*eventbridge.PlacementConstraint {
+func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []types.SageMakerPipelineParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var result []*eventbridge.PlacementConstraint
+	var result []types.SageMakerPipelineParameter
 
 	for _, tfMapRaw := range tfList {
 		if tfMapRaw == nil {
@@ -1050,14 +1090,14 @@ func expandTargetPlacementConstraints(tfList []interface{}) []*eventbridge.Place
 
 		tfMap := tfMapRaw.(map[string]interface{})
 
-		apiObject := &eventbridge.PlacementConstraint{}
+		apiObject := types.SageMakerPipelineParameter{}
 
-		if v, ok := tfMap["expression"].(string); ok && v != "" {
-			apiObject.Expression = aws.String(v)
+		if v, ok := tfMap["name"].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
 		}
 
-		if v, ok := tfMap["type"].(string); ok && v != "" {
-			apiObject.Type = aws.String(v)
+		if v, ok := tfMap["value"].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
 		}
 
 		result = append(result, apiObject)
@@ -1066,16 +1106,345 @@ func expandTargetPlacementConstraints(tfList []interface{}) []*eventbridge.Place
 	return result
 }
 
-func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) []map[string]interface{} {
+func expandTargetSageMakerPipelineParameters(config []interface{}) *types.SageMakerPipelineParameters {
+	sageMakerPipelineParameters := &types.SageMakerPipelineParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["pipeline_parameter_list"].(*schema.Set); ok && v.Len() > 0 {
+			sageMakerPipelineParameters.PipelineParameterList = expandTargetSageMakerPipelineParameterList(v.List())
+		}
+	}
+
+	return sageMakerPipelineParameters
+}
+
+func expandTargetHTTPParameters(tfMap map[string]interface{}) *types.HttpParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.HttpParameters{}
+
+	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.HeaderParameters = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PathParameterValues = flex.ExpandStringValueList(v)
+	}
+
+	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.QueryStringParameters = flex.ExpandStringValueMap(v)
+	}
+
+	return apiObject
+}
+
+func expandTransformerParameters(config []interface{}) *types.InputTransformer {
+	transformerParameters := &types.InputTransformer{}
+
+	inputPathsMaps := map[string]string{}
+
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		inputPaths := param["input_paths"].(map[string]interface{})
+
+		for k, v := range inputPaths {
+			inputPathsMaps[k] = v.(string)
+		}
+		transformerParameters.InputTemplate = aws.String(param["input_template"].(string))
+	}
+	transformerParameters.InputPathsMap = inputPathsMaps
+
+	return transformerParameters
+}
+
+func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, x := range runCommand.RunCommandTargets {
+		config := make(map[string]interface{})
+
+		config["key"] = aws.ToString(x.Key)
+		config["values"] = x.Values
+
+		result = append(result, config)
+	}
+
+	return result
+}
+
+func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	if ecsParameters.Group != nil {
+		config["group"] = aws.ToString(ecsParameters.Group)
+	}
+
+	config["launch_type"] = ecsParameters.LaunchType
+
+	config["network_configuration"] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
+	if ecsParameters.PlatformVersion != nil {
+		config["platform_version"] = aws.ToString(ecsParameters.PlatformVersion)
+	}
+
+	config["propagate_tags"] = ecsParameters.PropagateTags
+
+	if ecsParameters.PlacementConstraints != nil {
+		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
+	}
+
+	if ecsParameters.PlacementStrategy != nil {
+		config["ordered_placement_strategy"] = flattenTargetPlacementStrategies(ecsParameters.PlacementStrategy)
+	}
+
+	if ecsParameters.CapacityProviderStrategy != nil {
+		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+	}
+
+	config["tags"] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
+	config["enable_execute_command"] = ecsParameters.EnableExecuteCommand
+	config["enable_ecs_managed_tags"] = ecsParameters.EnableECSManagedTags
+	config["task_count"] = aws.ToInt32(ecsParameters.TaskCount)
+	config["task_definition_arn"] = aws.ToString(ecsParameters.TaskDefinitionArn)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetRedshiftParameters(redshiftParameters *types.RedshiftDataParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	if redshiftParameters == nil {
+		return []map[string]interface{}{config}
+	}
+
+	config["database"] = aws.ToString(redshiftParameters.Database)
+	config["db_user"] = aws.ToString(redshiftParameters.DbUser)
+	config["secrets_manager_arn"] = aws.ToString(redshiftParameters.SecretManagerArn)
+	config["sql"] = aws.ToString(redshiftParameters.Sql)
+	config["statement_name"] = aws.ToString(redshiftParameters.StatementName)
+	config["with_event"] = redshiftParameters.WithEvent
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetECSParametersNetworkConfiguration(nc *types.NetworkConfiguration) []interface{} {
+	if nc == nil {
+		return nil
+	}
+
+	result := make(map[string]interface{})
+	result["security_groups"] = nc.AwsvpcConfiguration.SecurityGroups
+	result["subnets"] = nc.AwsvpcConfiguration.Subnets
+	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == types.AssignPublicIpEnabled
+
+	return []interface{}{result}
+}
+
+func flattenTargetBatchParameters(batchParameters *types.BatchParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["job_definition"] = aws.ToString(batchParameters.JobDefinition)
+	config["job_name"] = aws.ToString(batchParameters.JobName)
+	if batchParameters.ArrayProperties != nil {
+		config["array_size"] = batchParameters.ArrayProperties.Size
+	}
+	if batchParameters.RetryStrategy != nil {
+		config["job_attempts"] = batchParameters.RetryStrategy.Attempts
+	}
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetKinesisParameters(kinesisParameters *types.KinesisParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["partition_key_path"] = aws.ToString(kinesisParameters.PartitionKeyPath)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetSageMakerPipelineParameters(sageMakerParameters *types.SageMakerPipelineParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["pipeline_parameter_list"] = flattenTargetSageMakerPipelineParameter(sageMakerParameters.PipelineParameterList)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetSageMakerPipelineParameter(pcs []types.SageMakerPipelineParameter) []map[string]interface{} {
 	if len(pcs) == 0 {
 		return nil
 	}
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["type"] = aws.StringValue(pc.Type)
+		c["name"] = aws.ToString(pc.Name)
+		c["value"] = aws.ToString(pc.Value)
+
+		results = append(results, c)
+	}
+	return results
+}
+
+func flattenTargetSQSParameters(sqsParameters *types.SqsParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["message_group_id"] = aws.ToString(sqsParameters.MessageGroupId)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetHTTPParameters(apiObject *types.HttpParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.HeaderParameters; v != nil {
+		tfMap["header_parameters"] = v
+	}
+
+	if v := apiObject.PathParameterValues; v != nil {
+		tfMap["path_parameter_values"] = v
+	}
+
+	if v := apiObject.QueryStringParameters; v != nil {
+		tfMap["query_string_parameters"] = v
+	}
+
+	return tfMap
+}
+
+func flattenInputTransformer(inputTransformer *types.InputTransformer) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["input_template"] = aws.ToString(inputTransformer.InputTemplate)
+	config["input_paths"] = inputTransformer.InputPathsMap
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetRetryPolicy(rp *types.RetryPolicy) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["maximum_event_age_in_seconds"] = aws.ToInt32(rp.MaximumEventAgeInSeconds)
+	config["maximum_retry_attempts"] = aws.ToInt32(rp.MaximumRetryAttempts)
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenTargetDeadLetterConfig(dlc *types.DeadLetterConfig) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["arn"] = aws.ToString(dlc.Arn)
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementConstraint {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []types.PlacementConstraint
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := types.PlacementConstraint{}
+
+		if v, ok := tfMap["expression"].(string); ok && v != "" {
+			apiObject.Expression = aws.String(v)
+		}
+
+		if v, ok := tfMap["type"].(string); ok && v != "" {
+			apiObject.Type = types.PlacementConstraintType(v)
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
+func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStrategy {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []types.PlacementStrategy
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := types.PlacementStrategy{}
+
+		if v, ok := tfMap["field"].(string); ok && v != "" {
+			apiObject.Field = aws.String(v)
+		}
+
+		if v, ok := tfMap["type"].(string); ok && v != "" {
+			apiObject.Type = types.PlacementStrategyType(v)
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
+func expandTargetCapacityProviderStrategy(tfList []interface{}) []types.CapacityProviderStrategyItem {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []types.CapacityProviderStrategyItem
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		cp := tfMapRaw.(map[string]interface{})
+
+		apiObject := types.CapacityProviderStrategyItem{}
+
+		if val, ok := cp["base"]; ok {
+			apiObject.Base = int32(val.(int))
+		}
+
+		if val, ok := cp["weight"]; ok {
+			apiObject.Weight = int32(val.(int))
+		}
+
+		if val, ok := cp["capacity_provider"]; ok {
+			apiObject.CapacityProvider = aws.String(val.(string))
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
+func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[string]interface{} {
+	if len(pcs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, pc := range pcs {
+		c := make(map[string]interface{})
+		c["type"] = pc.Type
 		if pc.Expression != nil {
-			c["expression"] = aws.StringValue(pc.Expression)
+			c["expression"] = aws.ToString(pc.Expression)
 		}
 
 		results = append(results, c)
@@ -1083,27 +1452,34 @@ func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) [
 	return results
 }
 
-func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	busName, ruleName, targetID, err := TargetParseImportID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
+func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[string]interface{} {
+	if len(pcs) == 0 {
+		return nil
 	}
+	results := make([]map[string]interface{}, 0)
+	for _, pc := range pcs {
+		c := make(map[string]interface{})
+		c["type"] = pc.Type
+		if pc.Field != nil {
+			c["field"] = aws.ToString(pc.Field)
+		}
 
-	id := TargetCreateResourceID(busName, ruleName, targetID)
-	d.SetId(id)
-	d.Set("target_id", targetID)
-	d.Set("rule", ruleName)
-	d.Set("event_bus_name", busName)
-
-	return []*schema.ResourceData{d}, nil
+		results = append(results, c)
+	}
+	return results
 }
 
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
+func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyItem) []map[string]interface{} {
+	if cps == nil {
+		return nil
 	}
+	results := make([]map[string]interface{}, 0)
+	for _, cp := range cps {
+		s := make(map[string]interface{})
+		s["capacity_provider"] = aws.ToString(cp.CapacityProvider)
+		s["weight"] = cp.Weight
+		s["base"] = cp.Base
+		results = append(results, s)
+	}
+	return results
 }

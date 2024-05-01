@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -12,21 +15,26 @@ import (
 	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_memorydb_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceParameterGroupCreate,
-		ReadContext:   resourceParameterGroupRead,
-		UpdateContext: resourceParameterGroupUpdate,
-		DeleteContext: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -64,7 +72,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateResourceNamePrefix(parameterGroupNameMaxLength - resource.UniqueIDSuffixLength),
+				ValidateFunc:  validateResourceNamePrefix(parameterGroupNameMaxLength - id.UniqueIDSuffixLength),
 			},
 			"parameter": {
 				Type:     schema.TypeSet,
@@ -83,30 +91,30 @@ func ResourceParameterGroup() *schema.Resource {
 				},
 				Set: ParameterHash,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateParameterGroupInput{
 		Description:        aws.String(d.Get("description").(string)),
 		Family:             aws.String(d.Get("family").(string)),
 		ParameterGroupName: aws.String(name),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB Parameter Group: %s", input)
 	output, err := conn.CreateParameterGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MemoryDB Parameter Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Parameter Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -115,11 +123,13 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[INFO] MemoryDB Parameter Group ID: %s", d.Id())
 
 	// Update to apply parameter changes.
-	return resourceParameterGroupUpdate(ctx, d, meta)
+	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -146,7 +156,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			err := resetParameterGroupParameters(ctx, conn, d.Get("name").(string), paramsToReset)
 
 			if err != nil {
-				return diag.Errorf("error resetting MemoryDB Parameter Group (%s) parameters to defaults: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "resetting MemoryDB Parameter Group (%s) parameters to defaults: %s", d.Id(), err)
 			}
 		}
 
@@ -161,37 +171,29 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			err := modifyParameterGroupParameters(ctx, conn, d.Get("name").(string), paramsToModify)
 
 			if err != nil {
-				return diag.Errorf("error modifying MemoryDB Parameter Group (%s) parameters: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "modifying MemoryDB Parameter Group (%s) parameters: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating MemoryDB Parameter Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceParameterGroupRead(ctx, d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	group, err := FindParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", group.ARN)
@@ -204,35 +206,20 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	parameters, err := listParameterGroupParameters(ctx, conn, d.Get("family").(string), d.Id(), userDefinedParameters)
 	if err != nil {
-		return diag.Errorf("error listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
-		return diag.Errorf("failed to set parameter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for MemoryDB Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Parameter Group: (%s)", d.Id())
 	_, err := conn.DeleteParameterGroupWithContext(ctx, &memorydb.DeleteParameterGroupInput{
@@ -240,14 +227,14 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeParameterGroupNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // resetParameterGroupParameters resets the given parameters to their default values.
@@ -262,13 +249,13 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB,
 		ParameterNames:     parameterNames,
 	}
 
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
+	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.ResetParameterGroupWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, memorydb.ErrCodeInvalidParameterGroupStateFault, " has pending changes") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

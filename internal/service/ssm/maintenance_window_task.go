@@ -1,31 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ssm_maintenance_window_task")
 func ResourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMaintenanceWindowTaskCreate,
-		Read:   resourceMaintenanceWindowTaskRead,
-		Update: resourceMaintenanceWindowTaskUpdate,
-		Delete: resourceMaintenanceWindowTaskDelete,
+		CreateWithoutTimeout: resourceMaintenanceWindowTaskCreate,
+		ReadWithoutTimeout:   resourceMaintenanceWindowTaskRead,
+		UpdateWithoutTimeout: resourceMaintenanceWindowTaskUpdate,
+		DeleteWithoutTimeout: resourceMaintenanceWindowTaskDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceMaintenanceWindowTaskImport,
+			StateContext: resourceMaintenanceWindowTaskImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -53,14 +60,14 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
 
 			"max_errors": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
 
 			"task_type": {
@@ -105,7 +112,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
 					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
 			},
 
@@ -136,7 +143,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 									"document_version": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 									},
 									"parameter": {
 										Type:     schema.TypeSet,
@@ -214,7 +221,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 									"document_version": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
 									},
 
 									"notification_config": {
@@ -667,8 +674,9 @@ func flattenTaskInvocationCommonParameters(parameters map[string][]*string) []in
 	return attributes
 }
 
-func resourceMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Task")
 
@@ -714,32 +722,33 @@ func resourceMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{
 		params.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
 	}
 
-	resp, err := conn.RegisterTaskWithMaintenanceWindow(params)
+	resp, err := conn.RegisterTaskWithMaintenanceWindowWithContext(ctx, params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SSM Maintenance Window Task: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.WindowTaskId))
 
-	return resourceMaintenanceWindowTaskRead(d, meta)
+	return append(diags, resourceMaintenanceWindowTaskRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.GetMaintenanceWindowTaskInput{
 		WindowId:     aws.String(windowID),
 		WindowTaskId: aws.String(d.Id()),
 	}
-	resp, err := conn.GetMaintenanceWindowTask(params)
+	resp, err := conn.GetMaintenanceWindowTaskWithContext(ctx, params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
 	}
 
 	windowTaskID := aws.StringValue(resp.WindowTaskId)
@@ -757,12 +766,12 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 
 	if resp.TaskInvocationParameters != nil {
 		if err := d.Set("task_invocation_parameters", flattenTaskInvocationParameters(resp.TaskInvocationParameters)); err != nil {
-			return fmt.Errorf("Error setting task_invocation_parameters error: %#v", err)
+			return sdkdiag.AppendErrorf(diags, "setting task_invocation_parameters error: %#v", err)
 		}
 	}
 
 	if err := d.Set("targets", flattenTargets(resp.Targets)); err != nil {
-		return fmt.Errorf("Error setting targets error: %#v", err)
+		return sdkdiag.AppendErrorf(diags, "setting targets error: %#v", err)
 	}
 
 	arn := arn.ARN{
@@ -774,11 +783,12 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 	}.String()
 	d.Set("arn", arn)
 
-	return nil
+	return diags
 }
 
-func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.UpdateMaintenanceWindowTaskInput{
@@ -824,16 +834,17 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 		params.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
 	}
 
-	_, err := conn.UpdateMaintenanceWindowTask(params)
+	_, err := conn.UpdateMaintenanceWindowTaskWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error updating Maintenance Window (%s) Task (%s): %w", windowID, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
 	}
 
-	return resourceMaintenanceWindowTaskRead(d, meta)
+	return append(diags, resourceMaintenanceWindowTaskRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Task: %s", d.Id())
 
@@ -842,18 +853,18 @@ func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{
 		WindowTaskId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeregisterTaskFromMaintenanceWindow(params)
+	_, err := conn.DeregisterTaskFromMaintenanceWindowWithContext(ctx, params)
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deregistering SSM Maintenance Window Task (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deregistering SSM Maintenance Window Task (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMaintenanceWindowTaskImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMaintenanceWindowTaskImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <window-id>/<window-task-id>", d.Id())

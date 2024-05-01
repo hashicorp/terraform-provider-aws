@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ses
 
@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ses_configuration_set", &resource.Sweeper{
 		Name: "aws_ses_configuration_set",
 		F:    sweepConfigurationSets,
@@ -39,17 +39,18 @@ func init() {
 }
 
 func sweepConfigurationSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SESConn
+	conn := client.SESConn(ctx)
 	input := &ses.ListConfigurationSetsInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
-		output, err := conn.ListConfigurationSets(input)
-		if sweep.SkipSweepError(err) {
+		output, err := conn.ListConfigurationSetsWithContext(ctx, input)
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Configuration Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -62,7 +63,7 @@ func sweepConfigurationSets(region string) error {
 			name := aws.StringValue(configurationSet.Name)
 
 			log.Printf("[INFO] Deleting SES Configuration Set: %s", name)
-			_, err := conn.DeleteConfigurationSet(&ses.DeleteConfigurationSetInput{
+			_, err := conn.DeleteConfigurationSetWithContext(ctx, &ses.DeleteConfigurationSetInput{
 				ConfigurationSetName: aws.String(name),
 			})
 			if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
@@ -86,17 +87,18 @@ func sweepConfigurationSets(region string) error {
 }
 
 func sweepIdentities(region, identityType string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SESConn
+	conn := client.SESConn(ctx)
 	input := &ses.ListIdentitiesInput{
 		IdentityType: aws.String(identityType),
 	}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListIdentitiesPages(input, func(page *ses.ListIdentitiesOutput, lastPage bool) bool {
+	err = conn.ListIdentitiesPagesWithContext(ctx, input, func(page *ses.ListIdentitiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -105,7 +107,7 @@ func sweepIdentities(region, identityType string) error {
 			identity := aws.StringValue(identity)
 
 			log.Printf("[INFO] Deleting SES Identity: %s", identity)
-			_, err = conn.DeleteIdentity(&ses.DeleteIdentityInput{
+			_, err = conn.DeleteIdentityWithContext(ctx, &ses.DeleteIdentityInput{
 				Identity: aws.String(identity),
 			})
 			if err != nil {
@@ -118,7 +120,7 @@ func sweepIdentities(region, identityType string) error {
 
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SES Identities sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -130,17 +132,19 @@ func sweepIdentities(region, identityType string) error {
 }
 
 func sweepReceiptRuleSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).SESConn
+	conn := client.SESConn(ctx)
 
 	// You cannot delete the receipt rule set that is currently active.
-	// Setting the name of the receipt rule set to make active to null disables all email receiving.
+	// Setting the name of the active receipt rule set to null disables all email receiving.
 	log.Printf("[INFO] Disabling any currently active SES Receipt Rule Set")
-	_, err = conn.SetActiveReceiptRuleSet(&ses.SetActiveReceiptRuleSetInput{})
-	if sweep.SkipSweepError(err) {
+	_, err = conn.SetActiveReceiptRuleSetWithContext(ctx, &ses.SetActiveReceiptRuleSetInput{})
+	// In some regions, this will return "InvalidAction" with no message
+	if awsv1.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InvalidAction") {
 		log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 		return nil
 	}
@@ -152,8 +156,8 @@ func sweepReceiptRuleSets(region string) error {
 	var sweeperErrs *multierror.Error
 
 	for {
-		output, err := conn.ListReceiptRuleSets(input)
-		if sweep.SkipSweepError(err) {
+		output, err := conn.ListReceiptRuleSetsWithContext(ctx, input)
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -166,7 +170,7 @@ func sweepReceiptRuleSets(region string) error {
 			name := aws.StringValue(ruleSet.Name)
 
 			log.Printf("[INFO] Deleting SES Receipt Rule Set: %s", name)
-			_, err := conn.DeleteReceiptRuleSet(&ses.DeleteReceiptRuleSetInput{
+			_, err := conn.DeleteReceiptRuleSetWithContext(ctx, &ses.DeleteReceiptRuleSetInput{
 				RuleSetName: aws.String(name),
 			})
 			if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {

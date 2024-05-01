@@ -21,8 +21,8 @@ Manages a Service Catalog Product.
 ```terraform
 resource "aws_servicecatalog_product" "example" {
   name  = "example"
-  owner = [aws_security_group.example.id]
-  type  = aws_subnet.main.id
+  owner = "example-owner"
+  type  = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     template_url = "https://s3.amazonaws.com/cf-templates-ozkq9d3hgiq2-us-east-1/temp1.json"
@@ -41,7 +41,7 @@ The following arguments are required:
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
 * `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
-* `type` - (Required) Type of product. Valid values are `CLOUD_FORMATION_TEMPLATE`, `MARKETPLACE`.
+* `type` - (Required) Type of product. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html#API_CreateProduct_RequestSyntax) for valid list of values.
 
 The following arguments are optional:
 
@@ -55,18 +55,18 @@ The following arguments are optional:
 
 ### provisioning_artifact_parameters
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disable_template_validation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
 * `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2beta`). No spaces are allowed.
 * `template_physical_id` - (Required if `template_url` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
 * `template_url` - (Required if `template_physical_id` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
-* `type` - (Optional) Type of provisioning artifact. Valid values: `CLOUD_FORMATION_TEMPLATE`, `MARKETPLACE_AMI`, `MARKETPLACE_CAR` (Marketplace Clusters and AWS Resources).
+* `type` - (Optional) Type of provisioning artifact. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html) for valid list of values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the product.
 * `created_time` - Time when the product was created.
@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `read` - (Default `10m`)
@@ -86,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_product` can be imported using the product ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_product` using the product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_product.example
+  id = "prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_product` using the product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```

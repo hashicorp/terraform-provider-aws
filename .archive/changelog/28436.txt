@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appsync_resolver: Add `runtime` and `code` arguments
+```
+
+```release-note:enhancement
+resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl`
+```

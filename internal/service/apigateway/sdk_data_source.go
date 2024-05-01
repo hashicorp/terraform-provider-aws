@@ -1,19 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func DataSourceSdk() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_sdk", name="SDK")
+func dataSourceSDK() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSdkRead,
+		ReadWithoutTimeout: dataSourceSDKRead,
+
 		Schema: map[string]*schema.Schema{
 			"body": {
 				Type:     schema.TypeString,
@@ -49,32 +56,35 @@ func DataSourceSdk() *schema.Resource {
 	}
 }
 
-func dataSourceSdkRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restApiId := d.Get("rest_api_id").(string)
+	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	sdkType := d.Get("sdk_type").(string)
-
 	input := &apigateway.GetSdkInput{
-		RestApiId: aws.String(restApiId),
-		StageName: aws.String(stageName),
+		RestApiId: aws.String(apiID),
 		SdkType:   aws.String(sdkType),
+		StageName: aws.String(stageName),
 	}
 
 	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	export, err := conn.GetSdk(input)
+	id := apiID + ":" + stageName + ":" + sdkType
+
+	sdk, err := conn.GetSdk(ctx, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway SDK (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", restApiId, stageName, sdkType))
-	d.Set("body", string(export.Body))
-	d.Set("content_type", export.ContentType)
-	d.Set("content_disposition", export.ContentDisposition)
+	d.SetId(id)
+	d.Set("body", string(sdk.Body))
+	d.Set("content_disposition", sdk.ContentDisposition)
+	d.Set("content_type", sdk.ContentType)
 
-	return nil
+	return diags
 }

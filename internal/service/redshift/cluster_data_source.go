@@ -1,20 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCluster() *schema.Resource {
+// @SDKDataSource("aws_redshift_cluster", name="Cluster")
+// @Tags
+func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"allow_version_upgrade": {
@@ -49,6 +58,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -80,11 +93,6 @@ func DataSourceCluster() *schema.Resource {
 			"cluster_revision_number": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"cluster_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -147,6 +155,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"multi_az": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -180,7 +192,7 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -194,15 +206,15 @@ func DataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
-	rsc, err := FindClusterByID(conn, clusterID)
+	rsc, err := findClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Cluster (%s): %w", clusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", clusterID, err)
 	}
 
 	d.SetId(clusterID)
@@ -220,96 +232,77 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
 	}
 	d.Set("availability_zone", rsc.AvailabilityZone)
-	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
-	if err != nil {
-		return err
+	if v, err := clusterAvailabilityZoneRelocationStatus(rsc); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	} else {
+		d.Set("availability_zone_relocation_enabled", v)
 	}
-	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
-		return fmt.Errorf("setting cluster_nodes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
-
 	if len(rsc.ClusterParameterGroups) > 0 {
 		d.Set("cluster_parameter_group_name", rsc.ClusterParameterGroups[0].ParameterGroupName)
 	}
-
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-
-	var csg []string
-	for _, g := range rsc.ClusterSecurityGroups {
-		csg = append(csg, aws.StringValue(g.ClusterSecurityGroupName))
-	}
-	d.Set("cluster_security_groups", csg)
-
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
-
 	if len(rsc.ClusterNodes) > 1 {
 		d.Set("cluster_type", clusterTypeMultiNode)
 	} else {
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
-
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set("database_name", rsc.DBName)
-
+	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	if rsc.ElasticIpStatus != nil {
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
 	}
-
 	d.Set("encrypted", rsc.Encrypted)
-
 	if rsc.Endpoint != nil {
 		d.Set("endpoint", rsc.Endpoint.Address)
+		d.Set("port", rsc.Endpoint.Port)
 	}
-
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
-
-	var iamRoles []string
-	for _, i := range rsc.IamRoles {
-		iamRoles = append(iamRoles, aws.StringValue(i.IamRoleArn))
-	}
-	d.Set("iam_roles", iamRoles)
-
+	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v *redshift.ClusterIamRole) string {
+		return aws.StringValue(v.IamRoleArn)
+	}))
 	d.Set("kms_key_id", rsc.KmsKeyId)
-	d.Set("master_username", rsc.MasterUsername)
-	d.Set("node_type", rsc.NodeType)
-	d.Set("number_of_nodes", rsc.NumberOfNodes)
-	d.Set("port", rsc.Endpoint.Port)
-	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", rsc.PubliclyAccessible)
-	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
-
-	if err := d.Set("tags", KeyValueTags(rsc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	d.Set("master_username", rsc.MasterUsername)
+	if v, err := clusterMultiAZStatus(rsc); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	} else {
+		d.Set("multi_az", v)
 	}
-
+	d.Set("node_type", rsc.NodeType)
+	d.Set("number_of_nodes", rsc.NumberOfNodes)
+	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
+	d.Set("publicly_accessible", rsc.PubliclyAccessible)
 	d.Set("vpc_id", rsc.VpcId)
+	d.Set("vpc_security_group_ids", tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
+		return aws.StringValue(v.VpcSecurityGroupId)
+	}))
 
-	var vpcg []string
-	for _, g := range rsc.VpcSecurityGroups {
-		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
-	}
-	d.Set("vpc_security_group_ids", vpcg)
+	setTagsOut(ctx, rsc.Tags)
 
-	loggingStatus, err := conn.DescribeLoggingStatus(&redshift.DescribeLoggingStatusInput{
+	loggingStatus, err := conn.DescribeLoggingStatusWithContext(ctx, &redshift.DescribeLoggingStatusInput{
 		ClusterIdentifier: aws.String(clusterID),
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Cluster (%s) logging status: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s) logging status: %s", d.Id(), err)
 	}
 
 	if loggingStatus != nil && aws.BoolValue(loggingStatus.LoggingEnabled) {
-		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("bucket_name", loggingStatus.BucketName)
-		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
-		d.Set("log_exports", flex.FlattenStringSet(loggingStatus.LogExports))
+		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
+		d.Set("log_exports", aws.StringValueSlice(loggingStatus.LogExports))
+		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
 	}
 
-	return nil
+	return diags
 }

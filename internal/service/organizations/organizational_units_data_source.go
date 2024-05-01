@@ -1,23 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_organizations_organizational_units")
 func DataSourceOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrganizationalUnitsRead,
+		ReadWithoutTimeout: dataSourceOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"children": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -38,45 +44,87 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 					},
 				},
 			},
+			"parent_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
-func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	parent_id := d.Get("parent_id").(string)
-
-	params := &organizations.ListOrganizationalUnitsForParentInput{
-		ParentId: aws.String(parent_id),
-	}
-
-	var children []*organizations.OrganizationalUnit
-
-	err := conn.ListOrganizationalUnitsForParentPages(params,
-		func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
-			children = append(children, page.OrganizationalUnits...)
-
-			return !lastPage
-		})
+	parentID := d.Get("parent_id").(string)
+	children, err := findOrganizationalUnitsForParentByID(ctx, conn, parentID)
 
 	if err != nil {
-		return fmt.Errorf("error listing Organizations Organization Units for parent (%s): %w", parent_id, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parentID, err)
 	}
 
-	d.SetId(parent_id)
-
-	if err := d.Set("children", FlattenOrganizationalUnits(children)); err != nil {
-		return fmt.Errorf("error setting children: %w", err)
+	d.SetId(parentID)
+	if err := d.Set("children", flattenOrganizationalUnits(children)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting children: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func FlattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
+func findOrganizationalUnitsForParentByID(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.OrganizationalUnit, error) {
+	input := &organizations.ListOrganizationalUnitsForParentInput{
+		ParentId: aws.String(id),
+	}
+
+	return findOrganizationalUnitsForParent(ctx, conn, input, tfslices.PredicateTrue[*organizations.OrganizationalUnit]())
+}
+
+func findOrganizationalUnitForParent(ctx context.Context, conn *organizations.Organizations, input *organizations.ListOrganizationalUnitsForParentInput, filter tfslices.Predicate[*organizations.OrganizationalUnit]) (*organizations.OrganizationalUnit, error) {
+	output, err := findOrganizationalUnitsForParent(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.Organizations, input *organizations.ListOrganizationalUnitsForParentInput, filter tfslices.Predicate[*organizations.OrganizationalUnit]) ([]*organizations.OrganizationalUnit, error) {
+	var output []*organizations.OrganizationalUnit
+
+	err := conn.ListOrganizationalUnitsForParentPagesWithContext(ctx, input, func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.OrganizationalUnits {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeParentNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func flattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
 	if len(ous) == 0 {
 		return nil
 	}
+
 	var result []map[string]interface{}
 	for _, ou := range ous {
 		result = append(result, map[string]interface{}{

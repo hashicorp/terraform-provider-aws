@@ -1,33 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMPCAPermission_basic(t *testing.T) {
-	var permission acmpca.Permission
+	ctx := acctest.Context(t)
+	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &permission),
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					resource.TestCheckResourceAttr(resourceName, "actions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
@@ -42,21 +48,22 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 }
 
 func TestAccACMPCAPermission_disappears(t *testing.T) {
-	var permission acmpca.Permission
+	ctx := acctest.Context(t)
+	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &permission),
-					acctest.CheckResourceDisappears(acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,20 +72,21 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 }
 
 func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
-	var permission acmpca.Permission
+	ctx := acctest.Context(t)
+	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_sourceAccount(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &permission),
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
 					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
 				),
 			},
@@ -86,57 +94,42 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 	})
 }
 
-func testAccCheckPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acmpca_permission" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_acmpca_permission" {
+				continue
+			}
+
+			_, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes["principal"], rs.Primary.Attributes["source_account"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ACM PCA Permission %s still exists", rs.Primary.ID)
 		}
 
-		caARN, principal, sourceAccount, err := tfacmpca.PermissionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfacmpca.FindPermission(conn, caARN, principal, sourceAccount)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("ACM PCA Permission %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckPermissionExists(n string, v *acmpca.Permission) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, n string, v *types.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ACM PCA Permission ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		caARN, principal, sourceAccount, err := tfacmpca.PermissionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
-
-		output, err := tfacmpca.FindPermission(conn, caARN, principal, sourceAccount)
+		output, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes["principal"], rs.Primary.Attributes["source_account"])
 
 		if err != nil {
 			return err

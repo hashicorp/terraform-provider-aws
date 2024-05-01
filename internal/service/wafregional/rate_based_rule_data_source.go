@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceRateBasedRule() *schema.Resource {
+// @SDKDataSource("aws_wafregional_rate_based_rule", name="Rate Based Rule")
+func dataSourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRateBasedRuleRead,
+		ReadWithoutTimeout: dataSourceRateBasedRuleRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,17 +28,18 @@ func DataSourceRateBasedRule() *schema.Resource {
 	}
 }
 
-func dataSourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn
+func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)
 	// ListRulesInput does not have a name parameter for filtering
 	input := &waf.ListRateBasedRulesInput{}
 	for {
-		output, err := conn.ListRateBasedRules(input)
+		output, err := conn.ListRateBasedRulesWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error reading WAF Rate Based Rules: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading WAF Rate Based Rules: %s", err)
 		}
 		for _, rule := range output.Rules {
 			if aws.StringValue(rule.Name) == name {
@@ -47,16 +54,16 @@ func dataSourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(rules) == 0 {
-		return fmt.Errorf("WAF Rate Based Rules not found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "WAF Rate Based Rules not found for name: %s", name)
 	}
 
 	if len(rules) > 1 {
-		return fmt.Errorf("multiple WAF Rate Based Rules found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "multiple WAF Rate Based Rules found for name: %s", name)
 	}
 
 	rule := rules[0]
 
 	d.SetId(aws.StringValue(rule.RuleId))
 
-	return nil
+	return diags
 }

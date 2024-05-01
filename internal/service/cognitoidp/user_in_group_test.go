@@ -1,21 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_in_group.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -23,15 +29,15 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 	userResourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserInGroupDestroy,
+		CheckDestroy:             testAccCheckUserInGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserInGroupExists(resourceName),
+					testAccCheckUserInGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "group_name", userGroupResourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "username", userResourceName, "username"),
@@ -42,20 +48,21 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 }
 
 func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_in_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserInGroupDestroy,
+		CheckDestroy:             testAccCheckUserInGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserInGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserInGroup(), resourceName),
+					testAccCheckUserInGroupExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserInGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,20 +101,20 @@ resource "aws_cognito_user_in_group" "test" {
 `, rName)
 }
 
-func testAccCheckUserInGroupExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		groupName := rs.Primary.Attributes["group_name"]
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		username := rs.Primary.Attributes["username"]
 
-		found, err := tfcognitoidp.FindCognitoUserInGroup(conn, groupName, userPoolId, username)
+		found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
 		if err != nil {
 			return err
@@ -121,32 +128,34 @@ func testAccCheckUserInGroupExists(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserInGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cognito_user_in_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cognito_user_in_group" {
+				continue
+			}
+
+			groupName := rs.Primary.Attributes["group_name"]
+			userPoolId := rs.Primary.Attributes["user_pool_id"]
+			username := rs.Primary.Attributes["username"]
+
+			found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
+
+			if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if found {
+				return fmt.Errorf("user in group still exists (%s)", rs.Primary.ID)
+			}
 		}
 
-		groupName := rs.Primary.Attributes["group_name"]
-		userPoolId := rs.Primary.Attributes["user_pool_id"]
-		username := rs.Primary.Attributes["username"]
-
-		found, err := tfcognitoidp.FindCognitoUserInGroup(conn, groupName, userPoolId, username)
-
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if found {
-			return fmt.Errorf("user in group still exists (%s)", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }

@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ClusterRoleStatusActive  = "ACTIVE"
@@ -9,20 +14,53 @@ const (
 )
 
 const (
-	storageTypeStandard = "standard"
-	storageTypeGP2      = "gp2"
-	storageTypeIO1      = "io1"
+	ClusterStatusAvailable                  = "available"
+	ClusterStatusBackingUp                  = "backing-up"
+	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
+	ClusterStatusCreating                   = "creating"
+	ClusterStatusDeleting                   = "deleting"
+	ClusterStatusMigrating                  = "migrating"
+	ClusterStatusModifying                  = "modifying"
+	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
+	ClusterStatusPromoting                  = "promoting"
+	ClusterStatusRebooting                  = "rebooting"
+	ClusterStatusRenaming                   = "renaming"
+	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	ClusterStatusScalingCompute             = "scaling-compute"
+	ClusterStatusUpgrading                  = "upgrading"
+)
+
+const (
+	ClusterSnapshotStatusAvailable = "available"
+	ClusterSnapshotStatusCreating  = "creating"
+)
+
+const (
+	storageTypeStandard    = "standard"
+	storageTypeGP2         = "gp2"
+	storageTypeGP3         = "gp3"
+	storageTypeIO1         = "io1"
+	storageTypeIO2         = "io2"
+	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
 func StorageType_Values() []string {
 	return []string{
 		storageTypeStandard,
 		storageTypeGP2,
+		storageTypeGP3,
 		storageTypeIO1,
+		storageTypeIO2,
+		storageTypeAuroraIOPT1,
 	}
 }
 
 const (
+	InstanceEngineAuroraMySQL         = "aurora-mysql"
+	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -33,7 +71,7 @@ const (
 	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
-	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
+	InstanceEngineSQLServerWeb        = "sqlserver-web"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -45,10 +83,12 @@ const (
 	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
 	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
 	InstanceStatusCreating                                     = "creating"
+	InstanceStatusDeletePreCheck                               = "delete-precheck"
 	InstanceStatusDeleting                                     = "deleting"
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
 	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	InstanceStatusIncompatiblCreate                            = "incompatible-create"
 	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
 	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
 	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
@@ -70,33 +110,62 @@ const (
 )
 
 const (
-	InstanceAutomatedBackupStatusPending     = "pending"
-	InstanceAutomatedBackupStatusReplicating = "replicating"
-	InstanceAutomatedBackupStatusRetained    = "retained"
+	GlobalClusterStatusAvailable = "available"
+	GlobalClusterStatusCreating  = "creating"
+	GlobalClusterStatusDeleting  = "deleting"
+	GlobalClusterStatusModifying = "modifying"
+	GlobalClusterStatusUpgrading = "upgrading"
 )
 
 const (
-	EventSubscriptionStatusActive    = "active"
-	EventSubscriptionStatusCreating  = "creating"
-	EventSubscriptionStatusDeleting  = "deleting"
-	EventSubscriptionStatusModifying = "modifying"
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
 )
 
 const (
-	ClusterEngineAurora           = "aurora"
+	DBSnapshotAvailable = "available"
+	DBSnapshotCreating  = "creating"
+)
+
+const (
 	ClusterEngineAuroraMySQL      = "aurora-mysql"
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
 	ClusterEnginePostgres         = "postgres"
+	ClusterEngineCustomPrefix     = "custom-"
 )
 
 func ClusterEngine_Values() []string {
 	return []string{
-		ClusterEngineAurora,
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,
 		ClusterEnginePostgres,
+	}
+}
+
+func ClusterInstanceEngine_Values() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
+	}
+}
+
+const (
+	GlobalClusterEngineAurora           = "aurora"
+	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
+	GlobalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+)
+
+func GlobalClusterEngine_Values() []string {
+	return []string{
+		GlobalClusterEngineAurora,
+		GlobalClusterEngineAuroraMySQL,
+		GlobalClusterEngineAuroraPostgreSQL,
 	}
 }
 
@@ -122,9 +191,11 @@ const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
+	ExportableLogTypeDiagLog    = "diag.log"
 	ExportableLogTypeError      = "error"
 	ExportableLogTypeGeneral    = "general"
 	ExportableLogTypeListener   = "listener"
+	ExportableLogTypeNotifyLog  = "notify.log"
 	ExportableLogTypeOEMAgent   = "oemagent"
 	ExportableLogTypePostgreSQL = "postgresql"
 	ExportableLogTypeSlowQuery  = "slowquery"
@@ -139,6 +210,7 @@ func ClusterExportableLogType_Values() []string {
 		ExportableLogTypeGeneral,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
+		ExportableLogTypeUpgrade,
 	}
 }
 
@@ -147,9 +219,11 @@ func InstanceExportableLogType_Values() []string {
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
 		ExportableLogTypeAudit,
+		ExportableLogTypeDiagLog,
 		ExportableLogTypeError,
 		ExportableLogTypeGeneral,
 		ExportableLogTypeListener,
+		ExportableLogTypeNotifyLog,
 		ExportableLogTypeOEMAgent,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
@@ -195,5 +269,27 @@ func TimeoutAction_Values() []string {
 }
 
 const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
+	}
+}
+
+const (
 	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	ResNameTags = "Tags"
+)
+
+const (
+	ReservedInstanceStateActive         = "active"
+	ReservedInstanceStateRetired        = "retired"
+	ReservedInstanceStatePaymentPending = "payment-pending"
 )

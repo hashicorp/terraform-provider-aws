@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}_test
 
 {{- if .IncludeComments }}
@@ -17,10 +20,7 @@ package {{ .ServicePackage }}_test
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
 // it.
-//
-// Remember to register this new data source in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.{{- end }}
+{{- end }}
 
 import (
 {{- if .IncludeComments }}
@@ -40,10 +40,11 @@ import (
 	// types.<Type Name>.
 {{- end }}
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
-{{ if .AWSGoSDKV2 }}
+
+	"github.com/YakDriver/regexache"
+{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
@@ -52,12 +53,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
 {{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 {{- if .IncludeComments }}
 
 	// TIP: You will often need to import the package that this test file lives
@@ -65,6 +67,9 @@ import (
     // any normal context constants, variables, or functions.
 {{- end }}
 	tf{{ .ServicePackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ServicePackage }}"
+{{- if .AWSGoSDKV2 }}
+	"github.com/hashicorp/terraform-provider-aws/names"
+{{- end }}
 )
 {{ if .IncludeComments }}
 // TIP: File Structure. The basic outline for all test files should be as
@@ -98,6 +103,8 @@ import (
 // intricate, they should be unit tested.
 {{- end }}
 func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -125,7 +132,9 @@ func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
 			got, err := tf{{ .ServicePackage }}.FunctionFromDataSource(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -153,6 +162,7 @@ func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 // Acceptance test access AWS and cost money to run.
 {{- end }}
 func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
     {{- if .IncludeComments }}
     // TIP: This is a long-running test guard for tests that run longer than
     // 300s (5 min) generally.
@@ -167,18 +177,26 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			{{- if .AWSGoSDKV2 }}
+			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
+			{{- else }}
+			acctest.PreCheckPartitionHasService(t, {{ .ServicePackage }}.EndpointsID)
+			{{- end }}
+			testAccPreCheck(ctx, t)
 		},
+		{{- if .AWSGoSDKV2 }}
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
+		{{- else }}
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		{{- end }}
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy,
+		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .DataSource }}Exists(dataSourceName, &{{ .DataSourceLower }}),
+					testAccCheck{{ .DataSource }}Exists(ctx, dataSourceName, &{{ .DataSourceLower }}),
 					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "user.*", map[string]string{
@@ -187,7 +205,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexp.MustCompile(`{{ .DataSourceLower }}:+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:+.`)),
 				),
 			},
 		},

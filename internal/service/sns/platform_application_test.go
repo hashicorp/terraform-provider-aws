@@ -1,23 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 /**
@@ -25,39 +27,60 @@ import (
 
  GCM_API_KEY - Google Cloud Messaging API Key
 
+ APNS_SANDBOX_CREDENTIAL - Apple Push Notification Sandbox Private Key
+ APNS_SANDBOX_PRINCIPAL - Apple Push Notification Sandbox Certificate
+
  APNS_SANDBOX_CREDENTIAL_PATH - Apple Push Notification Sandbox Private Key file location
  APNS_SANDBOX_PRINCIPAL_PATH - Apple Push Notification Sandbox Certificate file location
+
+ APNS_SANDBOX_TOKEN_CREDENTIAL - Apple signing key
+ APNS_SANDBOX_TOKEN_PRINCIPAL - Apple signing key id
 **/
 
 type testAccPlatformApplicationPlatform struct {
-	Name       string
-	Credential string
-	Principal  string
+	Name         string
+	Credential   string
+	Principal    string
+	ApnsAuthType string // "certificate", "token"
 }
 
-func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccPlatformApplicationPlatform {
+func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType string) []*testAccPlatformApplicationPlatform {
 	platforms := make([]*testAccPlatformApplicationPlatform, 0, 2)
 
-	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" {
+	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" && allowedApnsAuthType == "certificate" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
 		}
 
 		platform := &testAccPlatformApplicationPlatform{
-			Name:       "APNS_SANDBOX",
-			Credential: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
-			Principal:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
+			Name:         "APNS_SANDBOX",
+			Credential:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
+			Principal:    fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
+			ApnsAuthType: "certificate",
 		}
 		platforms = append(platforms, platform)
-	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" {
+	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" && allowedApnsAuthType == "certificate" {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
 
 		platform := &testAccPlatformApplicationPlatform{
-			Name:       "APNS_SANDBOX",
-			Credential: strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
-			Principal:  strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
+			Name:         "APNS_SANDBOX",
+			Credential:   strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
+			Principal:    strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
+			ApnsAuthType: "certificate",
+		}
+		platforms = append(platforms, platform)
+	} else if os.Getenv("APNS_SANDBOX_TOKEN_CREDENTIAL") != "" && allowedApnsAuthType == "token" {
+		if os.Getenv("APNS_SANDBOX_TOKEN_PRINCIPAL") == "" {
+			t.Fatalf("APNS_SANDBOX_TOKEN_PRINCIPAL set but missing APNS_SANDBOX_TOKEN_CREDENTIAL")
+		}
+
+		platform := &testAccPlatformApplicationPlatform{
+			Name:         "APNS_SANDBOX",
+			Credential:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_TOKEN_CREDENTIAL"))),
+			Principal:    fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_TOKEN_PRINCIPAL"))),
+			ApnsAuthType: "token",
 		}
 		platforms = append(platforms, platform)
 	}
@@ -76,7 +99,9 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccPlatformA
 	return platforms
 }
 
-func TestDecodePlatformApplicationID(t *testing.T) {
+func TestParsePlatformApplicationResourceID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input            string
 		ExpectedArn      string
@@ -129,7 +154,7 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		arn, name, platform, err := tfsns.DecodePlatformApplicationID(tc.Input)
+		arn, name, platform, err := tfsns.ParsePlatformApplicationResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -148,11 +173,138 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 	}
 }
 
+func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
+	resourceName := "aws_sns_platform_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_delivery_failure_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_created_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_deleted_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_updated_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "failure_feedback_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_role_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_sample_rate"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+			},
+		},
+	})
+}
+
+func TestAccSNSPlatformApplication_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
+	resourceName := "aws_sns_platform_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourcePlatformApplication(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	apiKey := acctest.SkipIfEnvVarNotSet(t, "GCM_API_KEY")
+	resourceName := "aws_sns_platform_application.test"
+	topic0ResourceName := "aws_sns_topic.test.0"
+	topic1ResourceName := "aws_sns_topic.test.1"
+	role0ResourceName := "aws_iam_role.test.0"
+	role1ResourceName := "aws_iam_role.test.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmAllAttributes(rName, apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role0ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "25"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+			},
+			{
+				Config: testAccPlatformApplicationConfig_gcmAllAttributesUpdated(rName, apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "50"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSNSPlatformApplication_basic(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+	ctx := acctest.Context(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
-	for _, platform := range platforms {
+	for _, platform := range platforms { //nolint:paralleltest
 		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 		platformPrincipalCheck := resource.TestCheckNoResourceAttr(resourceName, "platform_principal")
 		if platform.Principal != "" {
@@ -161,16 +313,16 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:                 func() { acctest.PreCheck(t) },
-				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckPlatformApplicationDestroy,
+				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
-							testAccCheckPlatformApplicationExists(resourceName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
+							testAccCheckPlatformApplicationExists(ctx, resourceName),
+							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, "name", name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
@@ -190,7 +342,8 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 }
 
 func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+	ctx := acctest.Context(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []struct {
@@ -205,29 +358,31 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 		},
 	}
 
-	for _, platform := range platforms {
+	for _, platform := range platforms { //nolint:paralleltest
 		t.Run(platform.Name, func(*testing.T) {
+			t.Parallel()
+
 			for _, tc := range testCases {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
-					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:                 func() { acctest.PreCheck(t) },
-						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+					resource.Test(t, resource.TestCase{
+						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+						ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 						Steps: []resource.TestStep{
 							{
 								Config: testAccPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValue),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(ctx, resourceName),
 									resource.TestCheckResourceAttr(resourceName, tc.AttributeKey, tc.AttributeValue),
 								),
 							},
 							{
 								Config: testAccPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValueUpdate),
 								Check: resource.ComposeTestCheckFunc(
-									testAccCheckPlatformApplicationExists(resourceName),
+									testAccCheckPlatformApplicationExists(ctx, resourceName),
 									resource.TestCheckResourceAttr(resourceName, tc.AttributeKey, tc.AttributeValueUpdate),
 								),
 							},
@@ -245,205 +400,127 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 	}
 }
 
-func TestAccSNSPlatformApplication_iamRoleAttributes(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
+func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
+	ctx := acctest.Context(t)
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, "token")
 	resourceName := "aws_sns_platform_application.test"
+	applePlatformTeamId := "1111111111"
+	updatedApplePlatformTeamId := "2222222222"
+	applePlatformBundleId := "com.bundle.name"
+	updatedApplePlatformBundleId := "com.bundle2.name2"
 
-	var testCases = []string{
-		"failure_feedback_role_arn",
-		"success_feedback_role_arn",
-	}
+	for _, platform := range platforms { //nolint:paralleltest
+		if platform.Name == "GCM" {
+			continue
+		}
 
-	for _, platform := range platforms {
+		name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
+
 		t.Run(platform.Name, func(*testing.T) {
-			for _, tc := range testCases {
-				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc), func(*testing.T) {
-					iamRoleName1 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
-					iamRoleName2 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
-					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
-
-					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:                 func() { acctest.PreCheck(t) },
-						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
-						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
-						Steps: []resource.TestStep{
-							{
-								Config: testAccPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName1),
-								Check: resource.ComposeTestCheckFunc(
-									testAccCheckPlatformApplicationExists(resourceName),
-									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s$", iamRoleName1))),
-								),
-							},
-							{
-								Config: testAccPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName2),
-								Check: resource.ComposeTestCheckFunc(
-									testAccCheckPlatformApplicationExists(resourceName),
-									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s$", iamRoleName2))),
-								),
-							},
-							{
-								ResourceName:            resourceName,
-								ImportState:             true,
-								ImportStateVerify:       true,
-								ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
-							},
-						},
-					})
-				})
-			}
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, applePlatformTeamId, applePlatformBundleId),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckPlatformApplicationExists(ctx, resourceName),
+							resource.TestCheckResourceAttr(resourceName, "name", name),
+							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
+							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
+							resource.TestCheckResourceAttrSet(resourceName, "platform_principal"),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_team_id", applePlatformTeamId),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_bundle_id", applePlatformBundleId),
+						),
+					},
+					{
+						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, updatedApplePlatformTeamId, updatedApplePlatformBundleId),
+						Check: resource.ComposeTestCheckFunc(
+							testAccCheckPlatformApplicationExists(ctx, resourceName),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_team_id", updatedApplePlatformTeamId),
+							resource.TestCheckResourceAttr(resourceName, "apple_platform_bundle_id", updatedApplePlatformBundleId),
+						),
+					},
+					{
+						ResourceName:            resourceName,
+						ImportState:             true,
+						ImportStateVerify:       true,
+						ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+					},
+				},
+			})
 		})
 	}
 }
 
-func TestAccSNSPlatformApplication_snsTopicAttributes(t *testing.T) {
-	platforms := testAccPlatformApplicationPlatformFromEnv(t)
-	resourceName := "aws_sns_platform_application.test"
-
-	var testCases = []string{
-		"event_delivery_failure_topic_arn",
-		"event_endpoint_created_topic_arn",
-		"event_endpoint_deleted_topic_arn",
-		"event_endpoint_updated_topic_arn",
-	}
-
-	for _, platform := range platforms {
-		t.Run(platform.Name, func(*testing.T) {
-			for _, tc := range testCases {
-				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc), func(*testing.T) {
-					snsTopicName1 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
-					snsTopicName2 := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
-					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
-
-					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:                 func() { acctest.PreCheck(t) },
-						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
-						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
-						Steps: []resource.TestStep{
-							{
-								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName1),
-								Check: resource.ComposeTestCheckFunc(
-									testAccCheckPlatformApplicationExists(resourceName),
-									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName1))),
-								),
-							},
-							{
-								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName2),
-								Check: resource.ComposeTestCheckFunc(
-									testAccCheckPlatformApplicationExists(resourceName),
-									resource.TestMatchResourceAttr(resourceName, tc, regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:%s$", snsTopicName2))),
-								),
-							},
-							{
-								ResourceName:            resourceName,
-								ImportState:             true,
-								ImportStateVerify:       true,
-								ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
-							},
-						},
-					})
-				})
-			}
-		})
-	}
-}
-
-func testAccCheckPlatformApplicationExists(name string) resource.TestCheckFunc {
+func testAccCheckPlatformApplicationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("missing ID: %s", name)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
-
-		input := &sns.GetPlatformApplicationAttributesInput{
-			PlatformApplicationArn: aws.String(rs.Primary.ID),
-		}
-
-		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
-		_, err := conn.GetPlatformApplicationAttributes(input)
+		_, err := tfsns.FindPlatformApplicationAttributesByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+func testAccCheckPlatformApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sns_platform_application" {
-			continue
-		}
-
-		input := &sns.GetPlatformApplicationAttributesInput{
-			PlatformApplicationArn: aws.String(rs.Primary.ID),
-		}
-
-		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
-		_, err := conn.GetPlatformApplicationAttributes(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sns_platform_application" {
+				continue
 			}
-			return err
+
+			_, err := tfsns.FindPlatformApplicationAttributesByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SNS Platform Application %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
-	return nil
 }
 
-func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatformApplicationPlatform) string {
-	if platform.Principal == "" {
-		return fmt.Sprintf(`
-resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-}
-`, name, platform.Name, platform.Credential)
-	}
+func testAccPlatformApplicationConfig_gcmBasic(rName, credentials string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  platform_principal  = %s
+  name                = %[1]q
+  platform            = "GCM"
+  platform_credential = %[2]q
 }
-`, name, platform.Name, platform.Credential, platform.Principal)
+`, rName, credentials)
 }
 
-func testAccPlatformApplicationConfig_basicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, attributeValue string) string {
-	if platform.Principal == "" {
-		return fmt.Sprintf(`
-resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  %s                  = "%s"
-}
-`, name, platform.Name, platform.Credential, attributeKey, attributeValue)
-	}
+func testAccPlatformApplicationConfig_gcmAllAttributesBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sns_platform_application" "test" {
-  name                = "%s"
-  platform            = "%s"
-  platform_credential = %s
-  platform_principal  = %s
-  %s                  = "%s"
-}
-`, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
+resource "aws_sns_topic" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
 }
 
-func testAccPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
-	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -456,25 +533,108 @@ resource "aws_iam_role" "test" {
   }
 }
 EOF
-
-  name = "%s"
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
+  count = 2
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchLogsFullAccess"
-  role       = aws_iam_role.test.id
+  role       = aws_iam_role.test[count.index].id
+}
+`, rName)
 }
 
-%s
-`, iamRoleName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
+func testAccPlatformApplicationConfig_gcmAllAttributes(rName, credentials string) string {
+	return acctest.ConfigCompose(testAccPlatformApplicationConfig_gcmAllAttributesBase(rName), fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = "GCM"
+  platform_credential = %[2]q
+
+  event_delivery_failure_topic_arn = aws_sns_topic.test[0].arn
+  event_endpoint_created_topic_arn = aws_sns_topic.test[1].arn
+  event_endpoint_deleted_topic_arn = aws_sns_topic.test[0].arn
+  event_endpoint_updated_topic_arn = aws_sns_topic.test[1].arn
+
+  failure_feedback_role_arn = aws_iam_role.test[0].arn
+  success_feedback_role_arn = aws_iam_role.test[1].arn
+
+  success_feedback_sample_rate = 25
+}
+`, rName, credentials))
 }
 
-func testAccPlatformApplicationConfig_topicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, snsTopicName string) string {
+func testAccPlatformApplicationConfig_gcmAllAttributesUpdated(rName, credentials string) string {
+	return acctest.ConfigCompose(testAccPlatformApplicationConfig_gcmAllAttributesBase(rName), fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = "GCM"
+  platform_credential = %[2]q
+
+  event_delivery_failure_topic_arn = aws_sns_topic.test[1].arn
+  event_endpoint_created_topic_arn = aws_sns_topic.test[0].arn
+  event_endpoint_deleted_topic_arn = aws_sns_topic.test[1].arn
+  event_endpoint_updated_topic_arn = aws_sns_topic.test[0].arn
+
+  failure_feedback_role_arn = aws_iam_role.test[1].arn
+  success_feedback_role_arn = aws_iam_role.test[0].arn
+
+  success_feedback_sample_rate = 50
+}
+`, rName, credentials))
+}
+
+func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatformApplicationPlatform) string {
+	if platform.Principal == "" {
+		return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+}
+`, name, platform.Name, platform.Credential)
+	}
 	return fmt.Sprintf(`
-resource "aws_sns_topic" "test" {
-  name = "%s"
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  platform_principal  = %[4]s
+}
+`, name, platform.Name, platform.Credential, platform.Principal)
 }
 
-%s
-`, snsTopicName, testAccPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
+func testAccPlatformApplicationConfig_basicAttribute(name string, platform *testAccPlatformApplicationPlatform, attributeKey, attributeValue string) string {
+	if platform.Principal == "" {
+		return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  %[4]s               = %[5]q
+}
+`, name, platform.Name, platform.Credential, attributeKey, attributeValue)
+	}
+	return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = %[2]q
+  platform_credential = %[3]s
+  platform_principal  = %[4]s
+  %[5]s               = %[6]q
+}
+`, name, platform.Name, platform.Credential, platform.Principal, attributeKey, attributeValue)
+}
+
+func testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name string, platform *testAccPlatformApplicationPlatform, applePlatformTeamId string, applePlatformBundleId string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                     = %[1]q
+  platform                 = %[2]q
+  platform_credential      = %[3]s
+  platform_principal       = %[4]s
+  apple_platform_team_id   = %[5]q
+  apple_platform_bundle_id = %[6]q
+}
+`, name, platform.Name, platform.Credential, platform.Principal, applePlatformTeamId, applePlatformBundleId)
 }

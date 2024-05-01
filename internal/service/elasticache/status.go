@@ -1,9 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
+	"context"
+
+	elasticache_v2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -14,16 +20,12 @@ const (
 	ReplicationGroupStatusDeleting     = "deleting"
 	ReplicationGroupStatusCreateFailed = "create-failed"
 	ReplicationGroupStatusSnapshotting = "snapshotting"
-
-	UserStatusActive    = "active"
-	UserStatusDeleting  = "deleting"
-	UserStatusModifying = "modifying"
 )
 
 // StatusReplicationGroup fetches the Replication Group and its Status
-func StatusReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		rg, err := FindReplicationGroupByID(conn, replicationGroupID)
+		rg, err := FindReplicationGroupByID(ctx, conn, replicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -37,9 +39,9 @@ func StatusReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID st
 
 // StatusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func StatusReplicationGroupMemberClusters(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clusters, err := FindReplicationGroupMemberClustersByID(conn, replicationGroupID)
+		clusters, err := FindReplicationGroupMemberClustersByID(ctx, conn, replicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -72,9 +74,9 @@ const (
 )
 
 // StatusCacheCluster fetches the Cache Cluster and its Status
-func StatusCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
+func StatusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		c, err := FindCacheClusterByID(conn, cacheClusterID)
+		c, err := FindCacheClusterByID(ctx, conn, cacheClusterID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -87,6 +89,29 @@ func StatusCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string) re
 }
 
 const (
+	ServerlessCacheAvailable = "available"
+	ServerlessCacheCreating  = "creating"
+	ServerlessCacheDeleted   = "deleted"
+	ServerlessCacheDeleting  = "deleting"
+	ServerlessCacheModifying = "modifying"
+)
+
+// statusCacheCluster fetches the Cache Cluster and its Status
+func statusServerlessCache(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		c, err := FindServerlessCacheByID(ctx, conn, cacheClusterID)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return c, aws.StringValue(c.Status), nil
+	}
+}
+
+const (
 	GlobalReplicationGroupStatusAvailable   = "available"
 	GlobalReplicationGroupStatusCreating    = "creating"
 	GlobalReplicationGroupStatusModifying   = "modifying"
@@ -95,10 +120,10 @@ const (
 	GlobalReplicationGroupStatusDeleted     = "deleted"
 )
 
-// StatusGlobalReplicationGroup fetches the Global Replication Group and its Status
-func StatusGlobalReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
+// statusGlobalReplicationGroup fetches the Global Replication Group and its Status
+func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		grg, err := FindGlobalReplicationGroupByID(conn, globalReplicationGroupID)
+		grg, err := FindGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -114,10 +139,10 @@ const (
 	GlobalReplicationGroupMemberStatusAssociated = "associated"
 )
 
-// StatusGlobalReplicationGroup fetches the Global Replication Group and its Status
-func StatusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
+// statusGlobalReplicationGroupMember fetches a Global Replication Group Member and its Status
+func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		member, err := FindGlobalReplicationGroupMemberByID(conn, globalReplicationGroupID, id)
+		member, err := FindGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -126,22 +151,5 @@ func StatusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalRep
 		}
 
 		return member, aws.StringValue(member.Status), nil
-	}
-}
-
-// StatusUser fetches the ElastiCache user and its Status
-func StatusUser(conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		user, err := FindUserByID(conn, userId)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return user, aws.StringValue(user.Status), nil
 	}
 }

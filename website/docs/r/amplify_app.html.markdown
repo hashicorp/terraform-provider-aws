@@ -124,16 +124,53 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Custom Image
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  environment_variables = {
+    "_CUSTOM_IMAGE" = "node:16",
+  }
+}
+```
+
+### Custom Headers
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  custom_headers = <<-EOT
+    customHeaders:
+      - pattern: '**'
+        headers:
+          - key: 'Strict-Transport-Security'
+            value: 'max-age=31536000; includeSubDomains'
+          - key: 'X-Frame-Options'
+            value: 'SAMEORIGIN'
+          - key: 'X-XSS-Protection'
+            value: '1; mode=block'
+          - key: 'X-Content-Type-Options'
+            value: 'nosniff'
+          - key: 'Content-Security-Policy'
+            value: "default-src 'self'"
+  EOT
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for an Amplify app.
-* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. The personal access token is used to create a webhook and a read-only deploy key. The token is not stored.
+* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
 * `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. An `auto_branch_creation_config` block is documented below.
 * `auto_branch_creation_patterns` - (Optional) Automated branch creation glob patterns for an Amplify app.
 * `basic_auth_credentials` - (Optional) Credentials for basic authorization for an Amplify app.
 * `build_spec` - (Optional) The [build specification](https://docs.aws.amazon.com/amplify/latest/userguide/build-settings.html) (build spec) for an Amplify app.
+* `custom_headers` - (Optional) The [custom HTTP headers](https://docs.aws.amazon.com/amplify/latest/userguide/custom-headers.html) for an Amplify app.
 * `custom_rule` - (Optional) Custom rewrite and redirect rules for an Amplify app. A `custom_rule` block is documented below.
 * `description` - (Optional) Description for an Amplify app.
 * `enable_auto_branch_creation` - (Optional) Enables automated branch creation for an Amplify app.
@@ -143,10 +180,9 @@ The following arguments are supported:
 * `environment_variables` - (Optional) Environment variables map for an Amplify app.
 * `iam_service_role_arn` - (Optional) AWS Identity and Access Management (IAM) service role for an Amplify app.
 * `oauth_token` - (Optional) OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
-* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`.
+* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`. Default value: `WEB`.
 * `repository` - (Optional) Repository for an Amplify app.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 
 An `auto_branch_creation_config` block supports the following arguments:
 
@@ -168,9 +204,9 @@ A `custom_rule` block supports the following arguments:
 * `status` - (Optional) Status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
 * `target` - (Required) Target pattern for a URL rewrite or redirect rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Amplify app.
 * `default_domain` - Default domain for the Amplify app.
@@ -187,10 +223,19 @@ A `production_branch` block supports the following attributes:
 
 ## Import
 
-Amplify App can be imported using Amplify App ID (appId), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify App using Amplify App ID (appId). For example:
 
+```terraform
+import {
+  to = aws_amplify_app.example
+  id = "d2ypk4k47z8u6"
+}
 ```
-$ terraform import aws_amplify_app.example d2ypk4k47z8u6
+
+Using `terraform import`, import Amplify App using Amplify App ID (appId). For example:
+
+```console
+% terraform import aws_amplify_app.example d2ypk4k47z8u6
 ```
 
 App ID can be obtained from App ARN (e.g., `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).

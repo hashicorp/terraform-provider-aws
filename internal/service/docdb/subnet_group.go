@@ -1,30 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_docdb_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSubnetGroupCreate,
-		Read:   resourceSubnetGroupRead,
-		Update: resourceSubnetGroupUpdate,
-		Delete: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,7 +42,11 @@ func ResourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Managed by Terraform",
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -49,202 +63,178 @@ func ResourceSubnetGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	subnetIds := flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
-
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
-
-	createOpts := docdb.CreateDBSubnetGroupInput{
-		DBSubnetGroupName:        aws.String(groupName),
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &docdb.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-		SubnetIds:                subnetIds,
-		Tags:                     Tags(tags.IgnoreAWS()),
+		DBSubnetGroupName:        aws.String(name),
+		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Tags:                     getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create DocDB Subnet Group: %#v", createOpts)
-	_, err := conn.CreateDBSubnetGroup(&createOpts)
+	_, err := conn.CreateDBSubnetGroupWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DocDB Subnet Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Subnet Group (%s): %s", name, err)
 	}
 
-	d.SetId(groupName)
+	d.SetId(name)
 
-	return resourceSubnetGroupRead(d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	describeOpts := docdb.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(d.Id()),
-	}
+	subnetGroup, err := FindDBSubnetGroupByName(ctx, conn, d.Id())
 
-	var subnetGroups []*docdb.DBSubnetGroup
-	if err := conn.DescribeDBSubnetGroupsPages(&describeOpts, func(resp *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
-		return !lastPage
-	}); err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading DocDB Subnet Group (%s) parameters: %w", d.Id(), err)
-	}
-
-	if !d.IsNewResource() && (len(subnetGroups) != 1 || aws.StringValue(subnetGroups[0].DBSubnetGroupName) != d.Id()) {
-		log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DocumentDB Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
-	subnetGroup := subnetGroups[0]
-	d.Set("name", subnetGroup.DBSubnetGroupName)
-	d.Set("description", subnetGroup.DBSubnetGroupDescription)
-	d.Set("arn", subnetGroup.DBSubnetGroupArn)
-
-	subnets := make([]string, 0, len(subnetGroup.Subnets))
-	for _, s := range subnetGroup.Subnets {
-		subnets = append(subnets, aws.StringValue(s.SubnetIdentifier))
-	}
-	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
-	}
-
-	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DocumentDB Subnet Group (%s): %w", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	d.Set("arn", subnetGroup.DBSubnetGroupArn)
+	d.Set("description", subnetGroup.DBSubnetGroupDescription)
+	d.Set("name", subnetGroup.DBSubnetGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
+	var subnetIDs []string
+	for _, v := range subnetGroup.Subnets {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
 	}
+	d.Set("subnet_ids", subnetIDs)
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChanges("subnet_ids", "description") {
-		_, n := d.GetChange("subnet_ids")
-		if n == nil {
-			n = new(schema.Set)
-		}
-		sIds := flex.ExpandStringSet(n.(*schema.Set))
-
-		_, err := conn.ModifyDBSubnetGroup(&docdb.ModifyDBSubnetGroupInput{
+	if d.HasChanges("description", "subnet_ids") {
+		input := &docdb.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
 			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                sIds,
-		})
+			SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modify DocDB Subnet Group (%s) parameters: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DocumentDB Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceSubnetGroupRead(d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	delOpts := docdb.DeleteDBSubnetGroupInput{
+	log.Printf("[DEBUG] Deleting DocumentDB Subnet Group: %s", d.Id())
+	_, err := conn.DeleteDBSubnetGroupWithContext(ctx, &docdb.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting DocDB Subnet Group: %s", d.Id())
-
-	_, err := conn.DeleteDBSubnetGroup(&delOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			return nil
-		}
-		return fmt.Errorf("error deleting DocDB Subnet Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	return WaitForSubnetGroupDeletion(conn, d.Id())
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (interface{}, error) {
+		return FindDBSubnetGroupByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Subnet Group (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func WaitForSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
-	params := &docdb.DescribeDBSubnetGroupsInput{
+func FindDBSubnetGroupByName(ctx context.Context, conn *docdb.DocDB, name string) (*docdb.DBSubnetGroup, error) {
+	input := &docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
+	output, err := findDBSubnetGroup(ctx, conn, input)
 
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribeDBSubnetGroups(params)
-
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			return nil
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(fmt.Errorf("DocDB Subnet Group (%s) still exists", name))
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeDBSubnetGroups(params)
-		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
-			return nil
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("Error deleting DocDB subnet group: %s", err)
+		return nil, err
 	}
-	return nil
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBSubnetGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBSubnetGroup(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBSubnetGroupsInput) (*docdb.DBSubnetGroup, error) {
+	output, err := findDBSubnetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBSubnetGroups(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBSubnetGroupsInput) ([]*docdb.DBSubnetGroup, error) {
+	var output []*docdb.DBSubnetGroup
+
+	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBSubnetGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBSubnetGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

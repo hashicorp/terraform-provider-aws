@@ -1,45 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindCognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
-// Returns nil if no UI Customization is found.
-func FindCognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
-	input := &cognitoidentityprovider.GetUICustomizationInput{
-		ClientId:   aws.String(clientId),
-		UserPoolId: aws.String(userPoolId),
-	}
-
-	output, err := conn.GetUICustomization(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.UICustomization == nil {
-		return nil, nil
-	}
-
-	// The GetUICustomization API operation will return an empty struct
-	// if nothing is present rather than nil or an error, so we equate that with nil
-	if reflect.DeepEqual(output.UICustomization, &cognitoidentityprovider.UICustomizationType{}) {
-		return nil, nil
-	}
-
-	return output.UICustomization, nil
-}
-
 // FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
-func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
+func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
 	input := &cognitoidentityprovider.AdminListGroupsForUserInput{
 		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(username),
@@ -47,7 +24,7 @@ func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvide
 
 	found := false
 
-	err := conn.AdminListGroupsForUserPages(input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
+	err := conn.AdminListGroupsForUserPagesWithContext(ctx, input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -71,22 +48,23 @@ func FindCognitoUserInGroup(conn *cognitoidentityprovider.CognitoIdentityProvide
 	})
 
 	if err != nil {
-		return false, fmt.Errorf("error reading groups for user: %w", err)
+		return false, fmt.Errorf("reading groups for user: %w", err)
 	}
 
 	return found, nil
 }
 
-func FindCognitoUserPoolClient(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
+// FindCognitoUserPoolClientByID returns a Cognito User Pool Client using the ClientId
+func FindCognitoUserPoolClientByID(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
 	input := &cognitoidentityprovider.DescribeUserPoolClientInput{
 		ClientId:   aws.String(clientId),
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	output, err := conn.DescribeUserPoolClient(input)
+	output, err := conn.DescribeUserPoolClientWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -103,7 +81,50 @@ func FindCognitoUserPoolClient(conn *cognitoidentityprovider.CognitoIdentityProv
 	return output.UserPoolClient, nil
 }
 
-func FindRiskConfigurationById(conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.RiskConfigurationType, error) {
+func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) (*cognitoidentityprovider.UserPoolClientType, error) {
+	clientDescs, err := listCognitoUserPoolClientDescriptions(ctx, conn, userPoolId, nameFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := tfresource.AssertSinglePtrResult(clientDescs)
+	if err != nil {
+		return nil, err
+	}
+
+	return FindCognitoUserPoolClientByID(ctx, conn, userPoolId, aws.StringValue(client.ClientId))
+}
+
+type cognitoUserPoolClientDescriptionNameFilter func(string) (bool, error)
+
+func listCognitoUserPoolClientDescriptions(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) ([]*cognitoidentityprovider.UserPoolClientDescription, error) {
+	var errs []error
+	var descs []*cognitoidentityprovider.UserPoolClientDescription
+
+	input := &cognitoidentityprovider.ListUserPoolClientsInput{
+		UserPoolId: aws.String(userPoolId),
+	}
+
+	err := conn.ListUserPoolClientsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
+		for _, client := range page.UserPoolClients {
+			if ok, err := nameFilter(aws.StringValue(client.ClientName)); err != nil {
+				errs = append(errs, err)
+			} else if ok {
+				descs = append(descs, client)
+			}
+		}
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = append(errs, err)
+		return descs, errors.Join(errs...)
+	}
+
+	return descs, nil
+}
+
+func FindRiskConfigurationById(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.RiskConfigurationType, error) {
 	userPoolId, clientId, err := RiskConfigurationParseID(id)
 	if err != nil {
 		return nil, err
@@ -117,10 +138,10 @@ func FindRiskConfigurationById(conn *cognitoidentityprovider.CognitoIdentityProv
 		input.ClientId = aws.String(clientId)
 	}
 
-	output, err := conn.DescribeRiskConfiguration(input)
+	output, err := conn.DescribeRiskConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

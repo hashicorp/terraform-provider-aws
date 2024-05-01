@@ -8,38 +8,34 @@ on:
       - labeled
 jobs:
   slack-notification:
-    if: ${{ github.event.label.name == 'regression' }}
+    name: Slack Notifier
+    if: github.event.label.name == 'regression'
     runs-on: ubuntu-latest
     steps:
-      - name: Issues
-        if: ${{ github.event_name == 'issues' }}
-        uses: actions-ecosystem/action-slack-notifier@v1
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+          EVENT_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
         with:
-          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel: ${{ secrets.SLACK_CHANNEL }}
-          color: red
-          verbose: false
-          message: |
-            :warning: The following issue has been labeled as a regression:
-            https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}
-      - name: Pull Requests
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions-ecosystem/action-slack-notifier@v1
-        with:
-          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
-          channel: ${{ secrets.SLACK_CHANNEL }}
-          color: red
-          verbose: false
-          message: |
-            :warning: The following pull request has been labeled as a regression:
-            https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}
-  AddToWorkingBoard:
-    if: ${{ github.event.label.name == 'regression' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add regressions to To Do column
-        uses: alex-page/github-project-automation-plus@v0.8.1
-        with:
-          project: AWS Provider Working Board
-          column: To Do
-          repo-token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+          channel-id: ${{ secrets.SLACK_CHANNEL }}
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: The following has been labeled as a regression:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('<{0}|{1}>', env.EVENT_URL, env.EVENT_TITLE)) }}
+                  }
+                }
+              ]
+            }

@@ -1,30 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupSelectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_backup_selection.test"
 	resourceName := "aws_backup_selection.test"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccSelectionDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Selection`),
-			},
 			{
 				Config: testAccSelectionDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
@@ -36,13 +35,6 @@ func TestAccBackupSelectionDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccSelectionDataSourceConfig_nonExistent = `
-data "aws_backup_selection" "test" {
-  plan_id      = "tf-acc-test-does-not-exist"
-  selection_id = "tf-acc-test-dne"
-}
-`
 
 func testAccSelectionDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`

@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInviteAccepter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	masterDetectorResourceName := "aws_guardduty_detector.master"
 	memberDetectorResourceName := "aws_guardduty_detector.member"
 	resourceName := "aws_guardduty_invite_accepter.test"
@@ -21,17 +27,18 @@ func testAccInviteAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckInviteAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckInviteAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInviteAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInviteAccepterExists(resourceName),
+					testAccCheckInviteAccepterExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, "account_id"),
 				),
@@ -46,39 +53,41 @@ func testAccInviteAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckInviteAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+func testAccCheckInviteAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_guardduty_invite_accepter" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_invite_accepter" {
+				continue
+			}
+
+			input := &guardduty.GetMasterAccountInput{
+				DetectorId: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetMasterAccountWithContext(ctx, input)
+
+			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output == nil || output.Master == nil || aws.StringValue(output.Master.AccountId) != rs.Primary.Attributes["master_account_id"] {
+				continue
+			}
+
+			return fmt.Errorf("GuardDuty Detector (%s) still has GuardDuty Master Account ID (%s)", rs.Primary.ID, aws.StringValue(output.Master.AccountId))
 		}
 
-		input := &guardduty.GetMasterAccountInput{
-			DetectorId: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetMasterAccount(input)
-
-		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.Master == nil || aws.StringValue(output.Master.AccountId) != rs.Primary.Attributes["master_account_id"] {
-			continue
-		}
-
-		return fmt.Errorf("GuardDuty Detector (%s) still has GuardDuty Master Account ID (%s)", rs.Primary.ID, aws.StringValue(output.Master.AccountId))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckInviteAccepterExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -89,13 +98,13 @@ func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("Resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		input := &guardduty.GetMasterAccountInput{
 			DetectorId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetMasterAccount(input)
+		output, err := conn.GetMasterAccountWithContext(ctx, input)
 
 		if err != nil {
 			return err

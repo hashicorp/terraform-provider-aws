@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 /*
 This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/token/token_test.go
@@ -115,6 +118,8 @@ func jsonResponse(arn, account, userid string) string {
 }
 
 func TestSTSEndpoints(t *testing.T) {
+	t.Parallel()
+
 	verifier := tokenVerifier{}
 	chinaR := "sts.amazonaws.com.cn"                    //lintignore:AWSAT003
 	globalR := "sts.amazonaws.com"                      //lintignore:AWSAT003
@@ -145,6 +150,8 @@ func TestSTSEndpoints(t *testing.T) {
 }
 
 func TestVerifyTokenPreSTSValidations(t *testing.T) {
+	t.Parallel()
+
 	b := make([]byte, maxTokenLenBytes+1)
 	s := string(b)
 	validationErrorTest(t, s, "token is too large")
@@ -170,24 +177,30 @@ func TestVerifyTokenPreSTSValidations(t *testing.T) {
 }
 
 func TestVerifyHTTPError(t *testing.T) {
+	t.Parallel()
+
 	_, err := newVerifier(0, "", errors.New("an error")).Verify(validToken)
 	errorContains(t, err, "error during GET: an error")
 	assertSTSError(t, err)
 }
 
 func TestVerifyHTTP403(t *testing.T) {
+	t.Parallel()
+
 	_, err := newVerifier(403, " ", nil).Verify(validToken)
 	errorContains(t, err, "error from AWS (expected 200, got")
 	assertSTSError(t, err)
 }
 
 func TestVerifyBodyReadError(t *testing.T) {
+	t.Parallel()
+
 	verifier := tokenVerifier{
 		client: &http.Client{
 			Transport: &roundTripper{
 				err: nil,
 				resp: &http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       errorReadCloser{},
 				},
 			},
@@ -199,18 +212,24 @@ func TestVerifyBodyReadError(t *testing.T) {
 }
 
 func TestVerifyUnmarshalJSONError(t *testing.T) {
+	t.Parallel()
+
 	_, err := newVerifier(200, "xxxx", nil).Verify(validToken)
 	errorContains(t, err, "invalid character")
 	assertSTSError(t, err)
 }
 
 func TestVerifyInvalidCanonicalARNError(t *testing.T) {
+	t.Parallel()
+
 	_, err := newVerifier(200, jsonResponse("arn", "1000", "userid"), nil).Verify(validToken)
 	errorContains(t, err, "arn \"arn\" is invalid:")
 	assertSTSError(t, err)
 }
 
 func TestVerifyInvalidUserIDError(t *testing.T) {
+	t.Parallel()
+
 	//lintignore:AWSAT005
 	_, err := newVerifier(200, jsonResponse("arn:aws:iam::123456789012:user/Alice", "123456789012", "not:vailid:userid"), nil).Verify(validToken)
 	errorContains(t, err, "malformed UserID")
@@ -218,6 +237,8 @@ func TestVerifyInvalidUserIDError(t *testing.T) {
 }
 
 func TestVerifyNoSession(t *testing.T) {
+	t.Parallel()
+
 	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
 	account := "123456789012"
 	userID := "Alice"
@@ -241,6 +262,8 @@ func TestVerifyNoSession(t *testing.T) {
 }
 
 func TestVerifySessionName(t *testing.T) {
+	t.Parallel()
+
 	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
 	account := "123456789012"
 	userID := "Alice"
@@ -258,6 +281,8 @@ func TestVerifySessionName(t *testing.T) {
 }
 
 func TestVerifyCanonicalARN(t *testing.T) {
+	t.Parallel()
+
 	arn := "arn:aws:sts::123456789012:assumed-role/Alice/extra" //lintignore:AWSAT005
 	canonicalARN := "arn:aws:iam::123456789012:role/Alice"      //lintignore:AWSAT005
 	account := "123456789012"

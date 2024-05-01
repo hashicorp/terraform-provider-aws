@@ -1,13 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 )
 
 func TestValidIdentityPoolName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"123",
 		"1 2 3",
@@ -42,6 +47,8 @@ func TestValidIdentityPoolName(t *testing.T) {
 }
 
 func TestValidIdentityProvidersClientID(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"7lhlkkfbfb4q5kpp90urffao",
 		"12345678",
@@ -73,6 +80,8 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 }
 
 func TestValidIdentityProvidersProviderName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"foo",
 		"7346241598935552",
@@ -108,6 +117,8 @@ func TestValidIdentityProvidersProviderName(t *testing.T) {
 }
 
 func TestValidProviderDeveloperName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"1",
 		"foo",
@@ -139,6 +150,8 @@ func TestValidProviderDeveloperName(t *testing.T) {
 }
 
 func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		AmbiguousRoleResolution interface{}
 		Type                    string
@@ -146,22 +159,22 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 	}{
 		{
 			AmbiguousRoleResolution: nil,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                1,
 		},
 		{
 			AmbiguousRoleResolution: "foo",
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0, // 0 as it should be defined, the value isn't validated here
 		},
 		{
-			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			AmbiguousRoleResolution: awstypes.AmbiguousRoleResolutionTypeAuthenticatedRole,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0,
 		},
 		{
-			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			AmbiguousRoleResolution: awstypes.AmbiguousRoleResolutionTypeDeny,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0,
 		},
 	}
@@ -182,6 +195,8 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 }
 
 func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		MappingRule []interface{}
 		Type        string
@@ -189,7 +204,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 	}{
 		{
 			MappingRule: nil,
-			Type:        cognitoidentity.RoleMappingTypeRules,
+			Type:        string(awstypes.RoleMappingTypeRules),
 			ErrCount:    1,
 		},
 		{
@@ -201,7 +216,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 					"Value":     "paid",
 				},
 			},
-			Type:     cognitoidentity.RoleMappingTypeRules,
+			Type:     string(awstypes.RoleMappingTypeRules),
 			ErrCount: 0,
 		},
 		{
@@ -213,12 +228,12 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 					"Value":     "paid",
 				},
 			},
-			Type:     cognitoidentity.RoleMappingTypeToken,
+			Type:     string(awstypes.RoleMappingTypeToken),
 			ErrCount: 1,
 		},
 		{
 			MappingRule: nil,
-			Type:        cognitoidentity.RoleMappingTypeToken,
+			Type:        string(awstypes.RoleMappingTypeToken),
 			ErrCount:    0,
 		},
 	}
@@ -239,6 +254,8 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 }
 
 func TestValidRoles(t *testing.T) {
+	t.Parallel()
+
 	validValues := []map[string]interface{}{
 		{"authenticated": "hoge"},
 		{"unauthenticated": "hoge"},
@@ -266,6 +283,8 @@ func TestValidRoles(t *testing.T) {
 }
 
 func TestValidSupportedLoginProviders(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"foo",
 		"7346241598935552",

@@ -1,27 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceCachePolicy() *schema.Resource {
+// @SDKResource("aws_cloudfront_cache_policy", name="Cache Policy")
+func resourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCachePolicyCreate,
-		Read:   resourceCachePolicyRead,
-		Update: resourceCachePolicyUpdate,
-		Delete: resourceCachePolicyDelete,
+		CreateWithoutTimeout: resourceCachePolicyCreate,
+		ReadWithoutTimeout:   resourceCachePolicyRead,
+		UpdateWithoutTimeout: resourceCachePolicyUpdate,
+		DeleteWithoutTimeout: resourceCachePolicyDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,9 +73,9 @@ func ResourceCachePolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookie_behavior": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.CachePolicyCookieBehavior_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyCookieBehavior](),
 									},
 									"cookies": {
 										Type:     schema.TypeList,
@@ -100,9 +109,9 @@ func ResourceCachePolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"header_behavior": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.CachePolicyHeaderBehavior_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyHeaderBehavior](),
 									},
 									"headers": {
 										Type:     schema.TypeList,
@@ -128,9 +137,9 @@ func ResourceCachePolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"query_string_behavior": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.CachePolicyQueryStringBehavior_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CachePolicyQueryStringBehavior](),
 									},
 									"query_strings": {
 										Type:     schema.TypeList,
@@ -156,11 +165,12 @@ func ResourceCachePolicy() *schema.Resource {
 	}
 }
 
-func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get("name").(string)
-	apiObject := &cloudfront.CachePolicyConfig{
+	apiObject := &awstypes.CachePolicyConfig{
 		DefaultTTL: aws.Int64(int64(d.Get("default_ttl").(int))),
 		MaxTTL:     aws.Int64(int64(d.Get("max_ttl").(int))),
 		MinTTL:     aws.Int64(int64(d.Get("min_ttl").(int))),
@@ -179,31 +189,31 @@ func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		CachePolicyConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Cache Policy: (%s)", input)
-	output, err := conn.CreateCachePolicy(input)
+	output, err := conn.CreateCachePolicy(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Cache Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Cache Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.CachePolicy.Id))
+	d.SetId(aws.ToString(output.CachePolicy.Id))
 
-	return resourceCachePolicyRead(d, meta)
+	return append(diags, resourceCachePolicyRead(ctx, d, meta)...)
 }
 
-func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	output, err := FindCachePolicyByID(conn, d.Id())
+	output, err := findCachePolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Cache Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Cache Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
 	apiObject := output.CachePolicy.CachePolicyConfig
@@ -215,23 +225,24 @@ func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", apiObject.Name)
 	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
 		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
-			return fmt.Errorf("error setting parameters_in_cache_key_and_forwarded_to_origin: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting parameters_in_cache_key_and_forwarded_to_origin: %s", err)
 		}
 	} else {
 		d.Set("parameters_in_cache_key_and_forwarded_to_origin", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateCachePolicy.html:
 	// "When you update a cache policy configuration, all the fields are updated with the values provided in the request. You cannot update some fields independent of others."
 	//
-	apiObject := &cloudfront.CachePolicyConfig{
+	apiObject := &awstypes.CachePolicyConfig{
 		DefaultTTL: aws.Int64(int64(d.Get("default_ttl").(int))),
 		MaxTTL:     aws.Int64(int64(d.Get("max_ttl").(int))),
 		MinTTL:     aws.Int64(int64(d.Get("min_ttl").(int))),
@@ -252,42 +263,67 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		IfMatch:           aws.String(d.Get("etag").(string)),
 	}
 
-	log.Printf("[DEBUG] Updating CloudFront Cache Policy: (%s)", input)
-	_, err := conn.UpdateCachePolicy(input)
+	_, err := conn.UpdateCachePolicy(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront Cache Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceCachePolicyRead(d, meta)
+	return append(diags, resourceCachePolicyRead(ctx, d, meta)...)
 }
 
-func resourceCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
-	_, err := conn.DeleteCachePolicy(&cloudfront.DeleteCachePolicyInput{
+	_, err := conn.DeleteCachePolicy(ctx, &cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCachePolicy) {
-		return nil
+	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Cache Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}) *cloudfront.ParametersInCacheKeyAndForwardedToOrigin {
+func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetCachePolicyOutput, error) {
+	input := &cloudfront.GetCachePolicyInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetCachePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}) *awstypes.ParametersInCacheKeyAndForwardedToOrigin {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.ParametersInCacheKeyAndForwardedToOrigin{}
+	apiObject := &awstypes.ParametersInCacheKeyAndForwardedToOrigin{}
 
 	if v, ok := tfMap["cookies_config"].([]interface{}); ok && len(v) > 0 {
 		apiObject.CookiesConfig = expandCachePolicyCookiesConfig(v[0].(map[string]interface{}))
@@ -312,15 +348,15 @@ func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandCachePolicyCookiesConfig(tfMap map[string]interface{}) *cloudfront.CachePolicyCookiesConfig {
+func expandCachePolicyCookiesConfig(tfMap map[string]interface{}) *awstypes.CachePolicyCookiesConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.CachePolicyCookiesConfig{}
+	apiObject := &awstypes.CachePolicyCookiesConfig{}
 
 	if v, ok := tfMap["cookie_behavior"].(string); ok && v != "" {
-		apiObject.CookieBehavior = aws.String(v)
+		apiObject.CookieBehavior = awstypes.CachePolicyCookieBehavior(v)
 	}
 
 	if v, ok := tfMap["cookies"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -330,31 +366,31 @@ func expandCachePolicyCookiesConfig(tfMap map[string]interface{}) *cloudfront.Ca
 	return apiObject
 }
 
-func expandCookieNames(tfMap map[string]interface{}) *cloudfront.CookieNames {
+func expandCookieNames(tfMap map[string]interface{}) *awstypes.CookieNames {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.CookieNames{}
+	apiObject := &awstypes.CookieNames{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringSet(v)
+		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
-		apiObject.Quantity = aws.Int64(int64(len(items)))
+		apiObject.Quantity = aws.Int32(int32(len(items)))
 	}
 
 	return apiObject
 }
 
-func expandCachePolicyHeadersConfig(tfMap map[string]interface{}) *cloudfront.CachePolicyHeadersConfig {
+func expandCachePolicyHeadersConfig(tfMap map[string]interface{}) *awstypes.CachePolicyHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.CachePolicyHeadersConfig{}
+	apiObject := &awstypes.CachePolicyHeadersConfig{}
 
 	if v, ok := tfMap["header_behavior"].(string); ok && v != "" {
-		apiObject.HeaderBehavior = aws.String(v)
+		apiObject.HeaderBehavior = awstypes.CachePolicyHeaderBehavior(v)
 	}
 
 	if v, ok := tfMap["headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -364,31 +400,31 @@ func expandCachePolicyHeadersConfig(tfMap map[string]interface{}) *cloudfront.Ca
 	return apiObject
 }
 
-func expandHeaders(tfMap map[string]interface{}) *cloudfront.Headers {
+func expandHeaders(tfMap map[string]interface{}) *awstypes.Headers {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.Headers{}
+	apiObject := &awstypes.Headers{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringSet(v)
+		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
-		apiObject.Quantity = aws.Int64(int64(len(items)))
+		apiObject.Quantity = aws.Int32(int32(len(items)))
 	}
 
 	return apiObject
 }
 
-func expandCachePolicyQueryStringsConfig(tfMap map[string]interface{}) *cloudfront.CachePolicyQueryStringsConfig {
+func expandCachePolicyQueryStringsConfig(tfMap map[string]interface{}) *awstypes.CachePolicyQueryStringsConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.CachePolicyQueryStringsConfig{}
+	apiObject := &awstypes.CachePolicyQueryStringsConfig{}
 
 	if v, ok := tfMap["query_string_behavior"].(string); ok && v != "" {
-		apiObject.QueryStringBehavior = aws.String(v)
+		apiObject.QueryStringBehavior = awstypes.CachePolicyQueryStringBehavior(v)
 	}
 
 	if v, ok := tfMap["query_strings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -398,23 +434,23 @@ func expandCachePolicyQueryStringsConfig(tfMap map[string]interface{}) *cloudfro
 	return apiObject
 }
 
-func expandQueryStringNames(tfMap map[string]interface{}) *cloudfront.QueryStringNames {
+func expandQueryStringNames(tfMap map[string]interface{}) *awstypes.QueryStringNames {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.QueryStringNames{}
+	apiObject := &awstypes.QueryStringNames{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringSet(v)
+		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
-		apiObject.Quantity = aws.Int64(int64(len(items)))
+		apiObject.Quantity = aws.Int32(int32(len(items)))
 	}
 
 	return apiObject
 }
 
-func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *cloudfront.ParametersInCacheKeyAndForwardedToOrigin) map[string]interface{} {
+func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *awstypes.ParametersInCacheKeyAndForwardedToOrigin) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -426,11 +462,11 @@ func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *cloudfront.Param
 	}
 
 	if v := apiObject.EnableAcceptEncodingBrotli; v != nil {
-		tfMap["enable_accept_encoding_brotli"] = aws.BoolValue(v)
+		tfMap["enable_accept_encoding_brotli"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.EnableAcceptEncodingGzip; v != nil {
-		tfMap["enable_accept_encoding_gzip"] = aws.BoolValue(v)
+		tfMap["enable_accept_encoding_gzip"] = aws.ToBool(v)
 	}
 
 	if v := flattenCachePolicyHeadersConfig(apiObject.HeadersConfig); len(v) > 0 {
@@ -444,15 +480,13 @@ func flattenParametersInCacheKeyAndForwardedToOrigin(apiObject *cloudfront.Param
 	return tfMap
 }
 
-func flattenCachePolicyCookiesConfig(apiObject *cloudfront.CachePolicyCookiesConfig) map[string]interface{} {
+func flattenCachePolicyCookiesConfig(apiObject *awstypes.CachePolicyCookiesConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CookieBehavior; v != nil {
-		tfMap["cookie_behavior"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"cookie_behavior": apiObject.CookieBehavior,
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
@@ -462,7 +496,7 @@ func flattenCachePolicyCookiesConfig(apiObject *cloudfront.CachePolicyCookiesCon
 	return tfMap
 }
 
-func flattenCookieNames(apiObject *cloudfront.CookieNames) map[string]interface{} {
+func flattenCookieNames(apiObject *awstypes.CookieNames) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -470,21 +504,19 @@ func flattenCookieNames(apiObject *cloudfront.CookieNames) map[string]interface{
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = aws.StringValueSlice(v)
+		tfMap["items"] = v
 	}
 
 	return tfMap
 }
 
-func flattenCachePolicyHeadersConfig(apiObject *cloudfront.CachePolicyHeadersConfig) map[string]interface{} {
+func flattenCachePolicyHeadersConfig(apiObject *awstypes.CachePolicyHeadersConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.HeaderBehavior; v != nil {
-		tfMap["header_behavior"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"header_behavior": apiObject.HeaderBehavior,
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
@@ -494,7 +526,7 @@ func flattenCachePolicyHeadersConfig(apiObject *cloudfront.CachePolicyHeadersCon
 	return tfMap
 }
 
-func flattenHeaders(apiObject *cloudfront.Headers) map[string]interface{} {
+func flattenHeaders(apiObject *awstypes.Headers) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -502,21 +534,19 @@ func flattenHeaders(apiObject *cloudfront.Headers) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = aws.StringValueSlice(v)
+		tfMap["items"] = v
 	}
 
 	return tfMap
 }
 
-func flattenCachePolicyQueryStringsConfig(apiObject *cloudfront.CachePolicyQueryStringsConfig) map[string]interface{} {
+func flattenCachePolicyQueryStringsConfig(apiObject *awstypes.CachePolicyQueryStringsConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.QueryStringBehavior; v != nil {
-		tfMap["query_string_behavior"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"query_string_behavior": apiObject.QueryStringBehavior,
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {
@@ -526,7 +556,7 @@ func flattenCachePolicyQueryStringsConfig(apiObject *cloudfront.CachePolicyQuery
 	return tfMap
 }
 
-func flattenQueryStringNames(apiObject *cloudfront.QueryStringNames) map[string]interface{} {
+func flattenQueryStringNames(apiObject *awstypes.QueryStringNames) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -534,7 +564,7 @@ func flattenQueryStringNames(apiObject *cloudfront.QueryStringNames) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = aws.StringValueSlice(v)
+		tfMap["items"] = v
 	}
 
 	return tfMap

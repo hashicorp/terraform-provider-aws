@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_subnet")
 func DataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSubnetRead,
+		ReadWithoutTimeout: dataSourceSubnetRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -61,6 +67,10 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_lni_at_device_index": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -69,7 +79,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,8 +133,9 @@ func DataSourceSubnet() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSubnetsInput{}
@@ -159,15 +170,15 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		filters["ipv6-cidr-block-association.ipv6-cidr-block"] = v.(string)
 	}
 
-	input.Filters = BuildAttributeFilterList(filters)
+	input.Filters = newAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
@@ -175,10 +186,10 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	subnet, err := FindSubnet(conn, input)
+	subnet, err := FindSubnet(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Subnet", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Subnet", err))
 	}
 
 	d.SetId(aws.StringValue(subnet.SubnetId))
@@ -192,6 +203,7 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
 	d.Set("ipv6_native", subnet.Ipv6Native)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
@@ -221,11 +233,11 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	if err := d.Set("tags", KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.Set("vpc_id", subnet.VpcId)
 
-	return nil
+	return diags
 }

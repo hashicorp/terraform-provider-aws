@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
-	"context"
 	"flag"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
@@ -16,15 +19,21 @@ var bucket = flag.String("b", "", "bucket")
 var force = flag.Bool("f", false, "force")
 
 func TestEmptyBucket(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+
 	if *bucket == "" {
 		t.Skip("bucket not specified")
 	}
 
-	sess := session.Must(session.NewSession())
-	svc := s3.New(sess)
-	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		t.Fatalf("error loading default SDK config: %s", err)
+	}
 
-	n, err := tfs3.EmptyBucket(ctx, svc, *bucket, *force)
+	client := s3.NewFromConfig(cfg)
+	n, err := tfs3.EmptyBucket(ctx, client, *bucket, *force)
 
 	if err != nil {
 		t.Fatalf("error emptying S3 bucket (%s): %s", *bucket, err)
@@ -34,14 +43,21 @@ func TestEmptyBucket(t *testing.T) {
 }
 
 func TestDeleteAllObjectVersions(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+
 	if *bucket == "" {
 		t.Skip("bucket not specified")
 	}
 
-	sess := session.Must(session.NewSession())
-	svc := s3.New(sess)
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		t.Fatalf("error loading default SDK config: %s", err)
+	}
 
-	n, err := tfs3.DeleteAllObjectVersions(svc, *bucket, "", *force, false)
+	client := s3.NewFromConfig(cfg)
+	n, err := tfs3.DeleteAllObjectVersions(ctx, client, *bucket, "", *force, false)
 
 	if err != nil {
 		t.Fatalf("error emptying S3 bucket (%s): %s", *bucket, err)

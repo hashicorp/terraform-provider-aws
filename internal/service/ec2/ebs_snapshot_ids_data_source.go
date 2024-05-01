@@ -1,27 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ebs_snapshot_ids")
 func DataSourceEBSSnapshotIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSSnapshotIDsRead,
+		ReadWithoutTimeout: dataSourceEBSSnapshotIDsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -41,8 +47,9 @@ func DataSourceEBSSnapshotIDs() *schema.Resource {
 	}
 }
 
-func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSnapshotsInput{}
 
@@ -54,7 +61,7 @@ func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) erro
 		input.RestorableByUserIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -62,10 +69,10 @@ func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) erro
 		input.Filters = nil
 	}
 
-	snapshots, err := FindSnapshots(conn, input)
+	snapshots, err := FindSnapshots(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Snapshots: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)
 	}
 
 	sort.Slice(snapshots, func(i, j int) bool {
@@ -81,5 +88,5 @@ func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", snapshotIDs)
 
-	return nil
+	return diags
 }

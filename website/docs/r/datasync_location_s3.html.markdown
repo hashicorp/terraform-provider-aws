@@ -25,7 +25,7 @@ resource "aws_datasync_location_s3" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `agent_arns` - (Optional) A list of DataSync Agent ARNs with which this location will be associated.
 * `s3_bucket_arn` - (Required) Amazon Resource Name (ARN) of the S3 Bucket.
@@ -36,13 +36,13 @@ The following arguments are supported:
 
 ### s3_config Argument Reference
 
-The following arguments are supported inside the `s3_config` configuration block:
+The `s3_config` configuration block supports the following arguments:
 
 * `bucket_access_role_arn` - (Required) ARN of the IAM Role used to connect to the S3 Bucket.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Location.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Location.
@@ -50,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_datasync_location_s3` can be imported by using the DataSync Task Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_s3` using the DataSync Task Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_location_s3.example
+  id = "arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_location_s3.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
+
+Using `terraform import`, import `aws_datasync_location_s3` using the DataSync Task Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_location_s3.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```

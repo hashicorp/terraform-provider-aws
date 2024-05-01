@@ -18,7 +18,7 @@ resource "aws_db_instance" "bar" {
   engine            = "mysql"
   engine_version    = "5.6.21"
   instance_class    = "db.t2.micro"
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
@@ -28,23 +28,23 @@ resource "aws_db_instance" "bar" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.bar.id
+  db_instance_identifier = aws_db_instance.bar.identifier
   db_snapshot_identifier = "testsnapshot1234"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_instance_identifier` - (Required) The DB Instance Identifier from which to take the snapshot.
 * `db_snapshot_identifier` - (Required) The Identifier for the snapshot.
+* `shared_accounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
@@ -65,14 +65,23 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20m`)
+- `create` - (Default `20m`)
 
 ## Import
 
-`aws_db_snapshot` can be imported by using the snapshot identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_db_snapshot` using the snapshot identifier. For example:
 
+```terraform
+import {
+  to = aws_db_snapshot.example
+  id = "my-snapshot"
+}
 ```
-$ terraform import aws_db_snapshot.example my-snapshot
+
+Using `terraform import`, import `aws_db_snapshot` using the snapshot identifier. For example:
+
+```console
+% terraform import aws_db_snapshot.example my-snapshot
 ```

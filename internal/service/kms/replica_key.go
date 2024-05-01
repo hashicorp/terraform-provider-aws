@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
@@ -9,23 +12,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_kms_replica_key", name="Replica Key")
+// @Tags(identifierAttribute="id")
 func ResourceReplicaKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicaKeyCreate,
-		Read:   resourceReplicaKeyRead,
-		Update: resourceReplicaKeyUpdate,
-		Delete: resourceReplicaKeyDelete,
+		CreateWithoutTimeout: resourceReplicaKeyCreate,
+		ReadWithoutTimeout:   resourceReplicaKeyRead,
+		UpdateWithoutTimeout: resourceReplicaKeyUpdate,
+		DeleteWithoutTimeout: resourceReplicaKeyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -85,27 +95,27 @@ func ResourceReplicaKey() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
 	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error parsing primary key ARN: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing primary key ARN: %s", err)
 	}
 
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
 		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
@@ -120,86 +130,77 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Policy = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	// Replication is initiated in the primary key's region.
-	session, err := conns.NewSessionForRegion(&conn.Config, primaryKeyARN.Region, meta.(*conns.AWSClient).TerraformVersion)
+	replicateConn := meta.(*conns.AWSClient).KMSConnForRegion(ctx, primaryKeyARN.Region)
 
-	if err != nil {
-		return fmt.Errorf("error creating AWS session: %w", err)
-	}
-
-	replicateConn := kms.New(session)
-
-	log.Printf("[DEBUG] Creating KMS Replica Key: %s", input)
-	outputRaw, err := WaitIAMPropagation(func() (interface{}, error) {
-		return replicateConn.ReplicateKey(input)
+	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
+		return replicateConn.ReplicateKeyWithContext(ctx, input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating KMS Replica Key: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating KMS Replica Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*kms.ReplicateKeyOutput).ReplicaKeyMetadata.KeyId))
+	d.SetId(aws.StringValue(output.ReplicaKeyMetadata.KeyId))
 
-	if _, err := WaitReplicaKeyCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for KMS Replica Key (%s) create: %w", d.Id(), err)
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+
+	if _, err := WaitReplicaKeyCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) create: %s", d.Id(), err)
 	}
 
 	d.Set("key_id", d.Id())
 
 	if enabled := d.Get("enabled").(bool); !enabled {
-		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating KMS Replica Key (%s): %s", d.Id(), err)
 		}
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	if v, ok := d.GetOk("policy"); ok {
-		if err := WaitKeyPolicyPropagated(conn, d.Id(), v.(string)); err != nil {
-			return fmt.Errorf("error waiting for KMS Replica Key (%s) policy propagation: %w", d.Id(), err)
+		if err := WaitKeyPolicyPropagated(ctx, conn, d.Id(), v.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) policy propagation: %s", d.Id(), err)
 		}
 	}
 
-	if len(tags) > 0 {
-		if err := WaitTagsPropagated(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error waiting for KMS Replica Key (%s) tag propagation: %w", d.Id(), err)
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
 
-	return resourceReplicaKeyRead(d, meta)
+	return append(diags, resourceReplicaKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
-	key, err := findKey(conn, d.Id(), d.IsNewResource())
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+
+	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Replica Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading KMS Replica Key (%s): %s", d.Id(), err)
 	}
 
 	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
-		return fmt.Errorf("KMS Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
+		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
 	}
 
 	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeAwsKms {
-		return fmt.Errorf("KMS Key (%s) has invalid Origin: %s", d.Id(), origin)
+		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) has invalid Origin: %s", d.Id(), origin)
 	}
 
 	if !aws.BoolValue(key.metadata.MultiRegion) ||
 		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypeReplica {
-		return fmt.Errorf("KMS Key (%s) is not a multi-Region replica key", d.Id())
+		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) is not a multi-Region replica key", d.Id())
 	}
 
 	d.Set("arn", key.metadata.Arn)
@@ -213,73 +214,57 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
+		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", key.policy, err)
 	}
 
 	d.Set("policy", policyToSet)
-
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
-	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, key.tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
-		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating KMS Replica Key (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
-			return err
+		if err := updateKeyDescription(ctx, conn, d.Id(), d.Get("description").(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating KMS Replica Key (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("policy") {
-		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
-			return err
+		if err := updateKeyPolicy(ctx, conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating KMS Replica Key (%s): %s", d.Id(), err)
 		}
 	}
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
-		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating KMS Replica Key (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating KMS Replica Key (%s) tags: %w", d.Id(), err)
-		}
-
-		if err := WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
-			return fmt.Errorf("error waiting for KMS Replica Key (%s) tag propagation: %w", d.Id(), err)
-		}
-	}
-
-	return resourceReplicaKeyRead(d, meta)
+	return append(diags, resourceReplicaKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),
@@ -290,23 +275,23 @@ func resourceReplicaKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting KMS Replica Key: (%s)", d.Id())
-	_, err := conn.ScheduleKeyDeletion(input)
+	_, err := conn.ScheduleKeyDeletionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrMessageContains(err, kms.ErrCodeInvalidStateException, "is pending deletion") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting KMS Replica Key (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting KMS Replica Key (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitKeyDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for KMS Replica Key (%s) delete: %w", d.Id(), err)
+	if _, err := WaitKeyDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

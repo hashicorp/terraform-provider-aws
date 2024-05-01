@@ -1,21 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package accessanalyzer
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -26,14 +35,18 @@ const (
 	organizationCreationTimeout = 10 * time.Minute
 )
 
-func ResourceAnalyzer() *schema.Resource {
+// @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types.AnalyzerSummary", serialize="true", preCheck="true")
+func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAnalyzerCreate,
-		Read:   resourceAnalyzerRead,
-		Update: resourceAnalyzerUpdate,
-		Delete: resourceAnalyzerDelete,
+		CreateWithoutTimeout: resourceAnalyzerCreate,
+		ReadWithoutTimeout:   resourceAnalyzerRead,
+		UpdateWithoutTimeout: resourceAnalyzerUpdate,
+		DeleteWithoutTimeout: resourceAnalyzerDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -43,24 +56,46 @@ func ResourceAnalyzer() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"type": {
-				Type:     schema.TypeString,
+			"configuration": {
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				Default:  accessanalyzer.TypeAccount,
-				ValidateFunc: validation.StringInSlice([]string{
-					accessanalyzer.TypeAccount,
-					accessanalyzer.TypeOrganization,
-				}, false),
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"unused_access": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unused_access_age": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.TypeAccount,
+				ValidateDiagFunc: enum.Validate[types.Type](),
 			},
 		},
 
@@ -68,120 +103,174 @@ func ResourceAnalyzer() *schema.Resource {
 	}
 }
 
-func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	analyzerName := d.Get("analyzer_name").(string)
+func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
+	analyzerName := d.Get("analyzer_name").(string)
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
-		Tags:         Tags(tags.IgnoreAWS()),
-		Type:         aws.String(d.Get("type").(string)),
+		ClientToken:  aws.String(id.UniqueId()),
+		Tags:         getTagsIn(ctx),
+		Type:         types.Type(d.Get("type").(string)),
 	}
 
-	// Handle Organizations eventual consistency
-	err := resource.Retry(organizationCreationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateAnalyzer(input)
-
-		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateAnalyzer(input)
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
+
+	// Handle Organizations eventual consistency.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateAnalyzer(ctx, input)
+		},
+		"You must create an organization",
+	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Access Analyzer Analyzer (%s): %s", analyzerName, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Access Analyzer Analyzer (%s): %s", analyzerName, err)
 	}
 
 	d.SetId(analyzerName)
 
-	return resourceAnalyzerRead(d, meta)
+	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
 }
 
-func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
-	input := &accessanalyzer.GetAnalyzerInput{
-		AnalyzerName: aws.String(d.Id()),
-	}
+	analyzer, err := findAnalyzerByName(ctx, conn, d.Id())
 
-	output, err := conn.GetAnalyzer(input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Access Analyzer Analyzer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Access Analyzer Analyzer (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.Analyzer == nil {
-		return fmt.Errorf("error getting Access Analyzer Analyzer (%s): empty response", d.Id())
+	d.Set("analyzer_name", analyzer.Name)
+	d.Set("arn", analyzer.Arn)
+	if analyzer.Configuration != nil {
+		if err := d.Set("configuration", []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
+		}
+	} else {
+		d.Set("configuration", nil)
 	}
+	d.Set("type", analyzer.Type)
 
-	d.Set("analyzer_name", output.Analyzer.Name)
-	d.Set("arn", output.Analyzer.Arn)
+	setTagsOut(ctx, analyzer.Tags)
 
-	tags := KeyValueTags(output.Analyzer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("type", output.Analyzer.Type)
-
-	return nil
+	return diags
 }
 
-func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Access Analyzer Analyzer (%s) tags: %s", d.Id(), err)
+	// Tags only.
+
+	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
+}
+
+func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
+
+	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
+	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{
+		AnalyzerName: aws.String(d.Id()),
+		ClientToken:  aws.String(id.UniqueId()),
+	})
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Analyzer Analyzer (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name string) (*types.AnalyzerSummary, error) {
+	input := &accessanalyzer.GetAnalyzerInput{
+		AnalyzerName: aws.String(name),
+	}
+
+	output, err := conn.GetAnalyzer(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	return resourceAnalyzerRead(d, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Analyzer == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Analyzer, nil
 }
 
-func resourceAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
-
-	log.Printf("[DEBUG] Deleting Access Analyzer Analyzer: (%s)", d.Id())
-	_, err := conn.DeleteAnalyzer(&accessanalyzer.DeleteAnalyzerInput{
-		AnalyzerName: aws.String(d.Id()),
-		ClientToken:  aws.String(resource.UniqueId()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
+func expandAnalyzerConfiguration(tfMap map[string]interface{}) types.AnalyzerConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error deleting Access Analyzer Analyzer (%s): %w", d.Id(), err)
+	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
+
+	if v, ok := tfMap["unused_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandUnusedAccess(v[0].(map[string]interface{}))
 	}
 
-	return nil
+	return apiObject
+}
+
+func expandUnusedAccess(tfMap map[string]interface{}) types.UnusedAccessConfiguration {
+	apiObject := types.UnusedAccessConfiguration{}
+
+	if v, ok := tfMap["unused_access_age"].(int); ok && v != 0 {
+		apiObject.UnusedAccessAge = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenConfiguration(apiObject types.AnalyzerConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	switch v := apiObject.(type) {
+	case *types.AnalyzerConfigurationMemberUnusedAccess:
+		tfMap["unused_access"] = []interface{}{flattenUnusedAccessConfiguration(&v.Value)}
+	}
+
+	return tfMap
+}
+
+func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.UnusedAccessAge; v != nil {
+		tfMap["unused_access_age"] = aws.ToInt32(v)
+	}
+
+	return tfMap
 }

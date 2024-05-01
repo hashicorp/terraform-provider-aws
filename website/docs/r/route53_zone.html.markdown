@@ -66,7 +66,7 @@ resource "aws_route53_zone" "private" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) This is the name of the hosted zone.
 * `comment` - (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.
@@ -80,20 +80,30 @@ The following arguments are supported:
 * `vpc_id` - (Required) ID of the VPC to associate.
 * `vpc_region` - (Optional) Region of the VPC to associate. Defaults to AWS provider region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Hosted Zone.
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.
 * `name_servers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
+* `primary_name_server` - The Route 53 name server that created the SOA record.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Route53 Zones can be imported using the `zone id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Zones using the zone `id`. For example:
 
+```terraform
+import {
+  to = aws_route53_zone.myzone
+  id = "Z1D633PJN98FT9"
+}
 ```
-$ terraform import aws_route53_zone.myzone Z1D633PJN98FT9
+
+Using `terraform import`, import Route53 Zones using the zone `id`. For example:
+
+```console
+% terraform import aws_route53_zone.myzone Z1D633PJN98FT9
 ```

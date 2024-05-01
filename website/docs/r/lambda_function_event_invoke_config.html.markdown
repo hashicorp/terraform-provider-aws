@@ -109,36 +109,74 @@ The following arguments are required:
 
 * `destination` - (Required) Amazon Resource Name (ARN) of the destination resource. See the [Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations) for acceptable resource types and associated IAM permissions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fully qualified Lambda Function name or Amazon Resource Name (ARN)
 
 ## Import
 
-Lambda Function Event Invoke Configs can be imported using the fully qualified Function name or Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
 
 ARN without qualifier (all versions and aliases):
 
-```
-$ terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "arn:aws:us-east-1:123456789012:function:my_function"
+}
 ```
 
 ARN with qualifier:
 
-```
-$ terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function:production
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "arn:aws:us-east-1:123456789012:function:my_function:production"
+}
 ```
 
 Name without qualifier (all versions and aliases):
 
-```
-$ terraform import aws_lambda_function_event_invoke_config.example my_function
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "my_function"
+}
 ```
 
 Name with qualifier:
 
+```terraform
+import {
+  to = aws_lambda_function_event_invoke_config.example
+  id = "my_function:production"
+}
 ```
-$ terraform import aws_lambda_function_event_invoke_config.example my_function:production
+
+**Using `terraform import` to import** Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
+
+ARN without qualifier (all versions and aliases):
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function
+```
+
+ARN with qualifier:
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:us-east-1:123456789012:function:my_function:production
+```
+
+Name without qualifier (all versions and aliases):
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example my_function
+```
+
+Name with qualifier:
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example my_function:production
 ```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_classifier: Add `custom_datatypes` and `custom_datatype_configured` arguments
+```

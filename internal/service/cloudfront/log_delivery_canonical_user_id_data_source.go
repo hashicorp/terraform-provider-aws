@@ -1,9 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -14,9 +20,10 @@ const (
 	cnLogDeliveryCanonicalUserID = "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"
 )
 
-func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_log_delivery_canonical_user_id", name="Log Delivery Canonical User ID")
+func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLogDeliveryCanonicalUserIDRead,
+		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -27,7 +34,8 @@ func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	}
 }
 
-func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	canonicalId := defaultLogDeliveryCanonicalUserID
 
 	region := meta.(*conns.AWSClient).Region
@@ -35,11 +43,11 @@ func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta inter
 		region = v.(string)
 	}
 
-	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
+	if v := names.PartitionForRegion(region); v == names.ChinaPartitionID {
 		canonicalId = cnLogDeliveryCanonicalUserID
 	}
 
 	d.SetId(canonicalId)
 
-	return nil
+	return diags
 }

@@ -1,18 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceGroup() *schema.Resource {
+// @SDKDataSource("aws_iam_group", name="Group")
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -59,8 +65,9 @@ func DataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	groupName := d.Get("group_name").(string)
 
@@ -68,43 +75,45 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		GroupName: aws.String(groupName),
 	}
 
-	var users []*iam.User
-	var group *iam.Group
+	var users []awstypes.User
+	var group *awstypes.Group
 
-	log.Printf("[DEBUG] Reading IAM Group: %s", req)
-	err := conn.GetGroupPages(req, func(page *iam.GetGroupOutput, lastPage bool) bool {
+	pages := iam.NewGetGroupPaginator(conn, req)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "getting group: %s", err)
+		}
 		if group == nil {
 			group = page.Group
 		}
+
 		users = append(users, page.Users...)
-		return !lastPage
-	})
-	if err != nil {
-		return fmt.Errorf("Error getting group: %w", err)
-	}
-	if group == nil {
-		return fmt.Errorf("no IAM group found")
 	}
 
-	d.SetId(aws.StringValue(group.GroupId))
+	if group == nil {
+		return sdkdiag.AppendErrorf(diags, "no IAM group found")
+	}
+
+	d.SetId(aws.ToString(group.GroupId))
 	d.Set("arn", group.Arn)
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
 	if err := d.Set("users", dataSourceGroupUsersRead(users)); err != nil {
-		return fmt.Errorf("error setting users: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting users: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func dataSourceGroupUsersRead(iamUsers []*iam.User) []map[string]interface{} {
+func dataSourceGroupUsersRead(iamUsers []awstypes.User) []map[string]interface{} {
 	users := make([]map[string]interface{}, 0, len(iamUsers))
 	for _, i := range iamUsers {
 		u := make(map[string]interface{})
-		u["arn"] = aws.StringValue(i.Arn)
-		u["user_id"] = aws.StringValue(i.UserId)
-		u["user_name"] = aws.StringValue(i.UserName)
-		u["path"] = aws.StringValue(i.Path)
+		u["arn"] = aws.ToString(i.Arn)
+		u["user_id"] = aws.ToString(i.UserId)
+		u["user_name"] = aws.ToString(i.UserName)
+		u["path"] = aws.ToString(i.Path)
 		users = append(users, u)
 	}
 	return users

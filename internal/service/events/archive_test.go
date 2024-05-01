@@ -1,34 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsArchive_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
@@ -46,26 +52,27 @@ func TestAccEventsArchive_basic(t *testing.T) {
 }
 
 func TestAccEventsArchive_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
 	resourceName := "aws_cloudwatch_event_archive.test"
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
 				),
 			},
 			{
 				Config: testAccArchiveConfig_updateAttributes(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -76,21 +83,22 @@ func TestAccEventsArchive_update(t *testing.T) {
 }
 
 func TestAccEventsArchive_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v eventbridge.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceArchive(), resourceName),
+					testAccCheckArchiveExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,70 +106,69 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckArchiveDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+func testAccCheckArchiveDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_archive" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_archive" {
+				continue
+			}
+
+			_, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Archive %s still exists", rs.Primary.ID)
 		}
 
-		params := eventbridge.DescribeArchiveInput{
-			ArchiveName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeArchive(&params)
-
-		if err == nil {
-			return fmt.Errorf("EventBridge event bus (%s) still exists: %s", rs.Primary.ID, resp)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckArchiveExists(n string, v *eventbridge.DescribeArchiveOutput) resource.TestCheckFunc {
+func testAccCheckArchiveExists(ctx context.Context, n string, v *eventbridge.DescribeArchiveOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
-		params := eventbridge.DescribeArchiveInput{
-			ArchiveName: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		resp, err := conn.DescribeArchive(&params)
+		output, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("EventBridge archive (%s) not found", n)
-		}
-
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
 func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
 	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy,
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_retentionOnCreation(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(resourceName, &v1),
+					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),

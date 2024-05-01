@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -41,6 +45,7 @@ func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "ipv6_supported", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "maximum_ipv4_addresses_per_interface", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "maximum_ipv6_addresses_per_interface", "10"),
+					resource.TestCheckResourceAttr(dataSourceName, "maximum_network_cards", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "maximum_network_interfaces", "3"),
 					resource.TestCheckResourceAttr(dataSourceName, "memory_size", "8192"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_performance", "Up to 10 Gigabit"),
@@ -70,11 +75,12 @@ func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeDataSource_metal(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -98,21 +104,24 @@ func TestAccEC2InstanceTypeDataSource_metal(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeDataSource_gpu(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeDataSourceConfig_gpu,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "gpus.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.count", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.count", "8"),
 					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.manufacturer", "NVIDIA"),
-					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.memory_size", "8192"),
-					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.name", "M60"),
+					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.memory_size", "81920"),
+					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.name", "H100"),
+					resource.TestCheckResourceAttr(dataSourceName, "maximum_network_cards", "32"),
+					resource.TestCheckResourceAttr(dataSourceName, "maximum_network_interfaces", "64"),
 				),
 			},
 		},
@@ -120,11 +129,12 @@ func TestAccEC2InstanceTypeDataSource_gpu(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeDataSource_fpga(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +166,7 @@ data "aws_ec2_instance_type" "test" {
 
 const testAccInstanceTypeDataSourceConfig_gpu = `
 data "aws_ec2_instance_type" "test" {
-  instance_type = "g3.4xlarge"
+  instance_type = "p5.48xlarge"
 }
 `
 

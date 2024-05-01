@@ -1,25 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ec2_instance_types")
 func DataSourceInstanceTypes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypesRead,
+		ReadWithoutTimeout: dataSourceInstanceTypesRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"instance_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -29,19 +35,20 @@ func DataSourceInstanceTypes() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeInstanceTypesInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	output, err := FindInstanceTypes(conn, input)
+	output, err := FindInstanceTypes(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Instance Types: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Types: %s", err)
 	}
 
 	var instanceTypes []string
@@ -53,5 +60,5 @@ func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("instance_types", instanceTypes)
 
-	return nil
+	return diags
 }

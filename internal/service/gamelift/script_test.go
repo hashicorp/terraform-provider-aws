@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGameLiftScript_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf gamelift.Script
 	resourceName := "aws_gamelift_script.test"
 
@@ -26,20 +32,20 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScriptDestroy,
+		CheckDestroy:             testAccCheckScriptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScriptExists(resourceName, &conf),
+					testAccCheckScriptExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`script/script-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`script/script-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", fmt.Sprintf("prod-gamescale-scripts-%s", region)),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_location.0.key"),
@@ -55,9 +61,9 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 			{
 				Config: testAccScriptConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScriptExists(resourceName, &conf),
+					testAccCheckScriptExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`script/script-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`script/script-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -67,6 +73,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 }
 
 func TestAccGameLiftScript_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf gamelift.Script
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -74,18 +81,18 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScriptDestroy,
+		CheckDestroy:             testAccCheckScriptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScriptExists(resourceName, &conf),
+					testAccCheckScriptExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -99,7 +106,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 			{
 				Config: testAccScriptConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScriptExists(resourceName, &conf),
+					testAccCheckScriptExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -108,7 +115,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 			{
 				Config: testAccScriptConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScriptExists(resourceName, &conf),
+					testAccCheckScriptExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -118,6 +125,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 }
 
 func TestAccGameLiftScript_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf gamelift.Script
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -125,20 +133,20 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScriptDestroy,
+		CheckDestroy:             testAccCheckScriptDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScriptExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceScript(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceScript(), resourceName),
+					testAccCheckScriptExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceScript(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceScript(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,7 +154,7 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheckFunc {
+func testAccCheckScriptExists(ctx context.Context, n string, res *gamelift.Script) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -157,9 +165,9 @@ func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheck
 			return fmt.Errorf("No GameLift Script ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
-		script, err := tfgamelift.FindScriptByID(conn, rs.Primary.ID)
+		script, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -174,26 +182,28 @@ func testAccCheckScriptExists(n string, res *gamelift.Script) resource.TestCheck
 	}
 }
 
-func testAccCheckScriptDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+func testAccCheckScriptDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_gamelift_script" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_gamelift_script" {
+				continue
+			}
+
+			script, err := tfgamelift.FindScriptByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if script != nil {
+				return fmt.Errorf("GameLift Script (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		script, err := tfgamelift.FindScriptByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if script != nil {
-			return fmt.Errorf("GameLift Script (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccScriptConfig_basic(rName string) string {

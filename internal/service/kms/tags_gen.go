@@ -4,32 +4,73 @@ package kms
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists kms service tags.
+// listTags lists kms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn kmsiface.KMSAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
+	var output []*kms.Tag
 
-	output, err := conn.ListResourceTagsWithContext(ctx, input)
+	err := conn.ListResourceTagsPagesWithContext(ctx, input, func(page *kms.ListResourceTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	if err != nil {
-		return tftags.New(nil), err
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, "NotFoundException") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return KeyValueTags(output.Tags), nil
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, output), nil
+}
+
+// ListTags lists kms service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KMSConn(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -51,30 +92,50 @@ func Tags(tags tftags.KeyValueTags) []*kms.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from kms service tags.
-func KeyValueTags(tags []*kms.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*kms.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.TagKey)] = tag.TagValue
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates kms service tags.
+// getTagsIn returns kms service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) []*kms.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// setTagsOut sets kms service tags in Context.
+func setTagsOut(ctx context.Context, tags []*kms.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+	}
+}
+
+// updateTags updates kms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn kmsiface.KMSAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn kmsiface.KMSAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func updateTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.KMS)
+	if len(removedTags) > 0 {
 		input := &kms.UntagResourceInput{
 			KeyId:   aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -84,10 +145,12 @@ func UpdateTagsWithContext(ctx context.Context, conn kmsiface.KMSAPI, identifier
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.KMS)
+	if len(updatedTags) > 0 {
 		input := &kms.TagResourceInput{
 			KeyId: aws.String(identifier),
-			Tags:  Tags(updatedTags.IgnoreAWS()),
+			Tags:  Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -97,5 +160,50 @@ func UpdateTagsWithContext(ctx context.Context, conn kmsiface.KMSAPI, identifier
 		}
 	}
 
+	if len(removedTags) > 0 || len(updatedTags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, identifier, newTags); err != nil {
+			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+		}
+	}
+
 	return nil
+}
+
+// UpdateTags updates kms service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).KMSConn(ctx), identifier, oldTags, newTags)
+}
+
+// waitTagsPropagated waits for kms service tags to be propagated.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func waitTagsPropagated(ctx context.Context, conn kmsiface.KMSAPI, id string, tags tftags.KeyValueTags) error {
+	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
+		"tags": tags,
+	})
+
+	checkFunc := func() (bool, error) {
+		output, err := listTags(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
+		}
+
+		return output.Equal(tags), nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(ctx, 10*time.Minute, checkFunc, opts)
 }

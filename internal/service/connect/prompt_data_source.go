@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -9,11 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_connect_prompt")
 func DataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePromptRead,
+		ReadWithoutTimeout: dataSourcePromptRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -36,7 +41,9 @@ func DataSourcePrompt() *schema.Resource {
 }
 
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -44,11 +51,11 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "finding Connect Prompt Summary by name (%s): %s", name, err)
 	}
 
 	if promptSummary == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): not found", name))
+		return sdkdiag.AppendErrorf(diags, "finding Connect Prompt Summary by name (%s): not found", name)
 	}
 
 	d.Set("arn", promptSummary.Arn)
@@ -58,7 +65,7 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(promptSummary.Id)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {

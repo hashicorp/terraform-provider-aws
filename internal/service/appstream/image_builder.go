@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -13,20 +15,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_appstream_image_builder", name="Image Builder")
+// @Tags(identifierAttribute="arn")
 func ResourceImageBuilder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBuilderCreate,
 		ReadWithoutTimeout:   resourceImageBuilderRead,
 		UpdateWithoutTimeout: resourceImageBuilderUpdate,
 		DeleteWithoutTimeout: resourceImageBuilderDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"access_endpoint": {
 				Type:     schema.TypeSet,
@@ -139,6 +148,8 @@ func ResourceImageBuilder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -162,35 +173,34 @@ func ResourceImageBuilder() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &appstream.CreateImageBuilderInput{
-		Name:         aws.String(name),
 		InstanceType: aws.String(d.Get("instance_type").(string)),
+		Name:         aws.String(name),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_endpoint"); ok && v.(*schema.Set).Len() > 0 {
 		input.AccessEndpoints = expandAccessEndpoints(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("appstream_agent_version"); ok {
 		input.AppstreamAgentVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("display_name"); ok {
@@ -205,6 +215,10 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.EnableDefaultInternetAccess = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("iam_role_arn"); ok {
+		input.IamRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("image_arn"); ok {
 		input.ImageArn = aws.String(v.(string))
 	}
@@ -213,138 +227,105 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ImageName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
-		input.IamRoleArn = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.CreateImageBuilderWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
+		return conn.CreateImageBuilderWithContext(ctx, input)
+	}, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role")
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream ImageBuilder (%s): %w", name, err))
+		return sdkdiag.AppendErrorf(diags, "creating AppStream ImageBuilder (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ImageBuilder.Name))
+	d.SetId(aws.StringValue(outputRaw.(*appstream.CreateImageBuilderOutput).ImageBuilder.Name))
 
 	if _, err = waitImageBuilderStateRunning(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream ImageBuilder (%s) to be running: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "waiting for AppStream ImageBuilder (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceImageBuilderRead(ctx, d, meta)
+	return append(diags, resourceImageBuilderRead(ctx, d, meta)...)
 }
 
 func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	imageBuilder, err := FindImageBuilderByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Appstream ImageBuilder (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AppStream ImageBuilder (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream ImageBuilder (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading AppStream ImageBuilder (%s): %s", d.Id(), err)
 	}
 
-	if imageBuilder == nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream ImageBuilder (%s): not found after creation", d.Id()))
+	if err = d.Set("access_endpoint", flattenAccessEndpoints(imageBuilder.AccessEndpoints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting access_endpoint: %s", err)
 	}
-
-	arn := aws.StringValue(imageBuilder.Arn)
-
 	d.Set("appstream_agent_version", imageBuilder.AppstreamAgentVersion)
+	arn := aws.StringValue(imageBuilder.Arn)
 	d.Set("arn", arn)
 	d.Set("created_time", aws.TimeValue(imageBuilder.CreatedTime).Format(time.RFC3339))
 	d.Set("description", imageBuilder.Description)
 	d.Set("display_name", imageBuilder.DisplayName)
+	if imageBuilder.DomainJoinInfo != nil {
+		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting domain_join_info: %s", err)
+		}
+	} else {
+		d.Set("domain_join_info", nil)
+	}
 	d.Set("enable_default_internet_access", imageBuilder.EnableDefaultInternetAccess)
-	d.Set("image_arn", imageBuilder.ImageArn)
 	d.Set("iam_role_arn", imageBuilder.IamRoleArn)
+	d.Set("image_arn", imageBuilder.ImageArn)
 	d.Set("instance_type", imageBuilder.InstanceType)
-
-	if err = d.Set("access_endpoint", flattenAccessEndpoints(imageBuilder.AccessEndpoints)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "access_endpoints", d.Id(), err))
-	}
-	if err = d.Set("domain_join_info", flattenDomainInfo(imageBuilder.DomainJoinInfo)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "domain_join_info", d.Id(), err))
-	}
-
-	if err = d.Set("vpc_config", flattenVPCConfig(imageBuilder.VpcConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream ImageBuilder (%s): %w", "vpc_config", d.Id(), err))
-	}
-
 	d.Set("name", imageBuilder.Name)
 	d.Set("state", imageBuilder.State)
-
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for AppStream ImageBuilder (%s): %w", arn, err))
+	if imageBuilder.VpcConfig != nil {
+		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+		}
+	} else {
+		d.Set("vpc_config", nil)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
-	return nil
+	return diags
 }
 
 func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if d.HasChange("tags_all") {
-		conn := meta.(*conns.AWSClient).AppStreamConn
-
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags for AppStream ImageBuilder (%s): %w", d.Id(), err))
-		}
-	}
-
+	// Tags only.
 	return resourceImageBuilderRead(ctx, d, meta)
 }
 
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	var diags diag.Diagnostics
 
-	log.Printf("[DEBUG] Deleting AppStream Image Builder: (%s)", d.Id())
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
+
+	log.Printf("[DEBUG] Deleting AppStream ImageBuilder: %s", d.Id())
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Appstream ImageBuilder (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream ImageBuilder (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitImageBuilderStateDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream ImageBuilder (%s) to be deleted: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "waiting for AppStream ImageBuilder (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandImageBuilderVPCConfig(tfList []interface{}) *appstream.VpcConfig {

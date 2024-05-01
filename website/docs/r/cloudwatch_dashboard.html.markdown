@@ -16,63 +16,72 @@ Provides a CloudWatch Dashboard resource.
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "my-dashboard"
 
-  dashboard_body = <<EOF
-{
-  "widgets": [
-    {
-      "type": "metric",
-      "x": 0,
-      "y": 0,
-      "width": 12,
-      "height": 6,
-      "properties": {
-        "metrics": [
-          [
-            "AWS/EC2",
-            "CPUUtilization",
-            "InstanceId",
-            "i-012345"
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+
+        properties = {
+          metrics = [
+            [
+              "AWS/EC2",
+              "CPUUtilization",
+              "InstanceId",
+              "i-012345"
+            ]
           ]
-        ],
-        "period": 300,
-        "stat": "Average",
-        "region": "us-east-1",
-        "title": "EC2 Instance CPU"
+          period = 300
+          stat   = "Average"
+          region = "us-east-1"
+          title  = "EC2 Instance CPU"
+        }
+      },
+      {
+        type   = "text"
+        x      = 0
+        y      = 7
+        width  = 3
+        height = 3
+
+        properties = {
+          markdown = "Hello world"
+        }
       }
-    },
-    {
-      "type": "text",
-      "x": 0,
-      "y": 7,
-      "width": 3,
-      "height": 3,
-      "properties": {
-        "markdown": "Hello world"
-      }
-    }
-  ]
-}
-EOF
+    ]
+  })
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `dashboard_name` - (Required) The name of the dashboard.
 * `dashboard_body` - (Required) The detailed information about the dashboard, including what widgets are included and their location on the dashboard. You can read more about the body structure in the [documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Dashboard-Body-Structure.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `dashboard_arn` - The Amazon Resource Name (ARN) of the dashboard.
 
 ## Import
 
-CloudWatch dashboards can be imported using the `dashboard_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch dashboards using the `dashboard_name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_dashboard.sample
+  id = "dashboard_name"
+}
 ```
-$ terraform import aws_cloudwatch_dashboard.sample dashboard_name
+
+Using `terraform import`, import CloudWatch dashboards using the `dashboard_name`. For example:
+
+```console
+% terraform import aws_cloudwatch_dashboard.sample dashboard_name
 ```

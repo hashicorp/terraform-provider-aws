@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -10,27 +14,31 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceServer() *schema.Resource {
+// @SDKResource("aws_transfer_server", name="Server")
+// @Tags(identifierAttribute="arn")
+func resourceServer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServerCreate,
-		Read:   resourceServerRead,
-		Update: resourceServerUpdate,
-		Delete: resourceServerDelete,
+		CreateWithoutTimeout: resourceServerCreate,
+		ReadWithoutTimeout:   resourceServerRead,
+		UpdateWithoutTimeout: resourceServerUpdate,
+		DeleteWithoutTimeout: resourceServerDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -157,13 +165,50 @@ func ResourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"pre_authentication_login_banner": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
+			},
+			"protocol_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"as2_transports": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(transfer.As2Transport_Values(), false),
+							},
+						},
+						"passive_ip": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(0, 15),
+						},
+						"set_stat_option": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.SetStatOption_Values(), false),
+						},
+						"tls_session_resumption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.TlsSessionResumptionMode_Values(), false),
+						},
+					},
+				},
 			},
 			"protocols": {
 				Type:     schema.TypeSet,
@@ -176,14 +221,45 @@ func ResourceServer() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
+			"s3_storage_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"directory_listing_optimization": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.DirectoryListingOptimization_Values(), false),
+						},
+					},
+				},
+			},
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"sftp_authentication_methods": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(transfer.SftpAuthenticationMethods_Values(), false),
+			},
+			"structured_log_destinations": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+				Description: "This is a set of arns of destinations that will receive structured logs from the transfer server",
+				Optional:    true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -194,10 +270,30 @@ func ResourceServer() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"on_partial_upload": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"execution_role": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"workflow_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"on_upload": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							AtLeastOneOf: []string{"workflow_details.0.on_upload", "workflow_details.0.on_partial_upload"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"execution_role": {
@@ -219,12 +315,13 @@ func ResourceServer() *schema.Resource {
 	}
 }
 
-func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	input := &transfer.CreateServerInput{}
+	input := &transfer.CreateServerInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("certificate"); ok {
 		input.Certificate = aws.String(v.(string))
@@ -281,6 +378,14 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.SftpAuthenticationMethods = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
 	}
@@ -293,12 +398,24 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.PreAuthenticationLoginBanner = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("protocol_details"); ok && len(v.([]interface{})) > 0 {
+		input.ProtocolDetails = expandProtocolDetails(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("s3_storage_options"); ok && len(v.([]interface{})) > 0 {
+		input.S3StorageOptions = expandS3StorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("security_policy_name"); ok {
 		input.SecurityPolicyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("structured_log_destinations"); ok && v.(*schema.Set).Len() > 0 {
+		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("url"); ok {
@@ -313,65 +430,57 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkflowDetails = expandWorkflowDetails(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Transfer Server: %s", input)
-	output, err := conn.CreateServer(input)
+	output, err := conn.CreateServerWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Transfer Server: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Transfer Server: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ServerId))
 
-	_, err = waitServerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to create: %w", d.Id(), err)
+	if _, err := waitServerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Transfer Server (%s) create: %s", d.Id(), err)
 	}
 
 	// AddressAllocationIds is only valid in the UpdateServer API.
 	if len(addressAllocationIDs) > 0 {
-		if err := stopServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+		if err := stopServer(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &transfer.UpdateServerInput{
-			ServerId: aws.String(d.Id()),
 			EndpointDetails: &transfer.EndpointDetails{
 				AddressAllocationIds: addressAllocationIDs,
 			},
+			ServerId: aws.String(d.Id()),
 		}
 
-		if err := updateServer(conn, input); err != nil {
-			return err
+		if err := updateServer(ctx, conn, input); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		if err := startServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+		if err := startServer(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceServerRead(d, meta)
+	return append(diags, resourceServerRead(ctx, d, meta)...)
 }
 
-func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	output, err := FindServerByID(conn, d.Id())
+	output, err := FindServerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Transfer Server (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
@@ -382,17 +491,17 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("directory_id", "")
 	}
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 
 		// Security Group IDs are not returned for VPC endpoints.
 		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByID(meta.(*conns.AWSClient).EC2Conn, vpcEndpointID)
+			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), vpcEndpointID)
 
 			if err != nil {
-				return fmt.Errorf("error reading Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
+				return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
 			}
 
 			for _, group := range output.Groups {
@@ -401,7 +510,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := d.Set("endpoint_details", []interface{}{flattenEndpointDetails(output.EndpointDetails, securityGroupIDs)}); err != nil {
-			return fmt.Errorf("error setting endpoint_details: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting endpoint_details: %s", err)
 		}
 	} else {
 		d.Set("endpoint_details", nil)
@@ -419,37 +528,40 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("invocation_role", "")
 	}
+	if output.IdentityProviderDetails != nil {
+		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
+	} else {
+		d.Set("sftp_authentication_methods", "")
+	}
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
+	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protocol_details: %s", err)
+	}
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
+	if err := d.Set("s3_storage_options", flattenS3StorageOptions(output.S3StorageOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3_storage_options: %s", err)
+	}
 	d.Set("security_policy_name", output.SecurityPolicyName)
+	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
 		d.Set("url", "")
 	}
-
 	if err := d.Set("workflow_details", flattenWorkflowDetails(output.WorkflowDetails)); err != nil {
-		return fmt.Errorf("error setting workflow_details: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var newEndpointTypeVpc bool
@@ -457,11 +569,9 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		old, new := d.GetChange("endpoint_type")
 
-		if old, new := old.(string), new.(string); new != old && new == transfer.EndpointTypeVpc {
+		if old, new := old.(string), new.(string); new == transfer.EndpointTypeVpc {
 			newEndpointTypeVpc = true
-		} else if new == old && new == transfer.EndpointTypeVpc {
-			newEndpointTypeVpc = true
-			oldEndpointTypeVpc = true
+			oldEndpointTypeVpc = old == new
 		}
 
 		var addressAllocationIDs []*string
@@ -524,7 +634,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			// You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC.
 			// To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
 			if d.HasChange("endpoint_details.0.security_group_ids") && newEndpointTypeVpc && oldEndpointTypeVpc {
-				conn := meta.(*conns.AWSClient).EC2Conn
+				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 				vpcEndpointID := d.Get("endpoint_details.0.vpc_endpoint_id").(string)
 				input := &ec2.ModifyVpcEndpointInput{
@@ -541,15 +651,14 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.RemoveSecurityGroupIds = del
 				}
 
-				log.Printf("[DEBUG] Updating VPC Endpoint: %s", input)
-				if _, err := conn.ModifyVpcEndpoint(input); err != nil {
-					return fmt.Errorf("error updating Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
-				}
-
-				_, err := tfec2.WaitVPCEndpointAvailable(conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout)
+				_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
 
 				if err != nil {
-					return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)
+					return sdkdiag.AppendErrorf(diags, "modifying Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)
+				}
+
+				if _, err := tfec2.WaitVPCEndpointAvailable(ctx, conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Transfer Server (%s) VPC Endpoint (%s) update: %s", d.Id(), vpcEndpointID, err)
 				}
 			}
 		}
@@ -567,7 +676,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
+		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
@@ -580,6 +689,10 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if attr, ok := d.GetOk("invocation_role"); ok {
 				identityProviderDetails.InvocationRole = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("sftp_authentication_methods"); ok {
+				identityProviderDetails.SftpAuthenticationMethods = aws.String(attr.(string))
 			}
 
 			if attr, ok := d.GetOk("url"); ok {
@@ -601,94 +714,97 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
 		}
 
+		if d.HasChange("protocol_details") {
+			input.ProtocolDetails = expandProtocolDetails(d.Get("protocol_details").([]interface{}))
+		}
+
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
+		}
+
+		if d.HasChange("s3_storage_options") {
+			input.S3StorageOptions = expandS3StorageOptions(d.Get("s3_storage_options").([]interface{}))
 		}
 
 		if d.HasChange("security_policy_name") {
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
 
+		// Per the docs it does not matter if this field has changed,
+		// if the update passes this as empty the structured logging will be turned off,
+		// so we need to always pass the new.
+		input.StructuredLogDestinations = flex.ExpandStringSet(d.Get("structured_log_destinations").(*schema.Set))
+
 		if d.HasChange("workflow_details") {
 			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))
 		}
 
 		if offlineUpdate {
-			if err := stopServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+			if err := stopServer(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
 		if removeAddressAllocationIDs {
 			input := &transfer.UpdateServerInput{
-				ServerId: aws.String(d.Id()),
 				EndpointDetails: &transfer.EndpointDetails{
 					AddressAllocationIds: []*string{},
 				},
+				ServerId: aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Removing Transfer Server Address Allocation IDs: %s", input)
-			if err := updateServer(conn, input); err != nil {
-				return err
+			if err := updateServer(ctx, conn, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "removing address allocation IDs: %s", err)
 			}
 		}
 
-		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
-		if err := updateServer(conn, input); err != nil {
-			return err
+		if err := updateServer(ctx, conn, input); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		if len(addressAllocationIDs) > 0 {
 			input := &transfer.UpdateServerInput{
-				ServerId: aws.String(d.Id()),
 				EndpointDetails: &transfer.EndpointDetails{
 					AddressAllocationIds: addressAllocationIDs,
 				},
+				ServerId: aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Adding Transfer Server Address Allocation IDs: %s", input)
-			if err := updateServer(conn, input); err != nil {
-				return err
+			if err := updateServer(ctx, conn, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding address allocation IDs: %s", err)
 			}
 		}
 
 		if offlineUpdate {
-			if err := startServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+			if err := startServer(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
-
-	return resourceServerRead(d, meta)
+	return append(diags, resourceServerRead(ctx, d, meta)...)
 }
 
-func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
 		input := &transfer.ListUsersInput{
 			ServerId: aws.String(d.Id()),
 		}
-		var deletionErrs *multierror.Error
+		var errs []error
 
-		err := conn.ListUsersPages(input, func(page *transfer.ListUsersOutput, lastPage bool) bool {
+		err := conn.ListUsersPagesWithContext(ctx, input, func(page *transfer.ListUsersOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, user := range page.Users {
-				err := userDelete(conn, d.Id(), aws.StringValue(user.UserName))
+				err := userDelete(ctx, conn, d.Id(), aws.StringValue(user.UserName), d.Timeout(schema.TimeoutDelete))
 
 				if err != nil {
-					log.Printf("[ERROR] %s", err)
-					deletionErrs = multierror.Append(deletionErrs, err)
+					errs = append(errs, err)
 
 					continue
 				}
@@ -698,40 +814,38 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error listing Transfer Users: %w", err))
+			errs = append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
 		}
 
-		err = deletionErrs.ErrorOrNil()
+		err = errors.Join(errs...)
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
 		func() (interface{}, error) {
-			return conn.DeleteServer(&transfer.DeleteServerInput{
+			return conn.DeleteServerWithContext(ctx, &transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),
 			})
 		},
 		transfer.ErrCodeInvalidRequestException, "Unable to delete VPC endpoint")
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Transfer Server (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Server (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitServerDeleted(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) delete: %w", d.Id(), err)
+	if _, err := waitServerDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Transfer Server (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetails {
@@ -796,17 +910,108 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	return tfMap
 }
 
-func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
-	if tfMap == nil {
+func expandProtocolDetails(m []interface{}) *transfer.ProtocolDetails {
+	if len(m) < 1 || m[0] == nil {
 		return nil
+	}
+
+	tfMap := m[0].(map[string]interface{})
+
+	apiObject := &transfer.ProtocolDetails{}
+
+	if v, ok := tfMap["as2_transports"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.As2Transports = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
+		apiObject.PassiveIp = aws.String(v)
+	}
+
+	if v, ok := tfMap["set_stat_option"].(string); ok && len(v) > 0 {
+		apiObject.SetStatOption = aws.String(v)
+	}
+
+	if v, ok := tfMap["tls_session_resumption_mode"].(string); ok && len(v) > 0 {
+		apiObject.TlsSessionResumptionMode = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.As2Transports; v != nil {
+		tfMap["as2_transports"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.PassiveIp; v != nil {
+		tfMap["passive_ip"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SetStatOption; v != nil {
+		tfMap["set_stat_option"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TlsSessionResumptionMode; v != nil {
+		tfMap["tls_session_resumption_mode"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandS3StorageOptions(m []interface{}) *transfer.S3StorageOptions {
+	if len(m) < 1 || m[0] == nil {
+		return nil
+	}
+
+	tfMap := m[0].(map[string]interface{})
+
+	apiObject := &transfer.S3StorageOptions{}
+
+	if v, ok := tfMap["directory_listing_optimization"].(string); ok && len(v) > 0 {
+		apiObject.DirectoryListingOptimization = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3StorageOptions(apiObject *transfer.S3StorageOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DirectoryListingOptimization; v != nil {
+		tfMap["directory_listing_optimization"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {
+	apiObject := &transfer.WorkflowDetails{
+		OnPartialUpload: []*transfer.WorkflowDetail{},
+		OnUpload:        []*transfer.WorkflowDetail{},
+	}
+
+	if len(tfMap) == 0 || tfMap[0] == nil {
+		return apiObject
 	}
 
 	tfMapRaw := tfMap[0].(map[string]interface{})
 
-	apiObject := &transfer.WorkflowDetails{}
-
 	if v, ok := tfMapRaw["on_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.OnUpload = expandWorkflowDetail(v)
+	}
+
+	if v, ok := tfMapRaw["on_partial_upload"].([]interface{}); ok && len(v) > 0 {
+		apiObject.OnPartialUpload = expandWorkflowDetail(v)
 	}
 
 	return apiObject
@@ -821,6 +1026,10 @@ func flattenWorkflowDetails(apiObject *transfer.WorkflowDetails) []interface{} {
 
 	if v := apiObject.OnUpload; v != nil {
 		tfMap["on_upload"] = flattenWorkflowDetail(v)
+	}
+
+	if v := apiObject.OnPartialUpload; v != nil {
+		tfMap["on_partial_upload"] = flattenWorkflowDetail(v)
 	}
 
 	return []interface{}{tfMap}
@@ -879,39 +1088,39 @@ func flattenWorkflowDetail(apiObjects []*transfer.WorkflowDetail) []interface{} 
 	return tfList
 }
 
-func stopServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
+func stopServer(ctx context.Context, conn *transfer.Transfer, serverID string, timeout time.Duration) error {
 	input := &transfer.StopServerInput{
 		ServerId: aws.String(serverID),
 	}
 
-	if _, err := conn.StopServer(input); err != nil {
-		return fmt.Errorf("error stopping Transfer Server (%s): %w", serverID, err)
+	if _, err := conn.StopServerWithContext(ctx, input); err != nil {
+		return fmt.Errorf("stopping Transfer Server (%s): %w", serverID, err)
 	}
 
-	if _, err := waitServerStopped(conn, serverID, timeout); err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to stop: %w", serverID, err)
+	if _, err := waitServerStopped(ctx, conn, serverID, timeout); err != nil {
+		return fmt.Errorf("waiting for Transfer Server (%s) stop: %w", serverID, err)
 	}
 
 	return nil
 }
 
-func startServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
+func startServer(ctx context.Context, conn *transfer.Transfer, serverID string, timeout time.Duration) error {
 	input := &transfer.StartServerInput{
 		ServerId: aws.String(serverID),
 	}
 
-	if _, err := conn.StartServer(input); err != nil {
-		return fmt.Errorf("error starting Transfer Server (%s): %w", serverID, err)
+	if _, err := conn.StartServerWithContext(ctx, input); err != nil {
+		return fmt.Errorf("starting Transfer Server (%s): %w", serverID, err)
 	}
 
-	if _, err := waitServerStarted(conn, serverID, timeout); err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %w", serverID, err)
+	if _, err := waitServerStarted(ctx, conn, serverID, timeout); err != nil {
+		return fmt.Errorf("waiting for Transfer Server (%s) start: %w", serverID, err)
 	}
 
 	return nil
 }
 
-func updateServer(conn *transfer.Transfer, input *transfer.UpdateServerInput) error {
+func updateServer(ctx context.Context, conn *transfer.Transfer, input *transfer.UpdateServerInput) error {
 	// The Transfer API will return a state of ONLINE for a server before the
 	// underlying VPC Endpoint is available and attempting to update the server
 	// will return an error until that EC2 API process is complete:
@@ -919,26 +1128,12 @@ func updateServer(conn *transfer.Transfer, input *transfer.UpdateServerInput) er
 	// To prevent accessing the EC2 API directly to check the VPC Endpoint
 	// state, which can require confusing IAM permissions and have other
 	// eventual consistency consideration, we retry only via the Transfer API.
-	err := resource.Retry(tfec2.VPCEndpointCreationTimeout, func() *resource.RetryError {
-		_, err := conn.UpdateServer(input)
-
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateServer(input)
-	}
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, tfec2.VPCEndpointCreationTimeout, func() (interface{}, error) {
+		return conn.UpdateServerWithContext(ctx, input)
+	}, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available")
 
 	if err != nil {
-		return fmt.Errorf("error updating Transfer Server (%s): %w", aws.StringValue(input.ServerId), err)
+		return fmt.Errorf("updating Transfer Server (%s): %w", aws.StringValue(input.ServerId), err)
 	}
 
 	return nil

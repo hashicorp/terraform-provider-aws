@@ -1,576 +1,557 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceGatewayRoute() *schema.Resource {
+// @SDKResource("aws_appmesh_gateway_route", name="Gateway Route")
+// @Tags(identifierAttribute="arn")
+func resourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGatewayRouteCreate,
-		Read:   resourceGatewayRouteRead,
-		Update: resourceGatewayRouteUpdate,
-		Delete: resourceGatewayRouteDelete,
+		CreateWithoutTimeout: resourceGatewayRouteCreate,
+		ReadWithoutTimeout:   resourceGatewayRouteRead,
+		UpdateWithoutTimeout: resourceGatewayRouteUpdate,
+		DeleteWithoutTimeout: resourceGatewayRouteDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceGatewayRouteImport,
+			StateContext: resourceGatewayRouteImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-
-			"mesh_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-
-			"mesh_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-
-			"virtual_gateway_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-
-			"spec": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"grpc_route": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"virtual_service": {
-																Type:     schema.TypeList,
-																Required: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"virtual_service_name": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-
-									"match": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"service_name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"spec.0.grpc_route",
-								"spec.0.http2_route",
-								"spec.0.http_route",
-							},
-						},
-
-						"http2_route": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"virtual_service": {
-																Type:     schema.TypeList,
-																Required: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"virtual_service_name": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"rewrite": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"hostname": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"default_target_hostname": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																		},
-																	},
-																},
-																AtLeastOneOf: []string{
-																	"spec.0.http2_route.0.action.0.rewrite.0.prefix",
-																	"spec.0.http2_route.0.action.0.rewrite.0.hostname",
-																},
-															},
-															"prefix": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"default_prefix": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																			ExactlyOneOf: []string{
-																				"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																				"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.value",
-																			},
-																		},
-																		"value": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-																			ExactlyOneOf: []string{
-																				"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																				"spec.0.http2_route.0.action.0.rewrite.0.prefix.0.value",
-																			},
-																		},
-																	},
-																},
-																AtLeastOneOf: []string{
-																	"spec.0.http2_route.0.action.0.rewrite.0.prefix",
-																	"spec.0.http2_route.0.action.0.rewrite.0.hostname",
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-
-									"match": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"prefix": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-													AtLeastOneOf: []string{
-														"spec.0.http2_route.0.match.0.prefix",
-														"spec.0.http2_route.0.match.0.hostname",
-													},
-												},
-												"hostname": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"exact": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ExactlyOneOf: []string{
-																	"spec.0.http2_route.0.match.0.hostname.0.exact",
-																	"spec.0.http2_route.0.match.0.hostname.0.suffix",
-																},
-															},
-															"suffix": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ExactlyOneOf: []string{
-																	"spec.0.http2_route.0.match.0.hostname.0.exact",
-																	"spec.0.http2_route.0.match.0.hostname.0.suffix",
-																},
-															},
-														},
-													},
-													AtLeastOneOf: []string{
-														"spec.0.http2_route.0.match.0.prefix",
-														"spec.0.http2_route.0.match.0.hostname",
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"spec.0.grpc_route",
-								"spec.0.http2_route",
-								"spec.0.http_route",
-							},
-						},
-
-						"http_route": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"action": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"target": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"virtual_service": {
-																Type:     schema.TypeList,
-																Required: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"virtual_service_name": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringLenBetween(1, 255),
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"rewrite": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"hostname": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"default_target_hostname": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																		},
-																	},
-																},
-																AtLeastOneOf: []string{
-																	"spec.0.http_route.0.action.0.rewrite.0.prefix",
-																	"spec.0.http_route.0.action.0.rewrite.0.hostname",
-																},
-															},
-															"prefix": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MinItems: 1,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"default_prefix": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-																			ExactlyOneOf: []string{
-																				"spec.0.http_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																				"spec.0.http_route.0.action.0.rewrite.0.prefix.0.value",
-																			},
-																		},
-																		"value": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-																			ExactlyOneOf: []string{
-																				"spec.0.http_route.0.action.0.rewrite.0.prefix.0.default_prefix",
-																				"spec.0.http_route.0.action.0.rewrite.0.prefix.0.value",
-																			},
-																		},
-																	},
-																},
-																AtLeastOneOf: []string{
-																	"spec.0.http_route.0.action.0.rewrite.0.prefix",
-																	"spec.0.http_route.0.action.0.rewrite.0.hostname",
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"match": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"prefix": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
-													AtLeastOneOf: []string{
-														"spec.0.http_route.0.match.0.prefix",
-														"spec.0.http_route.0.match.0.hostname",
-													},
-												},
-												"hostname": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"exact": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ExactlyOneOf: []string{
-																	"spec.0.http_route.0.match.0.hostname.0.exact",
-																	"spec.0.http_route.0.match.0.hostname.0.suffix",
-																},
-															},
-															"suffix": {
-																Type:     schema.TypeString,
-																Optional: true,
-																ExactlyOneOf: []string{
-																	"spec.0.http_route.0.match.0.hostname.0.exact",
-																	"spec.0.http_route.0.match.0.hostname.0.suffix",
-																},
-															},
-														},
-													},
-													AtLeastOneOf: []string{
-														"spec.0.http_route.0.match.0.prefix",
-														"spec.0.http_route.0.match.0.hostname",
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							ExactlyOneOf: []string{
-								"spec.0.grpc_route",
-								"spec.0.http2_route",
-								"spec.0.http_route",
-							},
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+				"created_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_updated_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"mesh_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":            resourceGatewayRouteSpecSchema(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"virtual_gateway_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceGatewayRouteSpecSchema() *schema.Schema {
+	// httpRouteSchema returns the schema for `http_route` and `http2_route` attributes.
+	httpRouteSchema := func(attrName string) *schema.Schema {
+		return &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			MinItems: 0,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"action": {
+						Type:     schema.TypeList,
+						Required: true,
+						MinItems: 1,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"rewrite": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"hostname": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"default_target_hostname": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+												},
+											},
+											"path": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+												},
+											},
+											"prefix": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"default_prefix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+															ExactlyOneOf: []string{
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
+															},
+														},
+														"value": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
+															ExactlyOneOf: []string{
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.default_prefix", attrName),
+																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
+															},
+														},
+													},
+												},
+												AtLeastOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.hostname", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.path", attrName),
+													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
+												},
+											},
+										},
+									},
+								},
+								"target": {
+									Type:     schema.TypeList,
+									Required: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"port": {
+												Type:         schema.TypeInt,
+												Optional:     true,
+												ValidateFunc: validation.IsPortNumber,
+											},
+											"virtual_service": {
+												Type:     schema.TypeList,
+												Required: true,
+												MinItems: 1,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"virtual_service_name": {
+															Type:         schema.TypeString,
+															Required:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					"match": {
+						Type:     schema.TypeList,
+						Required: true,
+						MinItems: 1,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"header": {
+									Type:     schema.TypeSet,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 10,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"invert": {
+												Type:     schema.TypeBool,
+												Optional: true,
+												Default:  false,
+											},
+											"match": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+														"prefix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+														"range": {
+															Type:     schema.TypeList,
+															Optional: true,
+															MinItems: 0,
+															MaxItems: 1,
+															Elem: &schema.Resource{
+																Schema: map[string]*schema.Schema{
+																	"end": {
+																		Type:     schema.TypeInt,
+																		Required: true,
+																	},
+																	"start": {
+																		Type:     schema.TypeInt,
+																		Required: true,
+																	},
+																},
+															},
+														},
+														"regex": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+														"suffix": {
+															Type:         schema.TypeString,
+															Optional:     true,
+															ValidateFunc: validation.StringLenBetween(1, 255),
+														},
+													},
+												},
+											},
+											"name": {
+												Type:         schema.TypeString,
+												Required:     true,
+												ValidateFunc: validation.StringLenBetween(1, 50),
+											},
+										},
+									},
+								},
+								"hostname": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 1,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"exact": {
+												Type:     schema.TypeString,
+												Optional: true,
+												ExactlyOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.exact", attrName),
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.suffix", attrName),
+												},
+											},
+											"suffix": {
+												Type:     schema.TypeString,
+												Optional: true,
+												ExactlyOneOf: []string{
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.exact", attrName),
+													fmt.Sprintf("spec.0.%s.0.match.0.hostname.0.suffix", attrName),
+												},
+											},
+										},
+									},
+									AtLeastOneOf: []string{
+										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
+									},
+								},
+								"path": {
+									Type:     schema.TypeList,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 1,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"exact": {
+												Type:         schema.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+											"regex": {
+												Type:         schema.TypeString,
+												Optional:     true,
+												ValidateFunc: validation.StringLenBetween(1, 255),
+											},
+										},
+									},
+									AtLeastOneOf: []string{
+										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
+									},
+								},
+								"port": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									ValidateFunc: validation.IsPortNumber,
+								},
+								"prefix": {
+									Type:         schema.TypeString,
+									Optional:     true,
+									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
+									AtLeastOneOf: []string{
+										fmt.Sprintf("spec.0.%s.0.match.0.hostname", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.path", attrName),
+										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
+									},
+								},
+								"query_parameter": {
+									Type:     schema.TypeSet,
+									Optional: true,
+									MinItems: 0,
+									MaxItems: 10,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"match": {
+												Type:     schema.TypeList,
+												Optional: true,
+												MinItems: 0,
+												MaxItems: 1,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"exact": {
+															Type:     schema.TypeString,
+															Optional: true,
+														},
+													},
+												},
+											},
+											"name": {
+												Type:     schema.TypeString,
+												Required: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			ExactlyOneOf: []string{
+				"spec.0.grpc_route",
+				"spec.0.http2_route",
+				"spec.0.http_route",
+			},
+		}
+	}
 
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MinItems: 1,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"grpc_route": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"target": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"port": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IsPortNumber,
+													},
+													"virtual_service": {
+														Type:     schema.TypeList,
+														Required: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"virtual_service_name": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"match": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"port": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										"service_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+					ExactlyOneOf: []string{
+						"spec.0.grpc_route",
+						"spec.0.http2_route",
+						"spec.0.http_route",
+					},
+				},
+				"http_route":  httpRouteSchema("http_route"),
+				"http2_route": httpRouteSchema("http2_route"),
+				"priority": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 1000),
+				},
+			},
+		},
+	}
+}
+
+func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+
+	name := d.Get("name").(string)
 	input := &appmesh.CreateGatewayRouteInput{
-		GatewayRouteName:   aws.String(d.Get("name").(string)),
+		GatewayRouteName:   aws.String(name),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
+
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		input.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh gateway route: %s", input)
-	output, err := conn.CreateGatewayRoute(input)
+	output, err := conn.CreateGatewayRouteWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh gateway route: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh Gateway Route (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.GatewayRoute.Metadata.Uid))
 
-	return resourceGatewayRouteRead(d, meta)
+	return append(diags, resourceGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	var gatewayRoute *appmesh.GatewayRouteData
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string))
+	}, d.IsNewResource())
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		gatewayRoute, err = FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		gatewayRoute, err = FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Gateway Route: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	if gatewayRoute == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Gateway Route: not found after creation")
-		}
-
-		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(gatewayRoute.Status.Status) == appmesh.GatewayRouteStatusCodeDeleted {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Gateway Route: %s after creation", aws.StringValue(gatewayRoute.Status.Status))
-		}
-
-		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	gatewayRoute := outputRaw.(*appmesh.GatewayRouteData)
 
 	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
 	d.Set("arn", arn)
@@ -580,34 +561,17 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
 	d.Set("name", gatewayRoute.GatewayRouteName)
 	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec))
-	if err != nil {
-		return fmt.Errorf("error setting spec: %w", err)
+	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh gateway route (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -616,65 +580,61 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 			Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
 			VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 		}
+
 		if v, ok := d.GetOk("mesh_owner"); ok {
 			input.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh gateway route: %s", input)
-		_, err := conn.UpdateGatewayRoute(input)
+		_, err := conn.UpdateGatewayRouteWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh gateway route (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh Gateway Route (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh gateway route (%s) tags: %s", arn, err)
-		}
-	}
-
-	return resourceGatewayRouteRead(d, meta)
+	return append(diags, resourceGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())
-	_, err := conn.DeleteGatewayRoute(&appmesh.DeleteGatewayRouteInput{
+	log.Printf("[DEBUG] Deleting App Mesh Gateway Route: %s", d.Id())
+	input := &appmesh.DeleteGatewayRouteInput{
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteGatewayRouteWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh gateway route (%s) : %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
 	}
 
-	mesh := parts[0]
-	vgName := parts[1]
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
+	meshName := parts[0]
+	virtualGatewayName := parts[1]
 	name := parts[2]
-	log.Printf("[DEBUG] Importing App Mesh gateway route %s from mesh %s/virtual gateway %s ", name, mesh, vgName)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
-
-	gatewayRoute, err := FindGatewayRoute(conn, mesh, vgName, name, "")
+	gatewayRoute, err := findGatewayRouteByFourPartKey(ctx, conn, meshName, "", virtualGatewayName, name)
 
 	if err != nil {
 		return nil, err
@@ -686,6 +646,53 @@ func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findGatewayRouteByFourPartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, virtualGatewayName, name string) (*appmesh.GatewayRouteData, error) {
+	input := &appmesh.DescribeGatewayRouteInput{
+		GatewayRouteName:   aws.String(name),
+		MeshName:           aws.String(meshName),
+		VirtualGatewayName: aws.String(virtualGatewayName),
+	}
+	if meshOwner != "" {
+		input.MeshOwner = aws.String(meshOwner)
+	}
+
+	output, err := findGatewayRoute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status.Status); status == appmesh.GatewayRouteStatusCodeDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findGatewayRoute(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.DescribeGatewayRouteInput) (*appmesh.GatewayRouteData, error) {
+	output, err := conn.DescribeGatewayRouteWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GatewayRoute == nil || output.GatewayRoute.Metadata == nil || output.GatewayRoute.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GatewayRoute, nil
 }
 
 func expandGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
@@ -707,6 +714,10 @@ func expandGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
 
 	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok {
 		spec.HttpRoute = expandHTTPGatewayRoute(vHttpRoute)
+	}
+
+	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+		spec.Priority = aws.Int64(int64(vPriority))
 	}
 
 	return spec
@@ -731,6 +742,10 @@ func expandGatewayRouteTarget(vRouteTarget []interface{}) *appmesh.GatewayRouteT
 		}
 
 		routeTarget.VirtualService = virtualService
+	}
+
+	if vPort, ok := mRouteTarget["port"].(int); ok && vPort > 0 {
+		routeTarget.Port = aws.Int64(int64(vPort))
 	}
 
 	return routeTarget
@@ -766,6 +781,10 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 			routeMatch.ServiceName = aws.String(vServiceName)
 		}
 
+		if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+			routeMatch.Port = aws.Int64(int64(vPort))
+		}
+
 		route.Match = routeMatch
 	}
 
@@ -786,6 +805,15 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 			routeHostnameRewrite.DefaultTargetHostname = aws.String(vDefaultTargetHostname)
 		}
 		routeRewrite.Hostname = routeHostnameRewrite
+	}
+
+	if vRoutePathRewrite, ok := mRouteRewrite["path"].([]interface{}); ok && len(vRoutePathRewrite) > 0 && vRoutePathRewrite[0] != nil {
+		mRoutePathRewrite := vRoutePathRewrite[0].(map[string]interface{})
+		routePathRewrite := &appmesh.HttpGatewayRoutePathRewrite{}
+		if vExact, ok := mRoutePathRewrite["exact"].(string); ok && vExact != "" {
+			routePathRewrite.Exact = aws.String(vExact)
+		}
+		routeRewrite.Path = routePathRewrite
 	}
 
 	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
@@ -812,21 +840,123 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 
 	mRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
 
+	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+		routeMatch.Port = aws.Int64(int64(vPort))
+	}
+
 	if vPrefix, ok := mRouteMatch["prefix"].(string); ok && vPrefix != "" {
 		routeMatch.Prefix = aws.String(vPrefix)
 	}
 
-	if vHostnameMatch, ok := mRouteMatch["hostname"].([]interface{}); ok && len(vHostnameMatch) > 0 && vHostnameMatch[0] != nil {
+	if vHeaders, ok := mRouteMatch["header"].(*schema.Set); ok && vHeaders.Len() > 0 {
+		headers := []*appmesh.HttpGatewayRouteHeader{}
+
+		for _, vHeader := range vHeaders.List() {
+			header := &appmesh.HttpGatewayRouteHeader{}
+
+			mHeader := vHeader.(map[string]interface{})
+
+			if vInvert, ok := mHeader["invert"].(bool); ok {
+				header.Invert = aws.Bool(vInvert)
+			}
+			if vName, ok := mHeader["name"].(string); ok && vName != "" {
+				header.Name = aws.String(vName)
+			}
+
+			if vMatch, ok := mHeader["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				header.Match = &appmesh.HeaderMatchMethod{}
+
+				mMatch := vMatch[0].(map[string]interface{})
+
+				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					header.Match.Exact = aws.String(vExact)
+				}
+				if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+					header.Match.Prefix = aws.String(vPrefix)
+				}
+				if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+					header.Match.Regex = aws.String(vRegex)
+				}
+				if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+					header.Match.Suffix = aws.String(vSuffix)
+				}
+
+				if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+					header.Match.Range = &appmesh.MatchRange{}
+
+					mRange := vRange[0].(map[string]interface{})
+
+					if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+						header.Match.Range.End = aws.Int64(int64(vEnd))
+					}
+					if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+						header.Match.Range.Start = aws.Int64(int64(vStart))
+					}
+				}
+			}
+
+			headers = append(headers, header)
+		}
+
+		routeMatch.Headers = headers
+	}
+
+	if vHostname, ok := mRouteMatch["hostname"].([]interface{}); ok && len(vHostname) > 0 && vHostname[0] != nil {
 		hostnameMatch := &appmesh.GatewayRouteHostnameMatch{}
 
-		mHostnameMatch := vHostnameMatch[0].(map[string]interface{})
-		if vExact, ok := mHostnameMatch["exact"].(string); ok && vExact != "" {
+		mHostname := vHostname[0].(map[string]interface{})
+
+		if vExact, ok := mHostname["exact"].(string); ok && vExact != "" {
 			hostnameMatch.Exact = aws.String(vExact)
 		}
-		if vSuffix, ok := mHostnameMatch["suffix"].(string); ok && vSuffix != "" {
+		if vSuffix, ok := mHostname["suffix"].(string); ok && vSuffix != "" {
 			hostnameMatch.Suffix = aws.String(vSuffix)
 		}
+
 		routeMatch.Hostname = hostnameMatch
+	}
+
+	if vPath, ok := mRouteMatch["path"].([]interface{}); ok && len(vPath) > 0 && vPath[0] != nil {
+		pathMatch := &appmesh.HttpPathMatch{}
+
+		mHostname := vPath[0].(map[string]interface{})
+
+		if vExact, ok := mHostname["exact"].(string); ok && vExact != "" {
+			pathMatch.Exact = aws.String(vExact)
+		}
+		if vRegex, ok := mHostname["regex"].(string); ok && vRegex != "" {
+			pathMatch.Regex = aws.String(vRegex)
+		}
+
+		routeMatch.Path = pathMatch
+	}
+
+	if vQueryParameters, ok := mRouteMatch["query_parameter"].(*schema.Set); ok && vQueryParameters.Len() > 0 {
+		queryParameters := []*appmesh.HttpQueryParameter{}
+
+		for _, vQueryParameter := range vQueryParameters.List() {
+			queryParameter := &appmesh.HttpQueryParameter{}
+
+			mQueryParameter := vQueryParameter.(map[string]interface{})
+
+			if vName, ok := mQueryParameter["name"].(string); ok && vName != "" {
+				queryParameter.Name = aws.String(vName)
+			}
+
+			if vMatch, ok := mQueryParameter["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				queryParameter.Match = &appmesh.QueryParameterMatch{}
+
+				mMatch := vMatch[0].(map[string]interface{})
+
+				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+					queryParameter.Match.Exact = aws.String(vExact)
+				}
+			}
+
+			queryParameters = append(queryParameters, queryParameter)
+		}
+
+		routeMatch.QueryParameters = queryParameters
 	}
 
 	return routeMatch
@@ -873,6 +1003,7 @@ func flattenGatewayRouteSpec(spec *appmesh.GatewayRouteSpec) []interface{} {
 		"grpc_route":  flattenGRPCGatewayRoute(spec.GrpcRoute),
 		"http2_route": flattenHTTPGatewayRoute(spec.Http2Route),
 		"http_route":  flattenHTTPGatewayRoute(spec.HttpRoute),
+		"priority":    int(aws.Int64Value(spec.Priority)),
 	}
 
 	return []interface{}{mSpec}
@@ -883,7 +1014,9 @@ func flattenGatewayRouteTarget(routeTarget *appmesh.GatewayRouteTarget) []interf
 		return []interface{}{}
 	}
 
-	mRouteTarget := map[string]interface{}{}
+	mRouteTarget := map[string]interface{}{
+		"port": int(aws.Int64Value(routeTarget.Port)),
+	}
 
 	if virtualService := routeTarget.VirtualService; virtualService != nil {
 		mVirtualService := map[string]interface{}{
@@ -915,6 +1048,9 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 		mRouteMatch := map[string]interface{}{
 			"service_name": aws.StringValue(routeMatch.ServiceName),
 		}
+		if routeMatch.Port != nil {
+			mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+		}
 
 		mGrpcRoute["match"] = []interface{}{mRouteMatch}
 	}
@@ -929,23 +1065,93 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 	mRouteMatch := map[string]interface{}{}
 
+	if routeMatch.Port != nil {
+		mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+	}
+
 	if routeMatch.Prefix != nil {
 		mRouteMatch["prefix"] = aws.StringValue(routeMatch.Prefix)
 	}
 
-	if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
+	vHeaders := []interface{}{}
 
-		mHostnameMatch := map[string]interface{}{}
-		if hostnameMatch.Exact != nil {
-			mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
-		}
-		if hostnameMatch.Suffix != nil {
-			mHostnameMatch["suffix"] = aws.StringValue(hostnameMatch.Suffix)
+	for _, header := range routeMatch.Headers {
+		mHeader := map[string]interface{}{
+			"invert": aws.BoolValue(header.Invert),
+			"name":   aws.StringValue(header.Name),
 		}
 
-		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
+		if match := header.Match; match != nil {
+			mMatch := map[string]interface{}{
+				"exact":  aws.StringValue(match.Exact),
+				"prefix": aws.StringValue(match.Prefix),
+				"regex":  aws.StringValue(match.Regex),
+				"suffix": aws.StringValue(match.Suffix),
+			}
 
+			if r := match.Range; r != nil {
+				mRange := map[string]interface{}{
+					"end":   int(aws.Int64Value(r.End)),
+					"start": int(aws.Int64Value(r.Start)),
+				}
+
+				mMatch["range"] = []interface{}{mRange}
+			}
+
+			mHeader["match"] = []interface{}{mMatch}
+		}
+
+		vHeaders = append(vHeaders, mHeader)
 	}
+
+	mRouteMatch["header"] = vHeaders
+
+	if hostname := routeMatch.Hostname; hostname != nil {
+		mHostname := map[string]interface{}{}
+
+		if hostname.Exact != nil {
+			mHostname["exact"] = aws.StringValue(hostname.Exact)
+		}
+		if hostname.Suffix != nil {
+			mHostname["suffix"] = aws.StringValue(hostname.Suffix)
+		}
+
+		mRouteMatch["hostname"] = []interface{}{mHostname}
+	}
+
+	if path := routeMatch.Path; path != nil {
+		mPath := map[string]interface{}{}
+
+		if path.Exact != nil {
+			mPath["exact"] = aws.StringValue(path.Exact)
+		}
+		if path.Regex != nil {
+			mPath["regex"] = aws.StringValue(path.Regex)
+		}
+
+		mRouteMatch["path"] = []interface{}{mPath}
+	}
+
+	vQueryParameters := []interface{}{}
+
+	for _, queryParameter := range routeMatch.QueryParameters {
+		mQueryParameter := map[string]interface{}{
+			"name": aws.StringValue(queryParameter.Name),
+		}
+
+		if match := queryParameter.Match; match != nil {
+			mMatch := map[string]interface{}{
+				"exact": aws.StringValue(match.Exact),
+			}
+
+			mQueryParameter["match"] = []interface{}{mMatch}
+		}
+
+		vQueryParameters = append(vQueryParameters, mQueryParameter)
+	}
+
+	mRouteMatch["query_parameter"] = vQueryParameters
+
 	return []interface{}{mRouteMatch}
 }
 
@@ -961,6 +1167,13 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrit
 			"default_target_hostname": aws.StringValue(rewriteHostname.DefaultTargetHostname),
 		}
 		mRouteRewrite["hostname"] = []interface{}{mRewriteHostname}
+	}
+
+	if rewritePath := routeRewrite.Path; rewritePath != nil {
+		mRewritePath := map[string]interface{}{
+			"exact": aws.StringValue(rewritePath.Exact),
+		}
+		mRouteRewrite["path"] = []interface{}{mRewritePath}
 	}
 
 	if rewritePrefix := routeRewrite.Prefix; rewritePrefix != nil {

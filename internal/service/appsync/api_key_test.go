@@ -1,41 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAPIKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiKey appsync.ApiKey
 	dateAfterSevenDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(7)).Truncate(time.Hour)
 	resourceName := "aws_appsync_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy,
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					testAccCheckAPIKeyExpiresDate(&apiKey, dateAfterSevenDays),
-					resource.TestMatchResourceAttr(resourceName, "key", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "key", regexache.MustCompile(`.+`)),
 				),
 			},
 			{
@@ -48,27 +54,28 @@ func testAccAPIKey_basic(t *testing.T) {
 }
 
 func testAccAPIKey_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiKey appsync.ApiKey
 	resourceName := "aws_appsync_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy,
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
 				Config: testAccAPIKeyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -82,6 +89,7 @@ func testAccAPIKey_description(t *testing.T) {
 }
 
 func testAccAPIKey_expires(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiKey appsync.ApiKey
 	dateAfterTenDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(10)).Truncate(time.Hour)
 	dateAfterTwentyDays := time.Now().UTC().Add(time.Hour * 24 * time.Duration(20)).Truncate(time.Hour)
@@ -89,22 +97,22 @@ func testAccAPIKey_expires(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy,
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_expires(rName, dateAfterTenDays.Format(time.RFC3339)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
 					testAccCheckAPIKeyExpiresDate(&apiKey, dateAfterTenDays),
 				),
 			},
 			{
 				Config: testAccAPIKeyConfig_expires(rName, dateAfterTwentyDays.Format(time.RFC3339)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(resourceName, &apiKey),
+					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
 					testAccCheckAPIKeyExpiresDate(&apiKey, dateAfterTwentyDays),
 				),
 			},
@@ -117,39 +125,39 @@ func testAccAPIKey_expires(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appsync_api_key" {
-			continue
-		}
-
-		apiID, keyID, err := tfappsync.DecodeAPIKeyID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		apiKey, err := tfappsync.GetAPIKey(apiID, keyID, conn)
-		if err == nil {
-			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-				return nil
+func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appsync_api_key" {
+				continue
 			}
-			return err
-		}
 
-		if apiKey != nil && aws.StringValue(apiKey.Id) == keyID {
-			return fmt.Errorf("Appsync API Key ID %q still exists", rs.Primary.ID)
-		}
+			apiID, keyID, err := tfappsync.DecodeAPIKeyID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
 
+			apiKey, err := tfappsync.GetAPIKey(ctx, apiID, keyID, conn)
+			if err == nil {
+				if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			if apiKey != nil && aws.StringValue(apiKey.Id) == keyID {
+				return fmt.Errorf("Appsync API Key ID %q still exists", rs.Primary.ID)
+			}
+
+			return nil
+		}
 		return nil
-
 	}
-	return nil
 }
 
-func testAccCheckAPIKeyExists(resourceName string, apiKey *appsync.ApiKey) resource.TestCheckFunc {
+func testAccCheckAPIKeyExists(ctx context.Context, resourceName string, apiKey *appsync.ApiKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync API Key Not found in state: %s", resourceName)
@@ -160,8 +168,8 @@ func testAccCheckAPIKeyExists(resourceName string, apiKey *appsync.ApiKey) resou
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-		key, err := tfappsync.GetAPIKey(apiID, keyID, conn)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		key, err := tfappsync.GetAPIKey(ctx, apiID, keyID, conn)
 		if err != nil {
 			return err
 		}

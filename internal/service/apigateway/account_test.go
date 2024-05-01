@@ -1,231 +1,102 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAPIGatewayAccount_basic(t *testing.T) {
-	var conf apigateway.Account
-
-	rInt := sdkacctest.RandInt()
-	firstName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_%d", rInt)
-	secondName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_modified_%d", rInt)
+func testAccAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
-	expectedRoleArn_first := regexp.MustCompile("role/" + firstName + "$")
-	expectedRoleArn_second := regexp.MustCompile("role/" + secondName + "$")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_updated(firstName),
+				Config: testAccAccountConfig_role0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &conf),
-					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_first),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.0", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "api_key_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "features.#"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cloudwatch_role_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountConfig_updated2(secondName),
+				Config: testAccAccountConfig_role1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &conf),
-					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_second),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
 				),
 			},
 			{
 				Config: testAccAccountConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &conf),
-					// This resource does not un-set the value, so this will preserve the CloudWatch role ARN setting on the
-					// deployed resource, but will be empty in the Terraform state
-					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_second),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAccountCloudWatchRoleARN(conf *apigateway.Account, expectedArn *regexp.Regexp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if expectedArn == nil && conf.CloudwatchRoleArn == nil {
-			return nil
-		}
-		if expectedArn == nil && conf.CloudwatchRoleArn != nil {
-			return fmt.Errorf("Expected empty CloudwatchRoleArn, given: %q", *conf.CloudwatchRoleArn)
-		}
-		if expectedArn != nil && conf.CloudwatchRoleArn == nil {
-			return fmt.Errorf("Empty CloudwatchRoleArn, expected: %q", expectedArn)
-		}
-		if !expectedArn.MatchString(*conf.CloudwatchRoleArn) {
-			return fmt.Errorf("CloudwatchRoleArn didn't match. Expected: %q, Given: %q", expectedArn, *conf.CloudwatchRoleArn)
-		}
-		return nil
-	}
-}
-
-func testAccCheckAccountExists(n string, res *apigateway.Account) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Account ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
-
-		req := &apigateway.GetAccountInput{}
-		describe, err := conn.GetAccount(req)
-		if err != nil {
-			return err
-		}
-		if describe == nil {
-			return fmt.Errorf("Got nil account ?!")
-		}
-
-		*res = *describe
-
-		return nil
-	}
-}
-
-func testAccCheckAccountDestroy(s *terraform.State) error {
-	// Intentionally noop
-	// as there is no API method for deleting or resetting account settings
-	return nil
-}
-
 const testAccAccountConfig_empty = `
-resource "aws_api_gateway_account" "test" {
-}
+resource "aws_api_gateway_account" "test" {}
 `
 
-func testAccAccountConfig_updated(randName string) string {
+func testAccAccountConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "apigateway.amazonaws.com"
+      }
+    }]
+  })
+
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"]
+}
+`, rName)
+}
+
+func testAccAccountConfig_role0(rName string) string {
+	return acctest.ConfigCompose(testAccAccountConfig_base(rName), `
 resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
+  cloudwatch_role_arn = aws_iam_role.test[0].arn
+}
+`)
 }
 
-resource "aws_iam_role" "cloudwatch" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "apigateway.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "cloudwatch" {
-  name = "default"
-  role = aws_iam_role.cloudwatch.id
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:PutLogEvents",
-                "logs:GetLogEvents",
-                "logs:FilterLogEvents"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-EOF
-}
-`, randName)
-}
-
-func testAccAccountConfig_updated2(randName string) string {
-	return fmt.Sprintf(`
+func testAccAccountConfig_role1(rName string) string {
+	return acctest.ConfigCompose(testAccAccountConfig_base(rName), `
 resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = aws_iam_role.second.arn
+  cloudwatch_role_arn = aws_iam_role.test[1].arn
 }
-
-resource "aws_iam_role" "second" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "apigateway.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "cloudwatch" {
-  name = "default"
-  role = aws_iam_role.second.id
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:PutLogEvents",
-                "logs:GetLogEvents",
-                "logs:FilterLogEvents"
-            ],
-            "Resource": "*"
-        }
-    ]
-}
-EOF
-}
-`, randName)
+`)
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_attachment: Retry errors like `ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10` when creating or deleting resource
+```

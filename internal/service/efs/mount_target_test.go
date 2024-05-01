@@ -1,44 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSMountTarget_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mount efs.MountTargetDescription
-	ct := fmt.Sprintf("createtoken-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
 	resourceName2 := "aws_efs_mount_target.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy,
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetConfig_basic(ct),
+				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTarget(resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "file_system_arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "file_system_arn", "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_target_dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -50,12 +53,12 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMountTargetConfig_modified(ct),
+				Config: testAccMountTargetConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTarget(resourceName, &mount),
-					testAccCheckMountTarget(resourceName2, &mount),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
-					acctest.MatchResourceAttrRegionalHostname(resourceName2, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, resourceName2, &mount),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName2, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
 				),
 			},
 		},
@@ -63,21 +66,22 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 }
 
 func TestAccEFSMountTarget_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mount efs.MountTargetDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_efs_mount_target.test"
-	ct := fmt.Sprintf("createtoken-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPNGatewayDestroy,
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMountTargetConfig_basic(ct),
+				Config: testAccMountTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTarget(resourceName, &mount),
-					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
+					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,20 +90,21 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 }
 
 func TestAccEFSMountTarget_ipAddress(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mount efs.MountTargetDescription
-	resourceName := "aws_efs_mount_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy,
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddress(rName, "10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTarget(resourceName, &mount),
+					testAccCheckMountTargetExists(ctx, resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.100"),
 				),
 			},
@@ -114,21 +119,22 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13845
 func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mount efs.MountTargetDescription
-	resourceName := "aws_efs_mount_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_efs_mount_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMountTargetDestroy,
+		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMountTargetConfig_ipAddressNullIP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMountTarget(resourceName, &mount),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					testAccCheckMountTargetExists(ctx, resourceName, &mount),
+					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 				),
 			},
 			{
@@ -140,314 +146,105 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 	})
 }
 
-func TestMountTarget_hasEmptyMountTargets(t *testing.T) {
-	mto := &efs.DescribeMountTargetsOutput{
-		MountTargets: []*efs.MountTargetDescription{},
-	}
-
-	actual := tfefs.HasEmptyMountTargets(mto)
-	if !actual {
-		t.Fatalf("Expected return value to be true, got %t", actual)
-	}
-
-	// Add an empty mount target.
-	mto.MountTargets = append(mto.MountTargets, &efs.MountTargetDescription{})
-
-	actual = tfefs.HasEmptyMountTargets(mto)
-	if actual {
-		t.Fatalf("Expected return value to be false, got %t", actual)
-	}
-}
-
-func testAccCheckMountTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_efs_mount_target" {
-			continue
-		}
-
-		resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-			MountTargetId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
-				// gone
-				return nil
-			}
-			return fmt.Errorf("Error describing EFS Mount in tests: %s", err)
-		}
-		if len(resp.MountTargets) > 0 {
-			return fmt.Errorf("EFS Mount target %q still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckMountTarget(resourceID string, mount *efs.MountTargetDescription) resource.TestCheckFunc {
+func testAccCheckMountTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_efs_mount_target" {
+				continue
+			}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+			_, err := tfefs.FindMountTargetByID(ctx, conn, rs.Primary.ID)
 
-		fs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
-		mt, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-			MountTargetId: aws.String(fs.Primary.ID),
-		})
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		if aws.StringValue(mt.MountTargets[0].MountTargetId) != fs.Primary.ID {
-			return fmt.Errorf("Mount target ID mismatch: %q != %q",
-				*mt.MountTargets[0].MountTargetId, fs.Primary.ID)
+			return fmt.Errorf("EFS Mount Target %s still exists", rs.Primary.ID)
 		}
-
-		*mount = *mt.MountTargets[0]
 
 		return nil
 	}
 }
 
-func testAccMountTargetConfig_basic(ct string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccCheckMountTargetExists(ctx context.Context, n string, v *efs.MountTargetDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EFS Mount Target ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+
+		output, err := tfefs.FindMountTargetByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
 }
 
+func testAccMountTargetConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
-
   tags = {
-    Name = "tf-acc-efs-mount-target-test"
+    Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccMountTargetConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), `
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+`)
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-efs-mount-target-test"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "tf-acc-efs-mount-target-test"
-  }
-}
-`, ct)
-}
-
-func testAccMountTargetConfig_modified(ct string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_efs_file_system" "test" {
-  creation_token = "%s"
-
-  tags = {
-    Name = "tf-acc-efs-mount-target-test"
-  }
-}
-
+func testAccMountTargetConfig_modified(rName string) string {
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), `
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test.id
+  subnet_id      = aws_subnet.test[0].id
 }
 
 resource "aws_efs_mount_target" "test2" {
   file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test2.id
+  subnet_id      = aws_subnet.test[1].id
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-efs-mount-target-test"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = "tf-acc-efs-mount-target-test"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.2.0/24"
-
-  tags = {
-    Name = "tf-acc-efs-mount-target-test2"
-  }
-}
-`, ct)
+`)
 }
 
 func testAccMountTargetConfig_ipAddress(rName, ipAddress string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_file_system" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), fmt.Sprintf(`
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
-  ip_address     = %[2]q
-  subnet_id      = aws_subnet.test.id
+  ip_address     = %[1]q
+  subnet_id      = aws_subnet.test[0].id
 }
-`, rName, ipAddress)
+`, ipAddress))
 }
 
 func testAccMountTargetConfig_ipAddressNullIP(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_file_system" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccMountTargetConfig_base(rName), `
 resource "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
   ip_address     = null
-  subnet_id      = aws_subnet.test.id
+  subnet_id      = aws_subnet.test[0].id
 }
-`, rName)
-}
-
-func testAccCheckVPNGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpn_gateway" {
-			continue
-		}
-
-		// Try to find the resource
-		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
-			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			var v *ec2.VpnGateway
-			for _, g := range resp.VpnGateways {
-				if *g.VpnGatewayId == rs.Primary.ID {
-					v = g
-				}
-			}
-
-			if v == nil {
-				// wasn't found
-				return nil
-			}
-
-			if *v.State != "deleted" {
-				return fmt.Errorf("Expected VPN Gateway to be in deleted state, but was not: %s", v)
-			}
-			return nil
-		}
-
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidVpnGatewayID.NotFound" {
-			return err
-		}
-	}
-
-	return nil
+`)
 }

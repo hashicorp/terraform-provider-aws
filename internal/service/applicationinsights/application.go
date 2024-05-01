@@ -1,29 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applicationinsights
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/applicationinsights"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_applicationinsights_application", name="Application")
+// @Tags(identifierAttribute="arn")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApplicationCreate,
-		Read:   resourceApplicationRead,
-		Update: resourceApplicationUpdate,
-		Delete: resourceApplicationDelete,
+		CreateWithoutTimeout: resourceApplicationCreate,
+		ReadWithoutTimeout:   resourceApplicationRead,
+		UpdateWithoutTimeout: resourceApplicationUpdate,
+		DeleteWithoutTimeout: resourceApplicationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,17 +71,16 @@ func ResourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	input := &applicationinsights.CreateApplicationInput{
 		AutoConfigEnabled: aws.Bool(d.Get("auto_config_enabled").(bool)),
@@ -81,7 +88,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		CWEMonitorEnabled: aws.Bool(d.Get("cwe_monitor_enabled").(bool)),
 		OpsCenterEnabled:  aws.Bool(d.Get("ops_center_enabled").(bool)),
 		ResourceGroupName: aws.String(d.Get("resource_group_name").(string)),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("grouping_type"); ok {
@@ -92,45 +99,43 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		input.OpsItemSNSTopicArn = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateApplication(input)
+	out, err := conn.CreateApplicationWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating ApplicationInsights Application: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ApplicationInsights Application: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.ApplicationInfo.ResourceGroupName))
 
-	if _, err := waitApplicationCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for ApplicationInsights Application (%s) create: %w", d.Id(), err)
+	if _, err := waitApplicationCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ApplicationInsights Application (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceApplicationRead(d, meta)
+	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
-	application, err := FindApplicationByName(conn, d.Id())
+	application, err := FindApplicationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ApplicationInsights Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ApplicationInsights Application (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ApplicationInsights Application (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/resource-group/%s", aws.StringValue(application.ResourceGroupName)),
+		Resource:  "application/resource-group/" + aws.StringValue(application.ResourceGroupName),
 		Service:   "applicationinsights",
 	}.String()
-
 	d.Set("arn", arn)
 	d.Set("resource_group_name", application.ResourceGroupName)
 	d.Set("auto_config_enabled", application.AutoConfigEnabled)
@@ -138,28 +143,12 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ops_center_enabled", application.OpsCenterEnabled)
 	d.Set("ops_item_sns_topic_arn", application.OpsItemSNSTopicArn)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for ApplicationInsights Application (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &applicationinsights.UpdateApplicationInput{
@@ -185,46 +174,38 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			} else {
 				input.RemoveSNSTopic = aws.Bool(true)
 			}
-
 		}
 
 		log.Printf("[DEBUG] Updating ApplicationInsights Application: %s", d.Id())
-		_, err := conn.UpdateApplication(input)
+		_, err := conn.UpdateApplicationWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error Updating ApplicationInsights Application: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating ApplicationInsights Application (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ApplicationInsights Application (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceApplicationRead(d, meta)
+	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	input := &applicationinsights.DeleteApplicationInput{
 		ResourceGroupName: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting ApplicationInsights Application: %s", d.Id())
-	_, err := conn.DeleteApplication(input)
+	_, err := conn.DeleteApplicationWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, applicationinsights.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting ApplicationInsights Application: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ApplicationInsights Application: %s", err)
 	}
 
-	if _, err := waitApplicationTerminated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for ApplicationInsights Application (%s) delete: %w", d.Id(), err)
+	if _, err := waitApplicationTerminated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ApplicationInsights Application (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -64,7 +64,7 @@ Terraform will fail. Ensure that your search is specific enough to return
 a single AMI ID only, or use `most_recent` to choose the most recent one. If
 you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ID of the found AMI. In addition, the following attributes
 are exported:
@@ -97,6 +97,7 @@ interpolation.
 * `image_owner_alias` - AWS account alias (for example, `amazon`, `self`) or
   the AWS account ID of the AMI owner.
 * `image_type` - Type of image.
+* `imds_support` - Instance Metadata Service (IMDS) support mode for the image. Set to `v2.0` if instances ran from this image enforce IMDSv2.
 * `kernel_id` - Kernel associated with the image, if any. Only applicable
   for machine images.
 * `name` - Name of the AMI that was provided during image creation.
@@ -130,7 +131,7 @@ interpolation.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
 

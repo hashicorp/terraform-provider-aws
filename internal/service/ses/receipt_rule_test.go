@@ -1,41 +1,46 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESReceiptRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
@@ -63,25 +68,25 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_s3Action(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_s3Action(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_action.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "s3_action.*.bucket_name", "aws_s3_bucket.test", "id"),
@@ -100,25 +105,25 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_snsAction(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_snsAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns_action.*", map[string]string{
@@ -137,25 +142,25 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_snsActionEncoding(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns_action.*", map[string]string{
@@ -174,25 +179,25 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_lambdaAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "lambda_action.*.function_arn", "aws_lambda_function.test", "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lambda_action.*", map[string]string{
@@ -211,25 +216,25 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_stopAction(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_stopAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "stop_action.*", map[string]string{
 						"scope": "RuleSet",
@@ -247,25 +252,25 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_order(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", "second"),
 					resource.TestCheckResourceAttrPair(resourceName, "after", "aws_ses_receipt_rule.test1", "name"),
 				),
@@ -280,25 +285,25 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_actions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_actions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_header_action.*", map[string]string{
 						"header_name":  "Added-By",
 						"header_value": "Terraform",
@@ -321,36 +326,35 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 }
 
 func TestAccSESReceiptRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
-
 	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			testAccPreCheckReceiptRule(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
+					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -358,60 +362,52 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReceiptRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckReceiptRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_receipt_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_receipt_rule" {
+				continue
+			}
+
+			_, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SES Receipt Rule %s still exists", rs.Primary.ID)
 		}
 
-		params := &ses.DescribeReceiptRuleInput{
-			RuleName:    aws.String(rs.Primary.Attributes["name"]),
-			RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
-		}
-
-		_, err := conn.DescribeReceiptRule(params)
-		if err == nil {
-			return fmt.Errorf("Receipt rule %s still exists. Failing!", rs.Primary.ID)
-		}
-
-		// Verify the error is what we want
-		_, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckReceiptRuleExists(n string, rule *ses.ReceiptRule) resource.TestCheckFunc {
+func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *ses.ReceiptRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Receipt Rule not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Receipt Rule name not set")
+			return fmt.Errorf("No SES Receipt Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
-		params := &ses.DescribeReceiptRuleInput{
-			RuleName:    aws.String(rs.Primary.Attributes["name"]),
-			RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
-		}
+		output, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
 
-		resp, err := conn.DescribeReceiptRule(params)
 		if err != nil {
 			return err
 		}
 
-		*rule = *resp.Rule
+		*v = *output
 
 		return nil
 	}
@@ -428,15 +424,15 @@ func testAccReceiptRuleImportStateIdFunc(resourceName string) resource.ImportSta
 	}
 }
 
-func testAccPreCheckReceiptRule(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccPreCheckReceiptRule(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 	input := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String("MyRule"),
 		RuleSetName: aws.String("MyRuleSet"),
 	}
 
-	_, err := conn.DescribeReceiptRule(input)
+	_, err := conn.DescribeReceiptRuleWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -479,7 +475,28 @@ resource "aws_s3_bucket" "test" {
   force_destroy = "true"
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
   bucket = aws_s3_bucket.test.id
   acl    = "public-read-write"
 }
@@ -583,7 +600,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {

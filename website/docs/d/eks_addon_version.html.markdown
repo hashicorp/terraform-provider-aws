@@ -46,9 +46,9 @@ output "latest" {
 * `kubernetes_version` – (Required) Version of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `most_recent` - (Optional) Determines if the most recent or default version of the addon should be returned.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the add-on
 * `version` - Version of the EKS add-on.

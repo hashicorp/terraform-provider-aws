@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -8,12 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_mskconnect_connector")
 func DataSourceConnector() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConnectorRead,
+		ReadWithoutTimeout: dataSourceConnectorRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,7 +42,9 @@ func DataSourceConnector() *schema.Resource {
 }
 
 func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
 	var output []*kafkaconnect.ConnectorSummary
@@ -57,7 +64,7 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing MSK Connect Connectors: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Connect Connectors: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {
@@ -67,7 +74,7 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Connector", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Connect Connector", err))
 	}
 
 	connector := output[0]
@@ -79,5 +86,5 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", connector.ConnectorName)
 	d.Set("version", connector.CurrentVersion)
 
-	return nil
+	return diags
 }

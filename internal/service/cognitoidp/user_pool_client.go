@@ -1,637 +1,922 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceUserPoolClient() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceUserPoolClientCreate,
-		Read:   resourceUserPoolClientRead,
-		Update: resourceUserPoolClientUpdate,
-		Delete: resourceUserPoolClientDelete,
+// @FrameworkResource(name="User Pool Client")
+func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userPoolClientResource{}
 
-		Importer: &schema.ResourceImporter{
-			State: resourceUserPoolClientImport,
-		},
+	return r, nil
+}
 
-		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html
-		Schema: map[string]*schema.Schema{
-			"access_token_validity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 86400),
-			},
-			"allowed_oauth_flows": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.OAuthFlowType_Values(), false),
-				},
-			},
-			"allowed_oauth_flows_user_pool_client": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"allowed_oauth_scopes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 50,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					// https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
-					// System reserved scopes are openid, email, phone, profile, and aws.cognito.signin.user.admin.
-					// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html#CognitoUserPools-CreateUserPoolClient-request-AllowedOAuthScopes
-					// Constraints seem like to be designed for custom scopes which are not supported yet?
-				},
-			},
-			"analytics_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"application_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ExactlyOneOf: []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
-						},
-						"application_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
-							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
-							ValidateFunc:  verify.ValidARN,
-						},
-						"external_id": {
-							Type:          schema.TypeString,
-							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
-							Optional:      true,
-						},
-						"role_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
-							ValidateFunc:  verify.ValidARN,
-						},
-						"user_data_shared": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"callback_urls": {
-				Type:     schema.TypeSet,
+type userPoolClientResource struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_cognito_user_pool_client"
+}
+
+// Schema returns the schema for this resource.
+func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				MaxItems: 100,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-							"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
-					),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"client_secret": {
-				Type:      schema.TypeString,
+			"allowed_oauth_flows": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(3),
+					setvalidator.ValueStringsAre(
+						stringvalidator.OneOf(cognitoidentityprovider.OAuthFlowType_Values()...),
+					),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"allowed_oauth_flows_user_pool_client": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"allowed_oauth_scopes": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(50),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"auth_session_validity": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int64{
+					int64validator.Between(3, 15),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"callback_urls": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(100),
+					setvalidator.ValueStringsAre(
+						userPoolClientURLValidator...,
+					),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"client_secret": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
-			},
-			"default_redirect_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1024),
-					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-						"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
-				),
-			},
-			"enable_token_revocation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_propagate_additional_user_context_data": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"explicit_auth_flows": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.ExplicitAuthFlowsType_Values(), false),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"generate_secret": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
+			"default_redirect_uri": schema.StringAttribute{
+				Optional:   true,
+				Computed:   true,
+				Validators: userPoolClientURLValidator,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"id_token_validity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 86400),
-			},
-			"logout_urls": {
-				Type:     schema.TypeSet,
+			"enable_propagate_additional_user_context_data": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				MaxItems: 100,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-							"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"enable_token_revocation": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"explicit_auth_flows": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						stringvalidator.OneOf(cognitoidentityprovider.ExplicitAuthFlowsType_Values()...),
 					),
 				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"name": {
-				Type:     schema.TypeString,
+			"generate_secret": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+			},
+			"id": framework.IDAttribute(),
+			"id_token_validity": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"logout_urls": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(100),
+					setvalidator.ValueStringsAre(
+						userPoolClientURLValidator...,
+					),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"name": schema.StringAttribute{
+				Required:   true,
+				Validators: userPoolClientNameValidator,
+			},
+			"prevent_user_existence_errors": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(cognitoidentityprovider.PreventUserExistenceErrorTypes_Values()...),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"read_attributes": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"refresh_token_validity": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
+			"supported_identity_providers": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						userPoolClientIdentityProviderValidator...,
+					),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"user_pool_id": schema.StringAttribute{
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`[\w\s+=,.@-]+`),
-						"must satisfy regular expression pattern: `[\\w\\s+=,.@-]+`"),
-				),
-			},
-			"prevent_user_existence_errors": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.PreventUserExistenceErrorTypes_Values(), false),
-			},
-			"read_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"refresh_token_validity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(0, 315360000),
-			},
-			"supported_identity_providers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 32),
-						validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-							"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
-					),
+			"write_attributes": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"token_validity_units": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"access_token": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cognitoidentityprovider.TimeUnitsTypeHours,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.TimeUnitsType_Values(), false),
+		},
+		Blocks: map[string]schema.Block{
+			"analytics_configuration": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"application_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+							Validators: []validator.String{
+								stringvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("application_arn"),
+									path.MatchRelative().AtParent().AtName("application_id"),
+								),
+								stringvalidator.ConflictsWith(
+									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName("role_arn"),
+								),
+							},
 						},
-						"id_token": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cognitoidentityprovider.TimeUnitsTypeHours,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.TimeUnitsType_Values(), false),
+						"application_id": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.AlsoRequires(
+									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName("role_arn"),
+								),
+							},
 						},
-						"refresh_token": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cognitoidentityprovider.TimeUnitsTypeDays,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.TimeUnitsType_Values(), false),
+						"external_id": schema.StringAttribute{
+							Optional: true,
+						},
+						"role_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+							Computed:   true,
+						},
+						"user_data_shared": schema.BoolAttribute{
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
 			},
-			"user_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"write_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+			"token_validity_units": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"access_token": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
+							Validators: []validator.String{
+								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
+							},
+						},
+						"id_token": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
+							Validators: []validator.String{
+								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
+							},
+						},
+						"refresh_token": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeDays),
+							Validators: []validator.String{
+								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	response.Schema = s
+}
+
+func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().CognitoIDPConn(ctx)
+
+	var config resourceUserPoolClientData
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var plan resourceUserPoolClientData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	params := plan.createInput(ctx, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	resp, err := conn.CreateUserPoolClientWithContext(ctx, params)
+	if err != nil {
+		response.Diagnostics.AddError(
+			fmt.Sprintf("creating Cognito User Pool Client (%s)", plan.Name.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	poolClient := resp.UserPoolClient
+
+	config.AccessTokenValidity = flex.Int64ToFrameworkLegacy(ctx, poolClient.AccessTokenValidity)
+	config.AllowedOauthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthFlows)
+	config.AllowedOauthFlowsUserPoolClient = flex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
+	config.AllowedOauthScopes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthScopes)
+	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration)
+	config.AuthSessionValidity = flex.Int64ToFramework(ctx, poolClient.AuthSessionValidity)
+	config.CallbackUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.CallbackURLs)
+	config.ClientSecret = flex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
+	config.DefaultRedirectUri = flex.StringToFrameworkLegacy(ctx, poolClient.DefaultRedirectURI)
+	config.EnablePropagateAdditionalUserContextData = flex.BoolToFramework(ctx, poolClient.EnablePropagateAdditionalUserContextData)
+	config.EnableTokenRevocation = flex.BoolToFramework(ctx, poolClient.EnableTokenRevocation)
+	config.ExplicitAuthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.ExplicitAuthFlows)
+	config.ID = flex.StringToFramework(ctx, poolClient.ClientId)
+	config.IdTokenValidity = flex.Int64ToFrameworkLegacy(ctx, poolClient.IdTokenValidity)
+	config.LogoutUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.LogoutURLs)
+	config.Name = flex.StringToFramework(ctx, poolClient.ClientName)
+	config.PreventUserExistenceErrors = flex.StringToFrameworkLegacy(ctx, poolClient.PreventUserExistenceErrors)
+	config.ReadAttributes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.ReadAttributes)
+	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
+	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
+	config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
+	config.UserPoolID = flex.StringToFramework(ctx, poolClient.UserPoolId)
+	config.WriteAttributes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.WriteAttributes)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
+}
+
+func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var state resourceUserPoolClientData
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPConn(ctx)
+
+	poolClient, err := FindCognitoUserPoolClientByID(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, state.ID.ValueString())
+		response.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		response.Diagnostics.Append(create.DiagErrorFramework(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, state.ID.ValueString(), err))
+		return
+	}
+
+	state.AccessTokenValidity = flex.Int64ToFrameworkLegacy(ctx, poolClient.AccessTokenValidity)
+	state.AllowedOauthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthFlows)
+	state.AllowedOauthFlowsUserPoolClient = flex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
+	state.AllowedOauthScopes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthScopes)
+	state.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration)
+	state.AuthSessionValidity = flex.Int64ToFramework(ctx, poolClient.AuthSessionValidity)
+	state.CallbackUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.CallbackURLs)
+	state.ClientSecret = flex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
+	state.DefaultRedirectUri = flex.StringToFrameworkLegacy(ctx, poolClient.DefaultRedirectURI)
+	state.EnablePropagateAdditionalUserContextData = flex.BoolToFramework(ctx, poolClient.EnablePropagateAdditionalUserContextData)
+	state.EnableTokenRevocation = flex.BoolToFramework(ctx, poolClient.EnableTokenRevocation)
+	state.ExplicitAuthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.ExplicitAuthFlows)
+	state.ID = flex.StringToFramework(ctx, poolClient.ClientId)
+	state.IdTokenValidity = flex.Int64ToFrameworkLegacy(ctx, poolClient.IdTokenValidity)
+	state.LogoutUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.LogoutURLs)
+	state.Name = flex.StringToFramework(ctx, poolClient.ClientName)
+	state.PreventUserExistenceErrors = flex.StringToFrameworkLegacy(ctx, poolClient.PreventUserExistenceErrors)
+	state.ReadAttributes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.ReadAttributes)
+	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
+	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
+	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
+		state.TokenValidityUnits = types.ListNull(elemType)
+	} else {
+		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
+	}
+	state.UserPoolID = flex.StringToFramework(ctx, poolClient.UserPoolId)
+	state.WriteAttributes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.WriteAttributes)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var config resourceUserPoolClientData
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var plan resourceUserPoolClientData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var state resourceUserPoolClientData
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPConn(ctx)
+
+	params := plan.updateInput(ctx, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	// If removing `token_validity_units`, reset to defaults
+	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() {
+		params.TokenValidityUnits.AccessToken = aws.String(cognitoidentityprovider.TimeUnitsTypeHours)
+		params.TokenValidityUnits.IdToken = aws.String(cognitoidentityprovider.TimeUnitsTypeHours)
+		params.TokenValidityUnits.RefreshToken = aws.String(cognitoidentityprovider.TimeUnitsTypeDays)
+	}
+
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.UpdateUserPoolClientWithContext(ctx, params)
+	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
+	if err != nil {
+		response.Diagnostics.AddError(
+			fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	poolClient := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
+
+	config.AccessTokenValidity = flex.Int64ToFrameworkLegacy(ctx, poolClient.AccessTokenValidity)
+	config.AllowedOauthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthFlows)
+	config.AllowedOauthFlowsUserPoolClient = flex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
+	config.AllowedOauthScopes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthScopes)
+	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration)
+	config.AuthSessionValidity = flex.Int64ToFramework(ctx, poolClient.AuthSessionValidity)
+	config.CallbackUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.CallbackURLs)
+	config.ClientSecret = flex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
+	config.DefaultRedirectUri = flex.StringToFrameworkLegacy(ctx, poolClient.DefaultRedirectURI)
+	config.EnablePropagateAdditionalUserContextData = flex.BoolToFramework(ctx, poolClient.EnablePropagateAdditionalUserContextData)
+	config.EnableTokenRevocation = flex.BoolToFramework(ctx, poolClient.EnableTokenRevocation)
+	config.ExplicitAuthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.ExplicitAuthFlows)
+	config.ID = flex.StringToFramework(ctx, poolClient.ClientId)
+	config.IdTokenValidity = flex.Int64ToFrameworkLegacy(ctx, poolClient.IdTokenValidity)
+	config.LogoutUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.LogoutURLs)
+	config.Name = flex.StringToFramework(ctx, poolClient.ClientName)
+	config.PreventUserExistenceErrors = flex.StringToFrameworkLegacy(ctx, poolClient.PreventUserExistenceErrors)
+	config.ReadAttributes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.ReadAttributes)
+	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
+	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
+	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
+		config.TokenValidityUnits = types.ListNull(elemType)
+	} else {
+		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
+	}
+	config.UserPoolID = flex.StringToFramework(ctx, poolClient.UserPoolId)
+	config.WriteAttributes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.WriteAttributes)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
+}
+
+func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var state resourceUserPoolClientData
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	params := state.deleteInput(ctx)
+
+	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
+		"id":           state.ID.ValueString(),
+		"user_pool_id": state.UserPoolID.ValueString(),
+	})
+
+	conn := r.Meta().CognitoIDPConn(ctx)
+
+	_, err := conn.DeleteUserPoolClientWithContext(ctx, params)
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			fmt.Sprintf("deleting Cognito User Pool Client (%s)", state.ID.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *userPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	parts := strings.Split(request.ID, "/")
+	if len(parts) != 2 {
+		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
+		return
+	}
+	userPoolId := parts[0]
+	clientId := parts[1]
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
+}
+
+func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourceUserPoolClientAccessTokenValidityValidator{
+			resourceUserPoolClientValidityValidator{
+				attr:        "access_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		resourceUserPoolClientIDTokenValidityValidator{
+			resourceUserPoolClientValidityValidator{
+				attr:        "id_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		resourceUserPoolClientRefreshTokenValidityValidator{
+			resourceUserPoolClientValidityValidator{
+				attr:        "refresh_token_validity",
+				min:         60 * time.Minute,
+				max:         315360000 * time.Second,
+				defaultUnit: 24 * time.Hour,
 			},
 		},
 	}
 }
 
-func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
-
-	params := &cognitoidentityprovider.CreateUserPoolClientInput{
-		ClientName: aws.String(d.Get("name").(string)),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
-	}
-
-	if v, ok := d.GetOk("generate_secret"); ok {
-		params.GenerateSecret = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("explicit_auth_flows"); ok {
-		params.ExplicitAuthFlows = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("read_attributes"); ok {
-		params.ReadAttributes = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("write_attributes"); ok {
-		params.WriteAttributes = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("refresh_token_validity"); ok {
-		params.RefreshTokenValidity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("access_token_validity"); ok {
-		params.AccessTokenValidity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("id_token_validity"); ok {
-		params.IdTokenValidity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("allowed_oauth_flows"); ok {
-		params.AllowedOAuthFlows = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("allowed_oauth_flows_user_pool_client"); ok {
-		params.AllowedOAuthFlowsUserPoolClient = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("allowed_oauth_scopes"); ok {
-		params.AllowedOAuthScopes = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("callback_urls"); ok {
-		params.CallbackURLs = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("default_redirect_uri"); ok {
-		params.DefaultRedirectURI = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("logout_urls"); ok {
-		params.LogoutURLs = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("supported_identity_providers"); ok {
-		params.SupportedIdentityProviders = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("analytics_configuration"); ok {
-		params.AnalyticsConfiguration = expandUserPoolClientAnalyticsConfig(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("token_validity_units"); ok {
-		params.TokenValidityUnits = expandUserPoolClientTokenValidityUnitsType(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("prevent_user_existence_errors"); ok {
-		params.PreventUserExistenceErrors = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("enable_token_revocation"); ok {
-		params.EnableTokenRevocation = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("enable_propagate_additional_user_context_data"); ok {
-		params.EnablePropagateAdditionalUserContextData = aws.Bool(v.(bool))
-	}
-
-	log.Printf("[DEBUG] Creating Cognito User Pool Client: %s", params)
-
-	resp, err := conn.CreateUserPoolClient(params)
-
-	if err != nil {
-		return fmt.Errorf("error creating Cognito User Pool Client (%s): %w", d.Get("name").(string), err)
-	}
-
-	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
-
-	return resourceUserPoolClientRead(d, meta)
+type resourceUserPoolClientData struct {
+	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity"`
+	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
+	AllowedOauthFlowsUserPoolClient          types.Bool   `tfsdk:"allowed_oauth_flows_user_pool_client"`
+	AllowedOauthScopes                       types.Set    `tfsdk:"allowed_oauth_scopes"`
+	AnalyticsConfiguration                   types.List   `tfsdk:"analytics_configuration"`
+	AuthSessionValidity                      types.Int64  `tfsdk:"auth_session_validity"`
+	CallbackUrls                             types.Set    `tfsdk:"callback_urls"`
+	ClientSecret                             types.String `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String `tfsdk:"default_redirect_uri"`
+	EnablePropagateAdditionalUserContextData types.Bool   `tfsdk:"enable_propagate_additional_user_context_data"`
+	EnableTokenRevocation                    types.Bool   `tfsdk:"enable_token_revocation"`
+	ExplicitAuthFlows                        types.Set    `tfsdk:"explicit_auth_flows"`
+	GenerateSecret                           types.Bool   `tfsdk:"generate_secret"`
+	ID                                       types.String `tfsdk:"id"`
+	IdTokenValidity                          types.Int64  `tfsdk:"id_token_validity"`
+	LogoutUrls                               types.Set    `tfsdk:"logout_urls"`
+	Name                                     types.String `tfsdk:"name"`
+	PreventUserExistenceErrors               types.String `tfsdk:"prevent_user_existence_errors"`
+	ReadAttributes                           types.Set    `tfsdk:"read_attributes"`
+	RefreshTokenValidity                     types.Int64  `tfsdk:"refresh_token_validity"`
+	SupportedIdentityProviders               types.Set    `tfsdk:"supported_identity_providers"`
+	TokenValidityUnits                       types.List   `tfsdk:"token_validity_units"`
+	UserPoolID                               types.String `tfsdk:"user_pool_id"`
+	WriteAttributes                          types.Set    `tfsdk:"write_attributes"`
 }
 
-func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func (data resourceUserPoolClientData) createInput(ctx context.Context, diags *diag.Diagnostics) *cognitoidentityprovider.CreateUserPoolClientInput {
+	return &cognitoidentityprovider.CreateUserPoolClientInput{
+		AccessTokenValidity:                      flex.Int64FromFrameworkLegacy(ctx, data.AccessTokenValidity),
+		AllowedOAuthFlows:                        flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthFlows),
+		AllowedOAuthFlowsUserPoolClient:          flex.BoolFromFramework(ctx, data.AllowedOauthFlowsUserPoolClient),
+		AllowedOAuthScopes:                       flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthScopes),
+		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration, diags),
+		AuthSessionValidity:                      flex.Int64FromFramework(ctx, data.AuthSessionValidity),
+		CallbackURLs:                             flex.ExpandFrameworkStringSet(ctx, data.CallbackUrls),
+		ClientName:                               flex.StringFromFramework(ctx, data.Name),
+		DefaultRedirectURI:                       flex.StringFromFrameworkLegacy(ctx, data.DefaultRedirectUri),
+		EnablePropagateAdditionalUserContextData: flex.BoolFromFramework(ctx, data.EnablePropagateAdditionalUserContextData),
+		EnableTokenRevocation:                    flex.BoolFromFramework(ctx, data.EnableTokenRevocation),
+		ExplicitAuthFlows:                        flex.ExpandFrameworkStringSet(ctx, data.ExplicitAuthFlows),
+		GenerateSecret:                           flex.BoolFromFramework(ctx, data.GenerateSecret),
+		IdTokenValidity:                          flex.Int64FromFrameworkLegacy(ctx, data.IdTokenValidity),
+		LogoutURLs:                               flex.ExpandFrameworkStringSet(ctx, data.LogoutUrls),
+		PreventUserExistenceErrors:               flex.StringFromFrameworkLegacy(ctx, data.PreventUserExistenceErrors),
+		ReadAttributes:                           flex.ExpandFrameworkStringSet(ctx, data.ReadAttributes),
+		RefreshTokenValidity:                     flex.Int64FromFramework(ctx, data.RefreshTokenValidity),
+		SupportedIdentityProviders:               flex.ExpandFrameworkStringSet(ctx, data.SupportedIdentityProviders),
+		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits, diags),
+		UserPoolId:                               flex.StringFromFramework(ctx, data.UserPoolID),
+		WriteAttributes:                          flex.ExpandFrameworkStringSet(ctx, data.WriteAttributes),
+	}
+}
 
-	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
+func (data resourceUserPoolClientData) updateInput(ctx context.Context, diags *diag.Diagnostics) *cognitoidentityprovider.UpdateUserPoolClientInput {
+	return &cognitoidentityprovider.UpdateUserPoolClientInput{
+		AccessTokenValidity:                      flex.Int64FromFrameworkLegacy(ctx, data.AccessTokenValidity),
+		AllowedOAuthFlows:                        flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthFlows),
+		AllowedOAuthFlowsUserPoolClient:          flex.BoolFromFramework(ctx, data.AllowedOauthFlowsUserPoolClient),
+		AllowedOAuthScopes:                       flex.ExpandFrameworkStringSet(ctx, data.AllowedOauthScopes),
+		AnalyticsConfiguration:                   expandAnaylticsConfiguration(ctx, data.AnalyticsConfiguration, diags),
+		AuthSessionValidity:                      flex.Int64FromFramework(ctx, data.AuthSessionValidity),
+		CallbackURLs:                             flex.ExpandFrameworkStringSet(ctx, data.CallbackUrls),
+		ClientId:                                 flex.StringFromFramework(ctx, data.ID),
+		ClientName:                               flex.StringFromFramework(ctx, data.Name),
+		DefaultRedirectURI:                       flex.StringFromFrameworkLegacy(ctx, data.DefaultRedirectUri),
+		EnablePropagateAdditionalUserContextData: flex.BoolFromFramework(ctx, data.EnablePropagateAdditionalUserContextData),
+		EnableTokenRevocation:                    flex.BoolFromFramework(ctx, data.EnableTokenRevocation),
+		ExplicitAuthFlows:                        flex.ExpandFrameworkStringSet(ctx, data.ExplicitAuthFlows),
+		IdTokenValidity:                          flex.Int64FromFrameworkLegacy(ctx, data.IdTokenValidity),
+		LogoutURLs:                               flex.ExpandFrameworkStringSet(ctx, data.LogoutUrls),
+		PreventUserExistenceErrors:               flex.StringFromFrameworkLegacy(ctx, data.PreventUserExistenceErrors),
+		ReadAttributes:                           flex.ExpandFrameworkStringSet(ctx, data.ReadAttributes),
+		RefreshTokenValidity:                     flex.Int64FromFramework(ctx, data.RefreshTokenValidity),
+		SupportedIdentityProviders:               flex.ExpandFrameworkStringSet(ctx, data.SupportedIdentityProviders),
+		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits, diags),
+		UserPoolId:                               flex.StringFromFramework(ctx, data.UserPoolID),
+		WriteAttributes:                          flex.ExpandFrameworkStringSet(ctx, data.WriteAttributes),
+	}
+}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id())
-		d.SetId("")
+func (data resourceUserPoolClientData) deleteInput(ctx context.Context) *cognitoidentityprovider.DeleteUserPoolClientInput {
+	return &cognitoidentityprovider.DeleteUserPoolClientInput{
+		ClientId:   flex.StringFromFramework(ctx, data.ID),
+		UserPoolId: flex.StringFromFramework(ctx, data.UserPoolID),
+	}
+}
+
+type analyticsConfiguration struct {
+	ApplicationARN fwtypes.ARN  `tfsdk:"application_arn"`
+	ApplicationID  types.String `tfsdk:"application_id"`
+	ExternalID     types.String `tfsdk:"external_id"`
+	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
+	UserDataShared types.Bool   `tfsdk:"user_data_shared"`
+}
+
+func (ac *analyticsConfiguration) expand(ctx context.Context) *cognitoidentityprovider.AnalyticsConfigurationType {
+	if ac == nil {
+		return nil
+	}
+	result := &cognitoidentityprovider.AnalyticsConfigurationType{
+		ApplicationArn: flex.StringFromFramework(ctx, ac.ApplicationARN),
+		ApplicationId:  flex.StringFromFramework(ctx, ac.ApplicationID),
+		ExternalId:     flex.StringFromFramework(ctx, ac.ExternalID),
+		RoleArn:        flex.StringFromFramework(ctx, ac.RoleARN),
+		UserDataShared: flex.BoolFromFramework(ctx, ac.UserDataShared),
+	}
+
+	return result
+}
+
+func expandAnaylticsConfiguration(ctx context.Context, list types.List, diags *diag.Diagnostics) *cognitoidentityprovider.AnalyticsConfigurationType {
+	var analytics []analyticsConfiguration
+	diags.Append(list.ElementsAs(ctx, &analytics, false)...)
+	if diags.HasError() {
 		return nil
 	}
 
-	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id(), err)
+	if len(analytics) == 1 {
+		return analytics[0].expand(ctx)
 	}
-
-	d.Set("user_pool_id", userPoolClient.UserPoolId)
-	d.Set("name", userPoolClient.ClientName)
-	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
-	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))
-	d.Set("write_attributes", flex.FlattenStringSet(userPoolClient.WriteAttributes))
-	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
-	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
-	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
-	d.Set("client_secret", userPoolClient.ClientSecret)
-	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
-	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
-	d.Set("allowed_oauth_scopes", flex.FlattenStringSet(userPoolClient.AllowedOAuthScopes))
-	d.Set("callback_urls", flex.FlattenStringSet(userPoolClient.CallbackURLs))
-	d.Set("default_redirect_uri", userPoolClient.DefaultRedirectURI)
-	d.Set("logout_urls", flex.FlattenStringSet(userPoolClient.LogoutURLs))
-	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
-	d.Set("supported_identity_providers", flex.FlattenStringSet(userPoolClient.SupportedIdentityProviders))
-	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
-	d.Set("enable_propagate_additional_user_context_data", userPoolClient.EnablePropagateAdditionalUserContextData)
-
-	if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
-		return fmt.Errorf("error setting analytics_configuration: %w", err)
-	}
-
-	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
-		return fmt.Errorf("error setting token_validity_units: %w", err)
-	}
-
 	return nil
 }
 
-func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType) types.List {
+	attributeTypes := fwtypes.AttributeTypesMust[analyticsConfiguration](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
-	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
-		ClientId:              aws.String(d.Id()),
-		UserPoolId:            aws.String(d.Get("user_pool_id").(string)),
-		EnableTokenRevocation: aws.Bool(d.Get("enable_token_revocation").(bool)),
+	if ac == nil {
+		return types.ListNull(elemType)
 	}
 
-	if v, ok := d.GetOk("name"); ok {
-		params.ClientName = aws.String(v.(string))
-	}
+	attrs := map[string]attr.Value{}
+	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn)
+	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
+	attrs["external_id"] = flex.StringToFramework(ctx, ac.ExternalId)
+	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
+	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)
 
-	if v, ok := d.GetOk("explicit_auth_flows"); ok {
-		params.ExplicitAuthFlows = flex.ExpandStringSet(v.(*schema.Set))
-	}
+	val := types.ObjectValueMust(attributeTypes, attrs)
 
-	if v, ok := d.GetOk("read_attributes"); ok {
-		params.ReadAttributes = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("write_attributes"); ok {
-		params.WriteAttributes = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("refresh_token_validity"); ok {
-		params.RefreshTokenValidity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("access_token_validity"); ok {
-		params.AccessTokenValidity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("id_token_validity"); ok {
-		params.IdTokenValidity = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("allowed_oauth_flows"); ok {
-		params.AllowedOAuthFlows = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("allowed_oauth_flows_user_pool_client"); ok {
-		params.AllowedOAuthFlowsUserPoolClient = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("allowed_oauth_scopes"); ok {
-		params.AllowedOAuthScopes = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("callback_urls"); ok {
-		params.CallbackURLs = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("default_redirect_uri"); ok {
-		params.DefaultRedirectURI = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("logout_urls"); ok {
-		params.LogoutURLs = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("prevent_user_existence_errors"); ok {
-		params.PreventUserExistenceErrors = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("supported_identity_providers"); ok {
-		params.SupportedIdentityProviders = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("analytics_configuration"); ok {
-		params.AnalyticsConfiguration = expandUserPoolClientAnalyticsConfig(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("token_validity_units"); ok {
-		params.TokenValidityUnits = expandUserPoolClientTokenValidityUnitsType(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("enable_propagate_additional_user_context_data"); ok {
-		params.EnablePropagateAdditionalUserContextData = aws.Bool(v.(bool))
-	}
-
-	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
-
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.UpdateUserPoolClient(params)
-	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
-	if err != nil {
-		return fmt.Errorf("error updating Cognito User Pool Client (%s): %w", d.Id(), err)
-	}
-
-	return resourceUserPoolClientRead(d, meta)
+	return types.ListValueMust(elemType, []attr.Value{val})
 }
 
-func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+type tokenValidityUnits struct {
+	AccessToken  types.String `tfsdk:"access_token"`
+	IdToken      types.String `tfsdk:"id_token"`
+	RefreshToken types.String `tfsdk:"refresh_token"`
+}
 
-	params := &cognitoidentityprovider.DeleteUserPoolClientInput{
-		ClientId:   aws.String(d.Id()),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+func isDefaultTokenValidityUnits(tvu *cognitoidentityprovider.TokenValidityUnitsType) bool {
+	if tvu == nil {
+		return false
 	}
+	return aws.StringValue(tvu.AccessToken) == cognitoidentityprovider.TimeUnitsTypeHours &&
+		aws.StringValue(tvu.IdToken) == cognitoidentityprovider.TimeUnitsTypeHours &&
+		aws.StringValue(tvu.RefreshToken) == cognitoidentityprovider.TimeUnitsTypeDays
+}
 
-	log.Printf("[DEBUG] Deleting Cognito User Pool Client: %s", params)
+func (tvu *tokenValidityUnits) expand(ctx context.Context) *cognitoidentityprovider.TokenValidityUnitsType {
+	if tvu == nil {
+		return nil
+	}
+	return &cognitoidentityprovider.TokenValidityUnitsType{
+		AccessToken:  flex.StringFromFramework(ctx, tvu.AccessToken),
+		IdToken:      flex.StringFromFramework(ctx, tvu.IdToken),
+		RefreshToken: flex.StringFromFramework(ctx, tvu.RefreshToken),
+	}
+}
 
-	_, err := conn.DeleteUserPoolClient(params)
-
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+func resolveTokenValidityUnits(ctx context.Context, list types.List, diags *diag.Diagnostics) *tokenValidityUnits {
+	var units []tokenValidityUnits
+	diags.Append(list.ElementsAs(ctx, &units, false)...)
+	if diags.HasError() {
 		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error deleting Cognito User Pool Client (%s): %w", d.Id(), err)
+	if len(units) == 1 {
+		return &units[0]
 	}
-
 	return nil
 }
 
-func resourceUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", d.Id())
+func expandTokenValidityUnits(ctx context.Context, list types.List, diags *diag.Diagnostics) *cognitoidentityprovider.TokenValidityUnitsType {
+	if tvu := resolveTokenValidityUnits(ctx, list, diags); tvu != nil {
+		return tvu.expand(ctx)
 	}
-	userPoolId := strings.Split(d.Id(), "/")[0]
-	clientId := strings.Split(d.Id(), "/")[1]
-	d.SetId(clientId)
-	d.Set("user_pool_id", userPoolId)
-	log.Printf("[DEBUG] Importing client %s for user pool %s", clientId, userPoolId)
-
-	return []*schema.ResourceData{d}, nil
+	return &cognitoidentityprovider.TokenValidityUnitsType{}
 }
 
-func expandUserPoolClientAnalyticsConfig(l []interface{}) *cognitoidentityprovider.AnalyticsConfigurationType {
-	if len(l) == 0 {
-		return nil
+func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) types.List {
+	attributeTypes := fwtypes.AttributeTypesMust[tokenValidityUnits](ctx)
+	elemType := types.ObjectType{AttrTypes: attributeTypes}
+
+	if tvu == nil || (tvu.AccessToken == nil && tvu.IdToken == nil && tvu.RefreshToken == nil) {
+		return types.ListNull(elemType)
 	}
 
-	m := l[0].(map[string]interface{})
+	attrs := map[string]attr.Value{}
+	attrs["access_token"] = flex.StringToFramework(ctx, tvu.AccessToken)
+	attrs["id_token"] = flex.StringToFramework(ctx, tvu.IdToken)
+	attrs["refresh_token"] = flex.StringToFramework(ctx, tvu.RefreshToken)
 
-	analyticsConfig := &cognitoidentityprovider.AnalyticsConfigurationType{}
+	val := types.ObjectValueMust(attributeTypes, attrs)
 
-	if v, ok := m["role_arn"]; ok && v != "" {
-		analyticsConfig.RoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := m["external_id"]; ok && v != "" {
-		analyticsConfig.ExternalId = aws.String(v.(string))
-	}
-
-	if v, ok := m["application_id"]; ok && v != "" {
-		analyticsConfig.ApplicationId = aws.String(v.(string))
-	}
-
-	if v, ok := m["application_arn"]; ok && v != "" {
-		analyticsConfig.ApplicationArn = aws.String(v.(string))
-	}
-
-	if v, ok := m["user_data_shared"]; ok {
-		analyticsConfig.UserDataShared = aws.Bool(v.(bool))
-	}
-
-	return analyticsConfig
+	return types.ListValueMust(elemType, []attr.Value{val})
 }
 
-func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovider.AnalyticsConfigurationType) []interface{} {
-	if analyticsConfig == nil {
-		return []interface{}{}
-	}
+var _ resource.ConfigValidator = &resourceUserPoolClientAccessTokenValidityValidator{}
 
-	m := map[string]interface{}{
-		"user_data_shared": aws.BoolValue(analyticsConfig.UserDataShared),
-	}
-
-	if analyticsConfig.ExternalId != nil {
-		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
-	}
-
-	if analyticsConfig.RoleArn != nil {
-		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
-	}
-
-	if analyticsConfig.ApplicationId != nil {
-		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
-	}
-
-	if analyticsConfig.ApplicationArn != nil {
-		m["application_arn"] = aws.StringValue(analyticsConfig.ApplicationArn)
-	}
-
-	return []interface{}{m}
+type resourceUserPoolClientAccessTokenValidityValidator struct {
+	resourceUserPoolClientValidityValidator
 }
 
-func expandUserPoolClientTokenValidityUnitsType(l []interface{}) *cognitoidentityprovider.TokenValidityUnitsType {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	tokenValidityConfig := &cognitoidentityprovider.TokenValidityUnitsType{}
-
-	if v, ok := m["access_token"]; ok {
-		tokenValidityConfig.AccessToken = aws.String(v.(string))
-	}
-
-	if v, ok := m["id_token"]; ok {
-		tokenValidityConfig.IdToken = aws.String(v.(string))
-	}
-
-	if v, ok := m["refresh_token"]; ok {
-		tokenValidityConfig.RefreshToken = aws.String(v.(string))
-	}
-
-	return tokenValidityConfig
+func (v resourceUserPoolClientAccessTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceUserPoolClientData) types.Int64 {
+			return rupcd.AccessTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.AccessToken
+		},
+	)
 }
 
-func flattenUserPoolClientTokenValidityUnitsType(tokenValidityConfig *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
-	if tokenValidityConfig == nil {
-		return nil
+var _ resource.ConfigValidator = &resourceUserPoolClientIDTokenValidityValidator{}
+
+type resourceUserPoolClientIDTokenValidityValidator struct {
+	resourceUserPoolClientValidityValidator
+}
+
+func (v resourceUserPoolClientIDTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceUserPoolClientData) types.Int64 {
+			return rupcd.IdTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.IdToken
+		},
+	)
+}
+
+var _ resource.ConfigValidator = &resourceUserPoolClientRefreshTokenValidityValidator{}
+
+type resourceUserPoolClientRefreshTokenValidityValidator struct {
+	resourceUserPoolClientValidityValidator
+}
+
+func (v resourceUserPoolClientRefreshTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceUserPoolClientData) types.Int64 {
+			return rupcd.RefreshTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.RefreshToken
+		},
+	)
+}
+
+type resourceUserPoolClientValidityValidator struct {
+	min         time.Duration
+	max         time.Duration
+	attr        string
+	defaultUnit time.Duration
+}
+
+func (v resourceUserPoolClientValidityValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v resourceUserPoolClientValidityValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
+}
+
+func (v resourceUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceUserPoolClientData) types.Int64, unitF func(*tokenValidityUnits) types.String) {
+	var config resourceUserPoolClientData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	//tokenValidityConfig is never nil and if everything is empty it causes diffs
-	if tokenValidityConfig.IdToken == nil && tokenValidityConfig.AccessToken == nil && tokenValidityConfig.RefreshToken == nil {
-		return nil
+	x := valF(config)
+
+	if x.IsUnknown() || x.IsNull() {
+		return
 	}
 
-	m := map[string]interface{}{}
+	val := aws.Int64Value(flex.Int64FromFramework(ctx, x))
 
-	if tokenValidityConfig.IdToken != nil {
-		m["id_token"] = aws.StringValue(tokenValidityConfig.IdToken)
+	var duration time.Duration
+
+	units := resolveTokenValidityUnits(ctx, config.TokenValidityUnits, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if units == nil {
+		duration = time.Duration(val * int64(v.defaultUnit))
+	} else {
+		switch aws.StringValue(flex.StringFromFramework(ctx, unitF(units))) {
+		case cognitoidentityprovider.TimeUnitsTypeSeconds:
+			duration = time.Duration(val * int64(time.Second))
+		case cognitoidentityprovider.TimeUnitsTypeMinutes:
+			duration = time.Duration(val * int64(time.Minute))
+		case cognitoidentityprovider.TimeUnitsTypeHours:
+			duration = time.Duration(val * int64(time.Hour))
+		case cognitoidentityprovider.TimeUnitsTypeDays:
+			duration = time.Duration(val * 24 * int64(time.Hour))
+		}
 	}
 
-	if tokenValidityConfig.AccessToken != nil {
-		m["access_token"] = aws.StringValue(tokenValidityConfig.AccessToken)
+	if duration < v.min || duration > v.max {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+			path.Root(v.attr),
+			v.Description(ctx),
+			duration.String(),
+		))
 	}
-
-	if tokenValidityConfig.RefreshToken != nil {
-		m["refresh_token"] = aws.StringValue(tokenValidityConfig.RefreshToken)
-	}
-
-	return []interface{}{m}
 }

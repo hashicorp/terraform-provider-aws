@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
 
@@ -7,143 +7,389 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
 		Name: "aws_globalaccelerator_accelerator",
 		F:    sweepAccelerators,
+		Dependencies: []string{
+			"aws_globalaccelerator_listener",
+		},
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_listener", &resource.Sweeper{
+		Name: "aws_globalaccelerator_listener",
+		F:    sweepListeners,
+		Dependencies: []string{
+			"aws_globalaccelerator_endpoint_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_endpoint_group", &resource.Sweeper{
+		Name: "aws_globalaccelerator_endpoint_group",
+		F:    sweepEndpointGroups,
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_custom_routing_accelerator", &resource.Sweeper{
+		Name: "aws_globalaccelerator_custom_routing_accelerator",
+		F:    sweepCustomRoutingAccelerators,
+		Dependencies: []string{
+			"aws_globalaccelerator_custom_routing_listener",
+		},
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_custom_routing_listener", &resource.Sweeper{
+		Name: "aws_globalaccelerator_custom_routing_listener",
+		F:    sweepCustomRoutingListeners,
+		Dependencies: []string{
+			"aws_globalaccelerator_custom_routing_endpoint_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_globalaccelerator_custom_routing_endpoint_group", &resource.Sweeper{
+		Name: "aws_globalaccelerator_custom_routing_endpoint_group",
+		F:    sweepCustomRoutingEndpointGroups,
 	})
 }
 
 func sweepAccelerators(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
-
+	conn := client.GlobalAcceleratorClient(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.ListAccelerators(input)
+	pages := globalaccelerator.NewListAcceleratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving Global Accelerator Accelerators: %s", err)
+			return fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err)
 		}
 
-		for _, accelerator := range output.Accelerators {
-			arn := aws.StringValue(accelerator.AcceleratorArn)
-
-			errs := sweepListeners(client, accelerator.AcceleratorArn)
-			if errs != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, errs)
-			}
-
-			r := ResourceAccelerator()
+		for _, v := range page.Accelerators {
+			r := resourceAccelerator()
 			d := r.Data(nil)
-			d.SetId(arn)
-			err = r.Delete(d, client)
+			d.SetId(aws.ToString(v.AcceleratorArn))
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Global Accelerator Accelerator (%s): %s", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Accelerators (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepEndpointGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.GlobalAcceleratorClient(ctx)
+	input := &globalaccelerator.ListAcceleratorsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := globalaccelerator.NewListAcceleratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Global Accelerator Endpoint Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err)
+		}
+
+		for _, v := range page.Accelerators {
+			input := &globalaccelerator.ListListenersInput{
+				AcceleratorArn: v.AcceleratorArn,
+			}
+
+			pages := globalaccelerator.NewListListenersPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.Listeners {
+					input := &globalaccelerator.ListEndpointGroupsInput{
+						ListenerArn: v.ListenerArn,
+					}
+
+					pages := globalaccelerator.NewListEndpointGroupsPaginator(conn, input)
+					for pages.HasMorePages() {
+						page, err := pages.NextPage(ctx)
+
+						if err != nil {
+							continue
+						}
+
+						for _, v := range page.EndpointGroups {
+							r := resourceEndpointGroup()
+							d := r.Data(nil)
+							d.SetId(aws.ToString(v.EndpointGroupArn))
+
+							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+						}
+					}
+				}
 			}
 		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Endpoint Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
-func sweepEndpointGroups(client interface{}, listenerArn *string) *multierror.Error {
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
-	var sweeperErrs *multierror.Error
-
-	log.Printf("[INFO] deleting Endpoint Groups for Listener %s", *listenerArn)
-	input := &globalaccelerator.ListEndpointGroupsInput{
-		ListenerArn: listenerArn,
-	}
-	output, err := conn.ListEndpointGroups(input)
+func sweepListeners(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Global Accelerator Endpoint Groups for Listener (%s): %s", *listenerArn, err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		return fmt.Errorf("error getting client: %s", err)
 	}
+	conn := client.GlobalAcceleratorClient(ctx)
+	input := &globalaccelerator.ListAcceleratorsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for _, endpoint := range output.EndpointGroups {
-		arn := aws.StringValue(endpoint.EndpointGroupArn)
+	pages := globalaccelerator.NewListAcceleratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		r := ResourceEndpointGroup()
-		d := r.Data(nil)
-		d.SetId(arn)
-		err = r.Delete(d, client)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Global Accelerator Endpoint Group sweep for %s: %s", region, err)
+			return nil
+		}
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Global Accelerator endpoint group (%s): %s", arn, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
+			return fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err)
+		}
+
+		for _, v := range page.Accelerators {
+			input := &globalaccelerator.ListListenersInput{
+				AcceleratorArn: v.AcceleratorArn,
+			}
+
+			pages := globalaccelerator.NewListListenersPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.Listeners {
+					r := resourceListener()
+					d := r.Data(nil)
+					d.SetId(aws.ToString(v.ListenerArn))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
 		}
 	}
 
-	return sweeperErrs
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Listeners (%s): %w", region, err)
+	}
+
+	return nil
 }
 
-func sweepListeners(client interface{}, acceleratorArn *string) *multierror.Error {
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn
-	var sweeperErrs *multierror.Error
-
-	log.Printf("[INFO] deleting Listeners for Accelerator %s", *acceleratorArn)
-	listenersInput := &globalaccelerator.ListListenersInput{
-		AcceleratorArn: acceleratorArn,
-	}
-	listenersOutput, err := conn.ListListeners(listenersInput)
+func sweepCustomRoutingAccelerators(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing Global Accelerator Listeners for Accelerator (%s): %s", *acceleratorArn, err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		return fmt.Errorf("error getting client: %s", err)
 	}
+	conn := client.GlobalAcceleratorClient(ctx)
+	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for _, listener := range listenersOutput.Listeners {
-		errs := sweepEndpointGroups(client, listener.ListenerArn)
-		if errs != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, errs)
+	pages := globalaccelerator.NewListCustomRoutingAcceleratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Global Accelerator Custom Routing Accelerator sweep for %s: %s", region, err)
+			return nil
 		}
-
-		arn := aws.StringValue(listener.ListenerArn)
-
-		r := ResourceListener()
-		d := r.Data(nil)
-		d.SetId(arn)
-		err = r.Delete(d, client)
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Global Accelerator listener (%s): %s", arn, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
+			return fmt.Errorf("error listing Global Accelerator Custom Routing Accelerators (%s): %w", region, err)
+		}
+
+		for _, v := range page.Accelerators {
+			r := resourceCustomRoutingAccelerator()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.AcceleratorArn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweeperErrs
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Custom Routing Accelerators (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCustomRoutingEndpointGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.GlobalAcceleratorClient(ctx)
+	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := globalaccelerator.NewListCustomRoutingAcceleratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Global Accelerator Custom Routing Accelerator sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Global Accelerator Custom Routing Accelerators (%s): %w", region, err)
+		}
+
+		for _, v := range page.Accelerators {
+			input := &globalaccelerator.ListCustomRoutingListenersInput{
+				AcceleratorArn: v.AcceleratorArn,
+			}
+
+			pages := globalaccelerator.NewListCustomRoutingListenersPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.Listeners {
+					input := &globalaccelerator.ListCustomRoutingEndpointGroupsInput{
+						ListenerArn: v.ListenerArn,
+					}
+
+					pages := globalaccelerator.NewListCustomRoutingEndpointGroupsPaginator(conn, input)
+					for pages.HasMorePages() {
+						page, err := pages.NextPage(ctx)
+
+						if err != nil {
+							continue
+						}
+
+						for _, v := range page.EndpointGroups {
+							r := resourceCustomRoutingEndpointGroup()
+							d := r.Data(nil)
+							d.SetId(aws.ToString(v.EndpointGroupArn))
+
+							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Custom Routing Endpoint Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCustomRoutingListeners(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.GlobalAcceleratorClient(ctx)
+	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := globalaccelerator.NewListCustomRoutingAcceleratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Global Accelerator Custom Routing Accelerator sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Global Accelerator Custom Routing Accelerators (%s): %w", region, err)
+		}
+
+		for _, v := range page.Accelerators {
+			input := &globalaccelerator.ListCustomRoutingListenersInput{
+				AcceleratorArn: v.AcceleratorArn,
+			}
+
+			pages := globalaccelerator.NewListCustomRoutingListenersPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					continue
+				}
+
+				for _, v := range page.Listeners {
+					r := resourceCustomRoutingListener()
+					d := r.Data(nil)
+					d.SetId(aws.ToString(v.ListenerArn))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Global Accelerator Custom Routing Listeners (%s): %w", region, err)
+	}
+
+	return nil
 }

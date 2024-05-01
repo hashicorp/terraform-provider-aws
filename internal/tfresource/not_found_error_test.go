@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
@@ -5,14 +8,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
+	t.Parallel()
+
 	lastRequest := 123
 	err := NewEmptyResultError(lastRequest)
 
-	var nfe *resource.NotFoundError
+	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -27,6 +33,8 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 }
 
 func TestEmptyResultErrorIs(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		err      error
@@ -71,7 +79,10 @@ func TestEmptyResultErrorIs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			err := &EmptyResultError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
@@ -82,11 +93,13 @@ func TestEmptyResultErrorIs(t *testing.T) {
 }
 
 func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
+	t.Parallel()
+
 	count := 2
 	lastRequest := 123
 	err := NewTooManyResultsError(count, lastRequest)
 
-	var nfe *resource.NotFoundError
+	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -101,6 +114,8 @@ func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
 }
 
 func TestTooManyResultsErrorIs(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		err      error
@@ -145,11 +160,84 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			err := &TooManyResultsError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)
+			}
+		})
+	}
+}
+
+func TestAssertSinglePtrResult(t *testing.T) {
+	t.Parallel()
+
+	type x struct {
+		A int
+	}
+
+	x1 := &x{A: 1}
+	x2 := &x{A: 2}
+	testCases := []struct {
+		name   string
+		input  []*x
+		fs     []FoundFunc[x]
+		output *x
+		err    bool
+	}{
+		{
+			name: "nil input",
+			err:  true,
+		},
+		{
+			name:  "empty input",
+			input: []*x{},
+			err:   true,
+		},
+		{
+			name:  "single nil input",
+			input: []*x{nil},
+			err:   true,
+		},
+		{
+			name:   "single non-nil input",
+			input:  []*x{x1},
+			output: x1,
+		},
+		{
+			name:  "multiple inputs",
+			input: []*x{x1, x2},
+			err:   true,
+		},
+		{
+			name:   "single non-nil input, with found",
+			input:  []*x{x1},
+			fs:     []FoundFunc[x]{func(v *x) bool { return v.A == 1 }},
+			output: x1,
+		},
+		{
+			name:  "single non-nil input, with not found",
+			input: []*x{x1},
+			fs:    []FoundFunc[x]{func(v *x) bool { return v.A == 2 }},
+			err:   true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			output, err := AssertSinglePtrResult(testCase.input, testCase.fs...)
+			if got, want := err != nil, testCase.err; got != want {
+				t.Fatalf("AssertSinglePtrResult err %t, want %t", got, want)
+			}
+			if diff := cmp.Diff(output, testCase.output); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}

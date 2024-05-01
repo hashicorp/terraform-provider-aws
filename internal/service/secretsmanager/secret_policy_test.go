@@ -1,39 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy secretsmanager.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecretPolicyDestroy,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
+						regexache.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
 			},
 			{
@@ -45,9 +50,9 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 			{
 				Config: testAccSecretPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(`{"Action":"secretsmanager:\*".+`)),
+						regexache.MustCompile(`{"Action":"secretsmanager:\*".+`)),
 				),
 			},
 		},
@@ -55,20 +60,21 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy secretsmanager.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecretPolicyDestroy,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyConfig_block(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
@@ -81,14 +87,14 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 			{
 				Config: testAccSecretPolicyConfig_block(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
 				Config: testAccSecretPolicyConfig_block(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretPolicyExists(resourceName, &policy),
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
 				),
 			},
@@ -97,21 +103,22 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 }
 
 func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy secretsmanager.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecretPolicyDestroy,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretPolicyExists(resourceName, &policy),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,95 +126,77 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+func TestAccSecretsManagerSecretPolicy_Disappears_secret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy secretsmanager.GetResourcePolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_policy.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_secretsmanager_secret_policy" {
-			continue
-		}
-
-		secretInput := &secretsmanager.DescribeSecretInput{
-			SecretId: aws.String(rs.Primary.ID),
-		}
-
-		var output *secretsmanager.DescribeSecretOutput
-
-		err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
-			var err error
-			output, err = conn.DescribeSecret(secretInput)
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			if output != nil && output.DeletedDate == nil {
-				return resource.RetryableError(fmt.Errorf("Secret %q still exists", rs.Primary.ID))
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			output, err = conn.DescribeSecret(secretInput)
-		}
-
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && output.DeletedDate == nil {
-			return fmt.Errorf("Secret %q still exists", rs.Primary.ID)
-		}
-
-		input := &secretsmanager.GetResourcePolicyInput{
-			SecretId: aws.String(rs.Primary.ID),
-		}
-
-		_, err = conn.GetResourcePolicy(input)
-
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException,
-				"You can't perform this operation on the secret because it was marked for deletion.") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretPolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecret(), secretResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckSecretPolicyExists(resourceName string, policy *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_secretsmanager_secret_policy" {
+				continue
+			}
+
+			output, err := tfsecretsmanager.FindSecretPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if aws.ToString(output.ResourcePolicy) == "" {
+				continue
+			}
+
+			return fmt.Errorf("Secrets Manager Secret Policy %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckSecretPolicyExists(ctx context.Context, n string, v *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
-		input := &secretsmanager.GetResourcePolicyInput{
-			SecretId: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
-		output, err := conn.GetResourcePolicy(input)
+		output, err := tfsecretsmanager.FindSecretPolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Secret Policy %q does not exist", rs.Primary.ID)
-		}
-
-		*policy = *output
+		*v = *output
 
 		return nil
 	}

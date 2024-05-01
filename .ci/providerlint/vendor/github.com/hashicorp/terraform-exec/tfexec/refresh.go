@@ -1,7 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"os/exec"
 	"strconv"
 )
@@ -78,6 +83,27 @@ func (tf *Terraform) Refresh(ctx context.Context, opts ...RefreshCmdOption) erro
 	return tf.runTerraformCmd(ctx, cmd)
 }
 
+// RefreshJSON represents the terraform refresh subcommand with the `-json` flag.
+// Using the `-json` flag will result in
+// [machine-readable](https://developer.hashicorp.com/terraform/internals/machine-readable-ui)
+// JSON being written to the supplied `io.Writer`. RefreshJSON is likely to be
+// removed in a future major version in favour of Refresh returning JSON by default.
+func (tf *Terraform) RefreshJSON(ctx context.Context, w io.Writer, opts ...RefreshCmdOption) error {
+	err := tf.compatible(ctx, tf0_15_3, nil)
+	if err != nil {
+		return fmt.Errorf("terraform refresh -json was added in 0.15.3: %w", err)
+	}
+
+	tf.SetStdout(w)
+
+	cmd, err := tf.refreshJSONCmd(ctx, opts...)
+	if err != nil {
+		return err
+	}
+
+	return tf.runTerraformCmd(ctx, cmd)
+}
+
 func (tf *Terraform) refreshCmd(ctx context.Context, opts ...RefreshCmdOption) (*exec.Cmd, error) {
 	c := defaultRefreshOptions
 
@@ -85,6 +111,26 @@ func (tf *Terraform) refreshCmd(ctx context.Context, opts ...RefreshCmdOption) (
 		o.configureRefresh(&c)
 	}
 
+	args := tf.buildRefreshArgs(c)
+
+	return tf.buildRefreshCmd(ctx, c, args)
+
+}
+
+func (tf *Terraform) refreshJSONCmd(ctx context.Context, opts ...RefreshCmdOption) (*exec.Cmd, error) {
+	c := defaultRefreshOptions
+
+	for _, o := range opts {
+		o.configureRefresh(&c)
+	}
+
+	args := tf.buildRefreshArgs(c)
+	args = append(args, "-json")
+
+	return tf.buildRefreshCmd(ctx, c, args)
+}
+
+func (tf *Terraform) buildRefreshArgs(c refreshConfig) []string {
 	args := []string{"refresh", "-no-color", "-input=false"}
 
 	// string opts: only pass if set
@@ -119,6 +165,10 @@ func (tf *Terraform) refreshCmd(ctx context.Context, opts ...RefreshCmdOption) (
 		}
 	}
 
+	return args
+}
+
+func (tf *Terraform) buildRefreshCmd(ctx context.Context, c refreshConfig, args []string) (*exec.Cmd, error) {
 	// optional positional argument
 	if c.dir != "" {
 		args = append(args, c.dir)

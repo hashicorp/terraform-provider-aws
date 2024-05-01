@@ -1,22 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func DataSourceResource() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_resource", name="Resource")
+func dataSourceResource() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResourceRead,
+		ReadWithoutTimeout: dataSourceResourceRead,
+
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": {
+			"parent_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -26,43 +37,72 @@ func DataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_id": {
+			"rest_api_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}
 }
 
-func dataSourceResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restApiId := d.Get("rest_api_id").(string)
-	target := d.Get("path").(string)
-	params := &apigateway.GetResourcesInput{RestApiId: aws.String(restApiId)}
+	path := d.Get("path").(string)
+	input := &apigateway.GetResourcesInput{
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+	}
 
-	var match *apigateway.Resource
-	log.Printf("[DEBUG] Reading API Gateway Resources: %s", params)
-	err := conn.GetResourcesPages(params, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
-		for _, resource := range page.Items {
-			if aws.StringValue(resource.Path) == target {
-				match = resource
-				return false
+	match, err := findResource(ctx, conn, input, func(v *types.Resource) bool {
+		return aws.ToString(v.Path) == path
+	})
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("API Gateway Resource", err))
+	}
+
+	d.SetId(aws.ToString(match.Id))
+	d.Set("parent_id", match.ParentId)
+	d.Set("path_part", match.PathPart)
+
+	return diags
+}
+
+func findResource(ctx context.Context, conn *apigateway.Client, input *apigateway.GetResourcesInput, filter tfslices.Predicate[*types.Resource]) (*types.Resource, error) {
+	output, err := findResources(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findResources(ctx context.Context, conn *apigateway.Client, input *apigateway.GetResourcesInput, filter tfslices.Predicate[*types.Resource]) ([]types.Resource, error) {
+	var output []types.Resource
+
+	pages := apigateway.NewGetResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
-		return !lastPage
-	})
-	if err != nil {
-		return fmt.Errorf("error describing API Gateway Resources: %w", err)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	if match == nil {
-		return fmt.Errorf("no Resources with path %q found for rest api %q", target, restApiId)
-	}
-
-	d.SetId(aws.StringValue(match.Id))
-	d.Set("path_part", match.PathPart)
-	d.Set("parent_id", match.ParentId)
-
-	return nil
+	return output, nil
 }

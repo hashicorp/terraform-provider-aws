@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package transfer
 
@@ -9,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
 		Name: "aws_transfer_server",
 		F:    sweepServers,
@@ -30,21 +30,22 @@ func init() {
 }
 
 func sweepServers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TransferConn
+	conn := client.TransferConn(ctx)
 	input := &transfer.ListServersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
+	err = conn.ListServersPagesWithContext(ctx, input, func(page *transfer.ListServersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, server := range page.Servers {
-			r := ResourceServer()
+			r := resourceServer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
 			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
@@ -56,7 +57,7 @@ func sweepServers(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
 		return nil
 	}
@@ -65,7 +66,7 @@ func sweepServers(region string) error {
 		return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
@@ -75,15 +76,16 @@ func sweepServers(region string) error {
 }
 
 func sweepWorkflows(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TransferConn
+	conn := client.TransferConn(ctx)
 	input := &transfer.ListWorkflowsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListWorkflowsPages(input, func(page *transfer.ListWorkflowsOutput, lastPage bool) bool {
+	err = conn.ListWorkflowsPagesWithContext(ctx, input, func(page *transfer.ListWorkflowsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -99,7 +101,7 @@ func sweepWorkflows(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Transfer Workflow sweep for %s: %s", region, err)
 		return nil
 	}
@@ -108,7 +110,7 @@ func sweepWorkflows(region string) error {
 		return fmt.Errorf("error listing Transfer Workflows (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Transfer Workflows (%s): %w", region, err)

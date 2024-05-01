@@ -1,26 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_local_gateway_virtual_interface_group")
 func DataSourceLocalGatewayVirtualInterfaceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocalGatewayVirtualInterfaceGroupRead,
+		ReadWithoutTimeout: dataSourceLocalGatewayVirtualInterfaceGroupRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -41,8 +47,9 @@ func DataSourceLocalGatewayVirtualInterfaceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceLocalGatewayVirtualInterfaceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
@@ -51,17 +58,17 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, met
 		input.LocalGatewayVirtualInterfaceGroupIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 		},
 	)
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -70,18 +77,18 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, met
 		input.Filters = nil
 	}
 
-	output, err := conn.DescribeLocalGatewayVirtualInterfaceGroups(input)
+	output, err := conn.DescribeLocalGatewayVirtualInterfaceGroupsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Local Gateway Virtual Interface Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing EC2 Local Gateway Virtual Interface Groups: %s", err)
 	}
 
 	if output == nil || len(output.LocalGatewayVirtualInterfaceGroups) == 0 {
-		return fmt.Errorf("no matching EC2 Local Gateway Virtual Interface Group found")
+		return sdkdiag.AppendErrorf(diags, "no matching EC2 Local Gateway Virtual Interface Group found")
 	}
 
 	if len(output.LocalGatewayVirtualInterfaceGroups) > 1 {
-		return fmt.Errorf("multiple EC2 Local Gateway Virtual Interface Groups matched; use additional constraints to reduce matches to a single EC2 Local Gateway Virtual Interface Group")
+		return sdkdiag.AppendErrorf(diags, "multiple EC2 Local Gateway Virtual Interface Groups matched; use additional constraints to reduce matches to a single EC2 Local Gateway Virtual Interface Group")
 	}
 
 	localGatewayVirtualInterfaceGroup := output.LocalGatewayVirtualInterfaceGroups[0]
@@ -91,12 +98,12 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, met
 	d.Set("local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroup.LocalGatewayVirtualInterfaceGroupId)
 
 	if err := d.Set("local_gateway_virtual_interface_ids", aws.StringValueSlice(localGatewayVirtualInterfaceGroup.LocalGatewayVirtualInterfaceIds)); err != nil {
-		return fmt.Errorf("error setting local_gateway_virtual_interface_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting local_gateway_virtual_interface_ids: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(localGatewayVirtualInterfaceGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, localGatewayVirtualInterfaceGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
