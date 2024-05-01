@@ -316,7 +316,7 @@ func testAccBackupConfig_baseLustre(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
-  subnet_ids                  = [aws_subnet.test1.id]
+  subnet_ids                  = [aws_subnet.test[0].id]
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = 50
 
@@ -331,10 +331,10 @@ func testAccBackupConfig_baseONTAP(rName string, vName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids          = [aws_subnet.test[0].id, aws_subnet.test[1].id]
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
+  preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -360,7 +360,7 @@ func testAccBackupConfig_baseOpenZFS(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test1.id]
+  subnet_ids          = [aws_subnet.test[0].id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
   skip_final_backup   = true
@@ -381,7 +381,7 @@ resource "aws_directory_service_directory" "test" {
   type     = "MicrosoftAD"
 
   vpc_settings {
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
     vpc_id     = aws_vpc.test.id
   }
 }
@@ -391,7 +391,7 @@ resource "aws_fsx_windows_file_system" "test" {
   automatic_backup_retention_days = 0
   skip_final_backup               = true
   storage_capacity                = 32
-  subnet_ids                      = [aws_subnet.test1.id]
+  subnet_ids                      = [aws_subnet.test[0].id]
   throughput_capacity             = 8
 
   tags = {
@@ -488,7 +488,7 @@ resource "aws_subnet" "test1" {
 
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
-  subnet_ids                  = [aws_subnet.test1.id]
+  subnet_ids                  = [aws_subnet.test[0].id]
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = 50
   copy_tags_to_backups        = true
