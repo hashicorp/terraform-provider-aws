@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Alias",
 		},
 		{
-			Factory:  DataSourceCiphertext,
+			Factory:  dataSourceCiphertext,
 			TypeName: "aws_kms_ciphertext",
+			Name:     "Ciphertext",
 		},
 		{
 			Factory:  DataSourceCustomKeyStore,
@@ -69,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Ciphertext",
 		},
 		{
-			Factory:  ResourceCustomKeyStore,
+			Factory:  resourceCustomKeyStore,
 			TypeName: "aws_kms_custom_key_store",
+			Name:     "Custom Key Store",
 		},
 		{
 			Factory:  ResourceExternalKey,

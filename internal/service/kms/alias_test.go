@@ -267,11 +267,11 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAliasExists(ctx context.Context, name string, v *awstypes.AliasListEntry) resource.TestCheckFunc {
+func testAccCheckAliasExists(ctx context.Context, n string, v *awstypes.AliasListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)

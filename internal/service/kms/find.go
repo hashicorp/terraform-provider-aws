@@ -15,26 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, in *kms.DescribeCustomKeyStoresInput) (*kms.CustomKeyStoresListEntry, error) {
-	out, err := conn.DescribeCustomKeyStoresWithContext(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeCustomKeyStoreNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.CustomKeyStores[0] == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.CustomKeyStores[0], nil
-}
-
 func FindKeyByID(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(id),

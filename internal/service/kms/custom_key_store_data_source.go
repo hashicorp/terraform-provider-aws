@@ -74,7 +74,7 @@ func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, m
 		ksID = v.(string)
 	}
 
-	keyStore, err := FindCustomKeyStoreByID(ctx, conn, input)
+	keyStore, err := findCustomKeyStore(ctx, conn, input)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.KMS, create.ErrActionReading, DSNameCustomKeyStore, ksID, err)
