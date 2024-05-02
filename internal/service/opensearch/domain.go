@@ -467,7 +467,7 @@ func ResourceDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(opensearchservice.IpAddressType_Values(), false),
+				ValidateFunc: validation.StringInSlice(opensearchservice.IPAddressType_Values(), false),
 			},
 			"kibana_endpoint": {
 				Type:       schema.TypeString,
@@ -652,7 +652,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
-		input.IpAddressType = aws.String(v.(string))
+		input.IPAddressType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
@@ -859,7 +859,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
 	d.Set("engine_version", ds.EngineVersion)
-	d.Set("ip_address_type", ds.IpAddressType)
+	d.Set("ip_address_type", ds.IPAddressType)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
@@ -992,7 +992,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("ip_address_type") {
-			input.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+			input.IPAddressType = aws.String(d.Get("ip_address_type").(string))
 		}
 
 		if d.HasChanges("ebs_options", "cluster_config") {
