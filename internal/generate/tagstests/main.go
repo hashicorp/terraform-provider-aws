@@ -100,7 +100,7 @@ func main() {
 			}
 		}
 
-		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.tmpl", sourceName))
+		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
 		var configTmpl string
 		if _, err := os.Stat(configTmplFile); err == nil {
 			b, err := os.ReadFile(configTmplFile)
