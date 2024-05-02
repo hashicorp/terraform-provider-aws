@@ -229,8 +229,6 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 
 func testAccSubscriberNotification_config(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
-
-
 resource "aws_apigatewayv2_api" "test" {
   name          = %[1]q
   protocol_type = "HTTP"
@@ -242,14 +240,16 @@ resource "aws_iam_role" "test" {
 
   assume_role_policy = <<POLICY
 {
-"Version": "2012-10-17",
-"Statement": [{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-	"Service": "glue.amazonaws.com"
-	},
-	"Effect": "Allow"
-}]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
 }
 POLICY
 }
@@ -259,16 +259,18 @@ resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.name
 
   policy = <<POLICY
-{
-	"Version": "2012-10-17",
-		"Statement": [{
-		"Effect": "Allow",
-		"Action": [
-		"s3:GetObject",
-		"s3:PutObject"
-		],
-		"Resource": "*"
-}]
+{  
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 
@@ -286,14 +288,16 @@ resource "aws_iam_role" "event_bridge" {
 
   assume_role_policy = <<POLICY
 {
-"Version": "2012-10-17",
-"Statement": [{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-	"Service": "events.amazonaws.com"
-	},
-	"Effect": "Allow"
-}]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
 }
 POLICY
 }
@@ -304,14 +308,18 @@ resource "aws_iam_role_policy" "event_bridge" {
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [{
-		"Effect": "Allow",
-		"Action": ["events:InvokeApiDestination"],
-		"Resource": "*"
-}]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "events:InvokeApiDestination"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
-  POLICY
+POLICY
 
   depends_on = [aws_securitylake_data_lake.test]
 }
