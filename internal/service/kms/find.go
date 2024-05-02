@@ -86,28 +86,3 @@ func FindKeyPolicyByKeyIDAndPolicyName(ctx context.Context, conn *kms.KMS, keyID
 
 	return output.Policy, nil
 }
-
-func FindKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.KMS, keyID string) (*bool, error) {
-	input := &kms.GetKeyRotationStatusInput{
-		KeyId: aws.String(keyID),
-	}
-
-	output, err := conn.GetKeyRotationStatusWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.KeyRotationEnabled, nil
-}

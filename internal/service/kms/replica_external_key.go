@@ -145,7 +145,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	// Replication is initiated in the primary key's region.
 	replicateConn := meta.(*conns.AWSClient).KMSConnForRegion(ctx, primaryKeyARN.Region)
 
-	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
 		return replicateConn.ReplicateKeyWithContext(ctx, input)
 	})
 

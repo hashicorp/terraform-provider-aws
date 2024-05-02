@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -33,13 +34,12 @@ const (
 	ReplicaKeyCreatedTimeout         = 2 * time.Minute
 )
 
-// WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
+// waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
-func WaitIAMPropagation[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+func waitIAMPropagation[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.MalformedPolicyDocumentException](ctx, timeout, func() (interface{}, error) {
 		return f()
-	},
-		kms.ErrCodeMalformedPolicyDocumentException)
+	})
 
 	if err != nil {
 		var zero T
@@ -131,50 +131,6 @@ func WaitKeyPolicyPropagated(ctx context.Context, conn *kms.KMS, id, policy stri
 	}
 
 	return tfresource.WaitUntil(ctx, KeyPolicyPropagationTimeout, checkFunc, opts)
-}
-
-func WaitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.KMS, id string, enabled bool) error {
-	checkFunc := func() (bool, error) {
-		output, err := FindKeyRotationEnabledByKeyID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return false, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		return aws.BoolValue(output) == enabled, nil
-	}
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
-		MinTimeout:                1 * time.Second,
-	}
-
-	return tfresource.WaitUntil(ctx, KeyRotationUpdatedTimeout, checkFunc, opts)
-}
-
-func WaitKeyStatePropagated(ctx context.Context, conn *kms.KMS, id string, enabled bool) error {
-	checkFunc := func() (bool, error) {
-		output, err := FindKeyByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return false, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		return aws.BoolValue(output.Enabled) == enabled, nil
-	}
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 15,
-		MinTimeout:                2 * time.Second,
-	}
-
-	return tfresource.WaitUntil(ctx, KeyStatePropagationTimeout, checkFunc, opts)
 }
 
 func WaitKeyValidToPropagated(ctx context.Context, conn *kms.KMS, id string, validTo string) error {
