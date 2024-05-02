@@ -62,10 +62,9 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -112,10 +111,9 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAgentKnowledgeBaseAssociationConfig_basic(rName, agentModel, foundationModel, "test desc2", "DISABLED"),
