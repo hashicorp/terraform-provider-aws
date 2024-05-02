@@ -10,6 +10,8 @@ var (
 	ResourceCustomKeyStore = resourceCustomKeyStore
 	ResourceKey            = resourceKey
 
-	FindAliasByName        = findAliasByName
-	FindCustomKeyStoreByID = findCustomKeyStoreByID
+	FindAliasByName           = findAliasByName
+	FindCustomKeyStoreByID    = findCustomKeyStoreByID
+	FindKeyByID               = findKeyByID
+	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 )

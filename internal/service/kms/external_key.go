@@ -193,7 +193,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait for propagation since KMS is eventually consistent.
 	if v, ok := d.GetOk("policy"); ok {
-		if err := WaitKeyPolicyPropagated(ctx, conn, d.Id(), v.(string)); err != nil {
+		if err := waitKeyPolicyPropagated(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) policy propagation: %s", d.Id(), err)
 		}
 	}
@@ -344,7 +344,7 @@ func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting KMS External Key (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitKeyDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitKeyDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) to delete: %s", d.Id(), err)
 	}
 

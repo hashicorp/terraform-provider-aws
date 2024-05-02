@@ -513,7 +513,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
-		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(ctx, conn, rs.Primary.ID, tfkms.PolicyNameDefault)
+		output, err := tfkms.FindKeyPolicyByTwoPartKey(ctx, conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
 		if err != nil {
 			return err

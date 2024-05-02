@@ -88,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_kms_grant",
 		},
 		{
-			Factory:  ResourceKey,
+			Factory:  resourceKey,
 			TypeName: "aws_kms_key",
 			Name:     "Key",
 			Tags: &types.ServicePackageResourceTags{

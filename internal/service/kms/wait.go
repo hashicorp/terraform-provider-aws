@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
-	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -49,50 +48,11 @@ func waitIAMPropagation[T any](ctx context.Context, timeout time.Duration, f fun
 	return outputRaw.(T), nil
 }
 
-func WaitKeyDeleted(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
-		Target:  []string{},
-		Refresh: StatusKeyState(ctx, conn, id),
-		Timeout: KeyDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitKeyDescriptionPropagated(ctx context.Context, conn *kms.KMS, id string, description string) error {
-	checkFunc := func() (bool, error) {
-		output, err := FindKeyByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return false, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		return aws.StringValue(output.Description) == description, nil
-	}
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
-		MinTimeout:                2 * time.Second,
-	}
-
-	return tfresource.WaitUntil(ctx, KeyDescriptionPropagationTimeout, checkFunc, opts)
-}
-
 func WaitKeyMaterialImported(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStatePendingImport},
 		Target:  []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
-		Refresh: StatusKeyState(ctx, conn, id),
+		Refresh: statusKeyState(ctx, conn, id),
 		Timeout: KeyMaterialImportedTimeout,
 	}
 
@@ -103,34 +63,6 @@ func WaitKeyMaterialImported(ctx context.Context, conn *kms.KMS, id string) (*km
 	}
 
 	return nil, err
-}
-
-func WaitKeyPolicyPropagated(ctx context.Context, conn *kms.KMS, id, policy string) error {
-	checkFunc := func() (bool, error) {
-		output, err := FindKeyPolicyByKeyIDAndPolicyName(ctx, conn, id, PolicyNameDefault)
-
-		if tfresource.NotFound(err) {
-			return false, nil
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(output), policy)
-
-		if err != nil {
-			return false, err
-		}
-
-		return equivalent, nil
-	}
-	opts := tfresource.WaitOpts{
-		ContinuousTargetOccurence: 5,
-		MinTimeout:                1 * time.Second,
-	}
-
-	return tfresource.WaitUntil(ctx, KeyPolicyPropagationTimeout, checkFunc, opts)
 }
 
 func WaitKeyValidToPropagated(ctx context.Context, conn *kms.KMS, id string, validTo string) error {
@@ -163,7 +95,7 @@ func WaitReplicaExternalKeyCreated(ctx context.Context, conn *kms.KMS, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStateCreating},
 		Target:  []string{kms.KeyStatePendingImport},
-		Refresh: StatusKeyState(ctx, conn, id),
+		Refresh: statusKeyState(ctx, conn, id),
 		Timeout: ReplicaExternalKeyCreatedTimeout,
 	}
 
@@ -180,7 +112,7 @@ func WaitReplicaKeyCreated(ctx context.Context, conn *kms.KMS, id string) (*kms.
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStateCreating},
 		Target:  []string{kms.KeyStateEnabled},
-		Refresh: StatusKeyState(ctx, conn, id),
+		Refresh: statusKeyState(ctx, conn, id),
 		Timeout: ReplicaKeyCreatedTimeout,
 	}
 
