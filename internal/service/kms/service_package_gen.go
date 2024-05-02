@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAlias,
+			Factory:  dataSourceAlias,
 			TypeName: "aws_kms_alias",
+			Name:     "Alias",
 		},
 		{
 			Factory:  DataSourceCiphertext,
