@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name =var.rName
+  analyzer_name = var.rName
 
   tags = {
     (var.tagKey1) = null

@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name =var.rName
+  analyzer_name = var.rName
 
 }
 
