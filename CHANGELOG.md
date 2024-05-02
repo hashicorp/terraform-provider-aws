@@ -1,5 +1,9 @@
 ## 5.48.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_bedrockagent_agent_knowledge_base_association` ([#37185](https://github.com/hashicorp/terraform-provider-aws/issues/37185))
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_target: Add `force_destroy` argument ([#37130](https://github.com/hashicorp/terraform-provider-aws/issues/37130))
