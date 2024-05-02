@@ -162,6 +162,7 @@ import (
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
+	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -1232,6 +1233,10 @@ func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
 	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces, make(map[string]any)))
+}
+
+func (c *AWSClient) WorkSpacesWebClient(ctx context.Context) *workspacesweb_sdkv2.Client {
+	return errs.Must(client[*workspacesweb_sdkv2.Client](ctx, c, names.WorkSpacesWeb, make(map[string]any)))
 }
 
 func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {
