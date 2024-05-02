@@ -179,7 +179,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Deleting EBS Volume Attachment: %s", d.Id())
 	_, err := conn.DetachVolumeWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, "IncorrectState", "available") {
+	if tfawserr.ErrMessageContains(err, errCodeIncorrectState, "available") {
 		return diags
 	}
 
