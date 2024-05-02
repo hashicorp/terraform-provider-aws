@@ -65,6 +65,12 @@ func ResourceFirewallRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+			"firewall_domain_redirection_action": {
+				Type:         schema.TypeString,
+				Required:     true,
+				Default:      route53resolver.FirewallDomainRedirectionActionInspectRedirectionDomain,
+				ValidateFunc: validation.StringInSlice(route53resolver.FirewallDomainRedirectionAction_Values(), false),
+			},
 			"firewall_rule_group_id": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -89,15 +95,17 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
+	FirewallDomainRedirectionAction := d.Get("firewall_domain_redirection_action").(string)
 	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallRuleInput{
-		Action:               aws.String(d.Get("action").(string)),
-		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
-		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-		FirewallDomainListId: aws.String(firewallDomainListID),
-		Name:                 aws.String(name),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Action:                          aws.String(d.Get("action").(string)),
+		CreatorRequestId:                aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
+		FirewallRuleGroupId:             aws.String(firewallRuleGroupID),
+		FirewallDomainListId:            aws.String(firewallDomainListID),
+		FirewallDomainRedirectionAction: aws.String(FirewallDomainRedirectionAction),
+		Name:                            aws.String(name),
+		Priority:                        aws.Int64(int64(d.Get("priority").(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
@@ -155,6 +163,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("block_response", firewallRule.BlockResponse)
 	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
 	d.Set("firewall_domain_list_id", firewallRule.FirewallDomainListId)
+	d.Set("firewall_domain_redirection_action", firewallRule.FirewallDomainRedirectionAction)
 	d.Set("name", firewallRule.Name)
 	d.Set("priority", firewallRule.Priority)
 
@@ -192,6 +201,10 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("block_response"); ok {
 		input.BlockResponse = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("firewall_domain_redirection_action"); ok {
+		input.FirewallDomainRedirectionAction = aws.String(v.(string))
 	}
 
 	_, err = conn.UpdateFirewallRuleWithContext(ctx, input)
