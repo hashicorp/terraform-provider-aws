@@ -240,11 +240,15 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	data.DataSourceID = fwflex.StringToFramework(ctx, outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource.DataSourceId)
 	data.setID()
 
-	if _, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	ds, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
+
+	data.DataDeletionPolicy = fwtypes.StringEnumValue(ds.DataDeletionPolicy)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
