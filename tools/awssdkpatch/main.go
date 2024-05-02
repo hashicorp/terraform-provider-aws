@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	out     string
-	service string
+	out         string
+	service     string
+	importalias string
 
 	//go:embed patch.tmpl
 	patchTemplate string
@@ -31,6 +32,7 @@ type TemplateData struct {
 	GoV1Package        string
 	GoV1ClientTypeName string
 	GoV2Package        string
+	ImportAlias        string
 	ProviderPackage    string
 	InputOutputTypes   []string
 	ContextFunctions   []string
@@ -47,6 +49,7 @@ func main() {
 	}
 	flag.StringVar(&out, "out", "awssdk.patch", "output file (optional)")
 	flag.StringVar(&service, "service", "", "service to migrate (required)")
+	flag.StringVar(&importalias, "importalias", "", "alias that the service package is imported as (optional)")
 	flag.Parse()
 
 	log.SetPrefix("awssdkpatch: ")
@@ -61,7 +64,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	td, err := getPackageData(sd)
+	td, err := getPackageData(sd, importalias)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,14 +105,19 @@ func getServiceData(service string) (data.ServiceRecord, error) {
 }
 
 // getPackageData parses AWS SDK V1 package data, collecting inputs for the patch template
-func getPackageData(sd data.ServiceRecord) (TemplateData, error) {
+func getPackageData(sd data.ServiceRecord, importAlias string) (TemplateData, error) {
 	goV1Package := sd.GoV1Package()
 	providerPackage := sd.ProviderPackage()
 	td := TemplateData{
 		GoV1Package:        goV1Package,
 		GoV1ClientTypeName: sd.GoV1ClientTypeName(),
 		GoV2Package:        sd.GoV2Package(),
+		ImportAlias:        importAlias,
 		ProviderPackage:    providerPackage,
+	}
+
+	if importAlias == "" {
+		td.ImportAlias = td.GoV2Package
 	}
 
 	config := &packages.Config{
