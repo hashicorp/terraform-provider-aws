@@ -163,6 +163,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			"subnet_configurations": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4": {
