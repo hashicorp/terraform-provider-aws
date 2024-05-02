@@ -593,8 +593,8 @@ func expandSubnetConfiguration(l []interface{}) []*ec2.SubnetConfiguration {
 		}
 
 		configurations = append(configurations, apiObject)
-
 	}
+
 	return configurations
 }
 

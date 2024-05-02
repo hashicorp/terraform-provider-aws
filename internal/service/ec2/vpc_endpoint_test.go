@@ -628,7 +628,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_interfaceUserDefinedIpv6(rName, ipv6HostNum1),
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName, ipv6HostNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
@@ -661,7 +661,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCEndpointConfig_interfaceUserDefinedIpv6(rName, ipv6HostNum2),
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName, ipv6HostNum2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
@@ -1304,6 +1304,12 @@ resource "aws_vpc_endpoint" "test" {
 
 func testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1, ipv4Address2 string, ipv6HostNum int) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1315,19 +1321,17 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test1" {
   vpc_id            = aws_vpc.test.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
   ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 }
 
 resource "aws_subnet" "test2" {
   vpc_id            = aws_vpc.test.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.0.1.0/24"
   ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
 }
-
-data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
@@ -1353,6 +1357,12 @@ resource "aws_vpc_endpoint" "test" {
 
 func testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2 string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1363,17 +1373,15 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test1" {
   vpc_id            = aws_vpc.test.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
 }
 
 resource "aws_subnet" "test2" {
   vpc_id            = aws_vpc.test.id
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "10.0.1.0/24"
 }
-
-data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
@@ -1394,8 +1402,14 @@ resource "aws_vpc_endpoint" "test" {
 `, rName, ipv4Address1, ipv4Address2)
 }
 
-func testAccVPCEndpointConfig_interfaceUserDefinedIpv6(rName string, ipv6HostNum int) string {
+func testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName string, ipv6HostNum int) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1407,7 +1421,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test1" {
   vpc_id                                         = aws_vpc.test.id
-  availability_zone                              = "us-west-2a"
+  availability_zone                              = data.aws_availability_zones.available.names[0]
   assign_ipv6_address_on_creation                = true
   enable_resource_name_dns_aaaa_record_on_launch = true
   ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
@@ -1417,15 +1431,13 @@ resource "aws_subnet" "test1" {
 
 resource "aws_subnet" "test2" {
   vpc_id                                         = aws_vpc.test.id
-  availability_zone                              = "us-west-2b"
+  availability_zone                              = data.aws_availability_zones.available.names[1]
   assign_ipv6_address_on_creation                = true
   enable_resource_name_dns_aaaa_record_on_launch = true
   ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
   ipv6_native                                    = true
   private_dns_hostname_type_on_launch            = "resource-name"
 }
-
-data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
