@@ -25,6 +25,7 @@ import (
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -74,6 +75,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_basic(t *testing.T) {
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -131,6 +133,7 @@ func TestAccBedrockAgentAgentKnowledgeBaseAssociation_update(t *testing.T) {
 func TestAccBedrockAgentAgentKnowledgeBaseAssociation_disappears(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	if testing.Short() {

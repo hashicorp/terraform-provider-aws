@@ -25,6 +25,7 @@ import (
 func testAccKnowledgeBase_basicRDS(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
@@ -80,6 +81,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 func testAccKnowledgeBase_disappears(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
@@ -119,6 +121,7 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 func testAccKnowledgeBase_tags(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
 	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
