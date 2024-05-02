@@ -21,8 +21,11 @@ import (
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func testAccKnowledgeBase_basicRDS(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
@@ -74,8 +77,11 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func testAccKnowledgeBase_disappears(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase
@@ -111,8 +117,11 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 
 // Prerequisites:
 // * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func testAccKnowledgeBase_tags(t *testing.T) {
 	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
 
 	ctx := acctest.Context(t)
 	var knowledgebase types.KnowledgeBase

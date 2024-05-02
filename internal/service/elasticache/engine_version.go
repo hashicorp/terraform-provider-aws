@@ -55,8 +55,8 @@ func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-// CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
-func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+// customizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
+func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	engineVersion, ok := diff.GetOk("engine_version")
 	if !ok {
 		return nil

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKDataSource("aws_elasticache_subnet_group", name="Subnet Group")
@@ -58,7 +59,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	group, err := findCacheSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Subnet Group", err))
 	}
 
 	d.SetId(aws.StringValue(group.CacheSubnetGroupName))

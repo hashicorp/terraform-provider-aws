@@ -60,7 +60,7 @@ func TestFlatten(t *testing.T) {
 			TestName: "json interface Source string Target",
 			Source: &TestFlexAWS19{
 				Field1: &testJSONDocument{
-					value: &struct {
+					Value: &struct {
 						Test string `json:"test"`
 					}{
 						Test: "a",
@@ -624,6 +624,42 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "map of map of string",
+			Source: &TestFlexAWS21{
+				Field1: map[string]map[string]string{
+					"x": {
+						"y": "z",
+					},
+				},
+			},
+			Target: &TestFlexTF21{},
+			WantTarget: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+		{
+			TestName: "map of map of string pointer",
+			Source: &TestFlexAWS22{
+				Field1: map[string]map[string]*string{
+					"x": {
+						"y": aws.String("z"),
+					},
+				},
+			},
+			Target: &TestFlexTF21{},
+			WantTarget: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+		{
 			TestName: "map block key list",
 			Source: &TestFlexMapBlockKeyAWS01{
 				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
@@ -1016,6 +1052,107 @@ func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
 	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
+func TestFlattenOptions(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Bool                       `tfsdk:"field1"`
+		Tags   fwtypes.MapValueOf[types.String] `tfsdk:"tags"`
+	}
+	type aws01 struct {
+		Field1 bool
+		Tags   map[string]string
+	}
+
+	// For test cases below where a field of `MapValue` type is ignored, the
+	// result of `cmp.Diff` is intentionally not checked.
+	//
+	// When a target contains an ignored field of a `MapValue` type, the resulting
+	// target will contain a zero value, which, because the `elementType` is nil, will
+	// always return `false` from the `Equal` method, even when compared with another
+	// zero value. In practice, this zeroed `MapValue` would be overwritten
+	// by a subsequent step (ie. transparent tagging), and the temporary invalid
+	// state of the zeroed `MapValue` will not appear in the final state.
+	//
+	// Example expected diff:
+	// 	    unexpected diff (+wanted, -got):   &flex.tf01{
+	//                 Field1: s"false",
+	//         -       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]{},
+	//         +       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]{MapValue: basetypes.MapValue{elementType: basetypes.StringType{}}},
+	//           }
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "empty source with tags",
+			Source:   &aws01{},
+			Target:   &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolValue(false),
+				Tags:   fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+			WantDiff: true, // Ignored MapValue type, expect diff
+		},
+		{
+			TestName: "ignore tags by default",
+			Source: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+			Target: &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolValue(true),
+				Tags:   fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+			WantDiff: true, // Ignored MapValue type, expect diff
+		},
+		{
+			TestName: "include tags with option override",
+			Options: []AutoFlexOptionsFunc{
+				func(opts *AutoFlexOptions) {
+					opts.SetIgnoredFields([]string{})
+				},
+			},
+			Source: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+			Target: &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolValue(true),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+		},
+		{
+			TestName: "ignore custom field",
+			Options: []AutoFlexOptionsFunc{
+				func(opts *AutoFlexOptions) {
+					opts.SetIgnoredFields([]string{"Field1"})
+				},
+			},
+			Source: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+			Target: &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolNull(),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
 func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
@@ -1029,7 +1166,7 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 				testCtx = testCase.Context
 			}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target)
+			err := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
@@ -1043,7 +1180,9 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 					t.Errorf("err = %q", err)
 				}
 			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				if !testCase.WantDiff {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
 			}
 		})
 	}
