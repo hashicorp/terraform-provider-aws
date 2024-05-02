@@ -38,74 +38,52 @@ func resourceConnection() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-			connectionHttpParameters := func() *schema.Resource {
+			connectionHttpParameters := func(parent string) *schema.Resource {
+				element := func() *schema.Resource {
+					return &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"is_value_secret": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"value": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+						},
+					}
+				}
+				atLeastOneOf := []string{
+					fmt.Sprintf("%s.0.body", parent),
+					fmt.Sprintf("%s.0.header", parent),
+					fmt.Sprintf("%s.0.query_string", parent),
+				}
+
 				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"body": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_value_secret": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
+							Type:         schema.TypeList,
+							Optional:     true,
+							Elem:         element(),
+							AtLeastOneOf: atLeastOneOf,
 						},
 						"header": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_value_secret": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
+							Type:         schema.TypeList,
+							Optional:     true,
+							Elem:         element(),
+							AtLeastOneOf: atLeastOneOf,
 						},
 						"query_string": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_value_secret": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
+							Type:         schema.TypeList,
+							Optional:     true,
+							Elem:         element(),
+							AtLeastOneOf: atLeastOneOf,
 						},
 					},
 				}
@@ -184,7 +162,7 @@ func resourceConnection() *schema.Resource {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
-								Elem:     connectionHttpParameters(),
+								Elem:     connectionHttpParameters("auth_parameters.0.invocation_http_parameters"),
 							},
 							"oauth": {
 								Type:     schema.TypeList,
@@ -237,7 +215,7 @@ func resourceConnection() *schema.Resource {
 											Type:     schema.TypeList,
 											Required: true,
 											MaxItems: 1,
-											Elem:     connectionHttpParameters(),
+											Elem:     connectionHttpParameters("auth_parameters.0.oauth.0.oauth_http_parameters"),
 										},
 									},
 								},

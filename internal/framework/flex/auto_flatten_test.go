@@ -624,6 +624,42 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
+			TestName: "map of map of string",
+			Source: &TestFlexAWS21{
+				Field1: map[string]map[string]string{
+					"x": {
+						"y": "z",
+					},
+				},
+			},
+			Target: &TestFlexTF21{},
+			WantTarget: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+		{
+			TestName: "map of map of string pointer",
+			Source: &TestFlexAWS22{
+				Field1: map[string]map[string]*string{
+					"x": {
+						"y": aws.String("z"),
+					},
+				},
+			},
+			Target: &TestFlexTF21{},
+			WantTarget: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+		{
 			TestName: "map block key list",
 			Source: &TestFlexMapBlockKeyAWS01{
 				MapBlock: map[string]TestFlexMapBlockKeyAWS02{

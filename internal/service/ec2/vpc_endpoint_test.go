@@ -890,7 +890,8 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_gatewayPolicy(rName, policy string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
-  service = "dynamodb"
+  service      = "dynamodb"
+  service_type = "Gateway"
 }
 
 resource "aws_vpc" "test" {
@@ -1170,7 +1171,8 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_orderPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
-  service = "dynamodb"
+  service      = "dynamodb"
+  service_type = "Gateway"
 }
 
 resource "aws_vpc" "test" {
@@ -1209,7 +1211,8 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_newOrderPolicy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
-  service = "dynamodb"
+  service      = "dynamodb"
+  service_type = "Gateway"
 }
 
 resource "aws_vpc" "test" {
