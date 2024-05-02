@@ -476,7 +476,8 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("volume_style", ontapConfig.VolumeStyle)
 	d.Set("volume_type", volume.VolumeType)
 
-	setTagsOut(ctx, volume.Tags)
+	// Volume tags aren't set in the Describe response.
+	// setTagsOut(ctx, volume.Tags)
 
 	return diags
 }
