@@ -575,8 +575,13 @@ func retryDataLakeConflictWithMutex[T any](ctx context.Context, timeout time.Dur
 	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
 	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
 
-	result, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (any, error) {
+	raw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (any, error) {
 		return f()
 	})
-	return result.(T), err
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return raw.(T), err
 }
