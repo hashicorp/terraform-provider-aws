@@ -5,14 +5,7 @@ page_title: "AWS: aws_bedrockagent_data_source"
 description: |-
   Terraform resource for managing an AWS Agents for Amazon Bedrock Data Source.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_bedrockagent_data_source
 
 Terraform resource for managing an AWS Agents for Amazon Bedrock Data Source.
@@ -47,9 +40,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

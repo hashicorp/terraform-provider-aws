@@ -5,16 +5,18 @@ package bedrockagent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,16 +32,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Data Source")
 func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataSourceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -51,18 +54,20 @@ const (
 
 type dataSourceResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *dataSourceResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrockagent_data_source"
+func (*dataSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_bedrockagent_data_source"
 }
 
-func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *dataSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
+			"data_deletion_policy": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DataDeletionPolicy](),
+				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -71,22 +76,13 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"data_source_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"data_deletion_policy": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"description": schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 200),
+				},
 			},
-			"failure_reasons": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Computed:    true,
-			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"knowledge_base_id": schema.StringAttribute{
 				Required: true,
 			},
@@ -95,13 +91,55 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"data_source_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.DataSourceType](),
+							Required:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"s3_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3DataSourceConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"bucket_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"bucket_owner_account_id": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											fwvalidators.AWSAccountID(),
+										},
+									},
+									"inclusion_prefixes": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Optional:    true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"server_side_encryption_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[serverSideEncryptionConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -116,45 +154,10 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			"data_source_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.IsRequired(),
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							Required: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"s3_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"bucket_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-									"bucket_owner_account_id": schema.StringAttribute{
-										Optional: true,
-									},
-									"inclusion_prefixes": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
 			"vector_ingestion_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vectorIngestionConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -170,7 +173,8 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"chunking_strategy": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.ChunkingStrategy](),
+										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -183,9 +187,15 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 											Attributes: map[string]schema.Attribute{
 												"max_tokens": schema.Int64Attribute{
 													Required: true,
+													Validators: []validator.Int64{
+														int64validator.AtLeast(1),
+													},
 												},
 												"overlap_percentage": schema.Int64Attribute{
 													Required: true,
+													Validators: []validator.Int64{
+														int64validator.Between(1, 99),
+													},
 												},
 											},
 										},
@@ -196,11 +206,6 @@ func (r *dataSourceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -219,6 +224,7 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 	if response.Diagnostics.HasError() {
 		return
 	}
+
 	input.ClientToken = aws.String(id.UniqueId())
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -231,30 +237,14 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	ds := outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource
-	data.DataSourceID = fwflex.StringToFramework(ctx, ds.DataSourceId)
-	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, ds.KnowledgeBaseId)
+	data.DataSourceID = fwflex.StringToFramework(ctx, outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource.DataSourceId)
 	data.setID()
 
-	parts, err := flex.ExpandResourceId(data.ID.ValueString(), dataSourceResourceIdPartCount, false)
-	if err != nil {
-		response.Diagnostics.AddError("Creating Bedrock Agent Data Source", err.Error())
+	if _, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
-
-	ds, err = waitDataSourceCreated(ctx, conn, parts[0], parts[1], r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) create", data.DataSourceID.ValueString()), err.Error())
-
-		return
-	}
-
-	// Set values for unknowns after creation is complete.
-	data.CreatedAt = fwflex.TimeToFramework(ctx, ds.CreatedAt)
-	data.FailureReasons = fwflex.FlattenFrameworkStringValueListOfString(ctx, ds.FailureReasons)
-	data.UpdatedAt = fwflex.TimeToFramework(ctx, ds.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -266,16 +256,15 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	conn := r.Meta().BedrockAgentClient(ctx)
-
-	parts, err := flex.ExpandResourceId(data.ID.ValueString(), dataSourceResourceIdPartCount, false)
-	if err != nil {
-		response.Diagnostics.AddError("Reading Bedrock Agent Data Source", err.Error())
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
 	}
 
-	ds, err := findDataSourceByID(ctx, conn, parts[0], parts[1])
+	conn := r.Meta().BedrockAgentClient(ctx)
+
+	ds, err := findDataSourceByTwoPartKey(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -285,7 +274,7 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Data Source (%s)", data.DataSourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Data Source (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
@@ -311,49 +300,20 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if !new.Description.Equal(old.Description) ||
-		!new.DataDeletionPolicy.Equal(old.DataDeletionPolicy) ||
-		!new.Name.Equal(old.Name) ||
-		!new.DataSourceConfiguration.Equal(old.DataSourceConfiguration) ||
-		!new.DataDeletionPolicy.Equal(old.DataDeletionPolicy) ||
-		!new.ServerSideEncryptionConfiguration.Equal(old.ServerSideEncryptionConfiguration) ||
-		!new.VectorIngestionConfiguration.Equal(old.VectorIngestionConfiguration) {
-		input := &bedrockagent.UpdateDataSourceInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	input := &bedrockagent.UpdateDataSourceInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-			return conn.UpdateDataSource(ctx, input)
-		}, errCodeValidationException, "cannot assume role")
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.UpdateDataSource(ctx, input)
+	}, errCodeValidationException, "cannot assume role")
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s)", new.DataSourceID.ValueString()), err.Error())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s)", new.DataSourceID.ValueString()), err.Error())
 
-			return
-		}
-
-		parts, err := flex.ExpandResourceId(new.ID.ValueString(), dataSourceResourceIdPartCount, false)
-		if err != nil {
-			response.Diagnostics.AddError("Updating Bedrock Agent Data Source", err.Error())
-
-			return
-		}
-
-		ds, err := waitDataSourceUpdated(ctx, conn, parts[0], parts[1], r.UpdateTimeout(ctx, new.Timeouts))
-
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) update", new.DataSourceID.ValueString()), err.Error())
-
-			return
-		}
-
-		new.FailureReasons = fwflex.FlattenFrameworkStringValueListOfString(ctx, ds.FailureReasons)
-		new.UpdatedAt = fwflex.TimeToFramework(ctx, ds.UpdatedAt)
-	} else {
-		new.FailureReasons = old.FailureReasons
-		new.UpdatedAt = old.UpdatedAt
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -369,8 +329,8 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteDataSource(ctx, &bedrockagent.DeleteDataSourceInput{
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
 		DataSourceId:    aws.String(data.DataSourceID.ValueString()),
+		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -378,86 +338,48 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Data Source (%s)", data.DataSourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Data Source (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	parts, err := flex.ExpandResourceId(data.ID.ValueString(), dataSourceResourceIdPartCount, false)
+	if _, err := waitDataSourceDeleted(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) delete", data.ID.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) (*awstypes.DataSource, error) {
+	input := &bedrockagent.GetDataSourceInput{
+		DataSourceId:    aws.String(dataSourceID),
+		KnowledgeBaseId: aws.String(knowledgeBaseID),
+	}
+
+	output, err := conn.GetDataSource(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
-		response.Diagnostics.AddError("Deleting Bedrock Agent Data Source", err.Error())
-
-		return
+		return nil, err
 	}
 
-	_, err = waitDataSourceDeleted(ctx, conn, parts[0], parts[1], r.DeleteTimeout(ctx, data.Timeouts))
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) delete", data.KnowledgeBaseID.ValueString()), err.Error())
-
-		return
+	if output == nil || output.DataSource == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
+
+	return output.DataSource, nil
 }
 
-func (r *dataSourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, id, kbId string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    enum.Slice(awstypes.DataSourceStatusAvailable),
-		Refresh:                   statusDataSource(ctx, conn, id, kbId),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DataSource); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDataSourceUpdated(ctx context.Context, conn *bedrockagent.Client, id, kbId string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.DataSourceStatusAvailable),
-		Target:                    enum.Slice(awstypes.DataSourceStatusAvailable),
-		Refresh:                   statusDataSource(ctx, conn, id, kbId),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DataSource); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, id, kbId string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
-		Target:  []string{},
-		Refresh: statusDataSource(ctx, conn, id, kbId),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DataSource); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, id, kbId string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDataSourceByID(ctx, conn, id, kbId)
+		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -470,68 +392,90 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, id, kbId s
 	}
 }
 
-func findDataSourceByID(ctx context.Context, conn *bedrockagent.Client, id, kbId string) (*awstypes.DataSource, error) {
-	input := &bedrockagent.GetDataSourceInput{
-		DataSourceId:    aws.String(id),
-		KnowledgeBaseId: aws.String(kbId),
+func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
+		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
+		Timeout: timeout,
 	}
 
-	out, err := conn.GetDataSource(ctx, input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-		return nil, err
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
 	}
 
-	if out == nil || out.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return nil, err
+}
+
+func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
+		Target:  []string{},
+		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
+		Timeout: timeout,
 	}
 
-	return out.DataSource, nil
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DataSource); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 type dataSourceResourceModel struct {
-	CreatedAt                         timetypes.RFC3339                                                       `tfsdk:"created_at"`
-	DataDeletionPolicy                types.String                                                            `tfsdk:"data_deletion_policy"`
+	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
 	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`
-	ID                                types.String                                                            `tfsdk:"id"`
 	Description                       types.String                                                            `tfsdk:"description"`
-	FailureReasons                    fwtypes.ListValueOf[types.String]                                       `tfsdk:"failure_reasons"`
+	ID                                types.String                                                            `tfsdk:"id"`
 	KnowledgeBaseID                   types.String                                                            `tfsdk:"knowledge_base_id"`
 	Name                              types.String                                                            `tfsdk:"name"`
 	ServerSideEncryptionConfiguration fwtypes.ListNestedObjectValueOf[serverSideEncryptionConfigurationModel] `tfsdk:"server_side_encryption_configuration"`
-	VectorIngestionConfiguration      fwtypes.ListNestedObjectValueOf[vectorIngestionConfigurationModel]      `tfsdk:"vector_ingestion_configuration"`
 	Timeouts                          timeouts.Value                                                          `tfsdk:"timeouts"`
-	UpdatedAt                         timetypes.RFC3339                                                       `tfsdk:"updated_at"`
+	VectorIngestionConfiguration      fwtypes.ListNestedObjectValueOf[vectorIngestionConfigurationModel]      `tfsdk:"vector_ingestion_configuration"`
 }
 
 const (
-	dataSourceResourceIdPartCount = 2
+	dataSourceResourceIDPartCount = 2
 )
 
+func (m *dataSourceResourceModel) InitFromID() error {
+	parts, err := flex.ExpandResourceId(m.ID.ValueString(), dataSourceResourceIDPartCount, false)
+	if err != nil {
+		return err
+	}
+
+	m.DataSourceID = types.StringValue(parts[0])
+	m.KnowledgeBaseID = types.StringValue(parts[1])
+
+	return nil
+}
+
 func (data *dataSourceResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString()}, dataSourceResourceIdPartCount, false)))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString()}, dataSourceResourceIDPartCount, false)))
 }
 
 type dataSourceConfigurationModel struct {
-	Type            types.String                                          `tfsdk:"type"`
-	S3Configuration fwtypes.ListNestedObjectValueOf[s3ConfigurationModel] `tfsdk:"s3_configuration"`
+	Type            fwtypes.StringEnum[awstypes.DataSourceType]                     `tfsdk:"type"`
+	S3Configuration fwtypes.ListNestedObjectValueOf[s3DataSourceConfigurationModel] `tfsdk:"s3_configuration"`
 }
 
-type s3ConfigurationModel struct {
+type s3DataSourceConfigurationModel struct {
 	BucketARN            fwtypes.ARN                      `tfsdk:"bucket_arn"`
-	BucketOwnerAccountId types.String                     `tfsdk:"bucket_owner_account_id"`
+	BucketOwnerAccountID types.String                     `tfsdk:"bucket_owner_account_id"`
 	InclusionPrefixes    fwtypes.SetValueOf[types.String] `tfsdk:"inclusion_prefixes"`
 }
 
 type serverSideEncryptionConfigurationModel struct {
-	KmsKeyArn types.String `tfsdk:"kms_key_arn"`
+	KMSKeyARN fwtypes.ARN `tfsdk:"kms_key_arn"`
 }
 
 type vectorIngestionConfigurationModel struct {
@@ -539,7 +483,7 @@ type vectorIngestionConfigurationModel struct {
 }
 
 type chunkingConfigurationModel struct {
-	ChunkingStrategy               types.String                                                         `tfsdk:"chunking_strategy"`
+	ChunkingStrategy               fwtypes.StringEnum[awstypes.ChunkingStrategy]                        `tfsdk:"chunking_strategy"`
 	FixedSizeChunkingConfiguration fwtypes.ListNestedObjectValueOf[fixedSizeChunkingConfigurationModel] `tfsdk:"fixed_size_chunking_configuration"`
 }
 

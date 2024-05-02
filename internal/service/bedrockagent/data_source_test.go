@@ -6,7 +6,6 @@ package bedrockagent_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -37,7 +36,7 @@ func testAccDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceBaseExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 				),
 			},
 			{
@@ -66,7 +65,7 @@ func testAccDataSource_full(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceBaseExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 				),
 			},
 			{
@@ -95,7 +94,7 @@ func testAccDataSource_disappears(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceBaseExists(ctx, resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceDataSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,8 +111,8 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_bedrockagent_data_source" {
 				continue
 			}
-			parts := strings.Split(rs.Primary.ID, ",")
-			_, err := tfbedrockagent.FindDataSourceByID(ctx, conn, parts[0], parts[1])
+
+			_, err := tfbedrockagent.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["data_source_id"], rs.Primary.Attributes["knowledge_base_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -130,7 +129,7 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDataSourceBaseExists(ctx context.Context, n string, v *types.DataSource) resource.TestCheckFunc {
+func testAccCheckDataSourceExists(ctx context.Context, n string, v *types.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -139,8 +138,7 @@ func testAccCheckDataSourceBaseExists(ctx context.Context, n string, v *types.Da
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		parts := strings.Split(rs.Primary.ID, ",")
-		output, err := tfbedrockagent.FindDataSourceByID(ctx, conn, parts[0], parts[1])
+		output, err := tfbedrockagent.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["data_source_id"], rs.Primary.Attributes["knowledge_base_id"])
 
 		if err != nil {
 			return err

@@ -16,6 +16,6 @@ var (
 	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
 	FindAgentAliasByTwoPartKey                     = findAgentAliasByTwoPartKey
 	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
-	FindDataSourceByID                             = findDataSourceByID
+	FindDataSourceByTwoPartKey                     = findDataSourceByTwoPartKey
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
 )
