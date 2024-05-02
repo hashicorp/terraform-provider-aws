@@ -15,37 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAliasByName(ctx context.Context, conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
-	input := &kms.ListAliasesInput{}
-	var output *kms.AliasListEntry
-
-	err := conn.ListAliasesPagesWithContext(ctx, input, func(page *kms.ListAliasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, alias := range page.Aliases {
-			if aws.StringValue(alias.AliasName) == name {
-				output = alias
-
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
-}
-
 func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, in *kms.DescribeCustomKeyStoresInput) (*kms.CustomKeyStoresListEntry, error) {
 	out, err := conn.DescribeCustomKeyStoresWithContext(ctx, in)
 

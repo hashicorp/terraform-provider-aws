@@ -45,7 +45,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	target := d.Get("name").(string)
 
-	alias, err := FindAliasByName(ctx, conn, target)
+	alias, err := findAliasByName(ctx, conn, target)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", target, err)
