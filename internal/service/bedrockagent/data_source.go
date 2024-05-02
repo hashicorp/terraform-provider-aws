@@ -459,8 +459,8 @@ func (m *dataSourceResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *dataSourceResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString()}, dataSourceResourceIDPartCount, false)))
+func (m *dataSourceResourceModel) setID() {
+	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.DataSourceID.ValueString(), m.KnowledgeBaseID.ValueString()}, dataSourceResourceIDPartCount, false)))
 }
 
 type dataSourceConfigurationModel struct {
