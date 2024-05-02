@@ -19,11 +19,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func testAccDataSource_basic(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -34,7 +46,7 @@ func testAccDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_basic(rName),
+				Config: testAccDataSourceConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 				),
@@ -48,11 +60,23 @@ func testAccDataSource_basic(t *testing.T) {
 	})
 }
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func testAccDataSource_full(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -63,7 +87,7 @@ func testAccDataSource_full(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_full(rName),
+				Config: testAccDataSourceConfig_full(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 				),
@@ -77,11 +101,23 @@ func testAccDataSource_full(t *testing.T) {
 	})
 }
 
+// Prerequisites:
+// * psql run via null_resource/provisioner "local-exec"
+// * jq for parsing output from aws cli to retrieve postgres password
 func testAccDataSource_disappears(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -92,7 +128,7 @@ func testAccDataSource_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_basic(rName),
+				Config: testAccDataSourceConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceDataSource, resourceName),
@@ -150,39 +186,50 @@ func testAccCheckDataSourceExists(ctx context.Context, n string, v *types.DataSo
 	}
 }
 
-func testAccDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccDataSourceConfig_base(rName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_basicRDS(rName, embeddingModel), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_basic(rName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name              = %[1]q
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+
+  data_source_configuration {
+    type = "S3"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.test.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_full(rName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
   name                 = %[1]q
-  knowledge_base_id    = "xxxx"
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
   data_deletion_policy = "RETAIN"
 
   data_source_configuration {
     type = "S3"
+
     s3_configuration {
-      bucket_arn = "arn:aws:xxxx"
+      bucket_arn = aws_s3_bucket.test.arn
     }
   }
-}
-`, rName)
-}
 
-func testAccDataSourceConfig_full(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagent_data_source" "test" {
-  name                 = %[1]q
-  knowledge_base_id    = "xxx"
-  data_deletion_policy = "RETAIN"
-
-  data_source_configuration {
-    type = "S3"
-    s3_configuration {
-      bucket_arn = "arn:aws:s3:::xxxxx"
-    }
-  }
   vector_ingestion_configuration {
     chunking_configuration {
       chunking_strategy = "FIXED_SIZE"
+
       fixed_size_chunking_configuration {
         max_tokens         = 3
         overlap_percentage = 80
@@ -190,5 +237,5 @@ resource "aws_bedrockagent_data_source" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
