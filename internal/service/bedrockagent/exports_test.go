@@ -8,12 +8,12 @@ var (
 	ResourceAgent                         = newAgentResource
 	ResourceAgentActionGroup              = newAgentActionGroupResource
 	ResourceAgentAlias                    = newAgentAliasResource
-	ResourceKnowledgeBase                 = newKnowledgeBaseResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
+	ResourceKnowledgeBase                 = newKnowledgeBaseResource
 
-	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
-	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartID
-	FindAgentAliasByTwoPartKey                     = findAgentAliasByTwoPartKey
 	FindAgentByID                                  = findAgentByID
+	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
+	FindAgentAliasByTwoPartKey                     = findAgentAliasByTwoPartKey
+	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
 )
