@@ -112,9 +112,9 @@ func resourceEBSSnapshotLockCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(d.Get("snapshot_id").(string))
-	d.Set("lock_created_on", aws.ToTime(resp.LockCreatedOn))
-	d.Set("cool_off_period_expires_on", aws.ToTime(resp.CoolOffPeriodExpiresOn))
-	d.Set("lock_duration_start_time", aws.ToTime(resp.LockDurationStartTime))
+	d.Set("lock_created_on", aws.ToTime(resp.LockCreatedOn).Format(time.RFC3339))
+	d.Set("cool_off_period_expires_on", aws.ToTime(resp.CoolOffPeriodExpiresOn).Format(time.RFC3339))
+	d.Set("lock_duration_start_time", aws.ToTime(resp.LockDurationStartTime).Format(time.RFC3339))
 	d.Set("lock_state", resp.LockState)
 
 	return append(diags, resourceEBSSnapshotLockRead(ctx, d, meta)...)
@@ -137,11 +137,11 @@ func resourceEBSSnapshotLockRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("cool_off_period", resp.Snapshots[0].CoolOffPeriod)
-	d.Set("cool_off_period_expires_on", resp.Snapshots[0].CoolOffPeriodExpiresOn)
-	d.Set("lock_created_on", resp.Snapshots[0].LockCreatedOn)
+	d.Set("cool_off_period_expires_on", aws.ToTime(resp.Snapshots[0].CoolOffPeriodExpiresOn).Format(time.RFC3339))
+	d.Set("lock_created_on", aws.ToTime(resp.Snapshots[0].LockCreatedOn).Format(time.RFC3339))
 	d.Set("lock_duration", resp.Snapshots[0].LockDuration)
-	d.Set("lock_duration_start_time", resp.Snapshots[0].LockDurationStartTime)
-	d.Set("expiration_date", resp.Snapshots[0].LockExpiresOn)
+	d.Set("lock_duration_start_time", aws.ToTime(resp.Snapshots[0].LockDurationStartTime).Format(time.RFC3339))
+	d.Set("expiration_date", aws.ToTime(resp.Snapshots[0].LockExpiresOn).Format(time.RFC3339))
 	d.Set("lock_state", resp.Snapshots[0].LockState)
 	d.Set("snapshot_id", resp.Snapshots[0].SnapshotId)
 
@@ -175,9 +175,9 @@ func resourceEBSSnapshotLockUpdate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Creating EBS snapshot lock: %s", err)
 	}
 
-	d.Set("lock_created_on", resp.LockCreatedOn)
-	d.Set("cool_off_period_expires_on", resp.CoolOffPeriodExpiresOn)
-	d.Set("lock_duration_start_time", resp.LockDurationStartTime)
+	d.Set("lock_created_on", aws.ToTime(resp.LockCreatedOn).Format(time.RFC3339))
+	d.Set("cool_off_period_expires_on", aws.ToTime(resp.CoolOffPeriodExpiresOn).Format(time.RFC3339))
+	d.Set("lock_duration_start_time", aws.ToTime(resp.LockDurationStartTime).Format(time.RFC3339))
 	d.Set("lock_state", resp.LockState)
 
 	return diags
