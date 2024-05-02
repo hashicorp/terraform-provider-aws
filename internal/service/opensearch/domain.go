@@ -783,21 +783,21 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] OpenSearch Domain %q created", d.Id())
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
-
 		input := &opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+			DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
+			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
 		}
 
-		input.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
-
+		log.Printf("[DEBUG] Updating OpenSearch Domain config: %s", input)
 		_, err = conn.UpdateDomainConfigWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying config for OpenSearch Domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain config: %s", err)
 		}
 
-		log.Printf("[DEBUG] Config for OpenSearch Domain %q modified", d.Id())
+		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
