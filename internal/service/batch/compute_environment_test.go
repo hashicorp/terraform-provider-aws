@@ -2913,67 +2913,6 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, version))
 }
 
-func testAccComputeEnvironmentConfig_tags0(rName string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  depends_on = [aws_iam_role_policy_attachment.batch_service]
-
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.batch_service.arn
-  type                     = "UNMANAGED"
-}
-`, rName))
-}
-
-func testAccComputeEnvironmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  depends_on = [aws_iam_role_policy_attachment.batch_service]
-
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.batch_service.arn
-  type                     = "UNMANAGED"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccComputeEnvironmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  depends_on = [aws_iam_role_policy_attachment.batch_service]
-
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.batch_service.arn
-  type                     = "UNMANAGED"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccComputeEnvironmentConfig_tagsNull(rName, tagKey1 string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  depends_on = [aws_iam_role_policy_attachment.batch_service]
-
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.batch_service.arn
-  type                     = "UNMANAGED"
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1))
-}
-
 func testAccComputeEnvironmentConfig_ec2Configuration(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {

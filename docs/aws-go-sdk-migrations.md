@@ -62,16 +62,18 @@ github.com/aws-sdk-go-v2/service/<service>
 awstypes github.com/aws-sdk-go-v2/service/<service>/types
 ```
 
-If the `aws` package is used, this should also be upgraded.
+If the `aws` or `arn` packages are used, these should also be upgraded.
 
 ```
 // Remove
 github.com/aws-sdk-go/aws
+github.com/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
 github.com/aws-sdk-go-v2/aws
+github.com/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client

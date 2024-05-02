@@ -204,7 +204,6 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -219,7 +218,6 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -229,7 +227,6 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -239,7 +236,6 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -254,7 +250,6 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 		},
@@ -373,55 +368,6 @@ resource "aws_iam_instance_profile" "test" {
 `, namePrefix))
 }
 
-func testAccInstanceProfileConfig_tags0(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-}
-`, rName))
-}
-
-func testAccInstanceProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccInstanceProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = "test-%[1]s"
-  role = aws_iam_role.test.name
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccInstanceProfileConfig_tagsNull(rName, tagKey1 string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1))
-}
-
 func testAccInstanceProfileConfig_launchConfiguration(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
@@ -437,10 +383,6 @@ resource "aws_launch_configuration" "test" {
 resource "aws_iam_instance_profile" "test" {
   name = %[1]q
   role = aws_iam_role.test.name
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName))
 }

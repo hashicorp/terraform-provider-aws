@@ -138,16 +138,6 @@ resource "aws_servicecatalog_portfolio" "test" {
 `, name)
 }
 
-func testAccPortfolioConfig_tags0(name string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-b"
-  provider_name = "test-c"
-}
-`, name)
-}
-
 func testAccPortfolioConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
@@ -160,33 +150,4 @@ resource "aws_servicecatalog_portfolio" "test" {
   }
 }
 `, name, tagKey1, tagValue1)
-}
-
-func testAccPortfolioConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-only-change-me"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccPortfolioConfig_tagsNull(name, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-b"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, name, tagKey1)
 }

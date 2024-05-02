@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
