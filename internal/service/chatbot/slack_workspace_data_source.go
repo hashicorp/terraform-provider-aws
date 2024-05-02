@@ -49,7 +49,6 @@ func (d *dataSourceSlackWorkspace) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (d *dataSourceSlackWorkspace) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().ChatbotClient(ctx)
 
 	var data dataSourceSlackWorkspaceData
@@ -85,7 +84,7 @@ func findSlackWorkspaceByName(ctx context.Context, conn *chatbot.Client, slack_t
 		}
 
 		for _, workspace := range output.SlackWorkspaces {
-			if *workspace.SlackTeamName == slack_team_name {
+			if aws.ToString(workspace.SlackTeamName) == slack_team_name {
 				return &workspace, nil
 			}
 		}
@@ -97,7 +96,6 @@ func findSlackWorkspaceByName(ctx context.Context, conn *chatbot.Client, slack_t
 	}
 	// If we are here, then we need to return an error that the data source was not found.
 	return nil, create.Error(names.Chatbot, "missing", DSNameSlackWorkspace, slack_team_name, nil)
-
 }
 
 type dataSourceSlackWorkspaceData struct {
