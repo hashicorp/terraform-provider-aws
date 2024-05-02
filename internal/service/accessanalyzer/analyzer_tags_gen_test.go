@@ -32,6 +32,9 @@ func testAccAccessAnalyzerAnalyzer_tagsSerial(t *testing.T) {
 	t.Run("DefaultTags_emptyResourceTag", testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyResourceTag)
 	t.Run("DefaultTags_nullOverlappingResourceTag", testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullOverlappingResourceTag)
 	t.Run("DefaultTags_nullNonOverlappingResourceTag", testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTag)
+	t.Run("ComputedTag_OnCreate", testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate)
+	t.Run("ComputedTag_OnUpdate_Add", testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add)
+	t.Run("ComputedTag_OnUpdate_Replace", testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace)
 }
 
 func testAccAccessAnalyzerAnalyzer_tags(t *testing.T) {

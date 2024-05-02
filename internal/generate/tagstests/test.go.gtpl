@@ -80,6 +80,9 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Run("DefaultTags_emptyResourceTag", {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag)
 	t.Run("DefaultTags_nullOverlappingResourceTag", {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag)
 	t.Run("DefaultTags_nullNonOverlappingResourceTag", {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag)
+	t.Run("ComputedTag_OnCreate", {{ template "testname" . }}_tags_ComputedTag_OnCreate)
+	t.Run("ComputedTag_OnUpdate_Add", {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add)
+	t.Run("ComputedTag_OnUpdate_Replace", {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace)
 }
 {{ end }}
 
