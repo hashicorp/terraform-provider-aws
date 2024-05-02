@@ -5,13 +5,15 @@ package bedrockagent
 
 // Exports for use in tests only.
 var (
-	ResourceAgent            = newAgentResource
-	ResourceAgentActionGroup = newAgentActionGroupResource
-	ResourceAgentAlias       = newAgentAliasResource
-	ResourceKnowledgeBase    = newKnowledgeBaseResource
+	ResourceAgent                         = newAgentResource
+	ResourceAgentActionGroup              = newAgentActionGroupResource
+	ResourceAgentAlias                    = newAgentAliasResource
+	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
+	ResourceKnowledgeBase                 = newKnowledgeBaseResource
 
-	FindAgentActionGroupByThreePartKey = findAgentActionGroupByThreePartKey
-	FindAgentAliasByTwoPartKey         = findAgentAliasByTwoPartKey
-	FindAgentByID                      = findAgentByID
-	FindKnowledgeBaseByID              = findKnowledgeBaseByID
+	FindAgentByID                                  = findAgentByID
+	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
+	FindAgentAliasByTwoPartKey                     = findAgentAliasByTwoPartKey
+	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
+	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
 )
