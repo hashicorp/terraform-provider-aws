@@ -31,11 +31,7 @@ import (
 // suitable target data type) are copied.
 func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOptionsFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
-	flattener := &autoFlattener{}
-
-	for _, optFn := range optFns {
-		optFn(flattener)
-	}
+	flattener := newAutoFlattener(optFns)
 
 	diags.Append(autoFlexConvert(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
@@ -46,7 +42,29 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	return diags
 }
 
-type autoFlattener struct{}
+type autoFlattener struct {
+	Options AutoFlexOptions
+}
+
+// newAutoFlattener initializes an auto-flattener with defaults that can be overridden
+// via functional options
+func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
+	o := AutoFlexOptions{
+		ignoredFieldNames: DefaultIgnoredFieldNames,
+	}
+
+	for _, optFn := range optFns {
+		optFn(&o)
+	}
+
+	return &autoFlattener{
+		Options: o,
+	}
+}
+
+func (flattener autoFlattener) getOptions() AutoFlexOptions {
+	return flattener.Options
+}
 
 // convert converts a single AWS API value to its Plugin Framework equivalent.
 func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
