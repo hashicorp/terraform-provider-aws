@@ -1,3 +1,3 @@
-``release-note:new-resource
+```release-note:new-resource
 aws_bedrockagent_data_source
 ```
