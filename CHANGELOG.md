@@ -5,6 +5,12 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_target: Add `force_destroy` argument ([#37130](https://github.com/hashicorp/terraform-provider-aws/issues/37130))
 * resource/aws_elasticache_replication_group: Increase default Delete timeout to 45 minutes ([#37182](https://github.com/hashicorp/terraform-provider-aws/issues/37182))
 * resource/aws_elasticache_replication_group: Use the configured Delete timeout when detaching from any global replication group ([#37182](https://github.com/hashicorp/terraform-provider-aws/issues/37182))
+* resource/aws_fsx_ontap_file_system: Add support for specifying 1 ha_pair with `SINGLE_AZ_1` and `MULTI_AZ_1` deployment types ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_file_system: Increase `storage_capacity` maximum to 1PiB ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_file_system: Support up to 12 `ha_pairs` ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_file_system: Update `throughput_capacity_per_ha_pair` to support all values from `throughput_capacity` ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_volume: Add `aggregate_configuration` configuration block ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_volume: Add `size_in_bytes` and `volume_style` arguments ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
 
 BUG FIXES:
 
