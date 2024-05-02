@@ -5,7 +5,8 @@ package kms
 
 // Exports for use in tests only.
 var (
-	ResourceAlias = resourceAlias
+	ResourceAlias      = resourceAlias
+	ResourceCiphertext = resourceCiphertext
 
 	FindAliasByName = findAliasByName
 )

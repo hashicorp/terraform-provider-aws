@@ -64,8 +64,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Alias",
 		},
 		{
-			Factory:  ResourceCiphertext,
+			Factory:  resourceCiphertext,
 			TypeName: "aws_kms_ciphertext",
+			Name:     "Ciphertext",
 		},
 		{
 			Factory:  ResourceCustomKeyStore,
