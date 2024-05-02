@@ -26,9 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -208,7 +208,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
-		mcs, err := strconv.Atoi(v.(string))
+		mcs, err := strconv.ParseInt(v.(string), 0, 32)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "converting minimum_compression_size (%s): %s", v, err)
 		}
@@ -310,7 +310,23 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(api.MinimumCompressionSize)), 10))
 	}
 	d.Set("name", api.Name)
-	d.Set("root_resource_id", api.RootResourceId)
+
+	input := &apigateway.GetResourcesInput{
+		RestApiId: aws.String(d.Id()),
+	}
+
+	rootResource, err := findResource(ctx, conn, input, func(v *types.Resource) bool {
+		return aws.ToString(v.Path) == "/"
+	})
+
+	switch {
+	case err == nil:
+		d.Set("root_resource_id", rootResource.Id)
+	case tfresource.NotFound(err):
+		d.Set("root_resource_id", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
+	}
 
 	policy, err := flattenAPIPolicy(api.Policy)
 	if err != nil {

@@ -8,7 +8,7 @@ description: |-
 
 # Function: arn_parse
 
-~> Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
+~> Provider-defined functions are supported in Terraform 1.8 and later.
 
 Parses an ARN into its constituent parts.
 

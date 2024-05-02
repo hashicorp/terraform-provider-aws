@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_snapshot_schedule", name="Snapshot Schedule")
 // @Tags(identifierAttribute="arn")
-func ResourceSnapshotSchedule() *schema.Resource {
+func resourceSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotScheduleCreate,
 		ReadWithoutTimeout:   resourceSnapshotScheduleRead,
@@ -109,7 +109,7 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	snapshotSchedule, err := FindSnapshotScheduleByID(ctx, conn, d.Id())
+	snapshotSchedule, err := findSnapshotScheduleByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", d.Id())
@@ -190,7 +190,7 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Redshift, id string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	snapshotSchedule, err := FindSnapshotScheduleByID(ctx, conn, id)
+	snapshotSchedule, err := findSnapshotScheduleByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Snapshot Schedule (%s): %s", id, err)
@@ -223,7 +223,7 @@ func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Redshif
 	return diags
 }
 
-func FindSnapshotScheduleByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.SnapshotSchedule, error) {
+func findSnapshotScheduleByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.SnapshotSchedule, error) {
 	input := &redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(id),
 	}

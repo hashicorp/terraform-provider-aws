@@ -22,4 +22,6 @@ const (
 	AlpnPolicyHTTP2Optional  = alpnPolicyHTTP2Optional
 	AlpnPolicyHTTP2Preferred = alpnPolicyHTTP2Preferred
 	AlpnPolicyNone           = alpnPolicyNone
+
+	LoadBalancerAttributeClientKeepAliveSeconds = loadBalancerAttributeClientKeepAliveSeconds
 )

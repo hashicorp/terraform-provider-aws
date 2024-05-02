@@ -22,7 +22,7 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceCatlaogPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioDataSourceConfig_basic(rName),

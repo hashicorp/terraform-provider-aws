@@ -32,6 +32,12 @@ var (
 	tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
 )
 
+// TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries removes RSA private key
+// pre and post encapsulation boundaries from a PEM string.
+func TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(pem string) string {
+	return removePEMEncapsulationBoundaries(pem, PEMBlockTypeRSAPrivateKey)
+}
+
 // TLSPEMRemovePublicKeyEncapsulationBoundaries removes public key
 // pre and post encapsulation boundaries from a PEM string.
 func TLSPEMRemovePublicKeyEncapsulationBoundaries(pem string) string {

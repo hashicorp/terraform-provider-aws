@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_lex_bot")
@@ -189,7 +189,7 @@ func updateComputedAttributesOnBotCreateVersion(_ context.Context, d *schema.Res
 	return nil
 }
 
-func hasBotConfigChanges(d verify.ResourceDiffer) bool {
+func hasBotConfigChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"description",
 		"child_directed",

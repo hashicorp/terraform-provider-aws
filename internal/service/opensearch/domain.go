@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -998,7 +999,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
 						switch engineType {
 						case opensearchservice.EngineTypeElasticsearch:
-							if verify.SemVerLessThan(version, "7.9") {
+							if semver.LessThan(version, "7.9") {
 								input.ClusterConfig.ColdStorageOptions = nil
 							}
 						case opensearchservice.EngineTypeOpenSearch:
@@ -1155,7 +1156,7 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	if engineType, version, err := ParseEngineVersion(version); err == nil {
 		switch engineType {
 		case opensearchservice.EngineTypeElasticsearch:
-			if verify.SemVerGreaterThanOrEqual(version, "6.7") {
+			if semver.GreaterThanOrEqual(version, "6.7") {
 				return true
 			}
 		case opensearchservice.EngineTypeOpenSearch:

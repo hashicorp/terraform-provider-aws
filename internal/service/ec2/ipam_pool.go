@@ -81,6 +81,10 @@ func ResourceIPAMPool() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.IpamPoolAwsService_Values(), false),
 			},
+			"cascade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -315,10 +319,16 @@ func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
-	_, err := conn.DeleteIpamPoolWithContext(ctx, &ec2.DeleteIpamPoolInput{
+	input := &ec2.DeleteIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
-	})
+	}
+
+	if v, ok := d.GetOk("cascade"); ok {
+		input.Cascade = aws.Bool(v.(bool))
+	}
+
+	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
+	_, err := conn.DeleteIpamPoolWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return diags

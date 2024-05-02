@@ -46,34 +46,40 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"domain_name_servers": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+			},
+			"ipv6_address_preferred_lease_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_name_servers": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_node_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"ntp_servers": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -89,11 +95,12 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 
 var (
 	optionsMap = newDHCPOptionsMap(map[string]string{
-		"domain_name":          "domain-name",
-		"domain_name_servers":  "domain-name-servers",
-		"netbios_name_servers": "netbios-name-servers",
-		"netbios_node_type":    "netbios-node-type",
-		"ntp_servers":          "ntp-servers",
+		"domain_name":                       "domain-name",
+		"domain_name_servers":               "domain-name-servers",
+		"ipv6_address_preferred_lease_time": "ipv6-address-preferred-lease-time",
+		"netbios_name_servers":              "netbios-name-servers",
+		"netbios_node_type":                 "netbios-node-type",
+		"ntp_servers":                       "ntp-servers",
 	})
 )
 

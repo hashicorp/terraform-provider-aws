@@ -353,7 +353,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 	ctx = tflog.SetField(ctx, "vpc_id", d.Get("vpc_id"))
 
-	if err := deleteLingeringENIs(ctx, conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 

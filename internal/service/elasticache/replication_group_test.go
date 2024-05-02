@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1370,13 +1371,49 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_transitEncryptionWithAuthToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+	authToken := sdkacctest.RandString(16)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_transitEncryptionWithAuthToken(rName, authToken),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "auth_token", authToken),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_encryption_mode"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_transitEncryption5x(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg1, rg2 elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_replication_group.test"
 
@@ -1387,10 +1424,11 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName, sdkacctest.RandString(16)),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled5x(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_encryption_mode"),
 				),
 			},
 			{
@@ -1398,6 +1436,79 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+			},
+			{
+				// With Redis engine versions < 7.0.5, transit_encryption_enabled can only be set
+				// during cluster creation. Modifying the argument should force a replacement.
+				Config: testAccReplicationGroupConfig_transitEncryptionDisabled5x(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
+					testAccCheckReplicationGroupRecreated(&rg1, &rg2),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg1, rg2, rg3, rg4 elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, elasticache.TransitEncryptionModePreferred),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", elasticache.TransitEncryptionModePreferred),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+			},
+			{
+				// With Redis engine versions >= 7.0.5, transit_encryption_mode can be modified in-place.
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, elasticache.TransitEncryptionModeRequired),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
+					testAccCheckReplicationGroupNotRecreated(&rg1, &rg2),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", elasticache.TransitEncryptionModeRequired),
+				),
+			},
+			{
+				// Before disabling transit encryption, mode must be transitioned back to "preferred" first.
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, elasticache.TransitEncryptionModePreferred),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg3),
+					testAccCheckReplicationGroupNotRecreated(&rg2, &rg3),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", elasticache.TransitEncryptionModePreferred),
+				),
+			},
+			{
+				// With Redis engine versions >= 7.0.5, transit_encryption_enabled can be modified in-place.
+				Config: testAccReplicationGroupConfig_transitEncryptionDisabled7x(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg4),
+					testAccCheckReplicationGroupNotRecreated(&rg3, &rg4),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "false"),
+				),
 			},
 		},
 	})
@@ -2153,7 +2264,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 				Config: testAccReplicationGroupConfig_globalIDBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg, &pg),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg, &pg),
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
@@ -2206,7 +2317,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				Config: testAccReplicationGroupConfig_globalIDFull(rName, initialNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg1, &pg1),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg1, &pg1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
@@ -2234,7 +2345,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				Config: testAccReplicationGroupConfig_globalIDFull(rName, updatedNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg2, &pg2),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg2, &pg2),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", strconv.Itoa(updatedNumCacheClusters)),
 				),
 			},
@@ -2304,7 +2415,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 2, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg1, &pg1),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg1, &pg1),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
@@ -2325,7 +2436,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 1, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg2, &pg2),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg2, &pg2),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "3"),
 
@@ -2620,17 +2731,15 @@ func testAccCheckReplicationGroupExists(ctx context.Context, n string, v *elasti
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No replication group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
-		rg, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("ElastiCache error: %w", err)
+			return err
 		}
 
-		*v = *rg
+		*v = *output
 
 		return nil
 	}
@@ -2644,79 +2753,90 @@ func testAccCheckReplicationGroupDestroy(ctx context.Context) resource.TestCheck
 			if rs.Type != "aws_elasticache_replication_group" {
 				continue
 			}
+
 			_, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
+
 			return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
 }
 
-func testAccCheckReplicationGroupParameterGroup(ctx context.Context, rg *elasticache.ReplicationGroup, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testAccCheckReplicationGroupParameterGroupExists(ctx context.Context, rg *elasticache.ReplicationGroup, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		cacheCluster := rg.NodeGroups[0].NodeGroupMembers[0]
-		cluster, err := tfelasticache.FindCacheClusterByID(ctx, conn, aws.StringValue(cacheCluster.CacheClusterId))
+		cacheClusterID := aws.StringValue(rg.NodeGroups[0].NodeGroupMembers[0].CacheClusterId)
+		cluster, err := tfelasticache.FindCacheClusterByID(ctx, conn, cacheClusterID)
+
 		if err != nil {
-			return fmt.Errorf("could not retrieve cache cluster (%s): %w", aws.StringValue(cacheCluster.CacheClusterId), err)
+			return fmt.Errorf("reading ElastiCache Cluster (%s): %w", cacheClusterID, err)
 		}
 
-		paramGroupName := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+		name := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+		output, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, name)
 
-		group, err := tfelasticache.FindParameterGroupByName(ctx, conn, paramGroupName)
 		if err != nil {
-			return fmt.Errorf("error retrieving parameter group (%s): %w", paramGroupName, err)
+			return fmt.Errorf("reading ElastiCache Parameter Group (%s): %w", name, err)
 		}
 
-		*pg = *group
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.Context, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.Context, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		paramGroupName := aws.StringValue(pg.CacheParameterGroupName)
+		name := aws.StringValue(v.CacheParameterGroupName)
+		_, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, name)
 
-		_, err := tfelasticache.FindParameterGroupByName(ctx, conn, paramGroupName)
 		if tfresource.NotFound(err) {
 			return nil
 		}
-		if err != nil {
-			return fmt.Errorf("error finding parameter group (%s): %w", paramGroupName, err)
-		}
-		return fmt.Errorf("Cache Parameter Group (%s) still exists", paramGroupName)
-	}
-}
-
-func testAccCheckReplicationGroupUserGroup(ctx context.Context, resourceName, userGroupID string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
-		rg, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
-		if len(rg.UserGroupIds) < 1 {
-			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any usergroups", resourceName)
+
+		return fmt.Errorf("ElastiCache Parameter Group (%s) still exists", name)
+	}
+}
+
+func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if *rg.UserGroupIds[0] != userGroupID {
-			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned usergroup (%s), usergroup was (%s) instead", resourceName, userGroupID, *rg.UserGroupIds[0])
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+
+		id := rs.Primary.ID
+		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, id)
+
+		if err != nil {
+			return err
 		}
+
+		if len(output.UserGroupIds) < 1 {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any User Groups", id)
+		}
+
+		if v := aws.StringValue(output.UserGroupIds[0]); v != userGroupID {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned User Group (%s), User Group was (%s) instead", n, userGroupID, v)
+		}
+
 		return nil
 	}
 }
@@ -2792,15 +2912,21 @@ func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticac
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameDefault,
-		)
+		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
+			func(v *elasticache.CacheParameterGroup) bool {
+				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			},
+			func(v *elasticache.CacheParameterGroup) bool {
+				name := aws.StringValue(v.CacheParameterGroupName)
+				return strings.HasPrefix(name, "default.") && !strings.HasSuffix(name, ".cluster.on")
+			},
+		))
+
 		if err != nil {
 			return err
 		}
 
-		*v = *parameterGroup
+		*v = *output
 
 		return nil
 	}
@@ -2833,15 +2959,21 @@ func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, vers
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameClusterEnabledDefault,
-		)
+		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
+			func(v *elasticache.CacheParameterGroup) bool {
+				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			},
+			func(v *elasticache.CacheParameterGroup) bool {
+				name := aws.StringValue(v.CacheParameterGroupName)
+				return strings.HasPrefix(name, "default.") && strings.HasSuffix(name, ".cluster.on")
+			},
+		))
+
 		if err != nil {
 			return err
 		}
 
-		*v = *parameterGroup
+		*v = *output
 
 		return nil
 	}
@@ -3496,24 +3628,11 @@ resource "aws_security_group" "test" {
 	)
 }
 
-func testAccReplicationGroupConfig_enableAuthTokenTransitEncryption(rName string, authToken string) string {
+// Dependencies shared across all tests exercising the transit_encryption_enabled argument
+func testAccReplicationGroupConfig_transitEncryptionBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id       = %[1]q
-  description                = "test description"
-  node_type                  = "cache.t2.micro"
-  num_cache_clusters         = "1"
-  port                       = 6379
-  subnet_group_name          = aws_elasticache_subnet_group.test.name
-  security_group_ids         = [aws_security_group.test.id]
-  parameter_group_name       = "default.redis5.0"
-  engine_version             = "5.0.6"
-  transit_encryption_enabled = true
-  auth_token                 = %[2]q
-}
-
 resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
@@ -3531,7 +3650,114 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+`, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_transitEncryptionWithAuthToken(rName, authToken string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis5.0"
+  engine_version             = "5.0.6"
+  auth_token                 = %[2]q
+  transit_encryption_enabled = true
+  apply_immediately          = true
+}
 `, rName, authToken),
+	)
+}
+
+func testAccReplicationGroupConfig_transitEncryptionEnabled5x(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis5.0"
+  engine_version             = "5.0.6"
+  transit_encryption_enabled = true
+  apply_immediately          = true
+}
+`, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_transitEncryptionDisabled5x(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis5.0"
+  engine_version             = "5.0.6"
+  transit_encryption_enabled = false
+  apply_immediately          = true
+}
+`, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, transitEncryptionMode string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis7"
+  engine_version             = "7.0"
+  transit_encryption_enabled = true
+  transit_encryption_mode    = %[2]q
+  apply_immediately          = true
+}
+`, rName, transitEncryptionMode),
+	)
+}
+
+func testAccReplicationGroupConfig_transitEncryptionDisabled7x(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis7"
+  engine_version             = "7.0"
+  transit_encryption_enabled = false
+  apply_immediately          = true
+}
+`, rName),
 	)
 }
 
@@ -4165,7 +4391,10 @@ func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Elast
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
 
-	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout)
+	const (
+		delay = 30 * time.Second
+	)
+	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout, delay)
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}

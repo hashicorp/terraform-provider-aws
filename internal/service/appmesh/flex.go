@@ -563,6 +563,16 @@ func expandMeshSpec(vSpec []interface{}) *appmesh.MeshSpec {
 		}
 	}
 
+	if vServiceDiscovery, ok := mSpec["service_discovery"].([]interface{}); ok && len(vServiceDiscovery) > 0 && vServiceDiscovery[0] != nil {
+		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
+
+		if vIpPreference, ok := mServiceDiscovery["ip_preference"].(string); ok && vIpPreference != "" {
+			spec.ServiceDiscovery = &appmesh.MeshServiceDiscovery{
+				IpPreference: aws.String(vIpPreference),
+			}
+		}
+	}
+
 	return spec
 }
 
@@ -1541,6 +1551,14 @@ func flattenMeshSpec(spec *appmesh.MeshSpec) []interface{} {
 		mSpec["egress_filter"] = []interface{}{
 			map[string]interface{}{
 				"type": aws.StringValue(spec.EgressFilter.Type),
+			},
+		}
+	}
+
+	if spec.ServiceDiscovery != nil {
+		mSpec["service_discovery"] = []interface{}{
+			map[string]interface{}{
+				"ip_preference": aws.StringValue(spec.ServiceDiscovery.IpPreference),
 			},
 		}
 	}

@@ -61,6 +61,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"client_keep_alive": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"connection_logs": {
 				Type:     schema.TypeList,
 				Computed: true,

@@ -775,8 +775,16 @@ func (d *mockChangesDiffer) Get(key string) any {
 	return d.values[key].Get()
 }
 
+func (d *mockChangesDiffer) GetOk(string) (any, bool) {
+	return nil, false
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
+}
+
+func (d *mockChangesDiffer) HasChanges(...string) bool {
+	return false
 }
 
 func (d *mockChangesDiffer) GetChange(key string) (any, any) {

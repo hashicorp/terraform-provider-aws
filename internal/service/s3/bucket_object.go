@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -535,7 +536,7 @@ func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 	return nil
 }
 
-func hasBucketObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",

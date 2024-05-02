@@ -26,32 +26,39 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceGatewayRoute,
+			Factory:  dataSourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
+			Name:     "Gateway Route",
 		},
 		{
-			Factory:  DataSourceMesh,
+			Factory:  dataSourceMesh,
 			TypeName: "aws_appmesh_mesh",
+			Name:     "Service Mesh",
 		},
 		{
-			Factory:  DataSourceRoute,
+			Factory:  dataSourceRoute,
 			TypeName: "aws_appmesh_route",
+			Name:     "Route",
 		},
 		{
-			Factory:  DataSourceVirtualGateway,
+			Factory:  dataSourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
+			Name:     "Virtual Gateway",
 		},
 		{
-			Factory:  DataSourceVirtualNode,
+			Factory:  dataSourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
+			Name:     "Virtual Node",
 		},
 		{
-			Factory:  DataSourceVirtualRouter,
+			Factory:  dataSourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
+			Name:     "Virtual Router",
 		},
 		{
-			Factory:  DataSourceVirtualService,
+			Factory:  dataSourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
+			Name:     "Virtual Service",
 		},
 	}
 }
@@ -59,7 +66,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceGatewayRoute,
+			Factory:  resourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
 			Name:     "Gateway Route",
 			Tags: &types.ServicePackageResourceTags{
@@ -67,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMesh,
+			Factory:  resourceMesh,
 			TypeName: "aws_appmesh_mesh",
 			Name:     "Service Mesh",
 			Tags: &types.ServicePackageResourceTags{
@@ -75,7 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRoute,
+			Factory:  resourceRoute,
 			TypeName: "aws_appmesh_route",
 			Name:     "Route",
 			Tags: &types.ServicePackageResourceTags{
@@ -83,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVirtualGateway,
+			Factory:  resourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
 			Name:     "Virtual Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -91,7 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVirtualNode,
+			Factory:  resourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
 			Name:     "Virtual Node",
 			Tags: &types.ServicePackageResourceTags{
@@ -99,7 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVirtualRouter,
+			Factory:  resourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
 			Name:     "Virtual Router",
 			Tags: &types.ServicePackageResourceTags{
@@ -107,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVirtualService,
+			Factory:  resourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
 			Name:     "Virtual Service",
 			Tags: &types.ServicePackageResourceTags{

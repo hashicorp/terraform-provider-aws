@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
 // @Tags(identifierAttribute="arn")
-func ResourceOpenZFSFileSystem() *schema.Resource {
+func resourceOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenZFSFileSystemCreate,
 		ReadWithoutTimeout:   resourceOpenZFSFileSystemRead,
@@ -114,6 +114,10 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 				},
 			},
 			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_ip_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -470,7 +474,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindOpenZFSFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := findOpenZFSFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
@@ -494,6 +498,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set("dns_name", filesystem.DNSName)
+	d.Set("endpoint_ip_address", openZFSConfig.EndpointIpAddress)
 	d.Set("endpoint_ip_address_range", openZFSConfig.EndpointIpAddressRange)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
@@ -511,7 +516,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 	setTagsOut(ctx, filesystem.Tags)
 
-	rootVolume, err := FindOpenZFSVolumeByID(ctx, conn, rootVolumeID)
+	rootVolume, err := findOpenZFSVolumeByID(ctx, conn, rootVolumeID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx for OpenZFS File System (%s) root volume (%s): %s", d.Id(), rootVolumeID, err)
@@ -782,7 +787,7 @@ func flattenOpenZFSFileSystemRootVolume(rs *fsx.Volume) []interface{} {
 	return []interface{}{m}
 }
 
-func FindOpenZFSFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeOpenzfs)
 
 	if err != nil {

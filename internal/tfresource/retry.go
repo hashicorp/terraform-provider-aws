@@ -162,6 +162,16 @@ func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() 
 	})
 }
 
+func RetryWhenIsOneOf[T1, T2 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[T1](err) || errs.IsA[T2](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
 func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (interface{}, error), needle string) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsAErrorMessageContains[T](err, needle) {

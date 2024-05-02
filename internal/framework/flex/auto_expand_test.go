@@ -259,13 +259,13 @@ func TestExpand(t *testing.T) {
 		},
 		{
 			TestName:   "single ARN Source and single string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: testARN},
 		},
 		{
 			TestName:   "single ARN Source and single *string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
 		},
@@ -287,6 +287,18 @@ func TestExpand(t *testing.T) {
 			Target: &TestFlexTimeAWS02{},
 			WantTarget: &TestFlexTimeAWS02{
 				CreationDateTime: testTimeTime,
+			},
+		},
+		{
+			TestName: "string Source to interface Target",
+			Source:   &TestFlexTF20{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Target:   &TestFlexAWS19{},
+			WantTarget: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					Value: map[string]any{
+						"field1": "a",
+					},
+				},
 			},
 		},
 	}
@@ -434,6 +446,42 @@ func TestExpandGeneric(t *testing.T) {
 			WantTarget: &TestFlexAWS13{
 				FieldInner: map[string]string{
 					"x": "y",
+				},
+			},
+		},
+		{
+			TestName: "map of map of string",
+			Source: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+			Target: &TestFlexAWS21{},
+			WantTarget: &TestFlexAWS21{
+				Field1: map[string]map[string]string{
+					"x": {
+						"y": "z",
+					},
+				},
+			},
+		},
+		{
+			TestName: "map of map of string pointer",
+			Source: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+			Target: &TestFlexAWS22{},
+			WantTarget: &TestFlexAWS22{
+				Field1: map[string]map[string]*string{
+					"x": {
+						"y": aws.String("z"),
+					},
 				},
 			},
 		},

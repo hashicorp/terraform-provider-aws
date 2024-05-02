@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -93,9 +93,9 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	name := d.Get("name")
-	input := &apigateway.GetRestApisInput{}
+	inputGRAs := &apigateway.GetRestApisInput{}
 
-	match, err := findRestAPI(ctx, conn, input, func(v *types.RestApi) bool {
+	match, err := findRestAPI(ctx, conn, inputGRAs, func(v *types.RestApi) bool {
 		return aws.ToString(v.Name) == name
 	})
 
@@ -118,7 +118,23 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
 	d.Set("policy", match.Policy)
-	d.Set("root_resource_id", match.RootResourceId)
+
+	inputGRs := &apigateway.GetResourcesInput{
+		RestApiId: aws.String(d.Id()),
+	}
+
+	rootResource, err := findResource(ctx, conn, inputGRs, func(v *types.Resource) bool {
+		return aws.ToString(v.Path) == "/"
+	})
+
+	switch {
+	case err == nil:
+		d.Set("root_resource_id", rootResource.Id)
+	case tfresource.NotFound(err):
+		d.Set("root_resource_id", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
+	}
 
 	setTagsOut(ctx, match.Tags)
 

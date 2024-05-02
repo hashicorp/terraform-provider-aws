@@ -80,7 +80,7 @@ func sweepMeshes(region string) error {
 		}
 
 		for _, v := range page.Meshes {
-			r := ResourceMesh()
+			r := resourceMesh()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.MeshName))
 
@@ -137,7 +137,7 @@ func sweepVirtualGateways(region string) error {
 
 				for _, v := range page.VirtualGateways {
 					virtualGatewayName := aws.StringValue(v.VirtualGatewayName)
-					r := ResourceVirtualGateway()
+					r := resourceVirtualGateway()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualGatewayName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
@@ -208,7 +208,7 @@ func sweepVirtualNodes(region string) error {
 
 				for _, v := range page.VirtualNodes {
 					virtualNodeName := aws.StringValue(v.VirtualNodeName)
-					r := ResourceVirtualNode()
+					r := resourceVirtualNode()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualNodeName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
@@ -279,7 +279,7 @@ func sweepVirtualRouters(region string) error {
 
 				for _, v := range page.VirtualRouters {
 					virtualRouterName := aws.StringValue(v.VirtualRouterName)
-					r := ResourceVirtualRouter()
+					r := resourceVirtualRouter()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualRouterName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
@@ -350,7 +350,7 @@ func sweepVirtualServices(region string) error {
 
 				for _, v := range page.VirtualServices {
 					virtualServiceName := aws.StringValue(v.VirtualServiceName)
-					r := ResourceVirtualService()
+					r := resourceVirtualService()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualServiceName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
@@ -433,7 +433,7 @@ func sweepGatewayRoutes(region string) error {
 
 						for _, v := range page.GatewayRoutes {
 							gatewayRouteName := aws.StringValue(v.GatewayRouteName)
-							r := ResourceGatewayRoute()
+							r := resourceGatewayRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualGatewayName, gatewayRouteName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
@@ -529,7 +529,7 @@ func sweepRoutes(region string) error {
 
 						for _, v := range page.Routes {
 							routeName := aws.StringValue(v.RouteName)
-							r := ResourceRoute()
+							r := resourceRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualRouterName, routeName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)

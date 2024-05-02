@@ -73,10 +73,16 @@ func ResourceReplicationTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validReplicationTaskID,
 			},
+			// "replication_task_settings" is equivalent to "replication_settings" on "aws_dms_replication_config"
+			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_config"
 			"replication_task_settings": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringIsJSON),
+					validateReplicationSettings,
+				),
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},
@@ -245,7 +251,11 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("replication_task_settings") {
 			if v, ok := d.GetOk("replication_task_settings"); ok {
-				input.ReplicationTaskSettings = aws.String(v.(string))
+				s, err := normalizeReplicationSettings(v.(string))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating DMS Replication Task (%s): %s", d.Id(), err)
+				}
+				input.ReplicationTaskSettings = aws.String(s)
 			}
 		}
 

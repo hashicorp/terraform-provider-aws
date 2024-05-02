@@ -14,9 +14,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -736,7 +736,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer (%s): %s", d.Id(), err)
 	}
 
-	err = deleteNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), d.Id())
+	err = deleteNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Client(ctx), d.Id())
 
 	if err != nil {
 		diags = sdkdiag.AppendWarningf(diags, "cleaning up ELB Classic Load Balancer (%s) ENIs: %s", d.Id(), err)
@@ -930,9 +930,9 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func deleteNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) error {
+func deleteNetworkInterfaces(ctx context.Context, conn *ec2.Client, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx, conn, "amazon-elb", "ELB "+name)
 
 	if err != nil {
 		return err

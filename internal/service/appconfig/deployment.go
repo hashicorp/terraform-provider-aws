@@ -9,6 +9,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -124,16 +126,18 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
-	output, err := conn.StartDeployment(ctx, input)
+	const (
+		timeout = 30 * time.Minute // AWS SDK for Go v1 compatibility.
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
+		return conn.StartDeployment(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: empty response")
-	}
-
+	output := outputRaw.(*appconfig.StartDeploymentOutput)
 	appID := aws.ToString(output.ApplicationId)
 	envID := aws.ToString(output.EnvironmentId)
 
@@ -154,7 +158,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &appconfig.GetDeploymentInput{
 		ApplicationId:    aws.String(appID),
-		DeploymentNumber: aws.Int32(int32(deploymentNum)),
+		DeploymentNumber: aws.Int32(deploymentNum),
 		EnvironmentId:    aws.String(envID),
 	}
 
@@ -211,17 +215,17 @@ func resourceDeploymentDelete(ctx context.Context, _ *schema.ResourceData, _ int
 	return diags
 }
 
-func DeploymentParseID(id string) (string, string, int, error) {
+func DeploymentParseID(id string) (string, string, int32, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID:EnvironmentID:DeploymentNumber", id)
 	}
 
-	num, err := strconv.Atoi(parts[2])
+	num, err := strconv.ParseInt(parts[2], 0, 32)
 	if err != nil {
 		return "", "", 0, fmt.Errorf("parsing AppConfig Deployment resource ID deployment_number: %w", err)
 	}
 
-	return parts[0], parts[1], num, nil
+	return parts[0], parts[1], int32(num), nil
 }

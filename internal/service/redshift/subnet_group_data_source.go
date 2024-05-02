@@ -15,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_redshift_subnet_group")
-func DataSourceSubnetGroup() *schema.Resource {
+// @SDKDataSource("aws_redshift_subnet_group", name="Subnet Group")
+// @Tags
+func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
@@ -40,7 +42,7 @@ func DataSourceSubnetGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -48,9 +50,8 @@ func DataSourceSubnetGroup() *schema.Resource {
 func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	subnetgroup, err := FindSubnetGroupByName(ctx, conn, d.Get("name").(string))
+	subnetgroup, err := findSubnetGroupByName(ctx, conn, d.Get("name").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Subnet Group (%s): %s", d.Id(), err)
@@ -69,10 +70,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("name", subnetgroup.ClusterSubnetGroupName)
 	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(ctx, subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, subnetgroup.Tags)
 
 	return diags
 }
