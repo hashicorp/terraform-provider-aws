@@ -180,6 +180,56 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"mongodb_atlas_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[mongoDBAtlasConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"collection_name": schema.StringAttribute{
+										Required: true,
+									},
+									"credentials_secret_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"database_name": schema.StringAttribute{
+										Required: true,
+									},
+									"endpoint": schema.StringAttribute{
+										Required: true,
+									},
+									"vectorIndexName": schema.StringAttribute{
+										Required: true,
+									},
+									"endpointServiceName": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mongoDBAtlasFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Required: true,
+												},
+												"text_field": schema.StringAttribute{
+													Required: true,
+												},
+												"vector_field": schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"rds_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[rdsConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -613,6 +663,7 @@ type vectorKnowledgeBaseConfigurationModel struct {
 type storageConfigurationModel struct {
 	OpensearchServerlessConfiguration fwtypes.ListNestedObjectValueOf[opensearchServerlessConfigurationModel] `tfsdk:"opensearch_serverless_configuration"`
 	PineconeConfiguration             fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]             `tfsdk:"pinecone_configuration"`
+	mongodbAtlasConfiguration         fwtypes.ListNestedObjectValueOf[mongoDBAtlasConfigurationModel]         `tfsdk:"mongodb_atlas_configuration"`
 	RDSConfiguration                  fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                  `tfsdk:"rds_configuration"`
 	RedisEnterpriseCloudConfiguration fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel] `tfsdk:"redis_enterprise_cloud_configuration"`
 	Type                              types.String                                                            `tfsdk:"type"`
@@ -640,6 +691,23 @@ type pineconeConfigurationModel struct {
 type pineconeFieldMappingModel struct {
 	MetadataField types.String `tfsdk:"metadata_field"`
 	TextField     types.String `tfsdk:"text_field"`
+}
+
+type mongoDBAtlasConfigurationModel struct {
+	collectionName       types.String                                               `tfsdk:"connection_name"`
+	CredentialsSecretARN fwtypes.ARN                                                `tfsdk:"credentials_secret_arn"`
+	databaseName         types.String                                               `tfsdk:"database_name"`
+	endpoint             types.String                                               `tfsdk:"endpoint"`
+	vectorIndexName      types.String                                               `tfsdk:"vector_index_name"`
+	endpointServiceName  fwtypes.ARN                                                `tfsdk:"endpoint_service_name"`
+	FieldMapping         fwtypes.ListNestedObjectValueOf[pineconeFieldMappingModel] `tfsdk:"field_mapping"`
+	Namespace            types.String                                               `tfsdk:"namespace"`
+}
+
+type mongoDBAtlasFieldMappingModel struct {
+	MetadataField types.String `tfsdk:"metadata_field"`
+	TextField     types.String `tfsdk:"text_field"`
+	vectorField   types.String `tfsdk:"vector_field"`
 }
 
 type rdsConfigurationModel struct {

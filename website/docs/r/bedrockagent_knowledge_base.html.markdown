@@ -59,11 +59,12 @@ Vector Knowledge Base Configuration supports the following:
 
 Storage Configuration supports the following:
 
-* `type` – (Required) The vector store service in which the knowledge base is stored.Valid Values: OPENSEARCH_SERVERLESS | PINECONE | REDIS_ENTERPRISE_CLOUD | RDS
+* `type` – (Required) The vector store service in which the knowledge base is stored.Valid Values: OPENSEARCH_SERVERLESS | PINECONE | REDIS_ENTERPRISE_CLOUD | RDS | MONGO_DB_ATLAS
 * `pinecone_configuration` – (Optional) Contains the storage configuration of the knowledge base in Pinecone.
 * `rds_configuration` – (Optional) Contains details about the storage configuration of the knowledge base in Amazon RDS. For more information, see Create a vector index in Amazon RDS.
 * `redis_enterprise_cloud_configuration` – (Optional) Contains the storage configuration of the knowledge base in Redis Enterprise Cloud.
 * `opensearch_serverless_configuration` – (Optional) Contains the storage configuration of the knowledge base in Amazon OpenSearch Service.
+* `mongo_db_atlas_configuration` – (Optional) Contains the storage configuration of the knowledge base in MongoDB Atlas.
 
 Pinecone Configuration supports the following:
 
@@ -105,6 +106,19 @@ Opensearch Serverless Configuration supports the following:
     * `metadata_field` – (Required) The name of the field in which Amazon Bedrock stores metadata about the vector store.
     * `text_field` – (Required) The name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
     * `vector_field` – (Required) The name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
+
+MongoDB Atlas Configuration supports the following:
+
+* `collection_name` – (Required) The name of the collection in the MongoDB Atlas database.
+* `credentials_secret_arn` – (Required) The ARN of the secret that you created in AWS Secrets Manager that is linked to your MongoDB Atlas database.
+* `database_name` – (Required) The name of the database in the MongoDB Atlas database.
+* `field_mapping` – (Required) Contains the names of the fields to which to map information about the vector store.
+    * `metadata_field` – (Required) The name of the field in which Amazon Bedrock stores metadata about the vector store.
+    * `text_field` – (Required) The name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
+    * `vector_field` – (Required) The name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
+* `vectorIndexName` – (Required) The name of the vector index.
+* `endpointServiceName` – (Required) The name of the service that hosts the MongoDB Atlas database.
+* `endpoint` – (Required) The endpoint URL of the MongoDB Atlas database.
 
 ## Attribute Reference
 
