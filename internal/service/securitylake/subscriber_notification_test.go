@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func testAccSubscriberNotification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomCustomLogSourceName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -57,7 +56,7 @@ func testAccSubscriberNotification_https(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomCustomLogSourceName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -94,7 +93,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomCustomLogSourceName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -111,8 +110,6 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriberNotification, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,7 +120,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 func testAccSubscriberNotification_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber_notification.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := randomCustomLogSourceName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -229,52 +226,73 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 
 func testAccSubscriberNotification_config(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "test" {
-  name          = %[1]q
-  protocol_type = "HTTP"
+resource "aws_securitylake_subscriber" "test" {
+  subscriber_name = %[1]q
+
+  source {
+    custom_log_source_resource {
+      source_name    = aws_securitylake_custom_log_source.test.source_name
+      source_version = aws_securitylake_custom_log_source.test.source_version
+    }
+  }
+  subscriber_identity {
+    external_id = "example"
+    principal   = data.aws_caller_identity.current.account_id
+  }
+}
+
+resource "aws_securitylake_custom_log_source" "test" {
+  source_name = %[1]q
+
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.test.arn
+    }
+
+    provider_identity {
+      external_id = "%[1]s-test"
+      principal   = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
 }
 
 resource "aws_iam_role" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  name = %[1]q
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "glue.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "glue.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
 }
 POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
-{  
+{
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
-      "Resource": "*"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "s3:GetObject",
+      "s3:PutObject"
+    ],
+    "Resource": "*"
+  }]
 }
 POLICY
-
-  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -323,62 +341,24 @@ POLICY
 
   depends_on = [aws_securitylake_data_lake.test]
 }
-
-resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = "windows-sysmon"
-  source_version = "1.0"
-  event_classes  = ["FILE_ACTIVITY"]
-
-  configuration {
-    crawler_configuration {
-      role_arn = aws_iam_role.test.arn
-    }
-
-    provider_identity {
-      external_id = "windows-sysmon-test"
-      principal   = data.aws_caller_identity.current.account_id
-    }
-  }
-
-  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
-}
-
-resource "aws_securitylake_subscriber" "test" {
-  subscriber_name        = %[1]q
-  subscriber_description = "Example"
-  source {
-    custom_log_source_resource {
-      source_name    = aws_securitylake_custom_log_source.test.source_name
-      source_version = aws_securitylake_custom_log_source.test.source_version
-    }
-  }
-  subscriber_identity {
-    external_id = "example"
-    principal   = data.aws_caller_identity.current.account_id
-  }
-
-  depends_on = [aws_securitylake_custom_log_source.test]
-}
-
-
 `, rName))
 }
 
 func testAccSubscriberNotificationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
+	return acctest.ConfigCompose(
+		testAccSubscriberNotification_config(rName), `
 resource "aws_securitylake_subscriber_notification" "test" {
   subscriber_id = aws_securitylake_subscriber.test.id
   configuration {
     sqs_notification_configuration {}
   }
-
-  depends_on = [aws_securitylake_subscriber.test]
 }
-`))
+`)
 }
 
 func testAccSubscriberNotificationConfig_https(rName string) string {
-	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
+	return acctest.ConfigCompose(
+		testAccSubscriberNotification_config(rName), fmt.Sprintf(`
 resource "aws_securitylake_subscriber_notification" "test" {
   subscriber_id = aws_securitylake_subscriber.test.id
   configuration {
@@ -387,14 +367,18 @@ resource "aws_securitylake_subscriber_notification" "test" {
       target_role_arn = aws_iam_role.event_bridge.arn
     }
   }
-
-  depends_on = [aws_securitylake_subscriber.test]
 }
-`))
+
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+`, rName))
 }
 
 func testAccSubscriberNotificationConfig_https_update(rName string) string {
-	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
+	return acctest.ConfigCompose(
+		testAccSubscriberNotification_config(rName), fmt.Sprintf(`
 resource "aws_securitylake_subscriber_notification" "test" {
   subscriber_id = aws_securitylake_subscriber.test.id
   configuration {
@@ -404,8 +388,11 @@ resource "aws_securitylake_subscriber_notification" "test" {
       http_method     = "POST"
     }
   }
-
-  depends_on = [aws_securitylake_subscriber.test]
 }
-`))
+
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+`, rName))
 }
