@@ -190,13 +190,13 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
-		if err := updateKeyRotationEnabled(ctx, conn, d.Id(), enableKeyRotation); err != nil {
+		if err := updateKeyRotationEnabled(ctx, conn, "KMS Key", d.Id(), enableKeyRotation); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if enabled := d.Get("is_enabled").(bool); !enabled {
-		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(ctx, conn, "KMS Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -274,32 +274,32 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
-		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(ctx, conn, "KMS Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if hasChange, enable := d.HasChange("enable_key_rotation"), d.Get("enable_key_rotation").(bool); hasChange {
-		if err := updateKeyRotationEnabled(ctx, conn, d.Id(), enable); err != nil {
+		if err := updateKeyRotationEnabled(ctx, conn, "KMS Key", d.Id(), enable); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if hasChange, description := d.HasChange("description"), d.Get("description").(string); hasChange {
-		if err := updateKeyDescription(ctx, conn, d.Id(), description); err != nil {
+		if err := updateKeyDescription(ctx, conn, "KMS Key", d.Id(), description); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if hasChange, policy, bypass := d.HasChange("policy"), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool); hasChange {
-		if err := updateKeyPolicy(ctx, conn, d.Id(), policy, bypass); err != nil {
+		if err := updateKeyPolicy(ctx, conn, "KMS Key", d.Id(), policy, bypass); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
-		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(ctx, conn, "KMS Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -511,7 +511,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	return aws.Bool(output.KeyRotationEnabled), nil
 }
 
-func updateKeyDescription(ctx context.Context, conn *kms.Client, keyID string, description string) error {
+func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, description string) error {
 	input := &kms.UpdateKeyDescriptionInput{
 		Description: aws.String(description),
 		KeyId:       aws.String(keyID),
@@ -520,18 +520,18 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, keyID string, d
 	_, err := conn.UpdateKeyDescription(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating KMS Key (%s) description: %w", keyID, err)
+		return fmt.Errorf("updating %s (%s) description: %w", resourceTypeName, keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	if err := waitKeyDescriptionPropagated(ctx, conn, keyID, description); err != nil {
-		return fmt.Errorf("waiting for KMS Key (%s) description update: %w", keyID, err)
+		return fmt.Errorf("waiting for %s (%s) description update: %w", resourceTypeName, keyID, err)
 	}
 
 	return nil
 }
 
-func updateKeyEnabled(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
+func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
 	updateFunc := func() (interface{}, error) {
@@ -553,18 +553,18 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, keyID string, enabl
 	}
 
 	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, PropagationTimeout, updateFunc); err != nil {
-		return fmt.Errorf("%s KMS Key (%s): %w", action, keyID, err)
+		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	if err := waitKeyStatePropagated(ctx, conn, keyID, enabled); err != nil {
-		return fmt.Errorf("waiting for KMS Key (%s) update (enabled = %t): %w", keyID, enabled, err)
+		return fmt.Errorf("waiting for %s (%s) update (enabled = %t): %w", resourceTypeName, keyID, enabled, err)
 	}
 
 	return nil
 }
 
-func updateKeyPolicy(ctx context.Context, conn *kms.Client, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
+func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
 	if err != nil {
 		return fmt.Errorf("policy contains invalid JSON: %w", err)
@@ -586,18 +586,18 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, keyID string, policy
 	}
 
 	if _, err := tfresource.RetryWhenIsOneOf[*awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, PropagationTimeout, updateFunc); err != nil {
-		return fmt.Errorf("updating KMS Key (%s) policy: %w", keyID, err)
+		return fmt.Errorf("updating %s (%s) policy: %w", resourceTypeName, keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	if err := waitKeyPolicyPropagated(ctx, conn, keyID, policy); err != nil {
-		return fmt.Errorf("waiting for KMS Key (%s) policy update: %w", keyID, err)
+		return fmt.Errorf("waiting for %s (%s) policy update: %w", resourceTypeName, keyID, err)
 	}
 
 	return nil
 }
 
-func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
+func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
 	updateFunc := func() (interface{}, error) {
@@ -619,12 +619,12 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, keyID strin
 	}
 
 	if _, err := tfresource.RetryWhenIsOneOf[*awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
-		return fmt.Errorf("%s KMS Key (%s) rotation: %w", action, keyID, err)
+		return fmt.Errorf("%s %s (%s) rotation: %w", action, resourceTypeName, keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	if err := waitKeyRotationEnabledPropagated(ctx, conn, keyID, enabled); err != nil {
-		return fmt.Errorf("waiting for KMS Key (%s) rotation update: %w", keyID, err)
+		return fmt.Errorf("waiting for %s (%s) rotation update: %w", resourceTypeName, keyID, err)
 	}
 
 	return nil

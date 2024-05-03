@@ -77,7 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Custom Key Store",
 		},
 		{
-			Factory:  ResourceExternalKey,
+			Factory:  resourceExternalKey,
 			TypeName: "aws_kms_external_key",
 			Name:     "External Key",
 			Tags: &types.ServicePackageResourceTags{

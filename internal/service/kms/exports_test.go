@@ -8,6 +8,7 @@ var (
 	ResourceAlias          = resourceAlias
 	ResourceCiphertext     = resourceCiphertext
 	ResourceCustomKeyStore = resourceCustomKeyStore
+	ResourceExternalKey    = resourceExternalKey
 	ResourceKey            = resourceKey
 
 	FindAliasByName           = findAliasByName
