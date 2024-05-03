@@ -56,7 +56,8 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"thumbprint_list": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(40, 40),
@@ -80,10 +81,13 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateOpenIDConnectProviderInput{
-		ClientIDList:   flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
-		Tags:           getTagsIn(ctx),
-		ThumbprintList: flex.ExpandStringValueList(d.Get("thumbprint_list").([]interface{})),
-		Url:            aws.String(d.Get("url").(string)),
+		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
+		Tags:         getTagsIn(ctx),
+		Url:          aws.String(d.Get("url").(string)),
+	}
+
+	if v, ok := d.GetOk("thumbprint_list"); ok {
+		input.ThumbprintList = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	output, err := conn.CreateOpenIDConnectProvider(ctx, input)
@@ -150,15 +154,18 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("thumbprint_list") {
-		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
-			OpenIDConnectProviderArn: aws.String(d.Id()),
-			ThumbprintList:           flex.ExpandStringValueList(d.Get("thumbprint_list").([]interface{})),
-		}
+		thumbprintList := d.Get("thumbprint_list").([]interface{})
+		if thumbprintList != nil {
+			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+				ThumbprintList:           flex.ExpandStringValueList(thumbprintList),
+			}
 
-		_, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input)
+			_, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			}
 		}
 	}
 

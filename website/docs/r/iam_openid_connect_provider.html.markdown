@@ -19,8 +19,6 @@ resource "aws_iam_openid_connect_provider" "default" {
   client_id_list = [
     "266362248691-342342xasdasdasda-apps.googleusercontent.com",
   ]
-
-  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 ```
 
@@ -30,7 +28,11 @@ This resource supports the following arguments:
 
 * `url` - (Required) The URL of the identity provider. Corresponds to the _iss_ claim.
 * `client_id_list` - (Required) A list of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
-* `thumbprint_list` - (Required) A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
+* `thumbprint_list` - (Optional) A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
+
+  AWS secures communication with some OIDC identity providers (IdPs) through a library of trusted root certificate authorities (CAs) instead of using a certificate thumbprint to verify the IdP server certificate. In these cases, a specified thumbprint list remains in the configuration, but is not used for validation. These OIDC IdPs include Auth0, GitHub, GitLab, Google, and those that use an Amazon S3 bucket to host a JSON Web Key Set (JWKS) endpoint.
+
+  If it is not specified, and the IdP is not included in the aforementioned group, IAM will retrieve and use the top intermediate certificate authority (CA) thumbprint of the OIDC identity provider server certificate.
 * `tags` - (Optional) Map of resource tags for the IAM OIDC provider. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

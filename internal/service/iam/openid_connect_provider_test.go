@@ -66,6 +66,34 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMOpenIDConnectProvider_withoutThumbprints(t *testing.T) {
+	ctx := acctest.Context(t)
+	url := "accounts.google.com"
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_withoutThumbprints(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, "url", url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
+						"266362248691-342342xasdasdasda-apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rString := sdkacctest.RandString(5)
@@ -189,6 +217,18 @@ resource "aws_iam_openid_connect_provider" "test" {
   thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94", "c784713d6f9cb67b55dd84f4e4af7832d42b8f55"]
 }
 `, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_withoutThumbprints() string {
+	return `
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.google.com"
+
+  client_id_list = [
+    "266362248691-342342xasdasdasda-apps.googleusercontent.com",
+  ]
+}
+`
 }
 
 func testAccOpenIDConnectProviderConfig_clientIDList_first(rName string) string {
