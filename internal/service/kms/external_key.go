@@ -158,7 +158,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := waitIAMPropagation(ctx, propagationTimeout, func() (*kms.CreateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKey(ctx, input)
 	})
 
@@ -355,7 +355,7 @@ func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, keyMaterialBase64, validTo string) error {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, kmsPropagationTimeout, func() (interface{}, error) {
 		return conn.GetParametersForImport(ctx, &kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
 			WrappingAlgorithm: awstypes.AlgorithmSpecRsaesOaepSha256,
@@ -402,7 +402,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, kmsPropagationTimeout, func() (interface{}, error) {
 		return conn.ImportKeyMaterial(ctx, input)
 	})
 

@@ -14,7 +14,14 @@ import (
 const (
 	keyRotationUpdatedTimeout = 10 * time.Minute
 
-	PropagationTimeout = 2 * time.Minute
+	// General timeout for KMS resource changes to propagate.
+	// See https://docs.aws.amazon.com/kms/latest/developerguide/programming-eventual-consistency.html
+	kmsPropagationTimeout = 3 * time.Minute // nosemgrep:ci.kms-in-const-name, ci.kms-in-var-name
+
+	// General timeout for IAM resource change to propagate.
+	// See https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency.
+	// We have settled on 2 minutes as the best timeout value.
+	iamPropagationTimeout = 2 * time.Minute
 )
 
 // waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.

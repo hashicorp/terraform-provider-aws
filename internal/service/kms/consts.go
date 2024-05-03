@@ -3,10 +3,6 @@
 
 package kms
 
-import (
-	"time"
-)
-
 const (
 	aliasNamePrefix = "alias/"
 	cmkAliasPrefix  = aliasNamePrefix + "aws/"
@@ -14,8 +10,4 @@ const (
 
 const (
 	policyNameDefault = "default"
-)
-
-const (
-	propagationTimeout = 2 * time.Minute
 )

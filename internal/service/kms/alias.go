@@ -97,7 +97,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, kmsPropagationTimeout, func() (interface{}, error) {
 		return findAliasByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 

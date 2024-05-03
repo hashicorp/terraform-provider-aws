@@ -20,5 +20,7 @@ var (
 	FindGrantByTwoPartKey     = findGrantByTwoPartKey
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
+	KMSPropagationTimeout     = kmsPropagationTimeout
 	PolicyNameDefault         = policyNameDefault
+	SecretRemovedMessage      = secretRemovedMessage
 )
