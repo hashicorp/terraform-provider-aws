@@ -239,5 +239,6 @@ val services = mapOf(
     "wellarchitected" to ServiceSpec("Well-Architected Tool"),
     "worklink" to ServiceSpec("WorkLink"),
     "workspaces" to ServiceSpec("WorkSpaces", vpcLock = true),
+    "workspacesweb" to ServiceSpec("WorkSpaces Web"),
     "xray" to ServiceSpec("X-Ray"),
 )
