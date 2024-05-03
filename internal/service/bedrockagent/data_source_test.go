@@ -216,9 +216,8 @@ func testAccDataSource_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_owner_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.*", "Europe/France/Nouvelle-Aquitaine/Bordeaux"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.*", "North America/USA/Washington/Seattle"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "S3"),
 					resource.TestCheckResourceAttrSet(resourceName, "data_source_id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
@@ -326,7 +325,7 @@ resource "aws_bedrockagent_data_source" "test" {
 
     s3_configuration {
       bucket_arn         = aws_s3_bucket.test.arn
-      inclusion_prefixes = ["Europe/France/Nouvelle-Aquitaine/Bordeaux", "North America/USA/Washington/Seattle"]
+      inclusion_prefixes = ["Europe/France/Nouvelle-Aquitaine/Bordeaux"]
     }
   }
 

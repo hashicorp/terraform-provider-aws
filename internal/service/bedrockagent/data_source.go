@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -71,6 +72,9 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 			},
 			"data_source_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -129,6 +133,10 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeAtMost(1),
+											setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 300)),
+										},
 									},
 								},
 							},
