@@ -44,6 +44,7 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, subscriberResourceName, &subscriber),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", resourceName, "subscriber_endpoint"),
 					func(s *terraform.State) error {
@@ -84,8 +85,12 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_value"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", "aws_apigatewayv2_api.test", "api_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 				),
@@ -147,6 +152,10 @@ func testAccSubscriberNotification_update(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
 				),
 			},
 			{
@@ -164,6 +173,8 @@ func testAccSubscriberNotification_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", names.AttrARN),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "0"),
 				),
 			},
 			{
@@ -182,6 +193,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "0"),
 				),
 			},
 			{
