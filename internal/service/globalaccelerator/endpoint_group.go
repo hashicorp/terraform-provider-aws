@@ -67,6 +67,11 @@ func resourceEndpointGroup() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 255),
 						},
+						"cross_account_attachment_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
 					},
 				},
 			},
@@ -381,6 +386,10 @@ func expandEndpointConfiguration(tfMap map[string]interface{}) *awstypes.Endpoin
 
 	if v, ok := tfMap["weight"].(int); ok {
 		apiObject.Weight = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["cross_account_attachment_arn"].(string); ok && v != "" {
+		apiObject.AttachmentArn = aws.String(v)
 	}
 
 	return apiObject
