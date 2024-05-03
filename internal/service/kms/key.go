@@ -362,7 +362,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 			return nil, fmt.Errorf("reading KMS Key (%s): %w", keyID, err)
 		}
 
-		policy, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, PolicyNameDefault)
+		policy, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, policyNameDefault)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading KMS Key (%s) policy: %w", keyID, err)
@@ -577,7 +577,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 			BypassPolicyLockoutSafetyCheck: bypassPolicyLockoutSafetyCheck,
 			KeyId:                          aws.String(keyID),
 			Policy:                         aws.String(policy),
-			PolicyName:                     aws.String(PolicyNameDefault),
+			PolicyName:                     aws.String(policyNameDefault),
 		}
 
 		_, err = conn.PutKeyPolicy(ctx, input)
@@ -693,7 +693,7 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 
 func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, policy string) error {
 	checkFunc := func() (bool, error) {
-		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, PolicyNameDefault)
+		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, policyNameDefault)
 
 		if tfresource.NotFound(err) {
 			return false, nil

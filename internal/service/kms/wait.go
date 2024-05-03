@@ -12,16 +12,9 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for StatusKeyState to return PendingDeletion
-	KeyStatePendingDeletionTimeout = 20 * time.Minute
-
 	keyRotationUpdatedTimeout = 10 * time.Minute
-	KeyTagsPropagationTimeout = 10 * time.Minute
 
 	PropagationTimeout = 2 * time.Minute
-
-	ReplicaExternalKeyCreatedTimeout = 2 * time.Minute
-	ReplicaKeyCreatedTimeout         = 2 * time.Minute
 )
 
 // waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.

@@ -72,7 +72,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
-		namePrefix = AliasNamePrefix
+		namePrefix = aliasNamePrefix
 	}
 	name := create.Name(d.Get("name").(string), namePrefix)
 	input := &kms.CreateAliasInput{

@@ -350,11 +350,14 @@ func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func waitReplicaExternalKeyCreated(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreating),
 		Target:  enum.Slice(awstypes.KeyStatePendingImport),
 		Refresh: statusKeyState(ctx, conn, id),
-		Timeout: ReplicaExternalKeyCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

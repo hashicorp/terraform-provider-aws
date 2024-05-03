@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -300,11 +301,14 @@ func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitReplicaKeyCreated(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreating),
 		Target:  enum.Slice(awstypes.KeyStateEnabled),
 		Refresh: statusKeyState(ctx, conn, id),
-		Timeout: ReplicaKeyCreatedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

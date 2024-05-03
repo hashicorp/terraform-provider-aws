@@ -54,17 +54,17 @@ func diffSuppressAlias(_, oldValue, newValue string, _ *schema.ResourceData) boo
 	return false
 }
 
-func DiffSuppressKeyOrAlias(k, oldValue, newValue string, d *schema.ResourceData) bool {
+func diffSuppressKeyOrAlias(k, oldValue, newValue string, d *schema.ResourceData) bool {
 	if arn.IsARN(newValue) {
 		if isKeyARN(newValue) {
-			return DiffSuppressKey(k, oldValue, newValue, d)
+			return diffSuppressKey(k, oldValue, newValue, d)
 		} else {
 			return diffSuppressAlias(k, oldValue, newValue, d)
 		}
 	} else if isAliasName(newValue) {
 		return diffSuppressAlias(k, oldValue, newValue, d)
 	}
-	return DiffSuppressKey(k, oldValue, newValue, d)
+	return diffSuppressKey(k, oldValue, newValue, d)
 }
 
 func keyIDFromARN(s string) string {
@@ -112,7 +112,7 @@ func isKeyARN(s string) bool {
 }
 
 func isAliasName(s string) bool {
-	return strings.HasPrefix(s, "alias/")
+	return strings.HasPrefix(s, aliasNamePrefix)
 }
 
 func isAliasARN(s string) bool {

@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	AliasNamePrefix = "alias/"
+	aliasNamePrefix = "alias/"
+	cmkAliasPrefix  = aliasNamePrefix + "aws/"
 )
 
 const (
-	PolicyNameDefault = "default"
+	policyNameDefault = "default"
 )
 
 const (

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	aliasNamePattern        = `alias/[0-9A-Za-z_/-]+`
+	aliasNamePattern        = aliasNamePrefix + `[0-9A-Za-z_/-]+`
 	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
@@ -50,7 +50,7 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if regexache.MustCompile(`^(alias/aws/)`).MatchString(value) {
+	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
