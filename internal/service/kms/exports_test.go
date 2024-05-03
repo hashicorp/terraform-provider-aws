@@ -20,7 +20,7 @@ var (
 	FindGrantByTwoPartKey     = findGrantByTwoPartKey
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
-	KMSPropagationTimeout     = kmsPropagationTimeout
+	KMSPropagationTimeout     = kmsPropagationTimeout // nosemgrep:ci.kms-in-var-name
 	PolicyNameDefault         = policyNameDefault
 	SecretRemovedMessage      = secretRemovedMessage
 )
