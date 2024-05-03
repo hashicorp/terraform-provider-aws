@@ -5,5 +5,5 @@ package kms
 
 // Exports for use in other modules.
 var (
-	FindDefaultKey = findDefaultKey
+	FindDefaultKeyARNForService = findDefaultKeyARNForService
 )

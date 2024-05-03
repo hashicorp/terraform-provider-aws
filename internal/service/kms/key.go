@@ -439,9 +439,7 @@ func findKeyByID(ctx context.Context, conn *kms.Client, id string, optFns ...fun
 	return keyMetadata, nil
 }
 
-func findDefaultKey(ctx context.Context, client *conns.AWSClient, service, region string) (string, error) {
-	conn := client.KMSClient(ctx)
-
+func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service, region string) (string, error) {
 	id := fmt.Sprintf("alias/aws/%s", service)
 	key, err := findKeyByID(ctx, conn, id, func(o *kms.Options) {
 		o.Region = region
