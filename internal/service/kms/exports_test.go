@@ -12,6 +12,7 @@ var (
 	ResourceGrant          = resourceGrant
 	ResourceKey            = resourceKey
 	ResourceKeyPolicy      = resourceKeyPolicy
+	ResourceReplicaKey     = resourceReplicaKey
 
 	FindAliasByName           = findAliasByName
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID

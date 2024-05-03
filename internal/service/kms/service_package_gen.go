@@ -112,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceReplicaKey,
+			Factory:  resourceReplicaKey,
 			TypeName: "aws_kms_replica_key",
 			Name:     "Replica Key",
 			Tags: &types.ServicePackageResourceTags{

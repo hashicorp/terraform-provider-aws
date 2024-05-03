@@ -57,20 +57,3 @@ func WaitReplicaExternalKeyCreated(ctx context.Context, conn *kms.KMS, id string
 
 	return nil, err
 }
-
-func WaitReplicaKeyCreated(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{kms.KeyStateCreating},
-		Target:  []string{kms.KeyStateEnabled},
-		Refresh: statusKeyState(ctx, conn, id),
-		Timeout: ReplicaKeyCreatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*kms.KeyMetadata); ok {
-		return output, err
-	}
-
-	return nil, err
-}
