@@ -80,7 +80,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, KeyRotationUpdatedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, keyRotationUpdatedTimeout, func() (interface{}, error) {
 		return conn.CreateAlias(ctx, input)
 	})
 

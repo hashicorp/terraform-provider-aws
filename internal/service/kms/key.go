@@ -610,7 +610,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, keyID strin
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf[*awstypes.NotFoundException, *awstypes.DisabledException](ctx, KeyRotationUpdatedTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf[*awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s KMS Key (%s) rotation: %w", action, keyID, err)
 	}
 
@@ -656,16 +656,22 @@ func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, id stri
 		ContinuousTargetOccurence: 5,
 		MinTimeout:                2 * time.Second,
 	}
+	const (
+		timeout = 10 * time.Minute
+	)
 
-	return tfresource.WaitUntil(ctx, KeyDescriptionPropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
 func waitKeyDeleted(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
 		Refresh: statusKeyState(ctx, conn, id),
-		Timeout: KeyDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -701,8 +707,11 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, id, policy s
 		ContinuousTargetOccurence: 5,
 		MinTimeout:                1 * time.Second,
 	}
+	const (
+		timeout = 10 * time.Minute
+	)
 
-	return tfresource.WaitUntil(ctx, KeyPolicyPropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
 func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, id string, enabled bool) error {
@@ -724,7 +733,7 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, id 
 		MinTimeout:                1 * time.Second,
 	}
 
-	return tfresource.WaitUntil(ctx, KeyRotationUpdatedTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, keyRotationUpdatedTimeout, checkFunc, opts)
 }
 
 func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, id string, enabled bool) error {
@@ -745,6 +754,9 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, id string, en
 		ContinuousTargetOccurence: 15,
 		MinTimeout:                2 * time.Second,
 	}
+	const (
+		timeout = 20 * time.Minute
+	)
 
-	return tfresource.WaitUntil(ctx, KeyStatePropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }

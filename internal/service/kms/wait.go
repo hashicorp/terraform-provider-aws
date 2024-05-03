@@ -18,14 +18,10 @@ const (
 	// Maximum amount of time to wait for StatusKeyState to return PendingDeletion
 	KeyStatePendingDeletionTimeout = 20 * time.Minute
 
-	KeyDeletedTimeout                = 20 * time.Minute
-	KeyDescriptionPropagationTimeout = 10 * time.Minute
-	KeyMaterialImportedTimeout       = 10 * time.Minute
-	KeyPolicyPropagationTimeout      = 10 * time.Minute
-	KeyRotationUpdatedTimeout        = 10 * time.Minute
-	KeyStatePropagationTimeout       = 20 * time.Minute
-	KeyTagsPropagationTimeout        = 10 * time.Minute
-	KeyValidToPropagationTimeout     = 5 * time.Minute
+	KeyMaterialImportedTimeout   = 10 * time.Minute
+	keyRotationUpdatedTimeout    = 10 * time.Minute
+	KeyTagsPropagationTimeout    = 10 * time.Minute
+	KeyValidToPropagationTimeout = 5 * time.Minute
 
 	PropagationTimeout = 2 * time.Minute
 
