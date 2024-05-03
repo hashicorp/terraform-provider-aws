@@ -2409,6 +2409,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
 		}
 	}
 
