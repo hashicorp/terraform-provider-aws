@@ -175,7 +175,6 @@ func expandCountryCodes(l []interface{}) []awstypes.CountryCode {
 
 		if v, ok := countryCode.(string); ok {
 			countryCodes = append(countryCodes, awstypes.CountryCode(v))
-
 		}
 	}
 
@@ -1636,7 +1635,7 @@ func flattenRules(r []awstypes.Rule) interface{} {
 		m["action"] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["name"] = aws.ToString(rule.Name)
-		m["priority"] = int32(rule.Priority)
+		m["priority"] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -2189,7 +2188,7 @@ func flattenTextTransformations(l []awstypes.TextTransformation) []interface{} {
 	out := make([]interface{}, len(l))
 	for i, t := range l {
 		m := make(map[string]interface{})
-		m["priority"] = int32(t.Priority)
+		m["priority"] = t.Priority
 		m["type"] = string(t.Type)
 		out[i] = m
 	}
@@ -2303,7 +2302,7 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) interfa
 	m := map[string]interface{}{
 		"comparison_operator": string(s.ComparisonOperator),
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"size":                int64(s.Size),
+		"size":                s.Size,
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
@@ -2484,7 +2483,7 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m["name"] = aws.ToString(rule.Name)
-		m["priority"] = int32(rule.Priority)
+		m["priority"] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -2951,7 +2950,7 @@ func flattenRateBasedStatement(apiObject *awstypes.RateBasedStatement) interface
 
 	tfMap := map[string]interface{}{
 		"aggregate_key_type":    string(apiObject.AggregateKeyType),
-		"evaluation_window_sec": int64(apiObject.EvaluationWindowSec),
+		"evaluation_window_sec": apiObject.EvaluationWindowSec,
 	}
 
 	if apiObject.ForwardedIPConfig != nil {
