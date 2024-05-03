@@ -15,10 +15,8 @@ var (
 	ResourceReplicaExternalKey = resourceReplicaExternalKey
 	ResourceReplicaKey         = resourceReplicaKey
 
-	FindAliasByName           = findAliasByName
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
 	FindGrantByTwoPartKey     = findGrantByTwoPartKey
-	FindKeyByID               = findKeyByID
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
 )
