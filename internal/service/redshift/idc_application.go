@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -74,6 +75,7 @@ func ResourceIdcApplication() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 127),
+					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
 				),
 			},
 			"idc_instance_arn": {
@@ -88,6 +90,7 @@ func ResourceIdcApplication() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 127),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_+.#@$-]+$`), "must match ^[a-zA-Z0-9_+.#@$-]+$"),
 				),
 			},
 			"redshift_idc_application_name": {
@@ -96,6 +99,7 @@ func ResourceIdcApplication() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexache.MustCompile(`[a-z][a-z0-9]*(-[a-z0-9]+)*`), "must match [a-z][a-z0-9]*(-[a-z0-9]+)"),
 				),
 			},
 			"service_integrations": {
