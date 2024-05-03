@@ -5,5 +5,6 @@ package kms
 
 // Exports for use in other modules.
 var (
+	DiffSuppressKey             = diffSuppressKey
 	FindDefaultKeyARNForService = findDefaultKeyARNForService
 )

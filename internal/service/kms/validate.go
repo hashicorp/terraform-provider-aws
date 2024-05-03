@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	aliasNameRegexPattern   = `alias/[0-9A-Za-z_/-]+`
-	multiRegionKeyIdPattern = `mrk-[0-9a-f]{32}`
+	aliasNamePattern        = `alias/[0-9A-Za-z_/-]+`
+	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
 var (
-	aliasNameRegex     = regexache.MustCompile(`^` + aliasNameRegexPattern + `$`)
-	keyIdRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
-	keyIdResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
+	aliasNameRegex     = regexache.MustCompile(`^` + aliasNamePattern + `$`)
+	keyIDRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
+	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
 )
 
 func validGrantName(v interface{}, k string) (ws []string, es []error) {
@@ -73,7 +73,7 @@ var ValidateKeyOrAlias = validation.Any(
 	validateKeyAliasARN,
 )
 
-var validateKeyId = validation.StringMatch(keyIdRegex, "must be a KMS Key ID")
+var validateKeyId = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
