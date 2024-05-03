@@ -45,8 +45,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Key",
 		},
 		{
-			Factory:  DataSourcePublicKey,
+			Factory:  dataSourcePublicKey,
 			TypeName: "aws_kms_public_key",
+			Name:     "Public Key",
 		},
 		{
 			Factory:  DataSourceSecret,
