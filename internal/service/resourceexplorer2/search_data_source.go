@@ -47,8 +47,8 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 			"query_string": schema.StringAttribute{
 				Required: true,
 			},
-			"resource_count": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[countData](ctx),
+			"resource_count": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[countData](ctx),
 				Computed:   true,
 			},
 			"resources": schema.ListAttribute{
@@ -122,7 +122,7 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 }
 
 type dataSourceSearchData struct {
-	Count       fwtypes.ObjectValueOf[countData]               `tfsdk:"resource_count"`
+	Count       fwtypes.ListNestedObjectValueOf[countData]     `tfsdk:"resource_count"`
 	ID          types.String                                   `tfsdk:"id"`
 	QueryString types.String                                   `tfsdk:"query_string"`
 	Resources   fwtypes.ListNestedObjectValueOf[resourcesData] `tfsdk:"resources"`
