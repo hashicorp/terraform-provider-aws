@@ -100,8 +100,26 @@ func testAccDataSource_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_full(rName, foundationModel),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.bucket_owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "data_source_configuration.0.s3_configuration.0.inclusion_prefixes.*", "Europe/France/Nouvelle-Aquitaine/Bordeaux"),
+					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.type", "S3"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_source_id"),
+					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.chunking_strategy", "FIXED_SIZE"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.fixed_size_chunking_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.fixed_size_chunking_configuration.0.max_tokens", "3"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.fixed_size_chunking_configuration.0.overlap_percentage", "80"),
 				),
 			},
 			{
@@ -208,7 +226,7 @@ func testAccDataSource_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceConfig_full(rName, foundationModel),
+				Config: testAccDataSourceConfig_updated(rName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
@@ -223,12 +241,7 @@ func testAccDataSource_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.chunking_strategy", "FIXED_SIZE"),
-					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.fixed_size_chunking_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.fixed_size_chunking_configuration.0.max_tokens", "3"),
-					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.chunking_configuration.0.fixed_size_chunking_configuration.0.overlap_percentage", "80"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "0"),
 				),
 			},
 			{
@@ -337,6 +350,26 @@ resource "aws_bedrockagent_data_source" "test" {
         max_tokens         = 3
         overlap_percentage = 80
       }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDataSourceConfig_updated(rName, embeddingModel string) string {
+	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  name                 = %[1]q
+  knowledge_base_id    = aws_bedrockagent_knowledge_base.test.id
+  data_deletion_policy = "RETAIN"
+  description          = "testing"
+
+  data_source_configuration {
+    type = "S3"
+
+    s3_configuration {
+      bucket_arn         = aws_s3_bucket.test.arn
+      inclusion_prefixes = ["Europe/France/Nouvelle-Aquitaine/Bordeaux"]
     }
   }
 }

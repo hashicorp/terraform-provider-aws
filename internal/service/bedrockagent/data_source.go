@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -164,6 +166,9 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 			}),
 			"vector_ingestion_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vectorIngestionConfigurationModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -171,6 +176,9 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 					Blocks: map[string]schema.Block{
 						"chunking_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[chunkingConfigurationModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -179,11 +187,17 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 									"chunking_strategy": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ChunkingStrategy](),
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
 									"fixed_size_chunking_configuration": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[fixedSizeChunkingConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
@@ -191,12 +205,18 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 											Attributes: map[string]schema.Attribute{
 												"max_tokens": schema.Int64Attribute{
 													Required: true,
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.RequiresReplace(),
+													},
 													Validators: []validator.Int64{
 														int64validator.AtLeast(1),
 													},
 												},
 												"overlap_percentage": schema.Int64Attribute{
 													Required: true,
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.RequiresReplace(),
+													},
 													Validators: []validator.Int64{
 														int64validator.Between(1, 99),
 													},
