@@ -46,6 +46,46 @@ func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "cross_account_attachment_arn", ""),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "port_override.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlobalAcceleratorEndpointGroup_crossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.EndpointGroup
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointGroupConfig_crossAccount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "cross_account_attachment_arn", "arn:aws:elasticloadbalancing:us-west-1:111111111111:loadbalancer/net/nlb-01/8a6825aea9cdab43"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "port_override.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", acctest.Ct3),
@@ -873,4 +913,29 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   traffic_dial_percentage       = 0
 }
 `, rName)
+}
+
+func testAccEndpointGroupConfig_crossAccount(rName string) string {
+	return fmt.Sprintf(`
+	resource "aws_globalaccelerator_accelerator" "test" {
+	  name            = %[1]q
+	  ip_address_type = "IPV4"
+	  enabled         = false
+	}
+
+	resource "aws_globalaccelerator_listener" "test" {
+	  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+	  protocol        = "TCP"
+
+	  port_range {
+		from_port = 80
+		to_port   = 80
+	  }
+	}
+
+	resource "aws_globalaccelerator_endpoint_group" "test" {
+	  listener_arn = aws_globalaccelerator_listener.test.id
+	  cross_account_attachment_arn = "arn:aws:elasticloadbalancing:us-west-1:111111111111:loadbalancer/net/nlb-01/8a6825aea9cdab43"
+	}
+	`, rName)
 }
