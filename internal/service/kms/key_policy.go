@@ -61,7 +61,7 @@ func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	keyID := d.Get("key_id").(string)
 
-	if err := updateKeyPolicy(ctx, conn, keyID, "KMS Key Policy", d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+	if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", keyID, d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
