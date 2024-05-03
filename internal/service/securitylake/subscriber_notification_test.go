@@ -215,7 +215,7 @@ func testAccCheckSubscriberNotificationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, _, err := tfsecuritylake.FindSubscriberNotificationBySubscriberID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
+			_, err := tfsecuritylake.FindSubscriberNotificationBySubscriberID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -241,7 +241,7 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
 
-		_, _, err := tfsecuritylake.FindSubscriberNotificationBySubscriberID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
+		_, err := tfsecuritylake.FindSubscriberNotificationBySubscriberID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
 
 		return err
 	}

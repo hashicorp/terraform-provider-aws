@@ -6,7 +6,6 @@ package securitylake
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -158,13 +157,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 		return
 	}
 
-	output, endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
-
-		return
-	}
-	parts, err := flex.ExpandResourceId(aws.ToString(output), subscriberNotificationIdPartCount, false)
+	endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
 
@@ -172,9 +165,8 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
-	data.EndpointID = fwflex.StringToFramework(ctx, endpoint)
-	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, endpoint)
+	data.EndpointID = fwflex.StringValueToFramework(ctx, endpoint)
+	data.SubscriberEndpoint = fwflex.StringValueToFramework(ctx, endpoint)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -195,23 +187,15 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	output, endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
+	endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
 
-	if tfresource.NotFound(err) || output == nil {
+	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
 
-	parts, err := flex.ExpandResourceId(aws.ToString(output), subscriberNotificationIdPartCount, false)
-	if err != nil {
-		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
-
-		return
-	}
-
-	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
-	data.EndpointID = fwflex.StringToFramework(ctx, endpoint)
-	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, endpoint)
+	data.EndpointID = fwflex.StringValueToFramework(ctx, endpoint)
+	data.SubscriberEndpoint = fwflex.StringValueToFramework(ctx, endpoint)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -292,21 +276,18 @@ func (r *subscriberNotificationResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*string, *string, error) {
-	var resourceID string
+func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securitylake.Client, subscriberID string) (string, error) {
 	output, err := findSubscriberByID(ctx, conn, subscriberID)
 
 	if err != nil {
-		return nil, nil, err
+		return "", err
 	}
 
 	if output == nil || output.SubscriberEndpoint == nil {
-		return nil, nil, &tfresource.EmptyResultError{}
+		return "", &tfresource.EmptyResultError{}
 	}
 
-	resourceID = fmt.Sprintf("%s,%s", aws.ToString(output.SubscriberId), "notification")
-
-	return &resourceID, output.SubscriberEndpoint, nil
+	return aws.ToString(output.SubscriberEndpoint), nil
 }
 
 func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subscriberNotificationResourceConfigurationModels []subscriberNotificationResourceConfigurationModel) (awstypes.NotificationConfiguration, diag.Diagnostics) {
