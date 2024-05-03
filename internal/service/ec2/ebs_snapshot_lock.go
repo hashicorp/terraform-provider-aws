@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_ebs_snapshot_lock", name="EBS Snapshot Lock")
@@ -123,16 +125,16 @@ func resourceEBSSnapshotLockRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeLockedSnapshotsInput{
-		SnapshotIds: []string{
-			d.Get("snapshot_id").(string),
-		},
+	resp, err := FindSnapshotLockByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EBS snapshot lock %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	resp, err := conn.DescribeLockedSnapshots(ctx, input)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "EBS snapshot lock not found: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS snapshot lock (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cool_off_period", resp.Snapshots[0].CoolOffPeriod)
@@ -152,26 +154,26 @@ func resourceEBSSnapshotLockUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.LockSnapshotInput{
-		SnapshotId: aws.String(d.Get("snapshot_id").(string)),
+		SnapshotId: aws.String(d.Id()),
 		LockMode:   types.LockMode(d.Get("lock_mode").(string)),
 	}
 
-	if v, ok := d.GetOk("cool_off_period"); ok {
+	if d.HasChange("cool_off_period") {
 		input.CoolOffPeriod = aws.Int32(v.(int32))
 	}
 
-	if v, ok := d.GetOk("lock_duration"); ok {
+	if d.HasChange("lock_duration") {
 		input.LockDuration = aws.Int32(v.(int32))
 	}
 
-	if v, ok := d.GetOk("expiration_date"); ok {
+	if d.HasChange("expiration_date") {
 		t, _ := time.Parse(time.RFC3339, v.(string))
 		input.ExpirationDate = aws.Time(t)
 	}
 
 	resp, err := conn.LockSnapshot(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating EBS snapshot lock: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating EBS snapshot lock (%s): %s", d.Id(), err)
 	}
 
 	d.Set("lock_created_on", aws.ToTime(resp.LockCreatedOn).Format(time.RFC3339))
@@ -187,13 +189,13 @@ func resourceEBSSnapshotLockDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.UnlockSnapshotInput{
-		SnapshotId: aws.String(d.Get("snapshot_id").(string)),
+		SnapshotId: aws.String(d.Id()),
 	}
 
 	_, err := conn.UnlockSnapshot(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Unlock EBS snapshot: %s", err)
+		return sdkdiag.AppendErrorf(diags, "unlocking EBS snapshot (%s): %s",, d.Id(), err)
 	}
 
 	return diags
