@@ -98,8 +98,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceKeyPolicy,
+			Factory:  resourceKeyPolicy,
 			TypeName: "aws_kms_key_policy",
+			Name:     "Key Policy",
 		},
 		{
 			Factory:  ResourceReplicaExternalKey,

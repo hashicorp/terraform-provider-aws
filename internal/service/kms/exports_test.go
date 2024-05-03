@@ -11,6 +11,7 @@ var (
 	ResourceExternalKey    = resourceExternalKey
 	ResourceGrant          = resourceGrant
 	ResourceKey            = resourceKey
+	ResourceKeyPolicy      = resourceKeyPolicy
 
 	FindAliasByName           = findAliasByName
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
