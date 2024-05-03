@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.52.0 // indirect
+	github.com/aws/aws-sdk-go v1.52.1 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
@@ -90,8 +90,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.159.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.160.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7 // indirect
@@ -155,7 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.78.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.0 // indirect
