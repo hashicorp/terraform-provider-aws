@@ -48,10 +48,6 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-const (
-	ResNameDataSource = "Data Source"
-)
-
 type dataSourceResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
