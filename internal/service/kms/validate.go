@@ -61,19 +61,19 @@ func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-var ValidateKey = validation.Any(
-	validateKeyId,
+var validateKey = validation.Any(
+	validateKeyID,
 	validateKeyARN,
 )
 
-var ValidateKeyOrAlias = validation.Any(
-	validateKeyId,
+var validateKeyOrAlias = validation.Any(
+	validateKeyID,
 	validateKeyARN,
 	validateKeyAliasName,
 	validateKeyAliasARN,
 )
 
-var validateKeyId = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
+var validateKeyID = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
