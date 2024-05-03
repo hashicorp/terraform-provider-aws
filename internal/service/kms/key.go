@@ -404,11 +404,29 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 	return outputRaw.(*kmsKeyInfo), nil
 }
 
-func findKeyByID(ctx context.Context, conn *kms.Client, id string, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {
+func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {
 	input := &kms.DescribeKeyInput{
-		KeyId: aws.String(id),
+		KeyId: aws.String(keyID),
 	}
 
+	output, err := findKey(ctx, conn, input, optFns...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
+	if state := output.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {
 	output, err := conn.DescribeKey(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -426,27 +444,17 @@ func findKeyByID(ctx context.Context, conn *kms.Client, id string, optFns ...fun
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	keyMetadata := output.KeyMetadata
-
-	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
-	if state := keyMetadata.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
-	return keyMetadata, nil
+	return output.KeyMetadata, nil
 }
 
 func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service, region string) (string, error) {
-	id := fmt.Sprintf("alias/aws/%s", service)
-	key, err := findKeyByID(ctx, conn, id, func(o *kms.Options) {
+	keyID := fmt.Sprintf("alias/aws/%s", service)
+	key, err := findKeyByID(ctx, conn, keyID, func(o *kms.Options) {
 		o.Region = region
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("reading KMS Key (%s): %s", id, err)
+		return "", fmt.Errorf("reading KMS Key (%s): %s", keyID, err)
 	}
 
 	return aws.ToString(key.Arn), nil
@@ -622,9 +630,9 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, keyID strin
 	return nil
 }
 
-func statusKeyState(ctx context.Context, conn *kms.Client, id string) retry.StateRefreshFunc {
+func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findKeyByID(ctx, conn, id)
+		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -638,9 +646,9 @@ func statusKeyState(ctx context.Context, conn *kms.Client, id string) retry.Stat
 	}
 }
 
-func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, id string, description string) error {
+func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, keyID string, description string) error {
 	checkFunc := func() (bool, error) {
-		output, err := findKeyByID(ctx, conn, id)
+		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -663,14 +671,14 @@ func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, id stri
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
-func waitKeyDeleted(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
+func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awstypes.KeyMetadata, error) {
 	const (
 		timeout = 20 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
-		Refresh: statusKeyState(ctx, conn, id),
+		Refresh: statusKeyState(ctx, conn, keyID),
 		Timeout: timeout,
 	}
 
@@ -683,9 +691,9 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, id string) (*awstypes
 	return nil, err
 }
 
-func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, id, policy string) error {
+func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, policy string) error {
 	checkFunc := func() (bool, error) {
-		output, err := findKeyPolicyByTwoPartKey(ctx, conn, id, PolicyNameDefault)
+		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, PolicyNameDefault)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -714,9 +722,9 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, id, policy s
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
-func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, id string, enabled bool) error {
+func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
 	checkFunc := func() (bool, error) {
-		output, err := findKeyRotationEnabledByKeyID(ctx, conn, id)
+		output, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -736,9 +744,9 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, id 
 	return tfresource.WaitUntil(ctx, keyRotationUpdatedTimeout, checkFunc, opts)
 }
 
-func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, id string, enabled bool) error {
+func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
 	checkFunc := func() (bool, error) {
-		output, err := findKeyByID(ctx, conn, id)
+		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
