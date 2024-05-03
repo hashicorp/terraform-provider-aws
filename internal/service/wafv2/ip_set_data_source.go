@@ -60,7 +60,7 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get("name").(string)
 
-	var foundIpSet *awstypes.IPSetSummary
+	var foundIpSet awstypes.IPSetSummary
 	input := &wafv2.ListIPSetsInput{
 		Scope: awstypes.Scope(d.Get("scope").(string)),
 		Limit: aws.Int32(100),
@@ -78,18 +78,18 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		for _, ipSet := range resp.IPSets {
 			if aws.ToString(ipSet.Name) == name {
-				foundIpSet = &ipSet
+				foundIpSet = ipSet
 				break
 			}
 		}
 
-		if resp.NextMarker == nil || foundIpSet != nil {
+		if resp.NextMarker == nil {
 			break
 		}
 		input.NextMarker = resp.NextMarker
 	}
 
-	if foundIpSet == nil {
+	if foundIpSet.Id == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 IPSet not found for name: %s", name)
 	}
 

@@ -50,7 +50,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get("name").(string)
 
-	var foundWebACL *awstypes.WebACLSummary
+	var foundWebACL awstypes.WebACLSummary
 	input := &wafv2.ListWebACLsInput{
 		Scope: awstypes.Scope(d.Get("scope").(string)),
 		Limit: aws.Int32(100),
@@ -68,18 +68,18 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		for _, webACL := range resp.WebACLs {
 			if aws.ToString(webACL.Name) == name {
-				foundWebACL = &webACL
+				foundWebACL = webACL
 				break
 			}
 		}
 
-		if resp.NextMarker == nil || foundWebACL != nil {
+		if resp.NextMarker == nil {
 			break
 		}
 		input.NextMarker = resp.NextMarker
 	}
 
-	if foundWebACL == nil {
+	if foundWebACL.Id == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for name: %s", name)
 	}
 

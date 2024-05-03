@@ -62,7 +62,7 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get("name").(string)
 
-	var foundRegexPatternSet *awstypes.RegexPatternSetSummary
+	var foundRegexPatternSet awstypes.RegexPatternSetSummary
 	input := &wafv2.ListRegexPatternSetsInput{
 		Scope: awstypes.Scope(d.Get("scope").(string)),
 		Limit: aws.Int32(100),
@@ -80,18 +80,18 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 
 		for _, regexPatternSet := range resp.RegexPatternSets {
 			if aws.ToString(regexPatternSet.Name) == name {
-				foundRegexPatternSet = &regexPatternSet
+				foundRegexPatternSet = regexPatternSet
 				break
 			}
 		}
 
-		if resp.NextMarker == nil || foundRegexPatternSet != nil {
+		if resp.NextMarker == nil {
 			break
 		}
 		input.NextMarker = resp.NextMarker
 	}
 
-	if foundRegexPatternSet == nil {
+	if foundRegexPatternSet.Id == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 RegexPatternSet not found for name: %s", name)
 	}
 

@@ -50,7 +50,7 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get("name").(string)
 
-	var foundRuleGroup *awstypes.RuleGroupSummary
+	var foundRuleGroup awstypes.RuleGroupSummary
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: awstypes.Scope(d.Get("scope").(string)),
 		Limit: aws.Int32(100),
@@ -68,18 +68,18 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		for _, ruleGroup := range resp.RuleGroups {
 			if aws.ToString(ruleGroup.Name) == name {
-				foundRuleGroup = &ruleGroup
+				foundRuleGroup = ruleGroup
 				break
 			}
 		}
 
-		if resp.NextMarker == nil || foundRuleGroup != nil {
+		if resp.NextMarker == nil {
 			break
 		}
 		input.NextMarker = resp.NextMarker
 	}
 
-	if foundRuleGroup == nil {
+	if foundRuleGroup.Id == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 RuleGroup not found for name: %s", name)
 	}
 

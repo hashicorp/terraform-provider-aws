@@ -15,6 +15,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -235,7 +236,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	client := meta.WAFV2Client(ctx)
 
-	_, err := client.ListRuleGroups(ctx, &wafv2_sdkv2.ListRuleGroupsInput{},
+	_, err := client.ListRuleGroups(ctx, &wafv2_sdkv2.ListRuleGroupsInput{
+		Scope: awstypes.ScopeRegional,
+	},
 		func(opts *wafv2_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &endpoint),
