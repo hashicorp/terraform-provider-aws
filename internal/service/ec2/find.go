@@ -6247,6 +6247,20 @@ func FindSnapshotByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Snaps
 	return output, nil
 }
 
+func FindSnapshotLockByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.DescribeLockedSnapshotsOutput, error) {
+	input := &ec2_sdkv2.DescribeLockedSnapshotsInput{
+		SnapshotIds: []string{id},
+	}
+
+	output, err := conn.DescribeLockedSnapshots(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindSnapshotAttribute(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
 	output, err := conn.DescribeSnapshotAttributeWithContext(ctx, input)
 
