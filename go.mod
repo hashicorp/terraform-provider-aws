@@ -170,6 +170,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.0
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.25.4
 	github.com/aws/smithy-go v1.20.2
 	github.com/beevik/etree v1.3.0
