@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,6 +24,8 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := randomCustomLogSourceName()
+	subscriberResourceName := "aws_securitylake_subscriber.test"
+	var subscriber types.SubscriberResource
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -37,9 +41,14 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberExists(ctx, subscriberResourceName, &subscriber),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", resourceName, "subscriber_endpoint"),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrRegionalARN(resourceName, "subscriber_endpoint", "sqs", fmt.Sprintf("AmazonSecurityLake-%s-Main-Queue", aws.ToString(subscriber.SubscriberId)))(s)
+					},
 				),
 			},
 			{
@@ -77,6 +86,8 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", "aws_apigatewayv2_api.test", "api_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 				),
 			},
 			{
@@ -344,7 +355,7 @@ POLICY
 `, rName))
 }
 
-func testAccSubscriberNotificationConfig_basic(rName string) string {
+func testAccSubscriberNotificationConfig_sqs_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSubscriberNotification_config(rName), `
 resource "aws_securitylake_subscriber_notification" "test" {
@@ -356,7 +367,7 @@ resource "aws_securitylake_subscriber_notification" "test" {
 `)
 }
 
-func testAccSubscriberNotificationConfig_https(rName string) string {
+func testAccSubscriberNotificationConfig_https_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSubscriberNotification_config(rName), fmt.Sprintf(`
 resource "aws_securitylake_subscriber_notification" "test" {

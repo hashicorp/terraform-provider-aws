@@ -55,6 +55,10 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"endpoint_id": schema.StringAttribute{
+				Computed:           true,
+				DeprecationMessage: "Use subscriber_endpoint instead",
+			},
+			"subscriber_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
 			"subscriber_id": schema.StringAttribute{
@@ -170,6 +174,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 	// Set values for unknowns.
 	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
 	data.EndpointID = fwflex.StringToFramework(ctx, endpoint)
+	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, endpoint)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -206,6 +211,7 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
 	data.EndpointID = fwflex.StringToFramework(ctx, endpoint)
+	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, endpoint)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -352,10 +358,11 @@ func expandSQSNotificationConfigurationModel(SQSNotifications []sqsNotificationC
 }
 
 type subscriberNotificationResourceModel struct {
-	Configuration fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] `tfsdk:"configuration"`
-	EndpointID    types.String                                                                      `tfsdk:"endpoint_id"`
-	ID            types.String                                                                      `tfsdk:"id"`
-	SubscriberID  types.String                                                                      `tfsdk:"subscriber_id"`
+	Configuration      fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] `tfsdk:"configuration"`
+	EndpointID         types.String                                                                      `tfsdk:"endpoint_id"`
+	ID                 types.String                                                                      `tfsdk:"id"`
+	SubscriberEndpoint types.String                                                                      `tfsdk:"subscriber_endpoint"`
+	SubscriberID       types.String                                                                      `tfsdk:"subscriber_id"`
 }
 
 const (

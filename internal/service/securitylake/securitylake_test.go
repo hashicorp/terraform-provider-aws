@@ -61,10 +61,10 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"migrateSource":   testAccSubscriber_migrate_source,
 		},
 		"SubscriberNotification": {
-			"sqs_basic":   testAccSubscriberNotification_sqs_basic,
-			"https_basic": testAccSubscriberNotification_https_basic,
 			"disappears":  testAccSubscriberNotification_disappears,
+			"https_basic": testAccSubscriberNotification_https_basic,
 			"update":      testAccSubscriberNotification_update,
+			"sqs_basic":   testAccSubscriberNotification_sqs_basic,
 		},
 	}
 
