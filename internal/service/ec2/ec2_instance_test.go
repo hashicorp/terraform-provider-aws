@@ -6860,12 +6860,12 @@ func testAccInstanceConfig_ipv6_addresses(rName string, addressCount int) string
 		testAccInstanceVPCIPv6Config(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  subnet_id          = aws_subnet.test.id
-  instance_type      = "t3.small"
-  ipv6_addresses     = [
-    for i in range(%[2]d):
-	    cidrhost(aws_subnet.test.ipv6_cidr_block, 10+i)
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  subnet_id     = aws_subnet.test.id
+  instance_type = "t3.small"
+  ipv6_addresses = [
+    for i in range(%[2]d) :
+    cidrhost(aws_subnet.test.ipv6_cidr_block, 10 + i)
   ]
   tags = {
     Name = %[1]q
