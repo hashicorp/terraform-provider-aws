@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Key Policy",
 		},
 		{
-			Factory:  ResourceReplicaExternalKey,
+			Factory:  resourceReplicaExternalKey,
 			TypeName: "aws_kms_replica_external_key",
 			Name:     "Replica External Key",
 			Tags: &types.ServicePackageResourceTags{

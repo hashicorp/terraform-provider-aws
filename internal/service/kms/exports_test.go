@@ -5,14 +5,15 @@ package kms
 
 // Exports for use in tests only.
 var (
-	ResourceAlias          = resourceAlias
-	ResourceCiphertext     = resourceCiphertext
-	ResourceCustomKeyStore = resourceCustomKeyStore
-	ResourceExternalKey    = resourceExternalKey
-	ResourceGrant          = resourceGrant
-	ResourceKey            = resourceKey
-	ResourceKeyPolicy      = resourceKeyPolicy
-	ResourceReplicaKey     = resourceReplicaKey
+	ResourceAlias              = resourceAlias
+	ResourceCiphertext         = resourceCiphertext
+	ResourceCustomKeyStore     = resourceCustomKeyStore
+	ResourceExternalKey        = resourceExternalKey
+	ResourceGrant              = resourceGrant
+	ResourceKey                = resourceKey
+	ResourceKeyPolicy          = resourceKeyPolicy
+	ResourceReplicaExternalKey = resourceReplicaExternalKey
+	ResourceReplicaKey         = resourceReplicaKey
 
 	FindAliasByName           = findAliasByName
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
