@@ -671,7 +671,7 @@ func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, keyID s
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
-func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awstypes.KeyMetadata, error) {
+func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awstypes.KeyMetadata, error) { //nolint:unparam
 	const (
 		timeout = 20 * time.Minute
 	)

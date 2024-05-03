@@ -413,7 +413,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	return nil
 }
 
-func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) {
+func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (*awstypes.KeyMetadata, error) { //nolint:unparam
 	const (
 		timeout = 10 * time.Minute
 	)
