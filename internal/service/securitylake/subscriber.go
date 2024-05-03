@@ -530,7 +530,7 @@ func expandSubscriptionValueSources(ctx context.Context, subscriberSourcesModels
 	return sources, diags
 }
 
-func expandSubscriberAwsLogSourceSource(ctx context.Context, awsLogSources []awsLogSubscriberSourceModel) *awstypes.LogSourceResourceMemberAwsLogSource {
+func expandSubscriberAwsLogSourceSource(ctx context.Context, awsLogSources []awsLogSubscriberSourceModel) *awstypes.LogSourceResourceMemberAwsLogSource { //nosemgrep:ci.aws-in-func-name
 	if len(awsLogSources) == 0 {
 		return nil
 	}

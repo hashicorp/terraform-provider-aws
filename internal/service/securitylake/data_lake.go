@@ -193,7 +193,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.CreateDataLakeOutput, error) {
+	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateDataLakeOutput, error) {
 		return conn.CreateDataLake(ctx, input)
 	})
 
@@ -299,7 +299,7 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.UpdateDataLakeOutput, error) {
+		_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.UpdateDataLakeOutput, error) {
 			return conn.UpdateDataLake(ctx, input)
 		})
 
@@ -332,7 +332,7 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.DeleteDataLakeOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
 		return conn.DeleteDataLake(ctx, input)
 	})
 
@@ -571,11 +571,13 @@ type dataLakeReplicationConfigurationModel struct {
 	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
 }
 
-func retryDataLakeConflictWithMutex[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, error)) (T, error) {
 	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
 	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
 
-	raw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (any, error) {
+	const dataLakeTimeout = 2 * time.Minute
+
+	raw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, dataLakeTimeout, func() (any, error) {
 		return f()
 	})
 	if err != nil {

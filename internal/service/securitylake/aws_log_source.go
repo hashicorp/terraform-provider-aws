@@ -6,7 +6,6 @@ package securitylake
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -118,7 +117,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.CreateAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
 		return conn.CreateAwsLogSource(ctx, input)
 	})
 
@@ -216,7 +215,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, 2*time.Minute, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
 		return conn.DeleteAwsLogSource(ctx, input)
 	})
 
