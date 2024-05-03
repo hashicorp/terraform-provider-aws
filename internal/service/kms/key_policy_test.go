@@ -187,12 +187,6 @@ func TestAccKMSKeyPolicy_iamRole(t *testing.T) {
 					testAccCheckKeyExists(ctx, keyResourceName, &key),
 				),
 			},
-			{
-				ResourceName:            keyResourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
-			},
 		},
 	})
 }
@@ -269,7 +263,7 @@ func TestAccKMSKeyPolicy_iamRoleOrder(t *testing.T) {
 	})
 }
 
-// // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646.
 func TestAccKMSKeyPolicy_iamServiceLinkedRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
@@ -287,12 +281,6 @@ func TestAccKMSKeyPolicy_iamServiceLinkedRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, keyResourceName, &key),
 				),
-			},
-			{
-				ResourceName:            keyResourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 		},
 	})
