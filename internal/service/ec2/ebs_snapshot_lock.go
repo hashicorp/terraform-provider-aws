@@ -45,19 +45,18 @@ func ResourceEBSSnapshotLock() *schema.Resource {
 			"cool_off_period": {
 				Type:             schema.TypeInt,
 				Optional:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 72)),
 			},
 			"lock_duration": {
 				Type:             schema.TypeInt,
 				Optional:         true,
-				ForceNew:         true,
+				ConflictsWith:    []string{"expiration_date"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 36500)),
 			},
 			"expiration_date": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
+				ConflictsWith:    []string{"lock_duration"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 			},
 			"lock_created_on": {
@@ -108,10 +107,10 @@ func resourceEBSSnapshotLockCreate(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.LockSnapshot(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Creating EBS snapshot lock: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EBS snapshot lock: %s", err)
 	}
 
-	d.SetId(d.Get("snapshot_id").(string))
+	d.SetId(aws.ToString(resp.SnapshotId))
 	d.Set("lock_created_on", aws.ToTime(resp.LockCreatedOn).Format(time.RFC3339))
 	d.Set("cool_off_period_expires_on", aws.ToTime(resp.CoolOffPeriodExpiresOn).Format(time.RFC3339))
 	d.Set("lock_duration_start_time", aws.ToTime(resp.LockDurationStartTime).Format(time.RFC3339))
