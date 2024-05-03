@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -33,7 +34,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -56,7 +57,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 }
 
 func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	webACLARN := d.Get("web_acl_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
@@ -66,10 +67,10 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 		WebACLArn:   aws.String(webACLARN),
 	}
 
-	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return conn.AssociateWebACLWithContext(ctx, input)
-	}, wafv2.ErrCodeWAFUnavailableEntityException)
+	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.AssociateWebACL(ctx, input)
+	})
 
 	if err != nil {
 		return diag.Errorf("creating WAFv2 WebACL Association (%s): %s", id, err)
@@ -81,7 +82,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
 
@@ -108,7 +109,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
 
@@ -117,11 +118,11 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Association: %s", d.Id())
-	_, err = conn.DisassociateWebACLWithContext(ctx, &wafv2.DisassociateWebACLInput{
+	_, err = conn.DisassociateWebACL(ctx, &wafv2.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
 	})
 
-	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil
 	}
 
@@ -132,14 +133,14 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func FindWebACLByResourceARN(ctx context.Context, conn *wafv2.WAFV2, arn string) (*wafv2.WebACL, error) {
+func FindWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.WebACL, error) {
 	input := &wafv2.GetWebACLForResourceInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.GetWebACLForResourceWithContext(ctx, input)
+	output, err := conn.GetWebACLForResource(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -6,12 +6,13 @@ package wafv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -35,9 +36,9 @@ func DataSourceRuleGroup() *schema.Resource {
 					Required: true,
 				},
 				"scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
 				},
 			}
 		},
@@ -46,17 +47,17 @@ func DataSourceRuleGroup() *schema.Resource {
 
 func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 	name := d.Get("name").(string)
 
-	var foundRuleGroup *wafv2.RuleGroupSummary
+	var foundRuleGroup *awstypes.RuleGroupSummary
 	input := &wafv2.ListRuleGroupsInput{
-		Scope: aws.String(d.Get("scope").(string)),
-		Limit: aws.Int64(100),
+		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Limit: aws.Int32(100),
 	}
 
 	for {
-		resp, err := conn.ListRuleGroupsWithContext(ctx, input)
+		resp, err := conn.ListRuleGroups(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 RuleGroups: %s", err)
 		}
@@ -66,8 +67,8 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		for _, ruleGroup := range resp.RuleGroups {
-			if aws.StringValue(ruleGroup.Name) == name {
-				foundRuleGroup = ruleGroup
+			if aws.ToString(ruleGroup.Name) == name {
+				foundRuleGroup = &ruleGroup
 				break
 			}
 		}
@@ -82,7 +83,7 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "WAFv2 RuleGroup not found for name: %s", name)
 	}
 
-	d.SetId(aws.StringValue(foundRuleGroup.Id))
+	d.SetId(aws.ToString(foundRuleGroup.Id))
 	d.Set("arn", foundRuleGroup.ARN)
 	d.Set("description", foundRuleGroup.Description)
 

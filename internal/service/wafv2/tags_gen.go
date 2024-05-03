@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/aws/aws-sdk-go/service/wafv2/wafv2iface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +19,12 @@ import (
 // listTags lists wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *wafv2.Client, identifier string, optFns ...func(*wafv2.Options)) (tftags.KeyValueTags, error) {
 	input := &wafv2.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +36,7 @@ func listTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) 
 // ListTags lists wafv2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).WAFV2Client(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -52,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns wafv2 service tags.
-func Tags(tags tftags.KeyValueTags) []*wafv2.Tag {
-	result := make([]*wafv2.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &wafv2.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -68,11 +68,11 @@ func Tags(tags tftags.KeyValueTags) []*wafv2.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from wafv2 service tags.
-func KeyValueTags(ctx context.Context, tags []*wafv2.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -80,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []*wafv2.Tag) tftags.KeyValueTags {
 
 // getTagsIn returns wafv2 service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*wafv2.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -91,7 +91,7 @@ func getTagsIn(ctx context.Context) []*wafv2.Tag {
 }
 
 // setTagsOut sets wafv2 service tags in Context.
-func setTagsOut(ctx context.Context, tags []*wafv2.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -100,7 +100,7 @@ func setTagsOut(ctx context.Context, tags []*wafv2.Tag) {
 // updateTags updates wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *wafv2.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*wafv2.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -111,10 +111,10 @@ func updateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string
 	if len(removedTags) > 0 {
 		input := &wafv2.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -129,7 +129,7 @@ func updateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -142,5 +142,5 @@ func updateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string
 // UpdateTags updates wafv2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).WAFV2Conn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).WAFV2Client(ctx), identifier, oldTags, newTags)
 }

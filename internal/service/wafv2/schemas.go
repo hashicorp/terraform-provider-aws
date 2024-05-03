@@ -7,9 +7,10 @@ import (
 	"math"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -140,9 +141,9 @@ func byteMatchStatementSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"field_to_match": fieldToMatchSchema(),
 				"positional_constraint": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PositionalConstraint_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PositionalConstraint](),
 				},
 				"search_string": {
 					Type:         schema.TypeString,
@@ -193,9 +194,9 @@ func ipSetReferenceStatementSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"fallback_behavior": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 							},
 							"header_name": {
 								Type:     schema.TypeString,
@@ -206,9 +207,9 @@ func ipSetReferenceStatementSchema() *schema.Schema {
 								),
 							},
 							"position": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.ForwardedIPPosition_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ForwardedIPPosition](),
 							},
 						},
 					},
@@ -234,9 +235,9 @@ func labelMatchStatementSchema() *schema.Schema {
 					),
 				},
 				"scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.LabelMatchScope_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.LabelMatchScope](),
 				},
 			},
 		},
@@ -292,9 +293,9 @@ func sizeConstraintSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"comparison_operator": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.ComparisonOperator_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
 				},
 				"field_to_match": fieldToMatchSchema(),
 				"size": {
@@ -408,17 +409,17 @@ func jsonBodySchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"invalid_fallback_behavior": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.BodyParsingFallbackBehavior_Values(), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.BodyParsingFallbackBehavior](),
 				},
 				"match_pattern": jsonBodyMatchPatternSchema(),
 				"match_scope": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.JsonMatchScope_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JsonMatchScope](),
 				},
-				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
+				"oversize_handling": oversizeHandlingOptionalSchema(string(awstypes.OversizeHandlingContinue)),
 			},
 		},
 	}
@@ -456,9 +457,9 @@ func forwardedIPConfigSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"fallback_behavior": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 				},
 				"header_name": {
 					Type:     schema.TypeString,
@@ -481,9 +482,9 @@ func textTransformationSchema() *schema.Schema {
 					Required: true,
 				},
 				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.TextTransformationType_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TextTransformationType](),
 				},
 			},
 		},
@@ -543,9 +544,9 @@ func requestBodySchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"default_size_inspection_limit": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.SizeInspectionLimit_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
 							},
 						},
 					},
@@ -770,9 +771,9 @@ func customResponseBodySchema() *schema.Schema {
 					ValidateFunc: validation.StringLenBetween(1, 10240),
 				},
 				"content_type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.ResponseContentType_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResponseContentType](),
 				},
 			},
 		},
@@ -824,9 +825,9 @@ func ja3fingerprintSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"fallback_behavior": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 				},
 			},
 		},
@@ -840,7 +841,7 @@ func bodySchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
+				"oversize_handling": oversizeHandlingOptionalSchema(string(awstypes.OversizeHandlingContinue)),
 			},
 		},
 	}
@@ -848,26 +849,26 @@ func bodySchema() *schema.Schema {
 
 func oversizeHandlingOptionalSchema(defaultValue string) *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		Default:      defaultValue,
-		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          defaultValue,
+		ValidateDiagFunc: enum.Validate[awstypes.OversizeHandling](),
 	}
 }
 
 func oversizeHandlingRequiredSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: enum.Validate[awstypes.OversizeHandling](),
 	}
 }
 
 func matchScopeSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ValidateFunc: validation.StringInSlice(wafv2.MapMatchScope_Values(), false),
+		Type:             schema.TypeString,
+		Required:         true,
+		ValidateDiagFunc: enum.Validate[awstypes.MapMatchScope](),
 	}
 }
 
@@ -990,10 +991,10 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"aggregate_key_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.RateBasedStatementAggregateKeyTypeIp,
+					ValidateDiagFunc: enum.Validate[awstypes.RateBasedStatementAggregateKeyType](),
 				},
 				"custom_key": {
 					Type:     schema.TypeList,
@@ -1165,6 +1166,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 							"enable_regex_in_path": {
 								Type:     schema.TypeBool,
 								Optional: true,
+								Computed: true,
 							},
 							"creation_path": {
 								Type:     schema.TypeString,
@@ -1196,6 +1198,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 							"enable_regex_in_path": {
 								Type:     schema.TypeBool,
 								Optional: true,
+								Computed: true,
 							},
 							"login_path": {
 								Type:     schema.TypeString,
@@ -1217,9 +1220,9 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"inspection_level": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InspectionLevel](),
 							},
 						},
 					},
@@ -1250,9 +1253,9 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 					},
 				},
 				"payload_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PayloadType](),
 				},
 				"username_field": {
 					Type:     schema.TypeList,
@@ -1383,9 +1386,9 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 					},
 				},
 				"payload_type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PayloadType](),
 				},
 				"username_field": {
 					Type:     schema.TypeList,
@@ -1434,9 +1437,9 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 					},
 				},
 				"payload_type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.PayloadType](),
 				},
 				"username_field": {
 					Type:     schema.TypeList,
