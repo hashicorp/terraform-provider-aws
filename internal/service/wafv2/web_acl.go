@@ -372,9 +372,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
 		return retryResourceWebACLDeleteOptmisticLockFailure(ctx, conn, aclId, aclName, aclScope, aclLockToken)
-	}
-
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+	} else if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil
 	}
 
