@@ -314,7 +314,7 @@ func TestAccKMSGrant_service(t *testing.T) {
 
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_grant" {
@@ -322,7 +322,6 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			keyID, grantID, err := tfkms.GrantParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -337,7 +336,7 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("KMS Grant still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("KMS Grant %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -351,17 +350,12 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No KMS Grant ID is set")
-		}
-
 		keyID, grantID, err := tfkms.GrantParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		_, err = tfkms.FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
 

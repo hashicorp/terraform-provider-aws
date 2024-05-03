@@ -9,10 +9,13 @@ var (
 	ResourceCiphertext     = resourceCiphertext
 	ResourceCustomKeyStore = resourceCustomKeyStore
 	ResourceExternalKey    = resourceExternalKey
+	ResourceGrant          = resourceGrant
 	ResourceKey            = resourceKey
 
 	FindAliasByName           = findAliasByName
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
+	FindGrantByTwoPartKey     = findGrantByTwoPartKey
 	FindKeyByID               = findKeyByID
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
+	GrantParseResourceID      = grantParseResourceID
 )
