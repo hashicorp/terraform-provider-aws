@@ -1340,12 +1340,12 @@ resource "aws_vpc_endpoint" "test" {
   ip_address_type   = "dualstack"
   subnet_configurations {
     ipv4      = %[2]q
-    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[4]v)
+    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[4]d)
     subnet_id = aws_subnet.test1.id
   }
   subnet_configurations {
     ipv4      = %[3]q
-    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[4]v)
+    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[4]d)
     subnet_id = aws_subnet.test2.id
   }
   subnet_ids = [
@@ -1445,11 +1445,11 @@ resource "aws_vpc_endpoint" "test" {
   vpc_endpoint_type = "Interface"
   ip_address_type   = "ipv6"
   subnet_configurations {
-    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[2]v)
+    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[2]d)
     subnet_id = aws_subnet.test1.id
   }
   subnet_configurations {
-    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[2]v)
+    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[2]d)
     subnet_id = aws_subnet.test2.id
   }
   subnet_ids = [
