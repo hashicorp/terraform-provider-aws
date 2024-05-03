@@ -154,7 +154,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 		return
 	}
 
-	output, endpointID, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString())
+	output, endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
 
@@ -169,7 +169,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 
 	// Set values for unknowns.
 	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
-	data.EndpointID = fwflex.StringToFramework(ctx, endpointID)
+	data.EndpointID = fwflex.StringToFramework(ctx, endpoint)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -190,7 +190,7 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	output, endpointID, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString())
+	output, endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
 
 	if tfresource.NotFound(err) || output == nil {
 		response.State.RemoveResource(ctx)
@@ -205,7 +205,7 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 	}
 
 	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
-	data.EndpointID = fwflex.StringToFramework(ctx, endpointID)
+	data.EndpointID = fwflex.StringToFramework(ctx, endpoint)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -286,7 +286,7 @@ func (r *subscriberNotificationResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func findSubscriberNotificationByEndPointID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*string, *string, error) {
+func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*string, *string, error) {
 	var resourceID string
 	output, err := findSubscriberByID(ctx, conn, subscriberID)
 
