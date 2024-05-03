@@ -16,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_policy", name="Policy")
@@ -29,7 +30,7 @@ func dataSourcePolicy() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"name", "path_prefix"},
+				ConflictsWith: []string{names.AttrName, "path_prefix"},
 			},
 			"attachment_count": {
 				Type:     schema.TypeInt,
@@ -39,7 +40,7 @@ func dataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -73,7 +74,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
@@ -103,7 +104,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", arn)
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set("description", policy.Description)
-	d.Set("name", policy.PolicyName)
+	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 

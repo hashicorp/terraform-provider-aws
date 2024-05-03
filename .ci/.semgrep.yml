@@ -634,3 +634,14 @@ rules:
     patterns:
       - pattern-regex: "(Create|Read|Update|Delete)Context:"
     severity: ERROR
+
+  - id: literal-name-string-constant
+    languages: [go]
+    message: Use the constant `Name` for the string literal `name`
+    paths:
+      include:
+        - "internal/service/iam/*.go"
+    patterns:
+      - pattern: '"name"'
+    severity: ERROR
+    fix: "names.AttrName"

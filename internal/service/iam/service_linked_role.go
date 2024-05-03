@@ -73,7 +73,7 @@ func resourceServiceLinkedRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +171,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("create_date", aws.ToTime(role.CreateDate).Format(time.RFC3339))
 	d.Set("custom_suffix", customSuffix)
 	d.Set("description", role.Description)
-	d.Set("name", role.RoleName)
+	d.Set(names.AttrName, role.RoleName)
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
 

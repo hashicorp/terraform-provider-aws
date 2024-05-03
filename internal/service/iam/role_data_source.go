@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_role", name="Role")
@@ -43,7 +44,7 @@ func dataSourceRole() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -85,7 +86,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	role, err := findRoleByName(ctx, conn, name)
 
 	if err != nil {
@@ -97,7 +98,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
-	d.Set("name", role.RoleName)
+	d.Set(names.AttrName, role.RoleName)
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
