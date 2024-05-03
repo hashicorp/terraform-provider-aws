@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -150,14 +151,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 		Configuration: configuration,
 	}
 
-	_, err := conn.CreateSubscriberNotification(ctx, input)
-	if err != nil {
-		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
-
-		return
-	}
-
-	endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
+	output, err := conn.CreateSubscriberNotification(ctx, input)
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
 
@@ -165,8 +159,8 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.EndpointID = fwflex.StringValueToFramework(ctx, endpoint)
-	data.SubscriberEndpoint = fwflex.StringValueToFramework(ctx, endpoint)
+	data.EndpointID = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
+	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -187,15 +181,30 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	endpoint, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
+	output, err := findSubscriberNotificationBySubscriberID(ctx, conn, data.SubscriberID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
+	if err != nil {
+		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
+		return
+	}
 
-	data.EndpointID = fwflex.StringValueToFramework(ctx, endpoint)
-	data.SubscriberEndpoint = fwflex.StringValueToFramework(ctx, endpoint)
+	data.EndpointID = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
+	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
+
+	if s := aws.ToString(output.SubscriberEndpoint); arn.IsARN(s) {
+		p, _ := arn.Parse(s)
+		if p.Service == "sqs" {
+			configurationValue := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &subscriberNotificationResourceConfigurationModel{
+				HTTPSNotificationConfiguration: fwtypes.NewListNestedObjectValueOfNull[httpsNotificationConfigurationModel](ctx),
+				SqsNotificationConfiguration:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sqsNotificationConfigurationModel{}),
+			})
+			data.Configuration = configurationValue
+		}
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -276,18 +285,19 @@ func (r *subscriberNotificationResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securitylake.Client, subscriberID string) (string, error) {
+// findSubscriberNotificationBySubscriberID returns an `*awstypes.SubscriberResource` because subscriber notifications are not really a standalone concept
+func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*awstypes.SubscriberResource, error) {
 	output, err := findSubscriberByID(ctx, conn, subscriberID)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if output == nil || output.SubscriberEndpoint == nil {
-		return "", &tfresource.EmptyResultError{}
+		return nil, &tfresource.EmptyResultError{}
 	}
 
-	return aws.ToString(output.SubscriberEndpoint), nil
+	return output, nil
 }
 
 func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subscriberNotificationResourceConfigurationModels []subscriberNotificationResourceConfigurationModel) (awstypes.NotificationConfiguration, diag.Diagnostics) {
