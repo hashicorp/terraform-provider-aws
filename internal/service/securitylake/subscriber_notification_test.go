@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSubscriberNotification_basic(t *testing.T) {
+func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_subscriber_notification.test"
@@ -34,7 +34,7 @@ func testAccSubscriberNotification_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriberNotificationConfig_basic(rName),
+				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
@@ -52,7 +52,7 @@ func testAccSubscriberNotification_basic(t *testing.T) {
 	})
 }
 
-func testAccSubscriberNotification_https(t *testing.T) {
+func testAccSubscriberNotification_https_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_subscriber_notification.test"
@@ -69,7 +69,7 @@ func testAccSubscriberNotification_https(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriberNotificationConfig_https(rName),
+				Config: testAccSubscriberNotificationConfig_https_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
@@ -106,7 +106,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriberNotificationConfig_basic(rName),
+				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriberNotification, resourceName),
@@ -133,7 +133,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriberNotificationConfig_basic(rName),
+				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 				),
@@ -145,7 +145,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"configuration"},
 			},
 			{
-				Config: testAccSubscriberNotificationConfig_https(rName),
+				Config: testAccSubscriberNotificationConfig_https_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
