@@ -88,6 +88,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_rds_engine_version",
 		},
 		{
+			Factory:  DataSourceGlobalCluster,
+			TypeName: "aws_rds_global_cluster",
+		},
+		{
 			Factory:  DataSourceOrderableInstance,
 			TypeName: "aws_rds_orderable_db_instance",
 		},
