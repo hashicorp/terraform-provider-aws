@@ -64,6 +64,7 @@ const (
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
+	KMSEndpointID                        = "kms"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"

@@ -238,6 +238,12 @@ func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	})
 }
 
+func FlattenStringValueMap(m map[string]string) map[string]interface{} {
+	return tfmaps.ApplyToAllValues(m, func(v string) any {
+		return v
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*int64
 func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,7 +18,7 @@ import (
 
 func TestAccKMSReplicaKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key kms.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_kms_replica_key.test"
@@ -60,7 +60,7 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 
 func TestAccKMSReplicaKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key kms.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
 
@@ -87,7 +87,7 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 
 func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key kms.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -139,7 +139,7 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 
 func TestAccKMSReplicaKey_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key kms.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
 	policy1 := `{"Id":"kms-tf-1","Statement":[{"Action":"kms:*","Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*","Sid":"Enable IAM User Permissions 1"}],"Version":"2012-10-17"}`
@@ -182,7 +182,7 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 
 func TestAccKMSReplicaKey_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key kms.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
 
@@ -251,7 +251,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 
 func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key kms.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test1"
 
