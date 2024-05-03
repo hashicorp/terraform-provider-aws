@@ -1,4 +1,10 @@
-## 5.48.0 (Unreleased)
+## 5.49.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_bedrockagent_data_source` ([#37158](https://github.com/hashicorp/terraform-provider-aws/issues/37158))
+
+## 5.48.0 (May  2, 2024)
 
 FEATURES:
 
