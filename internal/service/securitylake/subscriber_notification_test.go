@@ -35,7 +35,7 @@ func testAccSubscriberNotification_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -70,7 +70,7 @@ func testAccSubscriberNotification_https(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_https(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -107,7 +107,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriberNotification, resourceName),
 				),
@@ -134,7 +134,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 				),
 			},
@@ -146,7 +146,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 			},
 			{
 				Config: testAccSubscriberNotificationConfig_https(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -163,7 +163,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 			},
 			{
 				Config: testAccSubscriberNotificationConfig_https_update(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
