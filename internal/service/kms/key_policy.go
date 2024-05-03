@@ -74,7 +74,7 @@ func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
-	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
+	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())

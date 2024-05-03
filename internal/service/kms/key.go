@@ -223,7 +223,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
+	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
@@ -343,18 +343,18 @@ func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-type kmsKey struct {
+type kmsKeyInfo struct {
 	metadata *awstypes.KeyMetadata
 	policy   string
 	rotation *bool
 	tags     []awstypes.Tag
 }
 
-func findKey(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKey, error) {
+func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
 	// Wait for propagation since KMS is eventually consistent.
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		var err error
-		var key kmsKey
+		var key kmsKeyInfo
 
 		key.metadata, err = findKeyByID(ctx, conn, keyID)
 
@@ -401,7 +401,7 @@ func findKey(ctx context.Context, conn *kms.Client, keyID string, isNewResource 
 		return nil, err
 	}
 
-	return outputRaw.(*kmsKey), nil
+	return outputRaw.(*kmsKeyInfo), nil
 }
 
 func findKeyByID(ctx context.Context, conn *kms.Client, id string, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {

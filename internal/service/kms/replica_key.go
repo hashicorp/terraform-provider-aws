@@ -179,7 +179,7 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
+	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Replica Key (%s) not found, removing from state", d.Id())
