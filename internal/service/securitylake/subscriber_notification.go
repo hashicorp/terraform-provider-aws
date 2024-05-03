@@ -98,7 +98,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 										Optional: true,
 									},
 									"endpoint": schema.StringAttribute{
-										Optional: true,
+										Required: true,
 									},
 									"http_method": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.HttpMethod](),
@@ -106,7 +106,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 									},
 									"target_role_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
-										Optional:   true,
+										Required:   true,
 									},
 								},
 							},
