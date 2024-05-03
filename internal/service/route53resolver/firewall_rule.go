@@ -67,7 +67,7 @@ func ResourceFirewallRule() *schema.Resource {
 			},
 			"firewall_domain_redirection_action": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				Default:      route53resolver.FirewallDomainRedirectionActionInspectRedirectionDomain,
 				ValidateFunc: validation.StringInSlice(route53resolver.FirewallDomainRedirectionAction_Values(), false),
 			},
