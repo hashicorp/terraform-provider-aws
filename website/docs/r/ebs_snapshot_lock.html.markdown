@@ -62,5 +62,5 @@ import {
 Using `terraform import`, import an EBS Snapshot Lock using the Snapshot `id`. For example:
 
 ```console
-% terraform import aws_ebs_snapshot.example snap-049df61146c4d7901
+% terraform import aws_ebs_snapshot_lock.example snap-049df61146c4d7901
 ```
