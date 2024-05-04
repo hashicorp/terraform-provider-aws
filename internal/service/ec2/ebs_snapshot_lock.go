@@ -159,15 +159,15 @@ func resourceEBSSnapshotLockUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("cool_off_period") {
-		input.CoolOffPeriod = aws.Int32(v.(int32))
+		input.CoolOffPeriod = aws.Int32(d.Get("cool_off_period").(int32))
 	}
 
 	if d.HasChange("lock_duration") {
-		input.LockDuration = aws.Int32(v.(int32))
+		input.LockDuration = aws.Int32(d.Get("lock_duration").(int32))
 	}
 
 	if d.HasChange("expiration_date") {
-		t, _ := time.Parse(time.RFC3339, v.(string))
+		t, _ := time.Parse(time.RFC3339, d.Get("expiration_date").(string))
 		input.ExpirationDate = aws.Time(t)
 	}
 
@@ -195,7 +195,7 @@ func resourceEBSSnapshotLockDelete(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.UnlockSnapshot(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "unlocking EBS snapshot (%s): %s",, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "unlocking EBS snapshot (%s): %s", d.Id(), err)
 	}
 
 	return diags
