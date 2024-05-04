@@ -533,6 +533,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceEBSSnapshotLock,
+			TypeName: "aws_ebs_snapshot_lock",
+		},
+		{
 			Factory:  ResourceEBSVolume,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
