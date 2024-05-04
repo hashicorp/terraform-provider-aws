@@ -33,11 +33,11 @@ aresource "aws_ebs_snapshot_lock" "example" {
 
 This resource supports the following arguments:
 
-* `snapshot_id` - (Required)
-* `lock_mode` - (Required)
-* `cool_off_period` - (Optional)
-* `lock_duration` - (Optional)
-* `expiration_date` - (Optional)
+* `snapshot_id` - (Required) The ID of the snapshot to lock.
+* `lock_mode` - (Required) The mode in which to lock the snapshot. Specify one of the following. Valid values are `compliance` and `governance`.
+* `cool_off_period` - (Optional) The cooling-off period during which you can unlock the snapshot or modify the lock settings after locking the snapshot in compliance mode, in hours. You can increase the lock duration after the cooling-off period expires. The cooling-off period is optional when locking a snapshot in compliance mode. If you are locking the snapshot in governance mode, omit this parameter. To lock the snapshot in compliance mode immediately without a cooling-off period, omit this parameter. If you are extending the lock duration for a snapshot that is locked in compliance mode after the cooling-off period has expired, omit this parameter. Allowed values: Min 1, max 72.
+* `lock_duration` - (Optional) The period of time for which to lock the snapshot, in days. You must specify either this parameter or `expiration_date`, but not both. Allowed values: Min: 1, max 36500.
+* `expiration_date` - (Optional) The date and time at which the snapshot lock is to automatically expire, in the UTC time zone ( YYYY-MM-DDThh:mm:ss.sssZ ). You must specify either this parameter or `lock_duration`, but not both.
 
 ## Attribute Reference
 
