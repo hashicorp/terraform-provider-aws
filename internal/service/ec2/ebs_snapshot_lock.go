@@ -154,7 +154,6 @@ func resourceEBSSnapshotLockUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	input := &ec2.LockSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
-		LockMode:   types.LockMode(d.Get("lock_mode").(string)),
 	}
 
 	if d.HasChange("cool_off_period") {
