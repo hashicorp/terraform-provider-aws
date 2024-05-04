@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -31,6 +32,8 @@ func ResourceEBSSnapshotLock() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: resourcEBSSnapshotLockCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"snapshot_id": {
@@ -199,4 +202,15 @@ func resourceEBSSnapshotLockDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func resourcEBSSnapshotLockCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	lockMode := diff.Get("lock_mode").(string)
+	coolOffPeriod := diff.Get("cool_off_period").(string)
+
+	if lockMode == "governance" && coolOffPeriod != "" {
+		return fmt.Errorf("'cool_off_period' must not be set when 'lockMode' is '%s'", lockMode)
+	}
+
+	return nil
 }
