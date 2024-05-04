@@ -45,7 +45,7 @@ issues:
     - linters:
         - staticcheck
       path: "internal/service/cloudfront"
-      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+      text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
     - linters:
         - staticcheck
       path: "internal/service/cloudtrail"

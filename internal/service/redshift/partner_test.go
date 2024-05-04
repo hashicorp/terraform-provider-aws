@@ -103,7 +103,7 @@ func testAccCheckPartnerDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_redshift_partner" {
 				continue
 			}
-			_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -133,7 +133,7 @@ func testAccCheckPartnerExists(ctx context.Context, name string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		_, err := tfredshift.FindPartnerById(ctx, conn, rs.Primary.ID)
+		_, err := tfredshift.FindPartnerByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

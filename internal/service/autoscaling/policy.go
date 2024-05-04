@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_autoscaling_policy", name="Policy")
@@ -889,11 +889,11 @@ func expandPredictiveScalingConfig(predictiveScalingConfigSlice []interface{}) *
 		MaxCapacityBreachBehavior: awstypes.PredictiveScalingMaxCapacityBreachBehavior(predictiveScalingConfigFlat["max_capacity_breach_behavior"].(string)),
 		Mode:                      awstypes.PredictiveScalingMode(predictiveScalingConfigFlat["mode"].(string)),
 	}
-	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["max_capacity_buffer"].(string)).Value(); !null {
-		predictiveScalingConfig.MaxCapacityBuffer = aws.Int32(int32(v))
+	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["max_capacity_buffer"].(string)).ValueInt32(); !null {
+		predictiveScalingConfig.MaxCapacityBuffer = aws.Int32(v)
 	}
-	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["scheduling_buffer_time"].(string)).Value(); !null {
-		predictiveScalingConfig.SchedulingBufferTime = aws.Int32(int32(v))
+	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["scheduling_buffer_time"].(string)).ValueInt32(); !null {
+		predictiveScalingConfig.SchedulingBufferTime = aws.Int32(v)
 	}
 	return predictiveScalingConfig
 }
@@ -1302,13 +1302,13 @@ func expandStepAdjustments(tfList []interface{}) []awstypes.StepAdjustment {
 		}
 
 		if v, ok := tfMap["metric_interval_lower_bound"].(string); ok {
-			if v, null, _ := nullable.Float(v).Value(); !null {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 				apiObject.MetricIntervalLowerBound = aws.Float64(v)
 			}
 		}
 
 		if v, ok := tfMap["metric_interval_upper_bound"].(string); ok {
-			if v, null, _ := nullable.Float(v).Value(); !null {
+			if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 				apiObject.MetricIntervalUpperBound = aws.Float64(v)
 			}
 		}

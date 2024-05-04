@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -1285,12 +1285,12 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 		layout.RowSpan = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["column_index"].(string); ok && v != "" {
-		if i, null, _ := nullable.Int(v).Value(); !null {
+		if i, null, _ := nullable.Int(v).ValueInt64(); !null {
 			layout.ColumnIndex = aws.Int64(i)
 		}
 	}
 	if v, ok := tfMap["row_index"].(string); ok && v != "" {
-		if i, null, _ := nullable.Int(v).Value(); !null {
+		if i, null, _ := nullable.Int(v).ValueInt64(); !null {
 			layout.RowIndex = aws.Int64(i)
 		}
 	}

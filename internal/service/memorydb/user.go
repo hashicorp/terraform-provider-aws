@@ -54,7 +54,7 @@ func ResourceUser() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"passwords": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							MaxItems: 2,
 							Elem: &schema.Schema{
@@ -100,12 +100,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	userName := d.Get("user_name").(string)
 	input := &memorydb.CreateUserInput{
 		AccessString: aws.String(d.Get("access_string").(string)),
-		AuthenticationMode: &memorydb.AuthenticationMode{
-			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
-			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
-		},
-		Tags:     getTagsIn(ctx),
-		UserName: aws.String(userName),
+		Tags:         getTagsIn(ctx),
+		UserName:     aws.String(userName),
+	}
+
+	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.CreateUserWithContext(ctx, input)
@@ -171,11 +171,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.AccessString = aws.String(d.Get("access_string").(string))
 		}
 
-		if d.HasChange("authentication_mode") {
-			input.AuthenticationMode = &memorydb.AuthenticationMode{
-				Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
-				Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
-			}
+		if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		_, err := conn.UpdateUserWithContext(ctx, input)
@@ -215,4 +212,22 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
+}
+
+func expandAuthenticationMode(tfMap map[string]interface{}) *memorydb.AuthenticationMode {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &memorydb.AuthenticationMode{}
+
+	if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Passwords = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
 }

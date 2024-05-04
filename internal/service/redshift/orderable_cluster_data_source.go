@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_redshift_orderable_cluster")
-func DataSourceOrderableCluster() *schema.Resource {
+// @SDKDataSource("aws_redshift_orderable_cluster", name="Orderable Cluster Options")
+func dataSourceOrderableCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableClusterRead,
+
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,

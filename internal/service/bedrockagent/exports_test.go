@@ -8,8 +8,10 @@ var (
 	ResourceAgent            = newAgentResource
 	ResourceAgentActionGroup = newAgentActionGroupResource
 	ResourceAgentAlias       = newAgentAliasResource
+	ResourceKnowledgeBase    = newKnowledgeBaseResource
 
 	FindAgentActionGroupByThreePartKey = findAgentActionGroupByThreePartKey
 	FindAgentAliasByTwoPartKey         = findAgentAliasByTwoPartKey
 	FindAgentByID                      = findAgentByID
+	FindKnowledgeBaseByID              = findKnowledgeBaseByID
 )

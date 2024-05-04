@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -319,7 +320,13 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s): %s", name, err)
+		var detail string
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "Account used is not a delegated administrator") {
+			detail = "If you confirm that you are using a delegated administrator account, verify that the IAM User or Role has the permission \"organizations:ListDelegatedAdministrators\"."
+		}
+
+		d := errs.NewErrorDiagnostic(fmt.Sprintf("creating CloudFormation StackSet (%s): %s", name, err), detail)
+		return append(diags, d)
 	}
 
 	d.SetId(name)
