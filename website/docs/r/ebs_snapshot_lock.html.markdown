@@ -43,10 +43,10 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `lock_created_on` -
-* `cool_off_period_expires_on` -
-* `lock_duration_start_time` -
-* `lock_state` - 
+* `lock_created_on` - The date and time at which the snapshot was locked, in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ).
+* `cool_off_period_expires_on` - The date and time at which the compliance mode cooling-off period expires, in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ).
+* `lock_duration_start_time` - The date and time at which the lock duration started, in the UTC time zone (YYYY-MM-DDThh:mm:ss.sssZ).
+* `lock_state` - The state of the snapshot lock. valid states include: `compliance-cooloff` - The snapshot has been locked in compliance mode but it is still within the cooling-off period. The snapshot can't be deleted, but it can be unlocked and the lock settings can be modified by users with appropriate permissions. `governance` - The snapshot is locked in governance mode. The snapshot can't be deleted, but it can be unlocked and the lock settings can be modified by users with appropriate permissions. `compliance` - The snapshot is locked in compliance mode and the cooling-off period has expired. The snapshot can't be unlocked or deleted. The lock duration can only be increased by users with appropriate permissions. `expired` - The snapshot was locked in compliance or governance mode but the lock duration has expired. The snapshot is not locked and can be deleted.
 
 ## Import
 
