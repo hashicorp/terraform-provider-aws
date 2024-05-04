@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -281,10 +282,12 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
+// Converts the ARN of the Identity Center Application to the ARN of the Identity Center Instance
 func convertARN(arn *string) *string {
-	re := regexache.MustCompile(`arn:aws:sso::\d+:application/(.+)/apl-.+`)
-	ret := re.ReplaceAllString(*arn, "arn:aws:sso:::instance/$1")
-	return &ret
+	parts := strings.Split(*arn, ":")
+	subParts := strings.Split(parts[5], "/")
+	newArn := fmt.Sprintf("%s:%s:%s:::instance/%s", parts[0], parts[1], parts[2], subParts[1])
+	return &newArn
 }
 
 func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
