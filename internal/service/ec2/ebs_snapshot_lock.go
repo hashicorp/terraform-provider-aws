@@ -65,24 +65,20 @@ func ResourceEBSSnapshotLock() *schema.Resource {
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 			},
 			"lock_created_on": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cool_off_period_expires_on": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"lock_duration_start_time": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"lock_state": {
-				Type:             schema.TypeString,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.LockState](),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
