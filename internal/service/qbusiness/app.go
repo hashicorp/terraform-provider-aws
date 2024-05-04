@@ -241,7 +241,7 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	data.IdentityCenterInstanceArn = fwflex.StringToFrameworkARN(ctx, convertArn(out.IdentityCenterApplicationArn))
+	data.IdentityCenterInstanceArn = fwflex.StringToFrameworkARN(ctx, convertARN(out.IdentityCenterApplicationArn))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -281,7 +281,7 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func convertArn(arn *string) *string {
+func convertARN(arn *string) *string {
 	re := regexache.MustCompile(`arn:aws:sso::\d+:application/(.+)/apl-.+`)
 	ret := re.ReplaceAllString(*arn, "arn:aws:sso:::instance/$1")
 	return &ret
