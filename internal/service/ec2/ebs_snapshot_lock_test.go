@@ -27,7 +27,7 @@ func TestAccEC2EBSSnapshotLock_basic(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotLockConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "lock_state", "governance"),
+					resource.TestCheckResourceAttr(resourceName, "lock_state", "compliance"),
 				),
 			},
 			{
@@ -60,8 +60,9 @@ resource "aws_ebs_snapshot" "test" {
 func testAccEBSSnapshotLockConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotLockBaseConfig(rName), `
 resource "aws_ebs_snapshot_lock" "test" {
-  snapshot_id = aws_ebs_snapshot.test.id
-  lock_mode   = "governance"
+  snapshot_id     = aws_ebs_snapshot.test.id
+  lock_mode       = "compliance"
+  cool_off_period = 72
 }
 `)
 }
