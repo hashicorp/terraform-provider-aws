@@ -82,6 +82,9 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 					),
 				},
 			},
+			"standby_replicas": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
 				Computed: true,
@@ -126,15 +129,6 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 		out = output
 	}
 
-	data.ARN = flex.StringToFramework(ctx, out.Arn)
-	data.CollectionEndpoint = flex.StringToFramework(ctx, out.CollectionEndpoint)
-	data.DashboardEndpoint = flex.StringToFramework(ctx, out.DashboardEndpoint)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.ID = flex.StringToFramework(ctx, out.Id)
-	data.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-
 	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
 	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
 
@@ -143,7 +137,6 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
-
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
@@ -154,6 +147,11 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 
 	tags = tags.IgnoreConfig(ignoreTagsConfig)
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -168,6 +166,7 @@ type dataSourceCollectionData struct {
 	KmsKeyARN          types.String `tfsdk:"kms_key_arn"`
 	LastModifiedDate   types.String `tfsdk:"last_modified_date"`
 	Name               types.String `tfsdk:"name"`
+	StandbyReplicas    types.String `tfsdk:"standby_replicas"`
 	Tags               types.Map    `tfsdk:"tags"`
 	Type               types.String `tfsdk:"type"`
 }

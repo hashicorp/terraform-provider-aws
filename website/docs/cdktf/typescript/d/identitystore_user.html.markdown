@@ -89,14 +89,14 @@ The `externalId` configuration block supports the following arguments:
 
 The following arguments are supported by the `filter` configuration block:
 
-* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `userName` is the only valid attribute path.
+* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `UserName` is the only valid attribute path.
 * `attributeValue` - (Required) Value for an attribute.
 
 ### `uniqueAttribute` Configuration Block
 
 The `uniqueAttribute` configuration block supports the following arguments:
 
-* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. For example: `userName`. Refer to the [User data type](https://docs.aws.amazon.com/singlesignon/latest/IdentityStoreAPIReference/API_User.html).
+* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. For example: `UserName`. Refer to the [User data type](https://docs.aws.amazon.com/singlesignon/latest/IdentityStoreAPIReference/API_User.html).
 * `attributeValue` - (Required) Value for an attribute.
 
 ## Attribute Reference
@@ -141,4 +141,4 @@ This data source exports the following attributes in addition to the arguments a
 * `userName` - User's user name value.
 * `userType` - The user type.
 
-<!-- cache-key: cdktf-0.18.0 input-8c28f2f52361f5a36e7b173700680cb27d3254e1fd37a8faf2c90f48b32a9d09 -->
+<!-- cache-key: cdktf-0.20.1 input-8c28f2f52361f5a36e7b173700680cb27d3254e1fd37a8faf2c90f48b32a9d09 -->

@@ -34,12 +34,13 @@ import (
 
 // @SDKResource("aws_fsx_lustre_file_system", name="Lustre File System")
 // @Tags(identifierAttribute="arn")
-func ResourceLustreFileSystem() *schema.Resource {
+func resourceLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLustreFileSystemCreate,
 		ReadWithoutTimeout:   resourceLustreFileSystemRead,
 		UpdateWithoutTimeout: resourceLustreFileSystemUpdate,
 		DeleteWithoutTimeout: resourceLustreFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -196,7 +197,6 @@ func ResourceLustreFileSystem() *schema.Resource {
 			"per_unit_storage_throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 				ValidateFunc: validation.IntInSlice([]int{
 					12,
 					40,
@@ -434,7 +434,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindLustreFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := findLustreFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for Lustre File System (%s) not found, removing from state", d.Id())
@@ -510,12 +510,16 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		}
 
-		if v, ok := d.GetOk("data_compression_type"); ok {
-			input.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+		if d.HasChange("data_compression_type") {
+			input.LustreConfiguration.DataCompressionType = aws.String(d.Get("data_compression_type").(string))
 		}
 
 		if d.HasChange("log_configuration") {
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
+		}
+
+		if d.HasChange("per_unit_storage_throughput") {
+			input.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(d.Get("per_unit_storage_throughput").(int)))
 		}
 
 		if d.HasChange("root_squash_configuration") {
@@ -658,7 +662,7 @@ func logStateFunc(v interface{}) string {
 	return value
 }
 
-func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeLustre)
 
 	if err != nil {

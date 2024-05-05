@@ -14,62 +14,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type ServiceDatum struct {
-	ProviderNameUpper string
-	ProviderPackage   string
-}
-
 type TemplateData struct {
-	Services []ServiceDatum
+	Services []names.ServiceNameUpper
 }
 
 func main() {
 	const (
-		filename      = `consts_gen.go`
-		namesDataFile = "names_data.csv"
+		filename = `consts_gen.go`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating names/%s", filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
-
-	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+	td := TemplateData{
+		Services: names.ServiceNamesUpper(),
 	}
 
-	td := TemplateData{}
-
-	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
-		if l[names.ColExclude] != "" {
-			continue
-		}
-
-		if l[names.ColNotImplemented] != "" {
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
-
-		td.Services = append(td.Services, ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			ProviderPackage:   p,
-		})
-	}
-
-	sort.SliceStable(td.Services, func(i, j int) bool {
+	sort.Slice(td.Services, func(i, j int) bool {
 		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
 	})
 

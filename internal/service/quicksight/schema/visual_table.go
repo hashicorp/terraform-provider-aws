@@ -175,7 +175,7 @@ func tableVisualSchema() *schema.Schema {
 														MaxItems: 200,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+																"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 																"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 																"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 															},
@@ -1091,7 +1091,7 @@ func flattenTableFieldOption(apiObject []*quicksight.TableFieldOption) []interfa
 			tfMap["url_styling"] = flattenTableFieldURLConfiguration(config.URLStyling)
 		}
 		if config.Visibility != nil {
-			tfMap["visbility"] = aws.StringValue(config.Visibility)
+			tfMap["visibility"] = aws.StringValue(config.Visibility)
 		}
 		if config.Width != nil {
 			tfMap["width"] = aws.StringValue(config.Width)

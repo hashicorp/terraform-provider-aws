@@ -5,19 +5,18 @@ package cloudfront_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,8 +27,8 @@ const (
 func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution cloudfront.Distribution
-	var productionDistribution cloudfront.Distribution
+	var stagingDistribution awstypes.Distribution
+	var productionDistribution awstypes.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -37,9 +36,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,8 +81,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution cloudfront.Distribution
-	var productionDistribution cloudfront.Distribution
+	var stagingDistribution awstypes.Distribution
+	var productionDistribution awstypes.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -91,9 +90,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,8 +113,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution cloudfront.Distribution
-	var productionDistribution cloudfront.Distribution
+	var stagingDistribution awstypes.Distribution
+	var productionDistribution awstypes.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -123,9 +122,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,8 +210,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution cloudfront.Distribution
-	var productionDistribution cloudfront.Distribution
+	var stagingDistribution awstypes.Distribution
+	var productionDistribution awstypes.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -222,9 +221,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -284,7 +283,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 
 func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_continuous_deployment_policy" {
@@ -292,38 +291,38 @@ func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource
 			}
 
 			_, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
-			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
-				return nil
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return create.Error(names.CloudFront, create.ErrActionCheckingDestroyed, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("CloudFront Continuous Deployment Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, name string, policy *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
+func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, n string, v *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
-		resp, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
+		output, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*policy = *resp
+		*v = *output
 
 		return nil
 	}

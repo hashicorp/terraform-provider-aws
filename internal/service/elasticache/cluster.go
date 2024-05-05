@@ -26,9 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,13 +39,9 @@ const (
 	defaultMemcachedPort = "11211"
 )
 
-const (
-	cacheClusterCreatedTimeout = 40 * time.Minute
-)
-
 // @SDKResource("aws_elasticache_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -337,12 +334,12 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			CustomizeDiffValidateClusterAZMode,
-			CustomizeDiffValidateClusterEngineVersion,
+			customizeDiffValidateClusterAZMode,
+			customizeDiffValidateClusterEngineVersion,
 			customizeDiffEngineVersionForceNewOnDowngrade,
-			CustomizeDiffValidateClusterNumCacheNodes,
-			CustomizeDiffClusterMemcachedNodeType,
-			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
+			customizeDiffValidateClusterNumCacheNodes,
+			customizeDiffClusterMemcachedNodeType,
+			customizeDiffValidateClusterMemcachedSnapshotIdentifier,
 			verify.SetTagsDiff,
 		),
 	}
@@ -390,7 +387,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
-		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
 	}
@@ -475,7 +472,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(id)
 
-	if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), cacheClusterCreatedTimeout); err != nil {
+	const (
+		timeout = 40 * time.Minute
+	)
+	if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -500,12 +500,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	c, err := FindCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
+	c, err := findCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
@@ -556,33 +558,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
 	return diags
-}
-
-func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
-	d.Set("node_type", c.CacheNodeType)
-
-	d.Set("engine", c.Engine)
-	if aws.StringValue(c.Engine) == engineRedis {
-		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
-		}
-	} else {
-		setEngineVersionMemcached(d, c.EngineVersion)
-	}
-	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
-
-	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
-		return fmt.Errorf("setting security_group_ids: %w", err)
-	}
-
-	if c.CacheParameterGroup != nil {
-		d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
-	}
-
-	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
-
-	return nil
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -660,7 +635,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("auto_minor_version_upgrade") {
 			v := d.Get("auto_minor_version_upgrade")
-			if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				input.AutoMinorVersionUpgrade = aws.Bool(v)
 			}
 			requestUpdate = true
@@ -723,7 +698,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache cluster (%s), error: %s", d.Id(), err)
 			}
 
-			_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), CacheClusterUpdatedTimeout)
+			const (
+				timeout = 80 * time.Minute
+			)
+			_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), timeout)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to update: %s", d.Id(), err)
 			}
@@ -731,48 +709,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
-}
-
-func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []*string {
-	nodesIdsToRemove := []*string{}
-	for i := oldNumberOfNodes; i > oldNumberOfNodes-cacheNodesToRemove && i > 0; i-- {
-		s := fmt.Sprintf("%04d", i)
-		nodesIdsToRemove = append(nodesIdsToRemove, &s)
-	}
-
-	return nodesIdsToRemove
-}
-
-func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error {
-	sortedCacheNodes := make([]*elasticache.CacheNode, len(c.CacheNodes))
-	copy(sortedCacheNodes, c.CacheNodes)
-	sort.Sort(byCacheNodeId(sortedCacheNodes))
-
-	cacheNodeData := make([]map[string]interface{}, 0, len(sortedCacheNodes))
-
-	for _, node := range sortedCacheNodes {
-		if node.CacheNodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.CustomerAvailabilityZone == nil {
-			return fmt.Errorf("Unexpected nil pointer in: %s", node)
-		}
-		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			"id":                aws.StringValue(node.CacheNodeId),
-			"address":           aws.StringValue(node.Endpoint.Address),
-			"port":              aws.Int64Value(node.Endpoint.Port),
-			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
-			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
-		})
-	}
-
-	return d.Set("cache_nodes", cacheNodeData)
-}
-
-type byCacheNodeId []*elasticache.CacheNode
-
-func (b byCacheNodeId) Len() int      { return len(b) }
-func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byCacheNodeId) Less(i, j int) bool {
-	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -787,7 +723,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
-	_, err = WaitCacheClusterDeleted(ctx, conn, d.Id(), CacheClusterDeletedTimeout)
+	const (
+		timeout = 40 * time.Minute
+	)
+	_, err = waitCacheClusterDeleted(ctx, conn, d.Id(), timeout)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
@@ -849,4 +788,209 @@ func DeleteCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cach
 	}
 
 	return err
+}
+
+func findCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
+	input := &elasticache.DescribeCacheClustersInput{
+		CacheClusterId: aws.String(id),
+	}
+
+	return findCacheCluster(ctx, conn, input, tfslices.PredicateTrue[*elasticache.CacheCluster]())
+}
+func findCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
+	input := &elasticache.DescribeCacheClustersInput{
+		CacheClusterId:    aws.String(id),
+		ShowCacheNodeInfo: aws.Bool(true),
+	}
+
+	return findCacheCluster(ctx, conn, input, tfslices.PredicateTrue[*elasticache.CacheCluster]())
+}
+
+func findCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*elasticache.CacheCluster]) (*elasticache.CacheCluster, error) {
+	output, err := findCacheClusters(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findCacheClusters(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*elasticache.CacheCluster]) ([]*elasticache.CacheCluster, error) {
+	var output []*elasticache.CacheCluster
+
+	err := conn.DescribeCacheClustersPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.CacheClusters {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCacheClusterByID(ctx, conn, cacheClusterID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.CacheClusterStatus), nil
+	}
+}
+
+const (
+	cacheClusterStatusAvailable             = "available"
+	cacheClusterStatusCreating              = "creating"
+	cacheClusterStatusDeleted               = "deleted"
+	cacheClusterStatusDeleting              = "deleting"
+	cacheClusterStatusIncompatibleNetwork   = "incompatible-network"
+	cacheClusterStatusModifying             = "modifying"
+	cacheClusterStatusRebootingClusterNodes = "rebooting cluster nodes"
+	cacheClusterStatusRestoreFailed         = "restore-failed"
+	cacheClusterStatusSnapshotting          = "snapshotting"
+)
+
+func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			cacheClusterStatusCreating,
+			cacheClusterStatusModifying,
+			cacheClusterStatusSnapshotting,
+			cacheClusterStatusRebootingClusterNodes,
+		},
+		Target:     []string{cacheClusterStatusAvailable},
+		Refresh:    statusCacheCluster(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elasticache.CacheCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCacheClusterDeleted(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, timeout time.Duration) (*elasticache.CacheCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			cacheClusterStatusCreating,
+			cacheClusterStatusAvailable,
+			cacheClusterStatusModifying,
+			cacheClusterStatusDeleting,
+			cacheClusterStatusIncompatibleNetwork,
+			cacheClusterStatusRestoreFailed,
+			cacheClusterStatusSnapshotting,
+		},
+		Target:     []string{},
+		Refresh:    statusCacheCluster(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elasticache.CacheCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []*string {
+	nodesIdsToRemove := []*string{}
+	for i := oldNumberOfNodes; i > oldNumberOfNodes-cacheNodesToRemove && i > 0; i-- {
+		s := fmt.Sprintf("%04d", i)
+		nodesIdsToRemove = append(nodesIdsToRemove, &s)
+	}
+
+	return nodesIdsToRemove
+}
+
+func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error {
+	sortedCacheNodes := make([]*elasticache.CacheNode, len(c.CacheNodes))
+	copy(sortedCacheNodes, c.CacheNodes)
+	sort.Sort(byCacheNodeId(sortedCacheNodes))
+
+	cacheNodeData := make([]map[string]interface{}, 0, len(sortedCacheNodes))
+
+	for _, node := range sortedCacheNodes {
+		if node.CacheNodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.CustomerAvailabilityZone == nil {
+			return fmt.Errorf("Unexpected nil pointer in: %s", node)
+		}
+		cacheNodeData = append(cacheNodeData, map[string]interface{}{
+			"id":                aws.StringValue(node.CacheNodeId),
+			"address":           aws.StringValue(node.Endpoint.Address),
+			"port":              aws.Int64Value(node.Endpoint.Port),
+			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
+			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
+		})
+	}
+
+	return d.Set("cache_nodes", cacheNodeData)
+}
+
+type byCacheNodeId []*elasticache.CacheNode
+
+func (b byCacheNodeId) Len() int      { return len(b) }
+func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+func (b byCacheNodeId) Less(i, j int) bool {
+	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
+		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
+}
+
+func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
+	d.Set("node_type", c.CacheNodeType)
+
+	d.Set("engine", c.Engine)
+	if aws.StringValue(c.Engine) == engineRedis {
+		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
+			return err // nosemgrep:ci.bare-error-returns
+		}
+	} else {
+		setEngineVersionMemcached(d, c.EngineVersion)
+	}
+	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
+
+	d.Set("subnet_group_name", c.CacheSubnetGroupName)
+	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
+		return fmt.Errorf("setting security_group_ids: %w", err)
+	}
+
+	if c.CacheParameterGroup != nil {
+		d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
+	}
+
+	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
+
+	return nil
 }

@@ -23,7 +23,7 @@ resource "aws_dms_replication_config" "name" {
   target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
   table_mappings                = <<EOF
   {
-    "rules":[{"rule-type":"selection","rule-id":"1","rule-name":"1","object-locator":{"schema-name":"%%","table-name":"%%", "rule-action":"include"}]
+    "rules":[{"rule-type":"selection","rule-id":"1","rule-name":"1","rule-action":"include","object-locator":{"schema-name":"%%","table-name":"%%"}}]
   }
 EOF
 

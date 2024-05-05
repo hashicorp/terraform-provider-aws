@@ -5,6 +5,7 @@ package servicecatalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
+// @Testing(tagsTest=config-only, existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true)
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -459,18 +460,18 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
 	}
 
-	// To enable debugging of potential errors, log as a warning
+	// To enable debugging of potential v, log as a warning
 	// instead of exiting prematurely with an error, e.g.
-	// errors can be present after update to a new version failed and the stack
+	// v can be present after update to a new version failed and the stack
 	// rolled back to the current version.
-	if errors := recordOutput.RecordDetail.RecordErrors; len(errors) > 0 {
-		var errs *multierror.Error
+	if v := recordOutput.RecordDetail.RecordErrors; len(v) > 0 {
+		var errs []error
 
-		for _, err := range errors {
-			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.Code), aws.StringValue(err.Description)))
+		for _, err := range v {
+			errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.Code), aws.StringValue(err.Description)))
 		}
 
-		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.StringValue(detail.LastProvisioningRecordId), errs.ErrorOrNil())
+		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.StringValue(detail.LastProvisioningRecordId), errors.Join(errs...))
 	}
 
 	if err := d.Set("outputs", flattenRecordOutputs(recordOutput.RecordOutputs)); err != nil {
@@ -528,9 +529,9 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if d.HasChanges("tags", "tags_all") {
-		input.Tags = getTagsIn(ctx)
-	}
+	// Send tags each time the resource is updated. This is necessary to automatically apply tags
+	// to provisioned AWS objects during update if the tags don't change.
+	input.Tags = getTagsIn(ctx)
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateProvisionedProductWithContext(ctx, input)

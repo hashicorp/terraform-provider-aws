@@ -21,7 +21,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_tagFilter(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +44,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_includeComplianceDetails
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -66,7 +66,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceTypeFilters(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -90,7 +90,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceARNList(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

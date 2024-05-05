@@ -49,8 +49,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `exclusiveEndTime` - (Optional) The exclusive date and time that specifies when the stream ends. If you don't define this parameter, the stream runs indefinitely until you cancel it. It must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"20190613T21:36:34Z"`.
-* `inclusiveStartTime` - (Required) The inclusive start date and time from which to start streaming journal data. This parameter must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"20190613T21:36:34Z"`.  This cannot be in the future and must be before `exclusiveEndTime`.  If you provide a value that is before the ledger's `creationDateTime`, QLDB effectively defaults it to the ledger's `creationDateTime`.
+* `exclusiveEndTime` - (Optional) The exclusive date and time that specifies when the stream ends. If you don't define this parameter, the stream runs indefinitely until you cancel it. It must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.
+* `inclusiveStartTime` - (Required) The inclusive start date and time from which to start streaming journal data. This parameter must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.  This cannot be in the future and must be before `exclusiveEndTime`.  If you provide a value that is before the ledger's `CreationDateTime`, QLDB effectively defaults it to the ledger's `CreationDateTime`.
 * `kinesisConfiguration` - (Required) The configuration settings of the Kinesis Data Streams destination for your stream request. Documented below.
 * `ledgerName` - (Required) The name of the QLDB ledger.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of the IAM role that grants QLDB permissions for a journal stream to write data records to a Kinesis Data Streams resource.
@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `8M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `8m`)
+- `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.18.0 input-35ccfcf2d29f7f918b217c8f22a5948a35ed05cac3acbaacc55e0a1fd3e71f2a -->
+<!-- cache-key: cdktf-0.20.1 input-35ccfcf2d29f7f918b217c8f22a5948a35ed05cac3acbaacc55e0a1fd3e71f2a -->

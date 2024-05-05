@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -99,7 +100,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet.
-		if _, err := WaitInstanceReady(ctx, conn, instanceID, InstanceReadyTimeout); err != nil {
+		if _, err := waitInstanceReady(ctx, conn, instanceID, InstanceReadyTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) to be ready: %s", instanceID, err)
 		}
 
@@ -163,7 +164,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	volumeID := d.Get("volume_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
-		if err := StopInstance(ctx, conn, instanceID, InstanceStopTimeout); err != nil {
+		if err := stopInstance(ctx, conn, instanceID, false, InstanceStopTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 		}
 	}
@@ -177,6 +178,10 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Deleting EBS Volume Attachment: %s", d.Id())
 	_, err := conn.DetachVolumeWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeIncorrectState, "available") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -45,6 +46,8 @@ func DataSourceCustomPlugin() *schema.Resource {
 }
 
 func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
@@ -65,7 +68,7 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("listing MSK Connect Custom Plugins: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Connect Custom Plugins: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {
@@ -75,7 +78,7 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Custom Plugin", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Connect Custom Plugin", err))
 	}
 
 	plugin := output[0]
@@ -93,5 +96,5 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("latest_revision", nil)
 	}
 
-	return nil
+	return diags
 }

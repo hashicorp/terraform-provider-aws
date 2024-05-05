@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch;batch.ComputeEnvironmentDetail")
 func ResourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -259,6 +260,23 @@ func ResourceComputeEnvironment() *schema.Resource {
 				},
 				ValidateFunc: validation.StringInSlice(batch.CEType_Values(), true),
 			},
+			"update_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"job_execution_timeout_minutes": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"terminate_jobs_on_update": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -298,6 +316,23 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 	if _, err := waitComputeEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) create: %s", d.Id(), err)
+	}
+
+	// UpdatePolicy is not possible to set with CreateComputeEnvironment
+	if v, ok := d.GetOk("update_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		inputUpdateOnCreate := &batch.UpdateComputeEnvironmentInput{
+			ComputeEnvironment: aws.String(d.Id()),
+			UpdatePolicy:       expandComputeEnvironmentUpdatePolicy(v.([]interface{})),
+		}
+		log.Printf("[DEBUG] Creating Batch Compute Environment extra arguments: %s", inputUpdateOnCreate)
+
+		if _, err := conn.UpdateComputeEnvironmentWithContext(ctx, inputUpdateOnCreate); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Create Batch Compute Environment extra arguments through UpdateComputeEnvironment (%s): %s", d.Id(), err)
+		}
+
+		if err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Create waiting for Batch Compute Environment (%s) extra arguments through UpdateComputeEnvironment: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
@@ -345,6 +380,10 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("status_reason", computeEnvironment.StatusReason)
 	d.Set("type", computeEnvironmentType)
 
+	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
+	}
+
 	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
@@ -365,6 +404,10 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("state") {
 			input.State = aws.String(d.Get("state").(string))
+		}
+
+		if d.HasChange("update_policy") {
+			input.UpdatePolicy = expandComputeEnvironmentUpdatePolicy(d.Get("update_policy").([]interface{}))
 		}
 
 		if computeEnvironmentType := strings.ToUpper(d.Get("type").(string)); computeEnvironmentType == batch.CETypeManaged {
@@ -479,7 +522,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "updating Batch Compute Environment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -754,7 +797,7 @@ func waitComputeEnvironmentDisabled(ctx context.Context, conn *batch.Batch, name
 	return nil, err
 }
 
-func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
@@ -764,11 +807,11 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
-		return v, err
+	if _, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func isFargateType(computeResourceType string) bool {
@@ -1212,4 +1255,32 @@ func flattenLaunchTemplateSpecification(apiObject *batch.LaunchTemplateSpecifica
 	}
 
 	return tfMap
+}
+
+func expandComputeEnvironmentUpdatePolicy(l []interface{}) *batch.UpdatePolicy {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	up := &batch.UpdatePolicy{
+		JobExecutionTimeoutMinutes: aws.Int64(int64(m["job_execution_timeout_minutes"].(int))),
+		TerminateJobsOnUpdate:      aws.Bool(m["terminate_jobs_on_update"].(bool)),
+	}
+
+	return up
+}
+
+func flattenComputeEnvironmentUpdatePolicy(up *batch.UpdatePolicy) []interface{} {
+	if up == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"job_execution_timeout_minutes": aws.Int64Value(up.JobExecutionTimeoutMinutes),
+		"terminate_jobs_on_update":      aws.BoolValue(up.TerminateJobsOnUpdate),
+	}
+
+	return []interface{}{m}
 }

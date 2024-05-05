@@ -12,7 +12,7 @@ description: |-
 
 Provides a resource to manage AWS Certificate Manager Private Certificate Authorities (ACM PCA Certificate Authorities).
 
-~> **NOTE:** Creating this resource will leave the certificate authority in a `pendingCertificate` status, which means it cannot yet issue certificates. To complete this setup, you must fully sign the certificate authority CSR available in the `certificateSigningRequest` attribute. The [`awsAcmpcaCertificateAuthorityCertificate`](/docs/providers/aws/r/acmpca_certificate_authority_certificate.html) resource can be used for this purpose.
+~> **NOTE:** Creating this resource will leave the certificate authority in a `PENDING_CERTIFICATE` status, which means it cannot yet issue certificates. To complete this setup, you must fully sign the certificate authority CSR available in the `certificateSigningRequest` attribute. The [`aws_acmpca_certificate_authority_certificate`](/docs/providers/aws/r/acmpca_certificate_authority_certificate.html) resource can be used for this purpose.
 
 ## Example Usage
 
@@ -159,12 +159,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `certificateAuthorityConfiguration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
-* `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `active` state.
+* `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
 * `revocationConfiguration` - (Optional) Nested argument containing revocation configuration. Defined below.
-* `usageMode` - (Optional) Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly. Short-lived certificate validity is limited to seven days. Defaults to `generalPurpose`. Valid values: `generalPurpose` and `shortLivedCertificate`.
+* `usageMode` - (Optional) Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly. Short-lived certificate validity is limited to seven days. Defaults to `GENERAL_PURPOSE`. Valid values: `GENERAL_PURPOSE` and `SHORT_LIVED_CERTIFICATE`.
 * `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of the certificate authority. Defaults to `subordinate`. Valid values: `root` and `subordinate`.
-* `keyStorageSecurityStandard` - (Optional) Cryptographic key management compliance standard used for handling CA keys. Defaults to `fips1402Level3OrHigher`. Valid values: `fips1402Level3OrHigher` and `fips1402Level2OrHigher`. Supported standard for each region can be found in the [Storage and security compliance of AWS Private CA private keys Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys).
+* `type` - (Optional) Type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
+* `keyStorageSecurityStandard` - (Optional) Cryptographic key management compliance standard used for handling CA keys. Defaults to `FIPS_140_2_LEVEL_3_OR_HIGHER`. Valid values: `FIPS_140_2_LEVEL_3_OR_HIGHER` and `FIPS_140_2_LEVEL_2_OR_HIGHER`. Supported standard for each region can be found in the [Storage and security compliance of AWS Private CA private keys Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys).
 * `permanentDeletionTimeInDays` - (Optional) Number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
 
 ### certificate_authority_configuration
@@ -203,7 +203,7 @@ the custom OCSP responder endpoint. Defined below.
 * `enabled` - (Optional) Boolean value that specifies whether certificate revocation lists (CRLs) are enabled. Defaults to `false`.
 * `expirationInDays` - (Optional, Required if `enabled` is `true`) Number of days until a certificate expires. Must be between 1 and 5000.
 * `s3BucketName` - (Optional, Required if `enabled` is `true`) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `customCname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be between 3 and 255 characters in length.
-* `s3ObjectAcl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `publicRead`.
+* `s3ObjectAcl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `PUBLIC_READ`.
 
 #### ocsp_configuration
 
@@ -228,28 +228,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
+* `create` - (Default `1m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsAcmpcaCertificateAuthority` using the certificate authority ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AcmpcaCertificateAuthority } from "./.gen/providers/aws/acmpca-certificate-authority";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AcmpcaCertificateAuthority.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsAcmpcaCertificateAuthority` using the certificate authority ARN. For example:
+Using `terraform import`, import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
 ```console
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->
+<!-- cache-key: cdktf-0.20.1 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->

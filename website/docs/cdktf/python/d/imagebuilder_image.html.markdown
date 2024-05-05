@@ -47,6 +47,11 @@ This data source exports the following attributes in addition to the arguments a
 * `distribution_configuration_arn` - ARN of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - Whether additional information about the image being created is collected.
 * `image_recipe_arn` - ARN of the image recipe.
+* `image_scanning_configuration` - List of an object with image scanning configuration fields.
+    * `image_scanning_enabled` - Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image.
+    * `ecr_configuration` - Configuration block with ECR configuration.
+        * `repository_name` - The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+        * `container_tags` - Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 * `image_tests_configuration` - List of an object with image tests configuration.
     * `image_tests_enabled` - Whether image tests are enabled.
     * `timeout_minutes` - Number of minutes before image tests time out.
@@ -67,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.
 
-<!-- cache-key: cdktf-0.18.0 input-53a7f339aa6dcc7a25e0208e25307d27d8c96291fcb0093e705d220d99e734c2 -->
+<!-- cache-key: cdktf-0.20.1 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->

@@ -9,6 +9,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
     },
+    "aws-sdk-go-migration" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues that are related to the providers migration to AWS SDK for Go v2."
+    },
     "breaking-change" = {
       color       = "ec585d", # color:boundary
       description = "Introduces a breaking change in current functionality; usually deferred to the next major release."
@@ -65,6 +69,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to the Federal Information Processing Standard (FIPS)."
     },
+    "function" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to provider functions."
+    },
     "generators" = {
       color       = "60dea9", # color:nomad
       description = "Relates to code generators."
@@ -77,6 +85,10 @@ variable "workflow_labels" {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
     },
+    "localstack" = {
+      color       = "6577e7", # color:localstack blue-mid
+      description = "LocalStack-specific issues and PRs."
+    },
     "needs-triage" = {
       color       = "dc477d", # color:consul
       description = "Waiting for first response or review from a maintainer."
@@ -84,6 +96,10 @@ variable "workflow_labels" {
     "new-data-source" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
+    },
+    "new-function" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new function."
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
@@ -128,10 +144,6 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
-    },
-    "service/meta" = {
-      color       = "7b42bc", # color:terraform (logomark)
-      description = "Issues and PRs that correspond to meta data sources."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ses_configuration_set: Fix `tracking_options` being omitted from state and resulting in persistent diff
+```

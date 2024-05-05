@@ -74,6 +74,32 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 	return configuration
 }
 
+func expandChallengeConfig(l []interface{}) *wafv2.ChallengeConfig {
+	configuration := &wafv2.ChallengeConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["immunity_time_property"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+
+		if v, ok := m["immunity_time"]; ok {
+			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
+				ImmunityTime: aws.Int64(int64(v.(int))),
+			}
+		}
+	}
+
+	return configuration
+}
+
 func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -505,6 +531,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Cookies = expandCookies(m["cookies"].([]interface{}))
 	}
 
+	if v, ok := m["header_order"]; ok && len(v.([]interface{})) > 0 {
+		f.HeaderOrder = expandHeaderOrder(m["header_order"].([]interface{}))
+	}
+
 	if v, ok := m["headers"]; ok && len(v.([]interface{})) > 0 {
 		f.Headers = expandHeaders(m["headers"].([]interface{}))
 	}
@@ -881,6 +911,18 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	}
 }
 
+func expandHeaderOrder(l []interface{}) *wafv2.HeaderOrder {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.HeaderOrder{
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+}
+
 func expandHeaders(l []interface{}) *wafv2.Headers {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1142,6 +1184,24 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 	return out
 }
 
+func expandAddressFields(tfList []interface{}) []*wafv2.AddressField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	out := make([]*wafv2.AddressField, 0)
+	identifiers := tfList[0].(map[string]interface{})
+	for _, v := range identifiers["identifiers"].([]interface{}) {
+		r := wafv2.AddressField{
+			Identifier: aws.String(v.(string)),
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
+}
+
 func expandEmailField(tfList []interface{}) *wafv2.EmailField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1166,6 +1226,24 @@ func expandPasswordField(tfList []interface{}) *wafv2.PasswordField {
 	}
 
 	return &out
+}
+
+func expandPhoneNumberFields(tfList []interface{}) []*wafv2.PhoneNumberField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	out := make([]*wafv2.PhoneNumberField, 0)
+	identifiers := tfList[0].(map[string]interface{})
+	for _, v := range identifiers["identifiers"].([]interface{}) {
+		r := wafv2.PhoneNumberField{
+			Identifier: aws.String(v.(string)),
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
 }
 
 func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
@@ -1263,10 +1341,12 @@ func expandRequestInspectionACFP(tfList []interface{}) *wafv2.RequestInspectionA
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.RequestInspectionACFP{
-		EmailField:    expandEmailField(m["email_field"].([]interface{})),
-		PasswordField: expandPasswordField(m["password_field"].([]interface{})),
-		PayloadType:   aws.String(m["payload_type"].(string)),
-		UsernameField: expandUsernameField(m["username_field"].([]interface{})),
+		AddressFields:     expandAddressFields(m["address_fields"].([]interface{})),
+		EmailField:        expandEmailField(m["email_field"].([]interface{})),
+		PasswordField:     expandPasswordField(m["password_field"].([]interface{})),
+		PayloadType:       aws.String(m["payload_type"].(string)),
+		PhoneNumberFields: expandPhoneNumberFields(m["phone_number_fields"].([]interface{})),
+		UsernameField:     expandUsernameField(m["username_field"].([]interface{})),
 	}
 
 	return &out
@@ -1463,8 +1543,9 @@ func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.RateBasedStatement{
-		AggregateKeyType: aws.String(m["aggregate_key_type"].(string)),
-		Limit:            aws.Int64(int64(m["limit"].(int))),
+		AggregateKeyType:    aws.String(m["aggregate_key_type"].(string)),
+		EvaluationWindowSec: aws.Int64(int64(m["evaluation_window_sec"].(int))),
+		Limit:               aws.Int64(int64(m["limit"].(int))),
 	}
 
 	if v, ok := m["forwarded_ip_config"]; ok {
@@ -1639,6 +1720,23 @@ func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
 }
 
 func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+	if config.ImmunityTimeProperty == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"immunity_time_property": []interface{}{map[string]interface{}{
+			"immunity_time": aws.Int64Value(config.ImmunityTimeProperty.ImmunityTime),
+		}},
+	}
+
+	return []interface{}{m}
+}
+
+func flattenChallengeConfig(config *wafv2.ChallengeConfig) interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1913,6 +2011,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 
 	if f.Cookies != nil {
 		m["cookies"] = flattenCookies(f.Cookies)
+	}
+
+	if f.HeaderOrder != nil {
+		m["header_order"] = flattenHeaderOrder(f.HeaderOrder)
 	}
 
 	if f.Headers != nil {
@@ -2244,6 +2346,18 @@ func flattenVisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 	return []interface{}{m}
 }
 
+func flattenHeaderOrder(s *wafv2.HeaderOrder) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenHeaders(s *wafv2.Headers) interface{} {
 	if s == nil {
 		return []interface{}{}
@@ -2483,6 +2597,27 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 	return out
 }
 
+func flattenAddressFields(apiObjects []*wafv2.AddressField) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var identifiers []*string
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		identifiers = append(identifiers, apiObject.Identifier)
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"identifiers": aws.StringValueSlice(identifiers),
+		},
+	}
+}
+
 func flattenEmailField(apiObject *wafv2.EmailField) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -2505,6 +2640,27 @@ func flattenPasswordField(apiObject *wafv2.PasswordField) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func flattenPhoneNumberFields(apiObjects []*wafv2.PhoneNumberField) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var identifiers []*string
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		identifiers = append(identifiers, apiObject.Identifier)
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"identifiers": aws.StringValueSlice(identifiers),
+		},
+	}
 }
 
 func flattenUsernameField(apiObject *wafv2.UsernameField) []interface{} {
@@ -2576,10 +2732,12 @@ func flattenRequestInspectionACFP(apiObject *wafv2.RequestInspectionACFP) []inte
 	}
 
 	m := map[string]interface{}{
-		"email_field":    flattenEmailField(apiObject.EmailField),
-		"password_field": flattenPasswordField(apiObject.PasswordField),
-		"payload_type":   aws.StringValue(apiObject.PayloadType),
-		"username_field": flattenUsernameField(apiObject.UsernameField),
+		"address_fields":      flattenAddressFields(apiObject.AddressFields),
+		"email_field":         flattenEmailField(apiObject.EmailField),
+		"password_field":      flattenPasswordField(apiObject.PasswordField),
+		"payload_type":        aws.StringValue(apiObject.PayloadType),
+		"phone_number_fields": flattenPhoneNumberFields(apiObject.PhoneNumberFields),
+		"username_field":      flattenUsernameField(apiObject.UsernameField),
 	}
 
 	return []interface{}{m}
@@ -2807,6 +2965,10 @@ func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} 
 
 	if apiObject.CustomKeys != nil {
 		tfMap["custom_key"] = flattenRateBasedStatementCustomKeys(apiObject.CustomKeys)
+	}
+
+	if apiObject.EvaluationWindowSec != nil {
+		tfMap["evaluation_window_sec"] = int(aws.Int64Value(apiObject.EvaluationWindowSec))
 	}
 
 	if apiObject.Limit != nil {

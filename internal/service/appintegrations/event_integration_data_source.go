@@ -6,11 +6,12 @@ package appintegrations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -54,30 +55,32 @@ func DataSourceEventIntegration() *schema.Resource {
 }
 
 func dataSourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	output, err := conn.GetEventIntegrationWithContext(ctx, &appintegrationsservice.GetEventIntegrationInput{
+	output, err := conn.GetEventIntegration(ctx, &appintegrations.GetEventIntegrationInput{
 		Name: aws.String(name),
 	})
 
 	if err != nil {
-		return diag.Errorf("reading AppIntegrations Event Integration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Name))
+	d.SetId(aws.ToString(output.Name))
 	d.Set("arn", output.EventIntegrationArn)
 	d.Set("description", output.Description)
 	if err := d.Set("event_filter", flattenEventFilter(output.EventFilter)); err != nil {
-		return diag.Errorf("setting event_filter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting event_filter: %s", err)
 	}
 	d.Set("eventbridge_bus", output.EventBridgeBus)
 	d.Set("name", output.Name)
 
 	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

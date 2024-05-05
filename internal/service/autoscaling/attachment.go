@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -19,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_attachment")
-func ResourceAttachment() *schema.Resource {
+// @SDKResource("aws_autoscaling_attachment", name="Attachment")
+func resourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,
 		ReadWithoutTimeout:   resourceAttachmentRead,
@@ -50,40 +51,41 @@ func ResourceAttachment() *schema.Resource {
 
 func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
 		lbName := v.(string)
 		input := &autoscaling.AttachLoadBalancersInput{
 			AutoScalingGroupName: aws.String(asgName),
-			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
+			LoadBalancerNames:    []string{lbName},
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
-				return conn.AttachLoadBalancersWithContext(ctx, input)
+				return conn.AttachLoadBalancers(ctx, input)
 			},
 			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
 		}
 	} else {
+		lbTargetGroupARN := d.Get("lb_target_group_arn").(string)
 		input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      aws.StringSlice([]string{d.Get("lb_target_group_arn").(string)}),
+			TargetGroupARNs:      []string{lbTargetGroupARN},
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
-				return conn.AttachLoadBalancerTargetGroupsWithContext(ctx, input)
+				return conn.AttachLoadBalancerTargetGroups(ctx, input)
 			},
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target group (%s): %s", asgName, d.Get("lb_target_group_arn").(string), err)
+			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target group (%s): %s", asgName, lbTargetGroupARN, err)
 		}
 	}
 
@@ -95,15 +97,15 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	var err error
 
 	if v, ok := d.GetOk("elb"); ok {
-		err = FindAttachmentByLoadBalancerName(ctx, conn, asgName, v.(string))
+		err = findAttachmentByLoadBalancerName(ctx, conn, asgName, v.(string))
 	} else {
-		err = FindAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
+		err = findAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
 	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -121,54 +123,59 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
 		lbName := v.(string)
 		input := &autoscaling.DetachLoadBalancersInput{
 			AutoScalingGroupName: aws.String(asgName),
-			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
+			LoadBalancerNames:    []string{lbName},
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
-				return conn.DetachLoadBalancersWithContext(ctx, input)
+				return conn.DetachLoadBalancers(ctx, input)
 			},
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
+
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "Trying to remove Load Balancers that are not part of the group") {
+			return diags
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
 		}
 	} else {
+		lbTargetGroupARN := d.Get("lb_target_group_arn").(string)
 		input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      aws.StringSlice([]string{d.Get("lb_target_group_arn").(string)}),
+			TargetGroupARNs:      []string{lbTargetGroupARN},
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
-				return conn.DetachLoadBalancerTargetGroupsWithContext(ctx, input)
+				return conn.DetachLoadBalancerTargetGroups(ctx, input)
 			},
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target group (%s): %s", asgName, d.Get("lb_target_group_arn").(string), err)
+			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target group (%s): %s", asgName, lbTargetGroupARN, err)
 		}
 	}
 
 	return diags
 }
 
-func FindAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.AutoScaling, asgName, loadBalancerName string) error {
-	asg, err := FindGroupByName(ctx, conn, asgName)
+func findAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Client, asgName, loadBalancerName string) error {
+	asg, err := findGroupByName(ctx, conn, asgName)
 
 	if err != nil {
 		return err
 	}
 
 	for _, v := range asg.LoadBalancerNames {
-		if aws.StringValue(v) == loadBalancerName {
+		if v == loadBalancerName {
 			return nil
 		}
 	}
@@ -178,15 +185,15 @@ func FindAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Aut
 	}
 }
 
-func FindAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.AutoScaling, asgName, targetGroupARN string) error {
-	asg, err := FindGroupByName(ctx, conn, asgName)
+func findAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.Client, asgName, targetGroupARN string) error {
+	asg, err := findGroupByName(ctx, conn, asgName)
 
 	if err != nil {
 		return err
 	}
 
 	for _, v := range asg.TargetGroupARNs {
-		if aws.StringValue(v) == targetGroupARN {
+		if v == targetGroupARN {
 			return nil
 		}
 	}

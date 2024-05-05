@@ -4,20 +4,17 @@
 package autoscaling
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_autoscaling_group")
-func DataSourceGroup() *schema.Resource {
+// @SDKDataSource("aws_autoscaling_group", name="Group")
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
@@ -59,6 +56,22 @@ func DataSourceGroup() *schema.Resource {
 			"health_check_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"instance_maintenance_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"min_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"launch_configuration": {
 				Type:     schema.TypeString,
@@ -471,16 +484,6 @@ func DataSourceGroup() *schema.Resource {
 						},
 					},
 				},
-				// This should be removable, but wait until other tags work is being done.
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["key"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
-					buf.WriteString(fmt.Sprintf("%t-", m["propagate_at_launch"].(bool)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
@@ -558,25 +561,28 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	groupName := d.Get("name").(string)
-	group, err := FindGroupByName(ctx, conn, groupName)
+	group, err := findGroupByName(ctx, conn, groupName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", groupName, err)
 	}
 
-	d.SetId(aws.StringValue(group.AutoScalingGroupName))
+	d.SetId(aws.ToString(group.AutoScalingGroupName))
 	d.Set("arn", group.AutoScalingGroupARN)
-	d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones))
+	d.Set("availability_zones", group.AvailabilityZones)
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
 	d.Set("desired_capacity_type", group.DesiredCapacityType)
 	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
+	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(group.InstanceMaintenancePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+	}
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
@@ -585,7 +591,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("launch_template", nil)
 	}
-	d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames))
+	d.Set("load_balancers", group.LoadBalancerNames)
 	d.Set("max_instance_lifetime", group.MaxInstanceLifetime)
 	d.Set("max_size", group.MaxSize)
 	d.Set("min_size", group.MinSize)
@@ -603,11 +609,11 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set("status", group.Status)
 	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
-	if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
-	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
-	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
+	d.Set("target_group_arns", group.TargetGroupARNs)
+	d.Set("termination_policies", group.TerminationPolicies)
 	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(group.TrafficSources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
 	}

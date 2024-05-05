@@ -54,8 +54,8 @@ This data source exports the following attributes in addition to the arguments a
 * `errorMessage` - Reason your Amazon Kendra Experience could not properly process.
 * `id` - Unique identifiers of the Experience and index separated by a slash (`/`).
 * `name` - Name of the Experience.
-* `roleArn` - Shows the ARN of a role with permission to access `query` API, `querySuggestions` API, `submitFeedback` API, and AWS SSO that stores your user and group information.
-* `status` - Current processing status of your Amazon Kendra Experience. When the status is `active`, your Amazon Kendra Experience is ready to use. When the status is `failed`, the `errorMessage` field contains the reason that this failed.
+* `roleArn` - Shows the ARN of a role with permission to access `Query` API, `QuerySuggestions` API, `SubmitFeedback` API, and AWS SSO that stores your user and group information.
+* `status` - Current processing status of your Amazon Kendra Experience. When the status is `ACTIVE`, your Amazon Kendra Experience is ready to use. When the status is `FAILED`, the `errorMessage` field contains the reason that this failed.
 * `updatedAt` - Date and time that the Experience was last updated.
 
 The `configuration` block supports the following attributes:
@@ -78,4 +78,4 @@ The `endpoints` block supports the following attributes:
 * `endpoint` - Endpoint of your Amazon Kendra Experience.
 * `endpointType` - Type of endpoint for your Amazon Kendra Experience.
 
-<!-- cache-key: cdktf-0.18.0 input-f5305d893052c413022095c12ac4f6b75a23e499dbe8ec02edd79a5c7abd6c01 -->
+<!-- cache-key: cdktf-0.20.1 input-f5305d893052c413022095c12ac4f6b75a23e499dbe8ec02edd79a5c7abd6c01 -->

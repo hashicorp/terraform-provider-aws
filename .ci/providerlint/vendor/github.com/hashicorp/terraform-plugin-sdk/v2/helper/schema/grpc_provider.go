@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -27,6 +28,9 @@ import (
 const (
 	newExtraKey = "_new_extra_shim"
 )
+
+// Verify provider server interface implementation.
+var _ tfprotov5.ProviderServer = (*GRPCProviderServer)(nil)
 
 func NewGRPCProviderServer(p *Provider) *GRPCProviderServer {
 	return &GRPCProviderServer{
@@ -80,6 +84,7 @@ func (s *GRPCProviderServer) GetMetadata(ctx context.Context, req *tfprotov5.Get
 
 	resp := &tfprotov5.GetMetadataResponse{
 		DataSources:        make([]tfprotov5.DataSourceMetadata, 0, len(s.provider.DataSourcesMap)),
+		Functions:          make([]tfprotov5.FunctionMetadata, 0),
 		Resources:          make([]tfprotov5.ResourceMetadata, 0, len(s.provider.ResourcesMap)),
 		ServerCapabilities: s.serverCapabilities(),
 	}
@@ -106,6 +111,7 @@ func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfproto
 
 	resp := &tfprotov5.GetProviderSchemaResponse{
 		DataSourceSchemas:  make(map[string]*tfprotov5.Schema, len(s.provider.DataSourcesMap)),
+		Functions:          make(map[string]*tfprotov5.Function, 0),
 		ResourceSchemas:    make(map[string]*tfprotov5.Schema, len(s.provider.ResourcesMap)),
 		ServerCapabilities: s.serverCapabilities(),
 	}
@@ -582,6 +588,18 @@ func (s *GRPCProviderServer) ConfigureProvider(ctx context.Context, req *tfproto
 	}
 
 	config := terraform.NewResourceConfigShimmed(configVal, schemaBlock)
+
+	// CtyValue is the raw protocol configuration data from newer APIs.
+	//
+	// This field was only added as a targeted fix for passing raw protocol data
+	// through the existing (helper/schema.Provider).Configure() exported method
+	// and is only populated in that situation. The data could theoretically be
+	// set in the NewResourceConfigShimmed() function, however the consequences
+	// of doing this were not investigated at the time the fix was introduced.
+	//
+	// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1270
+	config.CtyValue = configVal
+
 	// TODO: remove global stop context hack
 	// This attaches a global stop synchro'd context onto the provider.Configure
 	// request scoped context. This provides a substitute for the removed provider.StopContext()
@@ -1194,6 +1212,42 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 	return resp, nil
 }
 
+func (s *GRPCProviderServer) MoveResourceState(ctx context.Context, req *tfprotov5.MoveResourceStateRequest) (*tfprotov5.MoveResourceStateResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("MoveResourceState request is nil")
+	}
+
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Returning error for MoveResourceState")
+
+	resp := &tfprotov5.MoveResourceStateResponse{}
+
+	_, ok := s.provider.ResourcesMap[req.TargetTypeName]
+
+	if !ok {
+		resp.Diagnostics = []*tfprotov5.Diagnostic{
+			{
+				Severity: tfprotov5.DiagnosticSeverityError,
+				Summary:  "Unknown Resource Type",
+				Detail:   fmt.Sprintf("The %q resource type is not supported by this provider.", req.TargetTypeName),
+			},
+		}
+
+		return resp, nil
+	}
+
+	resp.Diagnostics = []*tfprotov5.Diagnostic{
+		{
+			Severity: tfprotov5.DiagnosticSeverityError,
+			Summary:  "Move Resource State Not Supported",
+			Detail:   fmt.Sprintf("The %q resource type does not support moving resource state across resource types.", req.TargetTypeName),
+		},
+	}
+
+	return resp, nil
+}
+
 func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.ReadDataSourceRequest) (*tfprotov5.ReadDataSourceResponse, error) {
 	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ReadDataSourceResponse{}
@@ -1256,6 +1310,32 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 	resp.State = &tfprotov5.DynamicValue{
 		MsgPack: newStateMP,
 	}
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) CallFunction(ctx context.Context, req *tfprotov5.CallFunctionRequest) (*tfprotov5.CallFunctionResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Returning error for provider function call")
+
+	resp := &tfprotov5.CallFunctionResponse{
+		Error: &tfprotov5.FunctionError{
+			Text: fmt.Sprintf("Function Not Found: No function named %q was found in the provider.", req.Name),
+		},
+	}
+
+	return resp, nil
+}
+
+func (s *GRPCProviderServer) GetFunctions(ctx context.Context, req *tfprotov5.GetFunctionsRequest) (*tfprotov5.GetFunctionsResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Getting provider functions")
+
+	resp := &tfprotov5.GetFunctionsResponse{
+		Functions: make(map[string]*tfprotov5.Function, 0),
+	}
+
 	return resp, nil
 }
 

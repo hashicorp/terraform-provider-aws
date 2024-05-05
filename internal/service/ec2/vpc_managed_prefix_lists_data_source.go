@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -20,7 +21,7 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 		ReadWithoutTimeout: dataSourceManagedPrefixListsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -32,15 +33,17 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 }
 
 func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -52,7 +55,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	prefixLists, err := FindManagedPrefixLists(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Managed Prefix Lists: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix Lists: %s", err)
 	}
 
 	var prefixListIDs []string
@@ -64,5 +67,5 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", prefixListIDs)
 
-	return nil
+	return diags
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKDataSource("aws_dms_certificate")
@@ -95,7 +95,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("certificate_id", out.CertificateIdentifier)
 	d.Set("certificate_pem", out.CertificatePem)
 	if len(out.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", verify.Base64Encode(out.CertificateWallet))
+		d.Set("certificate_wallet", itypes.Base64EncodeOnce(out.CertificateWallet))
 	}
 	d.Set("key_length", out.KeyLength)
 	d.Set("signing_algorithm", out.SigningAlgorithm)
@@ -114,5 +114,5 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

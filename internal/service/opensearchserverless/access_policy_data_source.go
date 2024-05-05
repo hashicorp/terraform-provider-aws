@@ -82,23 +82,12 @@ func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.Name)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-	data.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
-
-	policyBytes, err := out.Policy.MarshalSmithyDocument()
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameAccessPolicy, data.Name.String(), err),
-			err.Error(),
-		)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	pb := string(policyBytes)
-	data.Policy = flex.StringToFramework(ctx, &pb)
+	data.ID = flex.StringToFramework(ctx, out.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

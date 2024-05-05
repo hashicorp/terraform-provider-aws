@@ -168,7 +168,9 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		ConfigurationSetName: aws.String(d.Id()),
 		ConfigurationSetAttributeNames: aws.StringSlice([]string{
 			ses.ConfigurationSetAttributeDeliveryOptions,
-			ses.ConfigurationSetAttributeReputationOptions}),
+			ses.ConfigurationSetAttributeReputationOptions,
+			ses.ConfigurationSetAttributeTrackingOptions,
+		}),
 	}
 
 	response, err := conn.DescribeConfigurationSetWithContext(ctx, configSetInput)

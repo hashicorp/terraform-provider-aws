@@ -327,6 +327,8 @@ const (
 )
 
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := &lightsail.CreateDistributionInput{
@@ -349,14 +351,18 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
+	if v, ok := d.GetOk("certificate_name"); ok {
+		in.CertificateName = aws.String(v.(string))
+	}
+
 	out, err := conn.CreateDistribution(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Distribution == nil {
-		return create.DiagError(names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	id := aws.ToString(out.Distribution.Name)
@@ -379,7 +385,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		updateOut, err := conn.UpdateDistribution(ctx, updateIn)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 
 		diagUpdate := expandOperation(ctx, conn, *updateOut.Operation, types.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
@@ -389,10 +395,12 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return resourceDistributionRead(ctx, d, meta)
+	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDistributionByID(ctx, conn, d.Id())
@@ -400,23 +408,23 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lightsail Distribution (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	d.Set("alternative_domain_names", out.AlternativeDomainNames)
 	d.Set("arn", out.Arn)
 	d.Set("bundle_id", out.BundleId)
 	if err := d.Set("cache_behavior", flattenCacheBehaviorsPerPath(out.CacheBehaviors)); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 
 	if out.CacheBehaviorSettings != nil {
 		if err := d.Set("cache_behavior_settings", []interface{}{flattenCacheSettings(out.CacheBehaviorSettings)}); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 		}
 	} else {
 		d.Set("cache_behavior_settings", nil)
@@ -426,14 +434,14 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set("domain_name", out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set("name", out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
@@ -443,10 +451,12 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	update := false
@@ -485,6 +495,11 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		update = true
 	}
 
+	if d.HasChanges("certificate_name") {
+		in.CertificateName = aws.String(d.Get("certificate_name").(string))
+		update = true
+	}
+
 	if d.HasChanges("bundle_id") {
 		bundleIn.BundleId = aws.String(d.Get("bundle_id").(string))
 		bundleUpdate = true
@@ -498,7 +513,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeSetIpAddressType), ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetIpAddressType), ResNameDistribution, d.Id(), err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetIpAddressType, ResNameDistribution, d.Id())
@@ -512,7 +527,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[DEBUG] Updating Lightsail Distribution (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateDistribution(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 
 		diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeUpdateDistribution, ResNameDistribution, d.Id())
@@ -526,7 +541,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[DEBUG] Updating Lightsail Distribution Bundle (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateDistributionBundle(ctx, bundleIn)
 		if err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 
 		diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeUpdateDistributionBundle, ResNameDistribution, d.Id())
@@ -536,10 +551,12 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return resourceDistributionRead(ctx, d, meta)
+	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
 func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	log.Printf("[INFO] Deleting Lightsail Distribution %s", d.Id())
@@ -549,11 +566,11 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if IsANotFoundError(err) || errs.IsA[*types.InvalidInputException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
 	}
 
 	diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeDeleteDistribution, ResNameDistribution, d.Id())
@@ -562,7 +579,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindDistributionByID(ctx context.Context, conn *lightsail.Client, id string) (*types.LightsailDistribution, error) {

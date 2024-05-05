@@ -27,6 +27,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory: newResourceBotLocale,
+			Name:    "Bot Locale",
+		},
+		{
+			Factory: newResourceBotVersion,
+			Name:    "Bot Version",
+		},
+		{
+			Factory: newResourceIntent,
+			Name:    "Intent",
+		},
+		{
+			Factory: newResourceSlot,
+			Name:    "Slot",
+		},
+		{
+			Factory: newResourceSlotType,
+			Name:    "Slot Type",
+		},
 	}
 }
 

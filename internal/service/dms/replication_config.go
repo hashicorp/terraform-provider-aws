@@ -5,6 +5,7 @@ package dms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,10 +113,18 @@ func ResourceReplicationConfig() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
+			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
 			"replication_settings": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringIsJSON),
+					validateReplicationSettings,
+				),
+				DiffSuppressFunc:      suppressEquivalentTaskSettings,
+				DiffSuppressOnRefresh: true,
 			},
 			"replication_type": {
 				Type:         schema.TypeString,
@@ -206,7 +216,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceReplicationConfigRead(ctx, d, meta)
+	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
 func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -286,7 +296,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.ModifyReplicationConfigWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Config (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Config (%s): %s", d.Id(), err)
 		}
 
 		if d.Get("start_replication").(bool) {
@@ -459,6 +469,22 @@ func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, 
 	}
 }
 
+func setLastReplicationError(err error, replication *dms.Replication) {
+	var errs []error
+
+	errs = append(errs, tfslices.ApplyToAll(replication.FailureMessages, func(v *string) error {
+		if v := aws.StringValue(v); v != "" {
+			return errors.New(v)
+		}
+		return nil
+	})...)
+	if v := aws.StringValue(replication.StopReason); v != "" {
+		errs = append(errs, errors.New(v))
+	}
+
+	tfresource.SetLastError(err, errors.Join(errs...))
+}
+
 func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
@@ -481,6 +507,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -500,6 +527,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -519,6 +547,7 @@ func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -533,7 +562,6 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 	}
 
 	replicationStatus := aws.StringValue(replication.Status)
-
 	if replicationStatus == replicationStatusRunning {
 		return nil
 	}
@@ -563,12 +591,15 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
 	}
 
 	replicationStatus := aws.StringValue(replication.Status)
-
 	if replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
 		return nil
 	}

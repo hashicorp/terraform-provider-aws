@@ -26,24 +26,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceIPSet,
+			Factory:  dataSourceIPSet,
 			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
 		},
 		{
-			Factory:  DataSourceRateBasedRule,
+			Factory:  dataSourceRateBasedRule,
 			TypeName: "aws_wafregional_rate_based_rule",
+			Name:     "Rate Based Rule",
 		},
 		{
-			Factory:  DataSourceRule,
+			Factory:  dataSourceRule,
 			TypeName: "aws_wafregional_rule",
+			Name:     "Rule",
 		},
 		{
-			Factory:  DataSourceSubscribedRuleGroup,
+			Factory:  dataSourceSubscribedRuleGroup,
 			TypeName: "aws_wafregional_subscribed_rule_group",
+			Name:     "Subscribed Rule Group",
 		},
 		{
-			Factory:  DataSourceWebACL,
+			Factory:  dataSourceWebACL,
 			TypeName: "aws_wafregional_web_acl",
+			Name:     "Web ACL",
 		},
 	}
 }
@@ -51,19 +56,22 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceByteMatchSet,
+			Factory:  resourceByteMatchSet,
 			TypeName: "aws_wafregional_byte_match_set",
+			Name:     "Byte Match Set",
 		},
 		{
-			Factory:  ResourceGeoMatchSet,
+			Factory:  resourceGeoMatchSet,
 			TypeName: "aws_wafregional_geo_match_set",
+			Name:     "Geo Match Set",
 		},
 		{
-			Factory:  ResourceIPSet,
+			Factory:  resourceIPSet,
 			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
 		},
 		{
-			Factory:  ResourceRateBasedRule,
+			Factory:  resourceRateBasedRule,
 			TypeName: "aws_wafregional_rate_based_rule",
 			Name:     "Rate Based Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -71,15 +79,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRegexMatchSet,
+			Factory:  resourceRegexMatchSet,
 			TypeName: "aws_wafregional_regex_match_set",
+			Name:     "Regex Match Set",
 		},
 		{
-			Factory:  ResourceRegexPatternSet,
+			Factory:  resourceRegexPatternSet,
 			TypeName: "aws_wafregional_regex_pattern_set",
+			Name:     "Regex Pattern Set",
 		},
 		{
-			Factory:  ResourceRule,
+			Factory:  resourceRule,
 			TypeName: "aws_wafregional_rule",
 			Name:     "Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -87,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRuleGroup,
+			Factory:  resourceRuleGroup,
 			TypeName: "aws_wafregional_rule_group",
 			Name:     "Rule Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -95,15 +105,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSizeConstraintSet,
+			Factory:  resourceSizeConstraintSet,
 			TypeName: "aws_wafregional_size_constraint_set",
+			Name:     "Size Constraint Set",
 		},
 		{
-			Factory:  ResourceSQLInjectionMatchSet,
+			Factory:  resourceSQLInjectionMatchSet,
 			TypeName: "aws_wafregional_sql_injection_match_set",
+			Name:     "SQL Injection Match Set",
 		},
 		{
-			Factory:  ResourceWebACL,
+			Factory:  resourceWebACL,
 			TypeName: "aws_wafregional_web_acl",
 			Name:     "Web ACL",
 			Tags: &types.ServicePackageResourceTags{
@@ -111,12 +123,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWebACLAssociation,
+			Factory:  resourceWebACLAssociation,
 			TypeName: "aws_wafregional_web_acl_association",
+			Name:     "Web ACL Association",
 		},
 		{
-			Factory:  ResourceXSSMatchSet,
+			Factory:  resourceXSSMatchSet,
 			TypeName: "aws_wafregional_xss_match_set",
+			Name:     "XSS Match Set",
 		},
 	}
 }

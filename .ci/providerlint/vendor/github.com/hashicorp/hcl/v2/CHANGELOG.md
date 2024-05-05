@@ -1,5 +1,21 @@
 # HCL Changelog
 
+## v2.19.0 (October 16, 2023)
+
+### Enhancements
+
+* ext/dynblock: `dynblock.Expand` now supports an optional hook for calling applications to check and potentially veto (by returning error diagnostics) particular `for_each` values. The behavior is unchanged for callers that don't set the new option. ([#634](https://github.com/hashicorp/hcl/pull/634))
+
+### Bugs Fixed
+
+* hclsyntax: Further fixes for treatment of "marked" values in the conditional expression, and better tracking of refined values into the conditional expression results, building on the fixes from v2.18.1. ([#633](https://github.com/hashicorp/hcl/pull/633))
+
+## v2.18.1 (October 5, 2023)
+
+### Bugs Fixed
+
+* hclsyntax: Conditional expressions will no longer panic when one or both of their results are "marked", as is the case for situations like how HashiCorp Terraform tracks its concept of "sensitive values". ([#630](https://github.com/hashicorp/hcl/pull/630))
+
 ## v2.18.0 (August 30, 2023)
 
 ### Enhancements

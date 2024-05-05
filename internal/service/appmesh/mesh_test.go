@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMesh_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func testAccMesh_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +62,7 @@ func testAccMesh_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,6 +97,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 				),
 			},
 			{
@@ -119,6 +121,55 @@ func testAccMesh_egressFilter(t *testing.T) {
 	})
 }
 
+func testAccMesh_serviceDiscovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var mesh appmesh.MeshData
+	resourceName := "aws_appmesh_mesh.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_PREFERRED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_PREFERRED"),
+				),
+			},
+			{
+				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv4_PREFERRED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv4_PREFERRED"),
+				),
+			},
+			{
+				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv4_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv4_ONLY"),
+				),
+			},
+			{
+				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_ONLY"),
+				),
+			},
+		},
+	})
+}
+
 func testAccMesh_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mesh appmesh.MeshData
@@ -127,7 +178,7 @@ func testAccMesh_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -235,6 +286,20 @@ resource "aws_appmesh_mesh" "test" {
   }
 }
 `, rName, egressFilterType)
+}
+
+func testAccMeshConfig_serviceDiscovery(rName, serviceDiscoveryIpPreference string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+
+  spec {
+    service_discovery {
+      ip_preference = %[2]q
+    }
+  }
+}
+`, rName, serviceDiscoveryIpPreference)
 }
 
 func testAccMeshConfig_tags1(rName, tagKey1, tagValue1 string) string {
