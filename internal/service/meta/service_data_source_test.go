@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaService_basic(t *testing.T) {
@@ -121,12 +121,12 @@ func TestAccMetaService_unsupported(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_unsupported(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", waf.ServiceID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", names.WafEndpointID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", endpoints.AwsUsGovPartitionID),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.UsGovWest1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsGovWest1RegionID, waf.ServiceID)),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", waf.ServiceID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsGovWest1RegionID, names.WafEndpointID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.WafEndpointID),
 					resource.TestCheckResourceAttr(dataSourceName, "supported", "false"),
 				),
 			},

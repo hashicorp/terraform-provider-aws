@@ -120,7 +120,7 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading WAF ByteMatchSet (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", aws.ToString(resp.ByteMatchSet.Name))
+	d.Set("name", resp.ByteMatchSet.Name)
 	d.Set("byte_match_tuples", flattenByteMatchTuples(resp.ByteMatchSet.ByteMatchTuples))
 
 	return diags
