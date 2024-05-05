@@ -253,7 +253,7 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
-		ExpectedUpdates [][]*awstypes.IPSetUpdate
+		ExpectedUpdates [][]awstypes.IPSetUpdate
 	}{
 		{
 			// Change
@@ -263,19 +263,19 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 			New: []interface{}{
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
-			ExpectedUpdates: [][]*awstypes.IPSetUpdate{
+			ExpectedUpdates: [][]awstypes.IPSetUpdate{
 				{
 					{
 						Action: awstypes.ChangeActionDelete,
 						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
+							Type:  awstypes.IPSetDescriptorTypeIpv4,
 							Value: aws.String("192.0.7.0/24"),
 						},
 					},
 					{
 						Action: awstypes.ChangeActionInsert,
 						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
+							Type:  awstypes.IPSetDescriptorTypeIpv4,
 							Value: aws.String("192.0.8.0/24"),
 						},
 					},
@@ -290,26 +290,26 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "10.0.2.0/24"},
 				map[string]interface{}{"type": "IPV4", "value": "10.0.3.0/24"},
 			},
-			ExpectedUpdates: [][]*awstypes.IPSetUpdate{
+			ExpectedUpdates: [][]awstypes.IPSetUpdate{
 				{
 					{
 						Action: awstypes.ChangeActionInsert,
 						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
+							Type:  awstypes.IPSetDescriptorTypeIpv4,
 							Value: aws.String("10.0.1.0/24"),
 						},
 					},
 					{
 						Action: awstypes.ChangeActionInsert,
 						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
+							Type:  awstypes.IPSetDescriptorTypeIpv4,
 							Value: aws.String("10.0.2.0/24"),
 						},
 					},
 					{
 						Action: awstypes.ChangeActionInsert,
 						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
+							Type:  awstypes.IPSetDescriptorTypeIpv4,
 							Value: aws.String("10.0.3.0/24"),
 						},
 					},
@@ -323,7 +323,7 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
 			New: []interface{}{},
-			ExpectedUpdates: [][]*awstypes.IPSetUpdate{
+			ExpectedUpdates: [][]awstypes.IPSetUpdate{
 				{
 					{
 						Action: awstypes.ChangeActionDelete,

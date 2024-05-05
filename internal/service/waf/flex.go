@@ -80,12 +80,12 @@ func FlattenWebACLRules(ts []awstypes.ActivatedRule) []map[string]interface{} {
 		switch r.Type {
 		case awstypes.WafRuleTypeGroup:
 			actionMap := map[string]interface{}{
-				"type": awstypes.WafOverrideActionType(r.OverrideAction.Type),
+				"type": r.OverrideAction.Type,
 			}
 			m["override_action"] = []map[string]interface{}{actionMap}
 		default:
 			actionMap := map[string]interface{}{
-				"type": awstypes.WafActionType(r.Action.Type),
+				"type": r.Action.Type,
 			}
 			m["action"] = []map[string]interface{}{actionMap}
 		}

@@ -202,9 +202,9 @@ func flattenByteMatchTuples(bmt []awstypes.ByteMatchTuple) []interface{} {
 		if t.FieldToMatch != nil {
 			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
 		}
-		m["positional_constraint"] = awstypes.PositionalConstraint(t.PositionalConstraint)
+		m["positional_constraint"] = t.PositionalConstraint
 		m["target_string"] = string(t.TargetString)
-		m["text_transformation"] = awstypes.TextTransformation(t.TextTransformation)
+		m["text_transformation"] = t.TextTransformation
 
 		out[i] = m
 	}
