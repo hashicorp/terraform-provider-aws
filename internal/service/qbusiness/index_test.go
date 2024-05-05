@@ -216,10 +216,14 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *qbusiness.GetInde
 func testAccIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
   attachments_configuration {
     attachments_control_mode = "ENABLED"
   }
@@ -259,10 +263,14 @@ resource "aws_qbusiness_index" "test" {
 func testAccIndexConfig_documentAttributeConfigurations(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
   attachments_configuration {
     attachments_control_mode = "ENABLED"
   }
@@ -312,10 +320,14 @@ resource "aws_qbusiness_index" "test" {
 func testAccIndexConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
   attachments_configuration {
     attachments_control_mode = "ENABLED"
   }
