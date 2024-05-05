@@ -8,27 +8,27 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRegionalGeoMatchSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.GeoMatchSet
+	var v awstypes.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	geoMatchSet := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
@@ -62,13 +62,13 @@ func TestAccWAFRegionalGeoMatchSet_basic(t *testing.T) {
 
 func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.GeoMatchSet
+	var before, after awstypes.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	geoMatchSet := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
@@ -105,12 +105,12 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFRegionalGeoMatchSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.GeoMatchSet
+	var v awstypes.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	geoMatchSet := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
@@ -129,12 +129,12 @@ func TestAccWAFRegionalGeoMatchSet_disappears(t *testing.T) {
 
 func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.GeoMatchSet
+	var before, after awstypes.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	setName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
@@ -186,12 +186,12 @@ func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 
 func TestAccWAFRegionalGeoMatchSet_noConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.GeoMatchSet
+	var ipset awstypes.GeoMatchSet
 	resourceName := "aws_wafregional_geo_match_set.test"
 	setName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
@@ -215,7 +215,7 @@ func TestAccWAFRegionalGeoMatchSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckGeoMatchSetIdDiffers(before, after *waf.GeoMatchSet) resource.TestCheckFunc {
+func testAccCheckGeoMatchSetIdDiffers(before, after *awstypes.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.GeoMatchSetId == *after.GeoMatchSetId {
 			return fmt.Errorf("Expected different IDs, given %q for both sets", *before.GeoMatchSetId)
@@ -224,7 +224,7 @@ func testAccCheckGeoMatchSetIdDiffers(before, after *waf.GeoMatchSet) resource.T
 	}
 }
 
-func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *waf.GeoMatchSet) resource.TestCheckFunc {
+func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -235,8 +235,8 @@ func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *waf.GeoMatc
 			return fmt.Errorf("No WAF Regional Geo Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		resp, err := conn.GetGeoMatchSetWithContext(ctx, &waf.GetGeoMatchSetInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		resp, err := conn.GetGeoMatchSet(ctx, &wafregional.GetGeoMatchSetInput{
 			GeoMatchSetId: aws.String(rs.Primary.ID),
 		})
 
@@ -260,8 +260,8 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-			resp, err := conn.GetGeoMatchSetWithContext(ctx, &waf.GetGeoMatchSetInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+			resp, err := conn.GetGeoMatchSet(ctx, &wafregional.GetGeoMatchSetInput{
 				GeoMatchSetId: aws.String(rs.Primary.ID),
 			})
 
@@ -272,7 +272,7 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			// Return nil if the WAF Regional Geo Match Set is already destroyed
-			if tfawserr.ErrCodeEquals(err, "WAFNonexistentItemException") {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				return nil
 			}
 

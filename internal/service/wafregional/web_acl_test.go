@@ -9,28 +9,28 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
+	var v awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -59,12 +59,12 @@ func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
+	var v awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -105,12 +105,12 @@ func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
+	var v awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -137,12 +137,12 @@ func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
+	var v awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -169,13 +169,13 @@ func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.WebACL
+	var before, after awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -213,13 +213,13 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.WebACL
+	var before, after awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	wafAclNewName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -257,12 +257,12 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
+	var v awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -281,12 +281,12 @@ func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
+	var v awstypes.WebACL
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -312,14 +312,14 @@ func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.WebACL
-	var r waf.Rule
+	var v awstypes.WebACL
+	var r awstypes.Rule
 	var idx int
 	wafAclName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -360,12 +360,12 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 
 func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL1, webACL2, webACL3 waf.WebACL
+	var webACL1, webACL2, webACL3 awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
@@ -434,8 +434,8 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-			resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+			resp, err := conn.GetWebACL(ctx, &wafregional.GetWebACLInput{
 				WebACLId: aws.String(rs.Primary.ID),
 			})
 
@@ -446,7 +446,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Return nil if the WebACL is already destroyed
-			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				return nil
 			}
 
@@ -457,7 +457,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWebACLExists(ctx context.Context, n string, v *waf.WebACL) resource.TestCheckFunc {
+func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -468,8 +468,8 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *waf.WebACL) reso
 			return fmt.Errorf("No WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		resp, err := conn.GetWebACL(ctx, &wafregional.GetWebACLInput{
 			WebACLId: aws.String(rs.Primary.ID),
 		})
 

@@ -9,21 +9,22 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFXSSMatchSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.XssMatchSet
+	var v awstypes.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_xss_match_set.test"
 
@@ -65,7 +66,7 @@ func TestAccWAFXSSMatchSet_basic(t *testing.T) {
 
 func TestAccWAFXSSMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.XssMatchSet
+	var before, after awstypes.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_xss_match_set.test"
@@ -103,7 +104,7 @@ func TestAccWAFXSSMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFXSSMatchSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.XssMatchSet
+	var v awstypes.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_xss_match_set.test"
 
@@ -127,7 +128,7 @@ func TestAccWAFXSSMatchSet_disappears(t *testing.T) {
 
 func TestAccWAFXSSMatchSet_changeTuples(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.XssMatchSet
+	var before, after awstypes.XssMatchSet
 	setName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_xss_match_set.test"
 
@@ -188,7 +189,7 @@ func TestAccWAFXSSMatchSet_changeTuples(t *testing.T) {
 
 func TestAccWAFXSSMatchSet_noTuples(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.XssMatchSet
+	var ipset awstypes.XssMatchSet
 	setName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_xss_match_set.test"
 
@@ -215,7 +216,7 @@ func TestAccWAFXSSMatchSet_noTuples(t *testing.T) {
 	})
 }
 
-func testAccCheckXSSMatchSetExists(ctx context.Context, n string, v *waf.XssMatchSet) resource.TestCheckFunc {
+func testAccCheckXSSMatchSetExists(ctx context.Context, n string, v *awstypes.XssMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -226,8 +227,8 @@ func testAccCheckXSSMatchSetExists(ctx context.Context, n string, v *waf.XssMatc
 			return fmt.Errorf("No WAF XSS Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-		resp, err := conn.GetXssMatchSetWithContext(ctx, &waf.GetXssMatchSetInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		resp, err := conn.GetXssMatchSet(ctx, &waf.GetXssMatchSetInput{
 			XssMatchSetId: aws.String(rs.Primary.ID),
 		})
 
@@ -251,8 +252,8 @@ func testAccCheckXSSMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-			resp, err := conn.GetXssMatchSetWithContext(ctx, &waf.GetXssMatchSetInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			resp, err := conn.GetXssMatchSet(ctx, &waf.GetXssMatchSetInput{
 				XssMatchSetId: aws.String(rs.Primary.ID),
 			})
 
@@ -263,7 +264,7 @@ func testAccCheckXSSMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			// Return nil if the XssMatchSet is already destroyed
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				return nil
 			}
 

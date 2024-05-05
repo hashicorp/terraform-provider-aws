@@ -9,21 +9,22 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.GeoMatchSet
+	var v awstypes.GeoMatchSet
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
@@ -61,7 +62,7 @@ func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 
 func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.GeoMatchSet
+	var before, after awstypes.GeoMatchSet
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
@@ -99,7 +100,7 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.GeoMatchSet
+	var v awstypes.GeoMatchSet
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
@@ -123,7 +124,7 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 
 func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.GeoMatchSet
+	var before, after awstypes.GeoMatchSet
 	setName := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
@@ -176,7 +177,7 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 
 func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.GeoMatchSet
+	var ipset awstypes.GeoMatchSet
 	setName := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
@@ -203,9 +204,9 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckGeoMatchSetDisappears(ctx context.Context, v *waf.GeoMatchSet) resource.TestCheckFunc {
+func testAccCheckGeoMatchSetDisappears(ctx context.Context, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -215,16 +216,16 @@ func testAccCheckGeoMatchSetDisappears(ctx context.Context, v *waf.GeoMatchSet) 
 			}
 
 			for _, geoMatchConstraint := range v.GeoMatchConstraints {
-				geoMatchConstraintUpdate := &waf.GeoMatchSetUpdate{
-					Action: aws.String("DELETE"),
-					GeoMatchConstraint: &waf.GeoMatchConstraint{
+				geoMatchConstraintUpdate := awstypes.GeoMatchSetUpdate{
+					Action: awstypes.ChangeActionDelete,
+					GeoMatchConstraint: &awstypes.GeoMatchConstraint{
 						Type:  geoMatchConstraint.Type,
 						Value: geoMatchConstraint.Value,
 					},
 				}
 				req.Updates = append(req.Updates, geoMatchConstraintUpdate)
 			}
-			return conn.UpdateGeoMatchSetWithContext(ctx, req)
+			return conn.UpdateGeoMatchSet(ctx, req)
 		})
 		if err != nil {
 			return fmt.Errorf("Error updating GeoMatchSet: %s", err)
@@ -235,7 +236,7 @@ func testAccCheckGeoMatchSetDisappears(ctx context.Context, v *waf.GeoMatchSet) 
 				ChangeToken:   token,
 				GeoMatchSetId: v.GeoMatchSetId,
 			}
-			return conn.DeleteGeoMatchSetWithContext(ctx, opts)
+			return conn.DeleteGeoMatchSet(ctx, opts)
 		})
 		if err != nil {
 			return fmt.Errorf("Error deleting GeoMatchSet: %s", err)
@@ -244,7 +245,7 @@ func testAccCheckGeoMatchSetDisappears(ctx context.Context, v *waf.GeoMatchSet) 
 	}
 }
 
-func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *waf.GeoMatchSet) resource.TestCheckFunc {
+func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -255,8 +256,8 @@ func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *waf.GeoMatc
 			return fmt.Errorf("No WAF GeoMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-		resp, err := conn.GetGeoMatchSetWithContext(ctx, &waf.GetGeoMatchSetInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		resp, err := conn.GetGeoMatchSet(ctx, &waf.GetGeoMatchSetInput{
 			GeoMatchSetId: aws.String(rs.Primary.ID),
 		})
 
@@ -280,8 +281,8 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-			resp, err := conn.GetGeoMatchSetWithContext(ctx, &waf.GetGeoMatchSetInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			resp, err := conn.GetGeoMatchSet(ctx, &waf.GetGeoMatchSetInput{
 				GeoMatchSetId: aws.String(rs.Primary.ID),
 			})
 
@@ -292,7 +293,7 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			// Return nil if the GeoMatchSet is already destroyed
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				return nil
 			}
 

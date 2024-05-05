@@ -93,6 +93,8 @@ const (
 	TranscribeEndpointID                 = "transcribe"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
+	WafEndpointID                        = "waf"
+	WafRegionalEndpointID                = "waf-regional"
 )
 
 // These should move to aws-sdk-go-base.

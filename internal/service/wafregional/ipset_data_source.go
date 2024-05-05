@@ -6,8 +6,9 @@ package wafregional
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,19 +31,19 @@ func dataSourceIPSet() *schema.Resource {
 
 func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	name := d.Get("name").(string)
 
-	ipsets := make([]*waf.IPSetSummary, 0)
+	ipsets := make([]awstypes.IPSetSummary, 0)
 	// ListIPSetsInput does not have a name parameter for filtering or a paginator
-	input := &waf.ListIPSetsInput{}
+	input := &wafregional.ListIPSetsInput{}
 	for {
-		output, err := conn.ListIPSetsWithContext(ctx, input)
+		output, err := conn.ListIPSets(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAF Regional IP sets: %s", err)
 		}
 		for _, ipset := range output.IPSets {
-			if aws.StringValue(ipset.Name) == name {
+			if aws.ToString(ipset.Name) == name {
 				ipsets = append(ipsets, ipset)
 			}
 		}
@@ -61,7 +62,7 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	ipset := ipsets[0]
-	d.SetId(aws.StringValue(ipset.IPSetId))
+	d.SetId(aws.ToString(ipset.IPSetId))
 
 	return diags
 }

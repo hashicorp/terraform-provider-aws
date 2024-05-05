@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package waf
+package wafregional
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -258,12 +258,12 @@ func FlattenActivatedRules(activatedRules []awstypes.ActivatedRule) []interface{
 		rule := map[string]interface{}{
 			"priority": aws.ToInt32(ar.Priority),
 			"rule_id":  aws.ToString(ar.RuleId),
-			"type":     ar.Type,
+			"type":     string(ar.Type),
 		}
 		if ar.Action != nil {
 			rule["action"] = []interface{}{
 				map[string]interface{}{
-					"type": string(ar.Action.Type),
+					"type": ar.Action.Type,
 				},
 			}
 		}

@@ -9,23 +9,24 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRuleGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule waf.Rule
-	var group waf.RuleGroup
+	var rule awstypes.Rule
+	var group awstypes.RuleGroup
 	var idx int
 
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -50,7 +51,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
-						"type":          waf.WafRuleTypeRegular,
+						"type":          string(awstypes.WafRuleTypeRegular),
 					}),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`rulegroup/.+`)),
 				),
@@ -66,7 +67,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 
 func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.RuleGroup
+	var before, after awstypes.RuleGroup
 
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -108,7 +109,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFRuleGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group waf.RuleGroup
+	var group awstypes.RuleGroup
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule_group.test"
@@ -133,8 +134,8 @@ func TestAccWAFRuleGroup_disappears(t *testing.T) {
 
 func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule0, rule1, rule2, rule3 waf.Rule
-	var groupBefore, groupAfter waf.RuleGroup
+	var rule0, rule1, rule2, rule3 awstypes.Rule
+	var groupBefore, groupAfter awstypes.RuleGroup
 	var idx0, idx1, idx2, idx3 int
 
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -160,7 +161,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
-						"type":          waf.WafRuleTypeRegular,
+						"type":          string(awstypes.WafRuleTypeRegular),
 					}),
 				),
 			},
@@ -176,7 +177,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "10",
-						"type":          waf.WafRuleTypeRegular,
+						"type":          string(awstypes.WafRuleTypeRegular),
 					}),
 
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test2", &rule2),
@@ -184,7 +185,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "1",
-						"type":          waf.WafRuleTypeRegular,
+						"type":          string(awstypes.WafRuleTypeRegular),
 					}),
 
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test3", &rule3),
@@ -192,7 +193,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "15",
-						"type":          waf.WafRuleTypeRegular,
+						"type":          string(awstypes.WafRuleTypeRegular),
 					}),
 				),
 			},
@@ -207,7 +208,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 
 // computeActivatedRuleWithRuleId calculates index
 // which isn't static because ruleId is generated as part of the test
-func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
+func computeActivatedRuleWithRuleId(rule *awstypes.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ruleResource := tfwaf.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
@@ -219,7 +220,7 @@ func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority 
 			},
 			"priority": priority,
 			"rule_id":  *rule.RuleId,
-			"type":     waf.WafRuleTypeRegular,
+			"type":     string(awstypes.WafRuleTypeRegular),
 		}
 
 		f := schema.HashResource(ruleResource)
@@ -231,7 +232,7 @@ func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority 
 
 func TestAccWAFRuleGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group waf.RuleGroup
+	var group awstypes.RuleGroup
 	groupName := fmt.Sprintf("test%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule_group.test"
 
@@ -283,7 +284,7 @@ func TestAccWAFRuleGroup_tags(t *testing.T) {
 
 func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group waf.RuleGroup
+	var group awstypes.RuleGroup
 	groupName := fmt.Sprintf("test%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule_group.test"
 
@@ -305,15 +306,15 @@ func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleGroupDisappears(ctx context.Context, group *waf.RuleGroup) resource.TestCheckFunc {
+func testAccCheckRuleGroupDisappears(ctx context.Context, group *awstypes.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
-		rResp, err := conn.ListActivatedRulesInRuleGroupWithContext(ctx, &waf.ListActivatedRulesInRuleGroupInput{
+		rResp, err := conn.ListActivatedRulesInRuleGroup(ctx, &waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
 		if err != nil {
-			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
+			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.ToString(group.RuleGroupId), err)
 		}
 
 		wr := tfwaf.NewRetryer(conn)
@@ -324,14 +325,14 @@ func testAccCheckRuleGroupDisappears(ctx context.Context, group *waf.RuleGroup) 
 			}
 
 			for _, rule := range rResp.ActivatedRules {
-				rule := &waf.RuleGroupUpdate{
-					Action:        aws.String("DELETE"),
-					ActivatedRule: rule,
+				rule := awstypes.RuleGroupUpdate{
+					Action:        awstypes.ChangeActionDelete,
+					ActivatedRule: &rule,
 				}
 				req.Updates = append(req.Updates, rule)
 			}
 
-			return conn.UpdateRuleGroupWithContext(ctx, req)
+			return conn.UpdateRuleGroup(ctx, req)
 		})
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
@@ -342,7 +343,7 @@ func testAccCheckRuleGroupDisappears(ctx context.Context, group *waf.RuleGroup) 
 				ChangeToken: token,
 				RuleGroupId: group.RuleGroupId,
 			}
-			return conn.DeleteRuleGroupWithContext(ctx, opts)
+			return conn.DeleteRuleGroup(ctx, opts)
 		})
 		if err != nil {
 			return fmt.Errorf("Error Deleting WAF Rule Group: %s", err)
@@ -358,8 +359,8 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-			resp, err := conn.GetRuleGroupWithContext(ctx, &waf.GetRuleGroupInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			resp, err := conn.GetRuleGroup(ctx, &waf.GetRuleGroupInput{
 				RuleGroupId: aws.String(rs.Primary.ID),
 			})
 
@@ -369,7 +370,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				}
 			}
 
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				return nil
 			}
 
@@ -380,7 +381,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRuleGroupExists(ctx context.Context, n string, group *waf.RuleGroup) resource.TestCheckFunc {
+func testAccCheckRuleGroupExists(ctx context.Context, n string, group *awstypes.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -391,8 +392,8 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, group *waf.RuleG
 			return fmt.Errorf("No WAF Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-		resp, err := conn.GetRuleGroupWithContext(ctx, &waf.GetRuleGroupInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		resp, err := conn.GetRuleGroup(ctx, &waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})
 

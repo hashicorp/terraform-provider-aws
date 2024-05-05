@@ -12,15 +12,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,11 +28,11 @@ import (
 func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_ipset.ipset"
-	var v waf.IPSet
+	var v awstypes.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
@@ -61,10 +61,10 @@ func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_ipset.ipset"
-	var v waf.IPSet
+	var v awstypes.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
@@ -84,12 +84,12 @@ func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_ipset.ipset"
-	var before, after waf.IPSet
+	var before, after awstypes.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
@@ -128,11 +128,11 @@ func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_ipset.ipset"
-	var before, after waf.IPSet
+	var before, after awstypes.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
@@ -172,7 +172,7 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 
 func TestAccWAFRegionalIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.IPSet
+	var ipset awstypes.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_ipset.ipset"
 
@@ -196,7 +196,7 @@ func TestAccWAFRegionalIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
@@ -220,11 +220,11 @@ func TestAccWAFRegionalIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_wafregional_ipset.ipset"
-	var ipset waf.IPSet
+	var ipset awstypes.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WafRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
@@ -252,7 +252,7 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
-		ExpectedUpdates [][]*waf.IPSetUpdate
+		ExpectedUpdates [][]*awstypes.IPSetUpdate
 	}{
 		{
 			// Change
@@ -262,19 +262,19 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 			New: []interface{}{
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
-			ExpectedUpdates: [][]*waf.IPSetUpdate{
+			ExpectedUpdates: [][]*awstypes.IPSetUpdate{
 				{
 					{
-						Action: aws.String(wafregional.ChangeActionDelete),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionDelete,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("192.0.7.0/24"),
 						},
 					},
 					{
-						Action: aws.String(wafregional.ChangeActionInsert),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionInsert,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("192.0.8.0/24"),
 						},
 					},
@@ -289,26 +289,26 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "10.0.2.0/24"},
 				map[string]interface{}{"type": "IPV4", "value": "10.0.3.0/24"},
 			},
-			ExpectedUpdates: [][]*waf.IPSetUpdate{
+			ExpectedUpdates: [][]*awstypes.IPSetUpdate{
 				{
 					{
-						Action: aws.String(wafregional.ChangeActionInsert),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionInsert,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("10.0.1.0/24"),
 						},
 					},
 					{
-						Action: aws.String(wafregional.ChangeActionInsert),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionInsert,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("10.0.2.0/24"),
 						},
 					},
 					{
-						Action: aws.String(wafregional.ChangeActionInsert),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionInsert,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("10.0.3.0/24"),
 						},
 					},
@@ -322,19 +322,19 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
 			New: []interface{}{},
-			ExpectedUpdates: [][]*waf.IPSetUpdate{
+			ExpectedUpdates: [][]*awstypes.IPSetUpdate{
 				{
 					{
-						Action: aws.String(wafregional.ChangeActionDelete),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionDelete,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("192.0.7.0/24"),
 						},
 					},
 					{
-						Action: aws.String(wafregional.ChangeActionDelete),
-						IPSetDescriptor: &waf.IPSetDescriptor{
-							Type:  aws.String("IPV4"),
+						Action: awstypes.ChangeActionDelete,
+						IPSetDescriptor: &awstypes.IPSetDescriptor{
+							Type:  awstypes.IPSetDescriptorType("IPV4"),
 							Value: aws.String("192.0.8.0/24"),
 						},
 					},
@@ -350,7 +350,7 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 
 			updates := tfwafregional.DiffIPSetDescriptors(tc.Old, tc.New)
 			if !reflect.DeepEqual(updates, tc.ExpectedUpdates) {
-				t.Fatalf("IPSet updates don't match.\nGiven: %s\nExpected: %s",
+				t.Fatalf("IPSet updates don't match.\nGiven: %v\nExpected: %v",
 					updates, tc.ExpectedUpdates)
 			}
 		})
@@ -364,8 +364,8 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-			resp, err := conn.GetIPSetWithContext(ctx, &waf.GetIPSetInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+			resp, err := conn.GetIPSet(ctx, &wafregional.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
 			})
 
@@ -375,7 +375,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 				}
 			}
 
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				continue
 			}
 
@@ -386,7 +386,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIPSetExists(ctx context.Context, n string, v *waf.IPSet) resource.TestCheckFunc {
+func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -397,8 +397,8 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *waf.IPSet) resour
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		resp, err := conn.GetIPSetWithContext(ctx, &waf.GetIPSetInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		resp, err := conn.GetIPSet(ctx, &wafregional.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})
 

@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -61,7 +62,7 @@ func ResourceGeoMatchSet() *schema.Resource {
 
 func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	log.Printf("[INFO] Creating GeoMatchSet: %s", d.Get("name").(string))
 
@@ -72,29 +73,29 @@ func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 			Name:        aws.String(d.Get("name").(string)),
 		}
 
-		return conn.CreateGeoMatchSetWithContext(ctx, params)
+		return conn.CreateGeoMatchSet(ctx, params)
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GeoMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateGeoMatchSetOutput)
 
-	d.SetId(aws.StringValue(resp.GeoMatchSet.GeoMatchSetId))
+	d.SetId(aws.ToString(resp.GeoMatchSet.GeoMatchSetId))
 
 	return append(diags, resourceGeoMatchSetUpdate(ctx, d, meta)...)
 }
 
 func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 	log.Printf("[INFO] Reading GeoMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetGeoMatchSetInput{
 		GeoMatchSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetGeoMatchSetWithContext(ctx, params)
+	resp, err := conn.GetGeoMatchSet(ctx, params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 			log.Printf("[WARN] WAF GeoMatchSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -119,7 +120,7 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("geo_match_constraint") {
 		o, n := d.GetChange("geo_match_constraint")
@@ -136,13 +137,13 @@ func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List()
 	if len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}
 		err := updateGeoMatchSetResource(ctx, d.Id(), oldConstraints, noConstraints, conn)
-		if err != nil {
+		if err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendErrorf(diags, "updating GeoMatchConstraint: %s", err)
 		}
 	}
@@ -154,8 +155,11 @@ func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 			GeoMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteGeoMatchSetWithContext(ctx, req)
+		return conn.DeleteGeoMatchSet(ctx, req)
 	})
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GeoMatchSet: %s", err)
 	}
@@ -163,7 +167,7 @@ func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func updateGeoMatchSetResource(ctx context.Context, id string, oldT, newT []interface{}, conn *waf.WAF) error {
+func updateGeoMatchSetResource(ctx context.Context, id string, oldT, newT []interface{}, conn *waf.Client) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.UpdateGeoMatchSetInput{
@@ -172,12 +176,8 @@ func updateGeoMatchSetResource(ctx context.Context, id string, oldT, newT []inte
 			Updates:       DiffGeoMatchSetConstraints(oldT, newT),
 		}
 
-		log.Printf("[INFO] Updating GeoMatchSet constraints: %s", req)
-		return conn.UpdateGeoMatchSetWithContext(ctx, req)
+		log.Printf("[INFO] Updating GeoMatchSet constraints: %s", id)
+		return conn.UpdateGeoMatchSet(ctx, req)
 	})
-	if err != nil {
-		return fmt.Errorf("updating GeoMatchSet: %s", err)
-	}
-
-	return nil
+	return err
 }

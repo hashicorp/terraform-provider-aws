@@ -8,21 +8,22 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFByteMatchSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.ByteMatchSet
+	var v awstypes.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
@@ -67,7 +68,7 @@ func TestAccWAFByteMatchSet_basic(t *testing.T) {
 
 func TestAccWAFByteMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.ByteMatchSet
+	var before, after awstypes.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
@@ -105,7 +106,7 @@ func TestAccWAFByteMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.ByteMatchSet
+	var before, after awstypes.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
@@ -174,7 +175,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 
 func TestAccWAFByteMatchSet_noTuples(t *testing.T) {
 	ctx := acctest.Context(t)
-	var byteSet waf.ByteMatchSet
+	var byteSet awstypes.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
@@ -203,7 +204,7 @@ func TestAccWAFByteMatchSet_noTuples(t *testing.T) {
 
 func TestAccWAFByteMatchSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.ByteMatchSet
+	var v awstypes.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
@@ -225,9 +226,9 @@ func TestAccWAFByteMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckByteMatchSetDisappears(ctx context.Context, v *waf.ByteMatchSet) resource.TestCheckFunc {
+func testAccCheckByteMatchSetDisappears(ctx context.Context, v *awstypes.ByteMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -237,9 +238,9 @@ func testAccCheckByteMatchSetDisappears(ctx context.Context, v *waf.ByteMatchSet
 			}
 
 			for _, ByteMatchTuple := range v.ByteMatchTuples {
-				ByteMatchUpdate := &waf.ByteMatchSetUpdate{
-					Action: aws.String("DELETE"),
-					ByteMatchTuple: &waf.ByteMatchTuple{
+				ByteMatchUpdate := awstypes.ByteMatchSetUpdate{
+					Action: awstypes.ChangeActionDelete,
+					ByteMatchTuple: &awstypes.ByteMatchTuple{
 						FieldToMatch:         ByteMatchTuple.FieldToMatch,
 						PositionalConstraint: ByteMatchTuple.PositionalConstraint,
 						TargetString:         ByteMatchTuple.TargetString,
@@ -249,7 +250,7 @@ func testAccCheckByteMatchSetDisappears(ctx context.Context, v *waf.ByteMatchSet
 				req.Updates = append(req.Updates, ByteMatchUpdate)
 			}
 
-			return conn.UpdateByteMatchSetWithContext(ctx, req)
+			return conn.UpdateByteMatchSet(ctx, req)
 		})
 		if err != nil {
 			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
@@ -260,17 +261,16 @@ func testAccCheckByteMatchSetDisappears(ctx context.Context, v *waf.ByteMatchSet
 				ChangeToken:    token,
 				ByteMatchSetId: v.ByteMatchSetId,
 			}
-			return conn.DeleteByteMatchSetWithContext(ctx, opts)
+			return conn.DeleteByteMatchSet(ctx, opts)
 		})
 		if err != nil {
 			return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
 		}
-
 		return nil
 	}
 }
 
-func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *waf.ByteMatchSet) resource.TestCheckFunc {
+func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *awstypes.ByteMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -281,8 +281,8 @@ func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *waf.ByteMa
 			return fmt.Errorf("No WAF ByteMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-		resp, err := conn.GetByteMatchSetWithContext(ctx, &waf.GetByteMatchSetInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		resp, err := conn.GetByteMatchSet(ctx, &waf.GetByteMatchSetInput{
 			ByteMatchSetId: aws.String(rs.Primary.ID),
 		})
 
@@ -306,8 +306,8 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-			resp, err := conn.GetByteMatchSetWithContext(ctx, &waf.GetByteMatchSetInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			resp, err := conn.GetByteMatchSet(ctx, &waf.GetByteMatchSetInput{
 				ByteMatchSetId: aws.String(rs.Primary.ID),
 			})
 
@@ -317,7 +317,7 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 				}
 			}
 
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 				continue
 			}
 

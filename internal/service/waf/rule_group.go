@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +75,7 @@ func ResourceRuleGroup() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  waf.WafRuleTypeRegular,
+							Default:  awstypes.WafRuleTypeRegular,
 						},
 					},
 				},
@@ -93,7 +94,7 @@ func ResourceRuleGroup() *schema.Resource {
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -104,13 +105,13 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 			Tags:        getTagsIn(ctx),
 		}
 
-		return conn.CreateRuleGroupWithContext(ctx, input)
+		return conn.CreateRuleGroup(ctx, input)
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF Rule Group (%s): %s", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateRuleGroupOutput)
-	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
+	d.SetId(aws.ToString(resp.RuleGroup.RuleGroupId))
 
 	activatedRules := d.Get("activated_rule").(*schema.Set).List()
 	if len(activatedRules) > 0 {
@@ -127,15 +128,15 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetRuleGroupWithContext(ctx, params)
+	resp, err := conn.GetRuleGroup(ctx, params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 			log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -144,7 +145,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading WAF Rule Group (%s): %s", d.Id(), err)
 	}
 
-	rResp, err := conn.ListActivatedRulesInRuleGroupWithContext(ctx, &waf.ListActivatedRulesInRuleGroupInput{
+	rResp, err := conn.ListActivatedRulesInRuleGroup(ctx, &waf.ListActivatedRulesInRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -167,7 +168,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -184,7 +185,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	if err := deleteRuleGroup(ctx, d.Id(), oldRules, conn); err != nil {
@@ -193,12 +194,14 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, conn *waf.WAF) error {
+func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, conn *waf.Client) error {
 	if len(oldRules) > 0 {
 		noRules := []interface{}{}
 		err := updateRuleGroupResource(ctx, id, oldRules, noRules, conn)
 		if err != nil {
-			return fmt.Errorf("updating WAF Rule Group Predicates: %s", err)
+			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+				return fmt.Errorf("updating WAF Rule Group Predicates: %s", err)
+			}
 		}
 	}
 
@@ -209,15 +212,18 @@ func deleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, con
 			RuleGroupId: aws.String(id),
 		}
 		log.Printf("[INFO] Deleting WAF Rule Group")
-		return conn.DeleteRuleGroupWithContext(ctx, req)
+		return conn.DeleteRuleGroup(ctx, req)
 	})
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("deleting WAF Rule Group: %s", err)
 	}
 	return nil
 }
 
-func updateRuleGroupResource(ctx context.Context, id string, oldRules, newRules []interface{}, conn *waf.WAF) error {
+func updateRuleGroupResource(ctx context.Context, id string, oldRules, newRules []interface{}, conn *waf.Client) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleGroupInput{
@@ -226,11 +232,7 @@ func updateRuleGroupResource(ctx context.Context, id string, oldRules, newRules 
 			Updates:     DiffRuleGroupActivatedRules(oldRules, newRules),
 		}
 
-		return conn.UpdateRuleGroupWithContext(ctx, req)
+		return conn.UpdateRuleGroup(ctx, req)
 	})
-	if err != nil {
-		return fmt.Errorf("Updating WAF Rule Group: %s", err)
-	}
-
-	return nil
+	return err
 }

@@ -10,15 +10,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,7 +29,7 @@ import (
 )
 
 const (
-	RuleDeleteTimeout = 5 * time.Minute
+	RuleDeleteTimeout = 1 * time.Minute
 )
 
 // @SDKResource("aws_waf_rule", name="Rule")
@@ -69,9 +71,9 @@ func ResourceRule() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PredicateType](),
 						},
 					},
 				},
@@ -90,7 +92,7 @@ func ResourceRule() *schema.Resource {
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -101,7 +103,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Tags:        getTagsIn(ctx),
 		}
 
-		return conn.CreateRuleWithContext(ctx, input)
+		return conn.CreateRule(ctx, input)
 	})
 
 	if err != nil {
@@ -109,7 +111,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	resp := out.(*waf.CreateRuleOutput)
-	d.SetId(aws.StringValue(resp.Rule.RuleId))
+	d.SetId(aws.ToString(resp.Rule.RuleId))
 
 	newPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(newPredicates) > 0 {
@@ -125,14 +127,14 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	params := &waf.GetRuleInput{
 		RuleId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetRuleWithContext(ctx, params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+	resp, err := conn.GetRule(ctx, params)
+	if !d.IsNewResource() && errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		log.Printf("[WARN] WAF Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,7 +159,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	for _, predicateSet := range resp.Rule.Predicates {
 		predicate := map[string]interface{}{
 			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
+			"type":    predicateSet.Type,
 			"data_id": *predicateSet.DataId,
 		}
 		predicates = append(predicates, predicate)
@@ -179,7 +181,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("predicates") {
 		o, n := d.GetChange("predicates")
@@ -196,14 +198,16 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
 		err := updateRuleResource(ctx, d.Id(), oldPredicates, noPredicates, conn)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Rule (%s) predicates: %s", d.Id(), err)
+			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+				return sdkdiag.AppendErrorf(diags, "updating WAF Rule (%s) predicates: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -215,11 +219,11 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 				RuleId:      aws.String(d.Id()),
 			}
 
-			return conn.DeleteRuleWithContext(ctx, req)
+			return conn.DeleteRule(ctx, req)
 		})
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeReferencedItemException) {
+			if errs.IsA[*awstypes.WAFReferencedItemException](err) {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
@@ -235,12 +239,12 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 				RuleId:      aws.String(d.Id()),
 			}
 
-			return conn.DeleteRuleWithContext(ctx, req)
+			return conn.DeleteRule(ctx, req)
 		})
 	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting WAF Rule (%s): %s", d.Id(), err)
@@ -249,7 +253,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func updateRuleResource(ctx context.Context, id string, oldP, newP []interface{}, conn *waf.WAF) error {
+func updateRuleResource(ctx context.Context, id string, oldP, newP []interface{}, conn *waf.Client) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.UpdateRuleInput{
@@ -257,8 +261,7 @@ func updateRuleResource(ctx context.Context, id string, oldP, newP []interface{}
 			RuleId:      aws.String(id),
 			Updates:     DiffRulePredicates(oldP, newP),
 		}
-
-		return conn.UpdateRuleWithContext(ctx, req)
+		return conn.UpdateRule(ctx, req)
 	})
 
 	return err

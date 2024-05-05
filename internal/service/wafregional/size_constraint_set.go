@@ -7,15 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 // @SDKResource("aws_wafregional_size_constraint_set", name="Size Constraint Set")
@@ -30,13 +29,13 @@ func resourceSizeConstraintSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: tfwaf.SizeConstraintSetSchema(),
+		Schema: SizeConstraintSetSchema(),
 	}
 }
 
 func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get("name").(string)
@@ -45,34 +44,34 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 
 	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		params := &waf.CreateSizeConstraintSetInput{
+		params := &wafregional.CreateSizeConstraintSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
 		}
 
-		return conn.CreateSizeConstraintSetWithContext(ctx, params)
+		return conn.CreateSizeConstraintSet(ctx, params)
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF Regional SizeConstraintSet: %s", err)
 	}
-	resp := out.(*waf.CreateSizeConstraintSetOutput)
+	resp := out.(*wafregional.CreateSizeConstraintSetOutput)
 
-	d.SetId(aws.StringValue(resp.SizeConstraintSet.SizeConstraintSetId))
+	d.SetId(aws.ToString(resp.SizeConstraintSet.SizeConstraintSetId))
 
 	return append(diags, resourceSizeConstraintSetUpdate(ctx, d, meta)...)
 }
 
 func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
 	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
-	params := &waf.GetSizeConstraintSetInput{
+	params := &wafregional.GetSizeConstraintSetInput{
 		SizeConstraintSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetSizeConstraintSetWithContext(ctx, params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+	resp, err := conn.GetSizeConstraintSet(ctx, params)
+	if !d.IsNewResource() && errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -82,7 +81,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("name", resp.SizeConstraintSet.Name)
-	d.Set("size_constraints", tfwaf.FlattenSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
+	d.Set("size_constraints", FlattenSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
 
 	return diags
 }
@@ -95,7 +94,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRegionalSizeConstraintSetResource(ctx, d.Id(), oldConstraints, newConstraints, client.WAFRegionalConn(ctx), client.Region)
+		err := updateRegionalSizeConstraintSetResource(ctx, d.Id(), oldConstraints, newConstraints, client.WAFRegionalClient(ctx), client.Region)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WAF Regional SizeConstraintSet(%s): %s", d.Id(), err)
 		}
@@ -106,7 +105,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()
@@ -114,24 +113,23 @@ func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData
 	if len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}
 		err := updateRegionalSizeConstraintSetResource(ctx, d.Id(), oldConstraints, noConstraints, conn, region)
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-			return diags
-		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting WAF Regional SizeConstraintSet(%s): %s", d.Id(), err)
+			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+				return sdkdiag.AppendErrorf(diags, "deleting WAF Regional SizeConstraintSet(%s): %s", d.Id(), err)
+			}
 		}
 	}
 
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.DeleteSizeConstraintSetInput{
+		req := &wafregional.DeleteSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(d.Id()),
 		}
-		return conn.DeleteSizeConstraintSetWithContext(ctx, req)
+		return conn.DeleteSizeConstraintSet(ctx, req)
 	})
 
-	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags
 	}
 
@@ -142,17 +140,17 @@ func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func updateRegionalSizeConstraintSetResource(ctx context.Context, id string, oldConstraints, newConstraints []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRegionalSizeConstraintSetResource(ctx context.Context, id string, oldConstraints, newConstraints []interface{}, conn *wafregional.Client, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.UpdateSizeConstraintSetInput{
+		req := &wafregional.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(id),
-			Updates:             tfwaf.DiffSizeConstraints(oldConstraints, newConstraints),
+			Updates:             DiffSizeConstraints(oldConstraints, newConstraints),
 		}
 
-		log.Printf("[INFO] Updating WAF Regional SizeConstraintSet: %s", req)
-		return conn.UpdateSizeConstraintSetWithContext(ctx, req)
+		log.Printf("[INFO] Updating WAF Regional SizeConstraintSet: %s", id)
+		return conn.UpdateSizeConstraintSet(ctx, req)
 	})
 
 	return err

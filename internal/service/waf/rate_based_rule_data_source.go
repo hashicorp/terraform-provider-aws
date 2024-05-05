@@ -6,8 +6,9 @@ package waf
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,19 +31,19 @@ func DataSourceRateBasedRule() *schema.Resource {
 
 func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 	name := d.Get("name").(string)
 
-	rules := make([]*waf.RuleSummary, 0)
+	rules := make([]awstypes.RuleSummary, 0)
 	// ListRulesInput does not have a name parameter for filtering
 	input := &waf.ListRateBasedRulesInput{}
 	for {
-		output, err := conn.ListRateBasedRulesWithContext(ctx, input)
+		output, err := conn.ListRateBasedRules(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAF Rate Based Rules: %s", err)
 		}
 		for _, rule := range output.Rules {
-			if aws.StringValue(rule.Name) == name {
+			if aws.ToString(rule.Name) == name {
 				rules = append(rules, rule)
 			}
 		}
@@ -63,7 +64,7 @@ func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, me
 
 	rule := rules[0]
 
-	d.SetId(aws.StringValue(rule.RuleId))
+	d.SetId(aws.ToString(rule.RuleId))
 
 	return diags
 }

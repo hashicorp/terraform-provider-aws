@@ -7,16 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 // @SDKResource("aws_wafregional_xss_match_set", name="XSS Match Set")
@@ -53,17 +52,17 @@ func resourceXSSMatchSet() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(wafregional.MatchFieldType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.MatchFieldType](),
 									},
 								},
 							},
 						},
 						"text_transformation": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(wafregional.TextTransformation_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TextTransformation](),
 						},
 					},
 				},
@@ -74,26 +73,26 @@ func resourceXSSMatchSet() *schema.Resource {
 
 func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating regional WAF XSS Match Set: %s", d.Get("name").(string))
 
 	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		params := &waf.CreateXssMatchSetInput{
+		params := &wafregional.CreateXssMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(d.Get("name").(string)),
 		}
 
-		return conn.CreateXssMatchSetWithContext(ctx, params)
+		return conn.CreateXssMatchSet(ctx, params)
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF Regional XSS Match Set: %s", err)
 	}
-	resp := out.(*waf.CreateXssMatchSetOutput)
+	resp := out.(*wafregional.CreateXssMatchSetOutput)
 
-	d.SetId(aws.StringValue(resp.XssMatchSet.XssMatchSetId))
+	d.SetId(aws.ToString(resp.XssMatchSet.XssMatchSetId))
 
 	if v, ok := d.Get("xss_match_tuple").(*schema.Set); ok && v.Len() > 0 {
 		if err := updateXSSMatchSetResourceWR(ctx, conn, region, d.Id(), nil, v.List()); err != nil {
@@ -106,14 +105,14 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
-	params := &waf.GetXssMatchSetInput{
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
+	params := &wafregional.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetXssMatchSetWithContext(ctx, params)
+	resp, err := conn.GetXssMatchSet(ctx, params)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		if !d.IsNewResource() && errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -134,7 +133,7 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceXSSMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("xss_match_tuple") {
@@ -151,34 +150,31 @@ func resourceXSSMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if oldT := d.Get("xss_match_tuple").(*schema.Set).List(); len(oldT) > 0 {
 		var newT []interface{}
 
 		err := updateXSSMatchSetResourceWR(ctx, conn, region, d.Id(), oldT, newT)
-
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
-			return diags
-		}
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional XSS Match Set (%s): %s", d.Id(), err)
+			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+				return sdkdiag.AppendErrorf(diags, "updating WAF Regional XSS Match Set (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional XSS Match Set: %s", d.Id())
 	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.DeleteXssMatchSetInput{
+		input := &wafregional.DeleteXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteXssMatchSetWithContext(ctx, input)
+		return conn.DeleteXssMatchSet(ctx, input)
 	})
 
-	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags
 	}
 
@@ -189,33 +185,33 @@ func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func updateXSSMatchSetResourceWR(ctx context.Context, conn *wafregional.WAFRegional, region, xssMatchSetID string, oldT, newT []interface{}) error {
+func updateXSSMatchSetResourceWR(ctx context.Context, conn *wafregional.Client, region, xssMatchSetID string, oldT, newT []interface{}) error {
 	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.UpdateXssMatchSetInput{
+		input := &wafregional.UpdateXssMatchSetInput{
 			ChangeToken:   token,
 			Updates:       diffXSSMatchSetTuples(oldT, newT),
 			XssMatchSetId: aws.String(xssMatchSetID),
 		}
 
-		return conn.UpdateXssMatchSetWithContext(ctx, input)
+		return conn.UpdateXssMatchSet(ctx, input)
 	})
 
 	return err
 }
 
-func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {
+func flattenXSSMatchTuples(ts []awstypes.XssMatchTuple) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
-		m["field_to_match"] = tfwaf.FlattenFieldToMatch(t.FieldToMatch)
-		m["text_transformation"] = aws.StringValue(t.TextTransformation)
+		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["text_transformation"] = t.TextTransformation
 		out[i] = m
 	}
 	return out
 }
 
-func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
-	updates := make([]*waf.XssMatchSetUpdate, 0)
+func diffXSSMatchSetTuples(oldT, newT []interface{}) []awstypes.XssMatchSetUpdate {
+	updates := make([]awstypes.XssMatchSetUpdate, 0)
 
 	for _, od := range oldT {
 		tuple := od.(map[string]interface{})
@@ -225,11 +221,11 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 			continue
 		}
 
-		updates = append(updates, &waf.XssMatchSetUpdate{
-			Action: aws.String(waf.ChangeActionDelete),
-			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
-				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+		updates = append(updates, awstypes.XssMatchSetUpdate{
+			Action: awstypes.ChangeActionDelete,
+			XssMatchTuple: &awstypes.XssMatchTuple{
+				FieldToMatch:       ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})
 	}
@@ -237,11 +233,11 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate {
 	for _, nd := range newT {
 		tuple := nd.(map[string]interface{})
 
-		updates = append(updates, &waf.XssMatchSetUpdate{
-			Action: aws.String(waf.ChangeActionInsert),
-			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       tfwaf.ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
-				TextTransformation: aws.String(tuple["text_transformation"].(string)),
+		updates = append(updates, awstypes.XssMatchSetUpdate{
+			Action: awstypes.ChangeActionInsert,
+			XssMatchTuple: &awstypes.XssMatchTuple{
+				FieldToMatch:       ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})
 	}

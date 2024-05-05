@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -38,7 +39,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 
 func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &waf.CreateSizeConstraintSetInput{
@@ -49,21 +50,21 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 	outputRaw, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input.ChangeToken = token
 
-		return conn.CreateSizeConstraintSetWithContext(ctx, input)
+		return conn.CreateSizeConstraintSet(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF Size Constraint Set (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*waf.CreateSizeConstraintSetOutput).SizeConstraintSet.SizeConstraintSetId))
+	d.SetId(aws.ToString(outputRaw.(*waf.CreateSizeConstraintSetOutput).SizeConstraintSet.SizeConstraintSetId))
 
 	return append(diags, resourceSizeConstraintSetUpdate(ctx, d, meta)...)
 }
 
 func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	sizeConstraintSet, err := FindSizeConstraintSetByID(ctx, conn, d.Id())
 
@@ -94,7 +95,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
@@ -112,26 +113,29 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()
 
 	if len(oldConstraints) > 0 {
 		err := updateSizeConstraintSetResource(ctx, conn, d.Id(), oldConstraints, []interface{}{})
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Size Constraint Set (%s): %s", d.Id(), err)
+			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+				return sdkdiag.AppendErrorf(diags, "updating WAF Size Constraint Set (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		return conn.DeleteSizeConstraintSetWithContext(ctx, &waf.DeleteSizeConstraintSetInput{
+		return conn.DeleteSizeConstraintSet(ctx, &waf.DeleteSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(d.Id()),
 		})
 	})
-
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting WAF Size Constraint Set (%s): %s", d.Id(), err)
 	}
@@ -139,7 +143,7 @@ func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func updateSizeConstraintSetResource(ctx context.Context, conn *waf.WAF, id string, oldS, newS []interface{}) error {
+func updateSizeConstraintSetResource(ctx context.Context, conn *waf.Client, id string, oldS, newS []interface{}) error {
 	input := &waf.UpdateSizeConstraintSetInput{
 		SizeConstraintSetId: aws.String(id),
 		Updates:             DiffSizeConstraints(oldS, newS),
@@ -149,20 +153,20 @@ func updateSizeConstraintSetResource(ctx context.Context, conn *waf.WAF, id stri
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input.ChangeToken = token
 
-		return conn.UpdateSizeConstraintSetWithContext(ctx, input)
+		return conn.UpdateSizeConstraintSet(ctx, input)
 	})
 
 	return err
 }
 
-func FindSizeConstraintSetByID(ctx context.Context, conn *waf.WAF, id string) (*waf.SizeConstraintSet, error) {
+func FindSizeConstraintSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.SizeConstraintSet, error) {
 	input := &waf.GetSizeConstraintSetInput{
 		SizeConstraintSetId: aws.String(id),
 	}
 
-	output, err := conn.GetSizeConstraintSetWithContext(ctx, input)
+	output, err := conn.GetSizeConstraintSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -6,12 +6,17 @@ package wafregional
 import (
 	"context"
 	"errors"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,7 +43,7 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 }
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	name, nameOk := d.Get("name").(string)
 	metricName, metricNameOk := d.Get("metric_name").(string)
 
@@ -52,15 +57,77 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 		return create.DiagError(names.WAFRegional, create.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
 	}
 
-	output, err := FindSubscribedRuleGroupByNameOrMetricName(ctx, conn, name, metricName)
+	output, err := findSubscribedRuleGroupByNameOrMetricName(ctx, conn, name, metricName)
 
 	if err != nil {
 		return create.DiagError(names.WAFRegional, create.ErrActionReading, DSNameSubscribedRuleGroup, name, err)
 	}
 
-	d.SetId(aws.StringValue(output.RuleGroupId))
+	d.SetId(aws.ToString(output.RuleGroupId))
 	d.Set("metric_name", output.MetricName)
 	d.Set("name", output.Name)
 
 	return nil
+}
+
+func findSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *wafregional.Client, name string, metricName string) (*awstypes.SubscribedRuleGroupSummary, error) {
+	hasName := name != ""
+	hasMetricName := metricName != ""
+	hasMatch := false
+
+	if !hasName && !hasMetricName {
+		return nil, errors.New("must specify either name or metricName")
+	}
+
+	input := &wafregional.ListSubscribedRuleGroupsInput{}
+
+	matchingRuleGroup := &awstypes.SubscribedRuleGroupSummary{}
+
+	for {
+		output, err := conn.ListSubscribedRuleGroups(ctx, input)
+
+		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, ruleGroup := range output.RuleGroups {
+			respName := aws.ToString(ruleGroup.Name)
+			respMetricName := aws.ToString(ruleGroup.MetricName)
+
+			if hasName && respName != name {
+				continue
+			}
+			if hasMetricName && respMetricName != metricName {
+				continue
+			}
+			if hasName && hasMetricName && (name != respName || metricName != respMetricName) {
+				continue
+			}
+			// Previous conditionals catch all non-matches
+			if hasMatch {
+				return nil, fmt.Errorf("multiple matches found for name %s and metricName %s", name, metricName)
+			}
+
+			matchingRuleGroup = &ruleGroup
+			hasMatch = true
+		}
+
+		if output.NextMarker == nil {
+			break
+		}
+		input.NextMarker = output.NextMarker
+	}
+
+	if !hasMatch {
+		return nil, fmt.Errorf("no matches found for name %s and metricName %s", name, metricName)
+	}
+
+	return matchingRuleGroup, nil
 }

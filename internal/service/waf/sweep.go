@@ -8,8 +8,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -138,7 +138,7 @@ func sweepByteMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -155,7 +155,7 @@ func sweepByteMatchSet(region string) error {
 			r := ResourceByteMatchSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(byteMatchSet.ByteMatchSetId)
+			id := aws.ToString(byteMatchSet.ByteMatchSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -213,7 +213,7 @@ func sweepGeoMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -230,7 +230,7 @@ func sweepGeoMatchSet(region string) error {
 			r := ResourceGeoMatchSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(geoMatchSet.GeoMatchSetId)
+			id := aws.ToString(geoMatchSet.GeoMatchSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -288,7 +288,7 @@ func sweepIPSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -305,7 +305,7 @@ func sweepIPSet(region string) error {
 			r := ResourceIPSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(ipSet.IPSetId)
+			id := aws.ToString(ipSet.IPSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -363,7 +363,7 @@ func sweepRateBasedRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -380,7 +380,7 @@ func sweepRateBasedRules(region string) error {
 			r := ResourceRateBasedRule()
 			d := r.Data(nil)
 
-			id := aws.StringValue(rule.RuleId)
+			id := aws.ToString(rule.RuleId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -438,7 +438,7 @@ func sweepRegexMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -455,7 +455,7 @@ func sweepRegexMatchSet(region string) error {
 			r := ResourceRegexMatchSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(regexMatchSet.RegexMatchSetId)
+			id := aws.ToString(regexMatchSet.RegexMatchSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -513,7 +513,7 @@ func sweepRegexPatternSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -530,7 +530,7 @@ func sweepRegexPatternSet(region string) error {
 			r := ResourceRegexPatternSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(regexPatternSet.RegexPatternSetId)
+			id := aws.ToString(regexPatternSet.RegexPatternSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -588,7 +588,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -605,7 +605,7 @@ func sweepRuleGroups(region string) error {
 			r := ResourceRuleGroup()
 			d := r.Data(nil)
 
-			id := aws.StringValue(ruleGroup.RuleGroupId)
+			id := aws.ToString(ruleGroup.RuleGroupId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -663,7 +663,7 @@ func sweepRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -677,14 +677,10 @@ func sweepRules(region string) error {
 		}
 
 		for _, rule := range page.Rules {
-			if rule == nil {
-				continue
-			}
-
 			r := ResourceRule()
 			d := r.Data(nil)
 
-			id := aws.StringValue(rule.RuleId)
+			id := aws.ToString(rule.RuleId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -742,7 +738,7 @@ func sweepSizeConstraintSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -759,7 +755,7 @@ func sweepSizeConstraintSet(region string) error {
 			r := ResourceSizeConstraintSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(sizeConstraintSet.SizeConstraintSetId)
+			id := aws.ToString(sizeConstraintSet.SizeConstraintSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -817,7 +813,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -834,7 +830,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 			r := ResourceSQLInjectionMatchSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(sqlInjectionMatchSet.SqlInjectionMatchSetId)
+			id := aws.ToString(sqlInjectionMatchSet.SqlInjectionMatchSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -892,7 +888,7 @@ func sweepWebACLs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -906,14 +902,10 @@ func sweepWebACLs(region string) error {
 		}
 
 		for _, webACL := range page.WebACLs {
-			if webACL == nil {
-				continue
-			}
-
 			r := ResourceWebACL()
 			d := r.Data(nil)
 
-			id := aws.StringValue(webACL.WebACLId)
+			id := aws.ToString(webACL.WebACLId)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -971,7 +963,7 @@ func sweepXSSMatchSet(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.WAFConn(ctx)
+	conn := client.WAFClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
@@ -988,7 +980,7 @@ func sweepXSSMatchSet(region string) error {
 			r := ResourceXSSMatchSet()
 			d := r.Data(nil)
 
-			id := aws.StringValue(xssMatchSet.XssMatchSetId)
+			id := aws.ToString(xssMatchSet.XssMatchSetId)
 			d.SetId(id)
 
 			// read concurrently and gather errors

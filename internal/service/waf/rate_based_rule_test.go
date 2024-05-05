@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -42,7 +42,7 @@ func TestAccWAFRateBasedRule_serial(t *testing.T) {
 
 func testAccWAFRateBasedRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.RateBasedRule
+	var v awstypes.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
@@ -73,7 +73,7 @@ func testAccWAFRateBasedRule_basic(t *testing.T) {
 
 func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.RateBasedRule
+	var before, after awstypes.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
@@ -113,7 +113,7 @@ func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 
 func testAccWAFRateBasedRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.RateBasedRule
+	var v awstypes.RateBasedRule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
@@ -137,10 +137,10 @@ func testAccWAFRateBasedRule_disappears(t *testing.T) {
 
 func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.IPSet
-	var byteMatchSet waf.ByteMatchSet
+	var ipset awstypes.IPSet
+	var byteMatchSet awstypes.ByteMatchSet
 
-	var before, after waf.RateBasedRule
+	var before, after awstypes.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
@@ -188,8 +188,8 @@ func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/9659
 func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.IPSet
-	var before, after waf.RateBasedRule
+	var ipset awstypes.IPSet
+	var before, after awstypes.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
@@ -238,7 +238,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 
 func testAccWAFRateBasedRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule waf.RateBasedRule
+	var rule awstypes.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
@@ -267,7 +267,7 @@ func testAccWAFRateBasedRule_noPredicates(t *testing.T) {
 
 func testAccWAFRateBasedRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule waf.RateBasedRule
+	var rule awstypes.RateBasedRule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rate_based_rule.wafrule"
 
@@ -322,7 +322,7 @@ func testAccCheckRateBasedRuleDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 			_, err := tfwaf.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
 
@@ -341,7 +341,7 @@ func testAccCheckRateBasedRuleDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *waf.RateBasedRule) resource.TestCheckFunc {
+func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *awstypes.RateBasedRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -352,7 +352,7 @@ func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *waf.RateB
 			return fmt.Errorf("No WAF Rate Based Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 		output, err := tfwaf.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
 

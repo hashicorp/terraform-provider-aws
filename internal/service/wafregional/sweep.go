@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
@@ -61,12 +60,12 @@ func sweepRateBasedRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WAFRegionalConn(ctx)
+	conn := client.WAFRegionalClient(ctx)
 
-	input := &waf.ListRateBasedRulesInput{}
+	input := &wafregional.ListRateBasedRulesInput{}
 
 	for {
-		output, err := conn.ListRateBasedRulesWithContext(ctx, input)
+		output, err := conn.ListRateBasedRules(ctx, input)
 
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Rate-Based Rule sweep for %s: %s", region, err)
@@ -78,40 +77,40 @@ func sweepRateBasedRules(region string) error {
 		}
 
 		for _, rule := range output.Rules {
-			deleteInput := &waf.DeleteRateBasedRuleInput{
+			deleteInput := &wafregional.DeleteRateBasedRuleInput{
 				RuleId: rule.RuleId,
 			}
-			id := aws.StringValue(rule.RuleId)
+			id := aws.ToString(rule.RuleId)
 			wr := NewRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
 				log.Printf("[INFO] Deleting WAF Regional Rate-Based Rule: %s", id)
-				return conn.DeleteRateBasedRuleWithContext(ctx, deleteInput)
+				return conn.DeleteRateBasedRule(ctx, deleteInput)
 			})
 
-			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonEmptyEntityException) {
-				getRateBasedRuleInput := &waf.GetRateBasedRuleInput{
+			if errs.IsA[*awstypes.WAFNonEmptyEntityException](err) {
+				getRateBasedRuleInput := &wafregional.GetRateBasedRuleInput{
 					RuleId: rule.RuleId,
 				}
 
-				getRateBasedRuleOutput, getRateBasedRuleErr := conn.GetRateBasedRuleWithContext(ctx, getRateBasedRuleInput)
+				getRateBasedRuleOutput, getRateBasedRuleErr := conn.GetRateBasedRule(ctx, getRateBasedRuleInput)
 
 				if getRateBasedRuleErr != nil {
 					return fmt.Errorf("error getting WAF Regional Rate-Based Rule (%s): %s", id, getRateBasedRuleErr)
 				}
 
-				var updates []*waf.RuleUpdate
-				updateRateBasedRuleInput := &waf.UpdateRateBasedRuleInput{
+				var updates []awstypes.RuleUpdate
+				updateRateBasedRuleInput := &wafregional.UpdateRateBasedRuleInput{
 					RateLimit: getRateBasedRuleOutput.Rule.RateLimit,
 					RuleId:    rule.RuleId,
 					Updates:   updates,
 				}
 
 				for _, predicate := range getRateBasedRuleOutput.Rule.MatchPredicates {
-					update := &waf.RuleUpdate{
-						Action:    aws.String(waf.ChangeActionDelete),
-						Predicate: predicate,
+					update := awstypes.RuleUpdate{
+						Action:    awstypes.ChangeActionDelete,
+						Predicate: &predicate,
 					}
 
 					updateRateBasedRuleInput.Updates = append(updateRateBasedRuleInput.Updates, update)
@@ -120,7 +119,7 @@ func sweepRateBasedRules(region string) error {
 				_, updateWebACLErr := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 					updateRateBasedRuleInput.ChangeToken = token
 					log.Printf("[INFO] Removing Predicates from WAF Regional Rate-Based Rule: %s", id)
-					return conn.UpdateRateBasedRuleWithContext(ctx, updateRateBasedRuleInput)
+					return conn.UpdateRateBasedRule(ctx, updateRateBasedRuleInput)
 				})
 
 				if updateWebACLErr != nil {
@@ -130,7 +129,7 @@ func sweepRateBasedRules(region string) error {
 				_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 					deleteInput.ChangeToken = token
 					log.Printf("[INFO] Deleting WAF Regional Rate-Based Rule: %s", id)
-					return conn.DeleteRateBasedRuleWithContext(ctx, deleteInput)
+					return conn.DeleteRateBasedRule(ctx, deleteInput)
 				})
 			}
 
@@ -139,7 +138,7 @@ func sweepRateBasedRules(region string) error {
 			}
 		}
 
-		if aws.StringValue(output.NextMarker) == "" {
+		if aws.ToString(output.NextMarker) == "" {
 			break
 		}
 
@@ -155,17 +154,17 @@ func sweepRegexMatchSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WAFRegionalConn(ctx)
-	input := &waf.ListRegexMatchSetsInput{}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListRegexMatchSetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = tfwaf.ListRegexMatchSetsPages(ctx, conn, input, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
+	err = ListRegexMatchSetsPages(ctx, conn, input, func(page *wafregional.ListRegexMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.RegexMatchSets {
-			id := aws.StringValue(v.RegexMatchSetId)
+			id := aws.ToString(v.RegexMatchSetId)
 
 			v, err := findRegexMatchSetByID(ctx, conn, id)
 
@@ -176,7 +175,7 @@ func sweepRegexMatchSets(region string) error {
 			r := resourceRegexMatchSet()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("regex_match_tuple", tfwaf.FlattenRegexMatchTuples(v.RegexMatchTuples))
+			d.Set("regex_match_tuple", FlattenRegexMatchTuples(v.RegexMatchTuples))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -208,17 +207,17 @@ func sweepRegexPatternSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WAFRegionalConn(ctx)
-	input := &waf.ListRegexPatternSetsInput{}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListRegexPatternSetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = tfwaf.ListRegexPatternSetsPages(ctx, conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = ListRegexPatternSetsPages(ctx, conn, input, func(page *wafregional.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.RegexPatternSets {
-			id := aws.StringValue(v.RegexPatternSetId)
+			id := aws.ToString(v.RegexPatternSetId)
 
 			v, err := findRegexPatternSetByID(ctx, conn, id)
 
@@ -229,7 +228,7 @@ func sweepRegexPatternSets(region string) error {
 			r := resourceRegexPatternSet()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("regex_pattern_strings", aws.StringValueSlice(v.RegexPatternStrings))
+			d.Set("regex_pattern_strings", aws.StringSlice(v.RegexPatternStrings))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -261,10 +260,10 @@ func sweepRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WAFRegionalConn(ctx)
+	conn := client.WAFRegionalClient(ctx)
 
-	req := &waf.ListRuleGroupsInput{}
-	resp, err := conn.ListRuleGroupsWithContext(ctx, req)
+	req := &wafregional.ListRuleGroupsInput{}
+	resp, err := conn.ListRuleGroups(ctx, req)
 	if err != nil {
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, err)
@@ -279,13 +278,13 @@ func sweepRuleGroups(region string) error {
 	}
 
 	for _, group := range resp.RuleGroups {
-		rResp, err := conn.ListActivatedRulesInRuleGroupWithContext(ctx, &waf.ListActivatedRulesInRuleGroupInput{
+		rResp, err := conn.ListActivatedRulesInRuleGroup(ctx, &wafregional.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
 		if err != nil {
 			return err
 		}
-		oldRules := tfwaf.FlattenActivatedRules(rResp.ActivatedRules)
+		oldRules := FlattenActivatedRules(rResp.ActivatedRules)
 		err = DeleteRuleGroup(ctx, *group.RuleGroupId, oldRules, conn, region)
 		if err != nil {
 			return err
@@ -301,12 +300,12 @@ func sweepRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WAFRegionalConn(ctx)
+	conn := client.WAFRegionalClient(ctx)
 
-	input := &waf.ListRulesInput{}
+	input := &wafregional.ListRulesInput{}
 
 	for {
-		output, err := conn.ListRulesWithContext(ctx, input)
+		output, err := conn.ListRules(ctx, input)
 
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Rule sweep for %s: %s", region, err)
@@ -318,48 +317,48 @@ func sweepRules(region string) error {
 		}
 
 		for _, rule := range output.Rules {
-			deleteInput := &waf.DeleteRuleInput{
+			deleteInput := &wafregional.DeleteRuleInput{
 				RuleId: rule.RuleId,
 			}
-			id := aws.StringValue(rule.RuleId)
+			id := aws.ToString(rule.RuleId)
 			wr := NewRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
 				log.Printf("[INFO] Deleting WAF Regional Rule: %s", id)
-				return conn.DeleteRuleWithContext(ctx, deleteInput)
+				return conn.DeleteRule(ctx, deleteInput)
 			})
 
-			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonEmptyEntityException) {
-				getRuleInput := &waf.GetRuleInput{
+			if errs.IsA[*awstypes.WAFNonEmptyEntityException](err) {
+				getRuleInput := &wafregional.GetRuleInput{
 					RuleId: rule.RuleId,
 				}
 
-				getRuleOutput, getRuleErr := conn.GetRuleWithContext(ctx, getRuleInput)
+				getRuleOutput, getRuleErr := conn.GetRule(ctx, getRuleInput)
 
 				if getRuleErr != nil {
 					return fmt.Errorf("error getting WAF Regional Rule (%s): %s", id, getRuleErr)
 				}
 
-				var updates []*waf.RuleUpdate
-				updateRuleInput := &waf.UpdateRuleInput{
+				var updates []awstypes.RuleUpdate
+				updateRuleInput := &wafregional.UpdateRuleInput{
 					RuleId:  rule.RuleId,
 					Updates: updates,
 				}
 
 				for _, predicate := range getRuleOutput.Rule.Predicates {
-					update := &waf.RuleUpdate{
-						Action:    aws.String(waf.ChangeActionDelete),
-						Predicate: predicate,
+					update := &awstypes.RuleUpdate{
+						Action:    awstypes.ChangeActionDelete,
+						Predicate: &predicate,
 					}
 
-					updateRuleInput.Updates = append(updateRuleInput.Updates, update)
+					updateRuleInput.Updates = append(updateRuleInput.Updates, *update)
 				}
 
 				_, updateWebACLErr := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 					updateRuleInput.ChangeToken = token
 					log.Printf("[INFO] Removing Predicates from WAF Regional Rule: %s", id)
-					return conn.UpdateRuleWithContext(ctx, updateRuleInput)
+					return conn.UpdateRule(ctx, updateRuleInput)
 				})
 
 				if updateWebACLErr != nil {
@@ -369,7 +368,7 @@ func sweepRules(region string) error {
 				_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 					deleteInput.ChangeToken = token
 					log.Printf("[INFO] Deleting WAF Regional Rule: %s", id)
-					return conn.DeleteRuleWithContext(ctx, deleteInput)
+					return conn.DeleteRule(ctx, deleteInput)
 				})
 			}
 
@@ -378,7 +377,7 @@ func sweepRules(region string) error {
 			}
 		}
 
-		if aws.StringValue(output.NextMarker) == "" {
+		if aws.ToString(output.NextMarker) == "" {
 			break
 		}
 
@@ -394,12 +393,12 @@ func sweepWebACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WAFRegionalConn(ctx)
+	conn := client.WAFRegionalClient(ctx)
 
-	input := &waf.ListWebACLsInput{}
+	input := &wafregional.ListWebACLsInput{}
 
 	for {
-		output, err := conn.ListWebACLsWithContext(ctx, input)
+		output, err := conn.ListWebACLs(ctx, input)
 
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Web ACL sweep for %s: %s", region, err)
@@ -411,49 +410,49 @@ func sweepWebACLs(region string) error {
 		}
 
 		for _, webACL := range output.WebACLs {
-			deleteInput := &waf.DeleteWebACLInput{
+			deleteInput := &wafregional.DeleteWebACLInput{
 				WebACLId: webACL.WebACLId,
 			}
-			id := aws.StringValue(webACL.WebACLId)
+			id := aws.ToString(webACL.WebACLId)
 			wr := NewRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
 				log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
-				return conn.DeleteWebACLWithContext(ctx, deleteInput)
+				return conn.DeleteWebACL(ctx, deleteInput)
 			})
 
-			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonEmptyEntityException) {
-				getWebACLInput := &waf.GetWebACLInput{
+			if errs.IsA[*awstypes.WAFNonEmptyEntityException](err) {
+				getWebACLInput := &wafregional.GetWebACLInput{
 					WebACLId: webACL.WebACLId,
 				}
 
-				getWebACLOutput, getWebACLErr := conn.GetWebACLWithContext(ctx, getWebACLInput)
+				getWebACLOutput, getWebACLErr := conn.GetWebACL(ctx, getWebACLInput)
 
 				if getWebACLErr != nil {
 					return fmt.Errorf("error getting WAF Regional Web ACL (%s): %s", id, getWebACLErr)
 				}
 
-				var updates []*waf.WebACLUpdate
-				updateWebACLInput := &waf.UpdateWebACLInput{
+				var updates []awstypes.WebACLUpdate
+				updateWebACLInput := &wafregional.UpdateWebACLInput{
 					DefaultAction: getWebACLOutput.WebACL.DefaultAction,
 					Updates:       updates,
 					WebACLId:      webACL.WebACLId,
 				}
 
 				for _, rule := range getWebACLOutput.WebACL.Rules {
-					update := &waf.WebACLUpdate{
-						Action:        aws.String(waf.ChangeActionDelete),
-						ActivatedRule: rule,
+					update := &awstypes.WebACLUpdate{
+						Action:        awstypes.ChangeActionDelete,
+						ActivatedRule: &rule,
 					}
 
-					updateWebACLInput.Updates = append(updateWebACLInput.Updates, update)
+					updateWebACLInput.Updates = append(updateWebACLInput.Updates, *update)
 				}
 
 				_, updateWebACLErr := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 					updateWebACLInput.ChangeToken = token
 					log.Printf("[INFO] Removing Rules from WAF Regional Web ACL: %s", id)
-					return conn.UpdateWebACLWithContext(ctx, updateWebACLInput)
+					return conn.UpdateWebACL(ctx, updateWebACLInput)
 				})
 
 				if updateWebACLErr != nil {
@@ -463,7 +462,7 @@ func sweepWebACLs(region string) error {
 				_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 					deleteInput.ChangeToken = token
 					log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
-					return conn.DeleteWebACLWithContext(ctx, deleteInput)
+					return conn.DeleteWebACL(ctx, deleteInput)
 				})
 			}
 
@@ -472,7 +471,7 @@ func sweepWebACLs(region string) error {
 			}
 		}
 
-		if aws.StringValue(output.NextMarker) == "" {
+		if aws.ToString(output.NextMarker) == "" {
 			break
 		}
 

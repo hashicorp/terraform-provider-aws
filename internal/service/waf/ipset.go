@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -49,12 +51,9 @@ func ResourceIPSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								waf.IPSetDescriptorTypeIpv4,
-								waf.IPSetDescriptorTypeIpv6,
-							}, false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.IPSetDescriptorType](),
 						},
 						"value": {
 							Type:         schema.TypeString,
@@ -70,7 +69,7 @@ func ResourceIPSet() *schema.Resource {
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -78,13 +77,13 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			ChangeToken: token,
 			Name:        aws.String(d.Get("name").(string)),
 		}
-		return conn.CreateIPSetWithContext(ctx, params)
+		return conn.CreateIPSet(ctx, params)
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF IPSet (%s): %s", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateIPSetOutput)
-	d.SetId(aws.StringValue(resp.IPSet.IPSetId))
+	d.SetId(aws.ToString(resp.IPSet.IPSetId))
 
 	if v, ok := d.GetOk("ip_set_descriptors"); ok && v.(*schema.Set).Len() > 0 {
 		err := updateIPSetDescriptors(ctx, d.Id(), nil, v.(*schema.Set).List(), conn)
@@ -98,15 +97,15 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetIPSetWithContext(ctx, params)
+	resp, err := conn.GetIPSet(ctx, params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -119,8 +118,8 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	for _, descriptor := range resp.IPSet.IPSetDescriptors {
 		d := map[string]interface{}{
-			"type":  aws.StringValue(descriptor.Type),
-			"value": aws.StringValue(descriptor.Value),
+			"type":  string(descriptor.Type),
+			"value": aws.ToString(descriptor.Value),
 		}
 		descriptors = append(descriptors, d)
 	}
@@ -142,7 +141,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("ip_set_descriptors") {
 		o, n := d.GetChange("ip_set_descriptors")
@@ -159,7 +158,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	oldDescriptors := d.Get("ip_set_descriptors").(*schema.Set).List()
 
@@ -177,8 +176,11 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 			IPSetId:     aws.String(d.Id()),
 		}
 		log.Printf("[INFO] Deleting WAF IPSet")
-		return conn.DeleteIPSetWithContext(ctx, req)
+		return conn.DeleteIPSet(ctx, req)
 	})
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting WAF IPSet: %s", err)
 	}
@@ -186,7 +188,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func updateIPSetDescriptors(ctx context.Context, id string, oldD, newD []interface{}, conn *waf.WAF) error {
+func updateIPSetDescriptors(ctx context.Context, id string, oldD, newD []interface{}, conn *waf.Client) error {
 	for _, ipSetUpdates := range DiffIPSetDescriptors(oldD, newD) {
 		wr := NewRetryer(conn)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -195,20 +197,22 @@ func updateIPSetDescriptors(ctx context.Context, id string, oldD, newD []interfa
 				IPSetId:     aws.String(id),
 				Updates:     ipSetUpdates,
 			}
-			log.Printf("[INFO] Updating IPSet descriptors: %s", req)
-			return conn.UpdateIPSetWithContext(ctx, req)
+			log.Printf("[INFO] Updating IPSet descriptors: %s", id)
+			return conn.UpdateIPSet(ctx, req)
 		})
 		if err != nil {
-			return fmt.Errorf("updating WAF IPSet: %s", err)
+			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+				return fmt.Errorf("updating WAF IPSet: %s", err)
+			}
 		}
 	}
 
 	return nil
 }
 
-func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
-	updates := make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
-	updatesBatches := make([][]*waf.IPSetUpdate, 0)
+func DiffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
+	updates := make([]awstypes.IPSetUpdate, 0, ipSetUpdatesLimit)
+	updatesBatches := make([][]awstypes.IPSetUpdate, 0)
 
 	for _, od := range oldD {
 		descriptor := od.(map[string]interface{})
@@ -220,13 +224,13 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 
 		if len(updates) == ipSetUpdatesLimit {
 			updatesBatches = append(updatesBatches, updates)
-			updates = make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
+			updates = make([]awstypes.IPSetUpdate, 0, ipSetUpdatesLimit)
 		}
 
-		updates = append(updates, &waf.IPSetUpdate{
-			Action: aws.String(waf.ChangeActionDelete),
-			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
+		updates = append(updates, awstypes.IPSetUpdate{
+			Action: awstypes.ChangeActionDelete,
+			IPSetDescriptor: &awstypes.IPSetDescriptor{
+				Type:  awstypes.IPSetDescriptorType(descriptor["type"].(string)),
 				Value: aws.String(descriptor["value"].(string)),
 			},
 		})
@@ -237,13 +241,13 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 
 		if len(updates) == ipSetUpdatesLimit {
 			updatesBatches = append(updatesBatches, updates)
-			updates = make([]*waf.IPSetUpdate, 0, ipSetUpdatesLimit)
+			updates = make([]awstypes.IPSetUpdate, 0, ipSetUpdatesLimit)
 		}
 
-		updates = append(updates, &waf.IPSetUpdate{
-			Action: aws.String(waf.ChangeActionInsert),
-			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
+		updates = append(updates, awstypes.IPSetUpdate{
+			Action: awstypes.ChangeActionInsert,
+			IPSetDescriptor: &awstypes.IPSetDescriptor{
+				Type:  awstypes.IPSetDescriptorType(descriptor["type"].(string)),
 				Value: aws.String(descriptor["value"].(string)),
 			},
 		})

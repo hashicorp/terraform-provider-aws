@@ -6,8 +6,9 @@ package wafregional
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafregional"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,20 +31,20 @@ func dataSourceWebACL() *schema.Resource {
 
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	name := d.Get("name").(string)
 
-	acls := make([]*waf.WebACLSummary, 0)
+	acls := make([]*awstypes.WebACLSummary, 0)
 	// ListWebACLsInput does not have a name parameter for filtering
-	input := &waf.ListWebACLsInput{}
+	input := &wafregional.ListWebACLsInput{}
 	for {
-		output, err := conn.ListWebACLsWithContext(ctx, input)
+		output, err := conn.ListWebACLs(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading web ACLs: %s", err)
 		}
 		for _, acl := range output.WebACLs {
-			if aws.StringValue(acl.Name) == name {
-				acls = append(acls, acl)
+			if aws.ToString(acl.Name) == name {
+				acls = append(acls, &acl)
 			}
 		}
 
@@ -63,7 +64,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	acl := acls[0]
 
-	d.SetId(aws.StringValue(acl.WebACLId))
+	d.SetId(aws.ToString(acl.WebACLId))
 
 	return diags
 }
