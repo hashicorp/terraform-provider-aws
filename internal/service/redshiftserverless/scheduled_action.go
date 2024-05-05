@@ -34,6 +34,10 @@ func resourceScheduledAction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
