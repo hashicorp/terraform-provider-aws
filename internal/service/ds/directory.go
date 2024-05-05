@@ -393,7 +393,7 @@ type directoryCreator interface {
 type adConnectorCreator struct{}
 
 func (c adConnectorCreator) TypeName() string {
-	return "AD Conntector"
+	return "AD Connector"
 }
 
 func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
