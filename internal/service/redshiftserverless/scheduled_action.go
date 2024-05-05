@@ -73,23 +73,23 @@ func resourceScheduledAction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"CreateSnapshot": {
+						"create_snapshot": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"SnapshotName": {
+									"snapshot_name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{3,60}$`), "must contain only lowercase alphanumeric characters, or hyphen, and between 3 and 60 characters"),
 									},
-									"NamespaceName": {
+									"namespace_name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,235}$`), "must contain only lowercase alphanumeric characters, or hyphen, and at most 235 characters"),
 									},
-									"retentionPeriod": {
+									"retention_period": {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
@@ -292,7 +292,7 @@ func expandTargetAction(tfMap map[string]interface{}) *types.TargetActionMemberC
 
 	apiObject := &types.TargetActionMemberCreateSnapshot{}
 
-	if v, ok := tfMap["CreateSnapshot"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["create_snapshot"].([]interface{}); ok && len(v) > 0 {
 		apiObject.CreateSnapshot = expandCreateSnapshotScheduleActionParameters(v[0].(map[string]interface{}))
 	}
 
@@ -329,7 +329,7 @@ func flattenTargetAction(apiObject *redshiftserverless.TargetActionMemberCreateS
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ResizeCluster; v != nil {
-		tfMap["CreateSnapshot"] = []interface{}{flattenCreateSnapshotScheduleActionParameters(v)}
+		tfMap["create_snapshot"] = []interface{}{flattenCreateSnapshotScheduleActionParameters(v)}
 	}
 
 	return tfMap
