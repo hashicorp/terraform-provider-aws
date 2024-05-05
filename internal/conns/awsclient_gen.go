@@ -186,7 +186,6 @@ import (
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	dlm_sdkv1 "github.com/aws/aws-sdk-go/service/dlm"
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
-	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
@@ -573,10 +572,6 @@ func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
 	return errs.Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic, make(map[string]any)))
-}
-
-func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
-	return errs.Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB, make(map[string]any)))
 }
 
 func (c *AWSClient) DynamoDBClient(ctx context.Context) *dynamodb_sdkv2.Client {
