@@ -36,7 +36,7 @@ func ResourceEBSSnapshotLock() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			resourcEBSSnapshotLockCustomizeDiff,
-		)
+		),
 
 		Schema: map[string]*schema.Schema{
 			"snapshot_id": {
