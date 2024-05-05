@@ -22,7 +22,7 @@ func TestAccWAFRuleDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFServiceID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
