@@ -143,7 +143,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 		input.StartTime = aws.Time(t)
 	}
 
-	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
+	log.Printf("[DEBUG] Creating Redshift Serverless Scheduled Action: %s", input)
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateScheduledActionWithContext(ctx, input)
@@ -158,7 +158,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Scheduled Action (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Scheduled Action (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*redshift.CreateScheduledActionOutput).ScheduledActionName))
