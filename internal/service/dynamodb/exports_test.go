@@ -9,7 +9,10 @@ var (
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
 
+	ARNForNewRegion                              = arnForNewRegion
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	ListTags                                     = listTags
+	RegionFromARN                                = regionFromARN
+	TableNameFromARN                             = tableNameFromARN
 )
