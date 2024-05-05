@@ -187,26 +187,6 @@ func statusTableSES(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 	}
 }
 
-func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		insight, err := FindContributorInsights(ctx, conn, tableName, indexName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if insight == nil {
-			return nil, "", nil
-		}
-
-		return insight, aws.StringValue(insight.ContributorInsightsStatus), nil
-	}
-}
-
 func statusTableExport(ctx context.Context, conn *dynamodb.DynamoDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindTableExportByID(ctx, conn, id)

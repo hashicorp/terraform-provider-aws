@@ -98,42 +98,6 @@ func findTTLRDescriptionByTableName(ctx context.Context, conn *dynamodb.DynamoDB
 	return output.TimeToLiveDescription, nil
 }
 
-func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	input := &dynamodb.DescribeContributorInsightsInput{
-		TableName: aws.String(tableName),
-	}
-
-	if indexName != "" {
-		input.IndexName = aws.String(indexName)
-	}
-
-	output, err := conn.DescribeContributorInsightsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if status := aws.StringValue(output.ContributorInsightsStatus); status == dynamodb.ContributorInsightsStatusDisabled {
-		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindTableExportByID(ctx context.Context, conn *dynamodb.DynamoDB, id string) (*dynamodb.DescribeExportOutput, error) {
 	input := &dynamodb.DescribeExportInput{
 		ExportArn: aws.String(id),

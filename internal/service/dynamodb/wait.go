@@ -247,32 +247,6 @@ func waitReplicaSSEUpdated(ctx context.Context, client *conns.AWSClient, region 
 	return nil, err
 }
 
-func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{dynamodb.ContributorInsightsStatusEnabling},
-		Target:  []string{dynamodb.ContributorInsightsStatusEnabled},
-		Timeout: timeout,
-		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{dynamodb.ContributorInsightsStatusDisabling},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
 func waitTableExportCreated(ctx context.Context, conn *dynamodb.DynamoDB, id string, timeout time.Duration) (*dynamodb.ExportDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{dynamodb.ExportStatusInProgress},

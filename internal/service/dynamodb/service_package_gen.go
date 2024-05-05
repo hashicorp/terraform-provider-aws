@@ -41,8 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceContributorInsights,
+			Factory:  resourceContributorInsights,
 			TypeName: "aws_dynamodb_contributor_insights",
+			Name:     "Contributor Insights",
 		},
 		{
 			Factory:  ResourceGlobalTable,
