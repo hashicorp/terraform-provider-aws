@@ -228,7 +228,7 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("enabled") {
-		input.Enable = aws.Bool(d.Get("enabled").(bool))
+		input.Enabled = aws.Bool(d.Get("enabled").(bool))
 	}
 
 	if hasChange, v := d.HasChange("end_time"), d.Get("end_time").(string); hasChange && v != "" {

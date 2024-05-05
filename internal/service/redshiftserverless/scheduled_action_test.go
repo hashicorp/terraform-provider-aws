@@ -274,7 +274,7 @@ resource "aws_redshiftserverless_scheduled_action" "test" {
 `, rName, schedule))
 }
 
-func testAccScheduledActionConfig_createSnapshotFullOptions(rName, schedule, description string, enable bool, startTime, endTime string) string {
+func testAccScheduledActionConfig_createSnapshotFullOptions(rName, schedule, description string, enabled bool, startTime, endTime string) string {
 	return acctest.ConfigCompose(testAccScheduledActionBaseConfig(rName), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -302,7 +302,7 @@ resource "aws_redshiftserverless_scheduled_action" "test" {
     }
   }
 }
-`, rName, description, enable, startTime, endTime, schedule))
+`, rName, description, enabled, startTime, endTime, schedule))
 }
 
 func TestAccRedshiftScheduledAction_validScheduleName(t *testing.T) {
