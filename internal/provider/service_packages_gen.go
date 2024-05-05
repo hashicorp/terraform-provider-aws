@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
@@ -239,6 +240,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
@@ -273,6 +275,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrockagent.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
+		chatbot.ServicePackage(ctx),
 		chime.ServicePackage(ctx),
 		chimesdkmediapipelines.ServicePackage(ctx),
 		chimesdkvoice.ServicePackage(ctx),
@@ -476,6 +479,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		wellarchitected.ServicePackage(ctx),
 		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
+		workspacesweb.ServicePackage(ctx),
 		xray.ServicePackage(ctx),
 	}
 

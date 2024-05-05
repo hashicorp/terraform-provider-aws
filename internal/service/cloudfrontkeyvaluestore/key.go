@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -328,12 +329,12 @@ func (data *keyResourceModel) InitFromID() error {
 		return err
 	}
 
-	v, err := fwdiag.AsError(fwtypes.ARNValue(parts[0]))
+	_, err = arn.Parse(parts[0])
 	if err != nil {
 		return err
 	}
 
-	data.KvsARN = v
+	data.KvsARN = fwtypes.ARNValue(parts[0])
 	data.Key = types.StringValue(parts[1])
 
 	return nil

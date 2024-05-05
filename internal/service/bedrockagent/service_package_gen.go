@@ -32,11 +32,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newAgentKnowledgeBaseAssociationResource,
+			Name:    "Agent Knowledge Base Association",
+		},
+		{
 			Factory: newAgentResource,
 			Name:    "Agent",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_arn",
 			},
+		},
+		{
+			Factory: newDataSourceResource,
+			Name:    "Data Source",
 		},
 		{
 			Factory: newKnowledgeBaseResource,

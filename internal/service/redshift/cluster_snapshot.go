@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_redshift_cluster_snapshot", name="Cluster Snapshot")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterSnapshot() *schema.Resource {
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
@@ -103,7 +103,8 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findClusterSnapshotByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")

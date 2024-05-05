@@ -200,51 +200,6 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName)
 }
 
-func testAccAnalyzerConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-}
-`, rName)
-}
-
-func testAccAnalyzerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAnalyzerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAnalyzerConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
-}
-
 func testAccAnalyzerConfig_typeOrganization(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}

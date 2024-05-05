@@ -1875,7 +1875,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKey(ctx, client, "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
 	if err != nil {
 		return sseList
 	}
@@ -1906,7 +1906,7 @@ func clearReplicaDefaultKeys(ctx context.Context, client *conns.AWSClient, repli
 			continue
 		}
 
-		dk, err := kms.FindDefaultKey(ctx, client, "dynamodb", replica["region_name"].(string))
+		dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", replica["region_name"].(string))
 		if err != nil {
 			continue
 		}

@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_redshift_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
-func ResourceEventSubscription() *schema.Resource {
+func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,
 		ReadWithoutTimeout:   resourceEventSubscriptionRead,
@@ -156,7 +156,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	sub, err := FindEventSubscriptionByName(ctx, conn, d.Id())
+	sub, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Event Subscription (%s) not found, removing from state", d.Id())

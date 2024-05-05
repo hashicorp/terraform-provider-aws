@@ -30,7 +30,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -601,7 +602,7 @@ func setObjectKMSKeyID(ctx context.Context, meta interface{}, d *schema.Resource
 	// Only set non-default KMS key ID (one that doesn't match default).
 	if sseKMSKeyID != "" {
 		// Read S3 KMS default master key.
-		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), defaultKMSKeyAlias)
+		keyMetadata, err := tfkms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSClient(ctx), defaultKMSKeyAlias)
 
 		if err != nil {
 			return fmt.Errorf("reading default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
@@ -641,7 +642,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 	return nil
 }
 
-func hasObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
@@ -735,7 +736,7 @@ func sdkv1CompatibleCleanKey(key string) string {
 	return key
 }
 
-func ignoreProviderDefaultTags(ctx context.Context, d verify.ResourceDiffer) bool {
+func ignoreProviderDefaultTags(ctx context.Context, d sdkv2.ResourceDiffer) bool {
 	if v, ok := d.GetOk("override_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if data := expandOverrideProviderModel(ctx, v.([]interface{})[0].(map[string]interface{})); data != nil && data.DefaultTagsConfig != nil {
 			return len(data.DefaultTagsConfig.Tags) == 0

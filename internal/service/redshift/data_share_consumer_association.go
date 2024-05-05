@@ -191,12 +191,12 @@ func (r *resourceDataShareConsumerAssociation) Read(ctx context.Context, req res
 		return
 	}
 	// split ID and write constituent parts to state to support import
-	state.DataShareARN = fwtypes.ARNValueMust(parts[0])
+	state.DataShareARN = fwtypes.ARNValue(parts[0])
 	if parts[1] != "" {
 		state.AssociateEntireAccount = types.BoolValue(parts[1] == "true")
 	}
 	if parts[2] != "" {
-		state.ConsumerARN = fwtypes.ARNValueMust(parts[2])
+		state.ConsumerARN = fwtypes.ARNValue(parts[2])
 	}
 	if parts[3] != "" {
 		state.ConsumerRegion = types.StringValue(parts[3])

@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_redshift_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -564,7 +564,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			inputR.SnapshotClusterIdentifier = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Restoring Redshift Cluster: %s", inputR)
 		output, err := conn.RestoreFromClusterSnapshotWithContext(ctx, inputR)
 
 		if err != nil {
@@ -634,7 +633,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	rsc, err := FindClusterByID(ctx, conn, d.Id())
+	rsc, err := findClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster (%s) not found, removing from state", d.Id())

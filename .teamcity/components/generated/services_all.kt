@@ -30,6 +30,7 @@ val services = mapOf(
     "bedrockagent" to ServiceSpec("Agents for Amazon Bedrock"),
     "budgets" to ServiceSpec("Web Services Budgets"),
     "ce" to ServiceSpec("CE (Cost Explorer)"),
+    "chatbot" to ServiceSpec("Chatbot"),
     "chime" to ServiceSpec("Chime"),
     "chimesdkmediapipelines" to ServiceSpec("Chime SDK Media Pipelines"),
     "chimesdkvoice" to ServiceSpec("Chime SDK Voice"),
@@ -238,5 +239,6 @@ val services = mapOf(
     "wellarchitected" to ServiceSpec("Well-Architected Tool"),
     "worklink" to ServiceSpec("WorkLink"),
     "workspaces" to ServiceSpec("WorkSpaces", vpcLock = true),
+    "workspacesweb" to ServiceSpec("WorkSpaces Web"),
     "xray" to ServiceSpec("X-Ray"),
 )

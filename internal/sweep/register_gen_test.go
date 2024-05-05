@@ -154,6 +154,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
 func registerSweepers() {
@@ -308,4 +309,5 @@ func registerSweepers() {
 	wafregional.RegisterSweepers()
 	wafv2.RegisterSweepers()
 	workspaces.RegisterSweepers()
+	xray.RegisterSweepers()
 }

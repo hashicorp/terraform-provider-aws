@@ -32,6 +32,7 @@ const (
 	Budgets                      = "budgets"
 	CE                           = "ce"
 	CUR                          = "cur"
+	Chatbot                      = "chatbot"
 	Chime                        = "chime"
 	ChimeSDKMediaPipelines       = "chimesdkmediapipelines"
 	ChimeSDKVoice                = "chimesdkvoice"
@@ -233,6 +234,7 @@ const (
 	WellArchitected              = "wellarchitected"
 	WorkLink                     = "worklink"
 	WorkSpaces                   = "workspaces"
+	WorkSpacesWeb                = "workspacesweb"
 	XRay                         = "xray"
 )
 
@@ -269,6 +271,7 @@ const (
 	BudgetsServiceID                      = "Budgets"
 	CEServiceID                           = "Cost Explorer"
 	CURServiceID                          = "Cost and Usage Report Service"
+	ChatbotServiceID                      = "Chatbot"
 	ChimeServiceID                        = "Chime"
 	ChimeSDKMediaPipelinesServiceID       = "Chime SDK Media Pipelines"
 	ChimeSDKVoiceServiceID                = "Chime SDK Voice"
@@ -470,5 +473,6 @@ const (
 	WellArchitectedServiceID              = "WellArchitected"
 	WorkLinkServiceID                     = "WorkLink"
 	WorkSpacesServiceID                   = "WorkSpaces"
+	WorkSpacesWebServiceID                = "WorkSpaces Web"
 	XRayServiceID                         = "XRay"
 )

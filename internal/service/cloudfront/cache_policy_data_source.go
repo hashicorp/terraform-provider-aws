@@ -6,16 +6,16 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_cache_policy")
-func DataSourceCachePolicy() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_cache_policy", name="Cache Policy")
+func dataSourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCachePolicyRead,
 
@@ -146,7 +146,7 @@ func DataSourceCachePolicy() *schema.Resource {
 }
 func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	var cachePolicyID string
 
@@ -156,14 +156,14 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		name := d.Get("name").(string)
 		input := &cloudfront.ListCachePoliciesInput{}
 
-		err := ListCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
+		err := listCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, policySummary := range page.CachePolicyList.Items {
-				if cachePolicy := policySummary.CachePolicy; aws.StringValue(cachePolicy.CachePolicyConfig.Name) == name {
-					cachePolicyID = aws.StringValue(cachePolicy.Id)
+				if cachePolicy := policySummary.CachePolicy; aws.ToString(cachePolicy.CachePolicyConfig.Name) == name {
+					cachePolicyID = aws.ToString(cachePolicy.Id)
 
 					return false
 				}
@@ -181,7 +181,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	output, err := FindCachePolicyByID(ctx, conn, cachePolicyID)
+	output, err := findCachePolicyByID(ctx, conn, cachePolicyID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Cache Policy (%s): %s", cachePolicyID, err)

@@ -232,6 +232,11 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"dedicated_log_volume": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"delete_automated_backups": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -769,6 +774,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -981,6 +990,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
@@ -1158,6 +1171,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("domain"); ok {
@@ -1401,6 +1418,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("domain"); ok {
 			input.Domain = aws.String(v.(string))
 		}
@@ -1583,6 +1604,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("domain"); ok {
@@ -1824,6 +1849,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
+	d.Set("dedicated_log_volume", v.DedicatedLogVolume)
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		v := v.DomainMemberships[0]
@@ -2207,6 +2233,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("db_subnet_group_name") {
 		needsModify = true
 		input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
+	}
+
+	if d.HasChange("dedicated_log_volume") {
+		needsModify = true
+		input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 	}
 
 	if d.HasChange("deletion_protection") {

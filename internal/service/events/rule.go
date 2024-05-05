@@ -251,7 +251,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("tags", "tags_all", "force_destroy") {
 		_, ruleName, err := ruleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -282,13 +282,12 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Name: aws.String(ruleName),
 	}
 
-	forceDestroy := d.Get("force_destroy").(bool)
-	if forceDestroy {
-		input.Force = forceDestroy
-	}
-
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
+	}
+
+	if v, ok := d.GetOk("force_destroy"); ok {
+		input.Force = v.(bool)
 	}
 
 	const (

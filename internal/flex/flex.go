@@ -158,6 +158,13 @@ func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
 	})
 }
 
+// ExpandFloat64ValueMap expands a map of string to interface to a map of string to float64
+func ExpandFloat64ValueMap(m map[string]interface{}) map[string]float64 {
+	return tfmaps.ApplyToAllValues(m, func(v any) float64 {
+		return v.(float64)
+	})
+}
+
 // Expands a map of string to interface to a map of string to *string
 func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	return tfmaps.ApplyToAllValues(m, func(v any) *string {
@@ -231,6 +238,12 @@ func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	})
 }
 
+func FlattenStringValueMap(m map[string]string) map[string]interface{} {
+	return tfmaps.ApplyToAllValues(m, func(v string) any {
+		return v
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*int64
 func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())
@@ -261,6 +274,12 @@ func ExpandInt64List(configured []interface{}) []*int64 {
 func ExpandFloat64List(configured []interface{}) []*float64 {
 	return tfslices.ApplyToAll(configured, func(v any) *float64 {
 		return aws.Float64(v.(float64))
+	})
+}
+
+func FlattenInt32ValueList(list []int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v int32) any {
+		return int(v)
 	})
 }
 
@@ -387,6 +406,13 @@ func Int64ValueToString(v int64) *string {
 func StringToIntValue(v *string) int {
 	i, _ := strconv.Atoi(aws.StringValue(v))
 	return i
+}
+
+// StringToInt32Value converts a string pointer to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringToInt32Value(v *string) int32 {
+	i, _ := strconv.ParseInt(aws.StringValue(v), 0, 32)
+	return int32(i)
 }
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
