@@ -115,7 +115,8 @@ func findSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *wafreg
 				return nil, fmt.Errorf("multiple matches found for name %s and metricName %s", name, metricName)
 			}
 
-			matchingRuleGroup = &ruleGroup
+			copyObject := ruleGroup
+			matchingRuleGroup = &copyObject
 			hasMatch = true
 		}
 

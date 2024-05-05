@@ -221,9 +221,10 @@ func testAccCheckRegexMatchSetDisappears(ctx context.Context, set *awstypes.Rege
 			}
 
 			for _, tuple := range set.RegexMatchTuples {
+				copyObject := tuple
 				req.Updates = append(req.Updates, awstypes.RegexMatchSetUpdate{
 					Action:          awstypes.ChangeAction("DELETE"),
-					RegexMatchTuple: &tuple,
+					RegexMatchTuple: &copyObject,
 				})
 			}
 

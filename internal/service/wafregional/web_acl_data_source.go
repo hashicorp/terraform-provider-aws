@@ -44,7 +44,8 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 		for _, acl := range output.WebACLs {
 			if aws.ToString(acl.Name) == name {
-				acls = append(acls, &acl)
+				copyObject := acl
+				acls = append(acls, &copyObject)
 			}
 		}
 
