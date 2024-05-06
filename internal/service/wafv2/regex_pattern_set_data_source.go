@@ -23,11 +23,11 @@ func DataSourceRegexPatternSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -110,8 +110,8 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.StringValue(resp.RegexPatternSet.Id))
-	d.Set("arn", resp.RegexPatternSet.ARN)
-	d.Set("description", resp.RegexPatternSet.Description)
+	d.Set(names.AttrARN, resp.RegexPatternSet.ARN)
+	d.Set(names.AttrDescription, resp.RegexPatternSet.Description)
 
 	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regular_expression: %s", err)

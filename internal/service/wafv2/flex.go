@@ -301,7 +301,7 @@ func expandCustomResponseBodies(m []interface{}) map[string]*wafv2.CustomRespons
 
 	for _, v := range m {
 		vm := v.(map[string]interface{})
-		key := vm["key"].(string)
+		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = &wafv2.CustomResponseBody{
 			Content:     aws.String(vm["content"].(string)),
 			ContentType: aws.String(vm["content_type"].(string)),
@@ -365,7 +365,7 @@ func expandCustomHeaders(l []interface{}) []*wafv2.CustomHTTPHeader {
 		m := header.(map[string]interface{})
 		headers = append(headers, &wafv2.CustomHTTPHeader{
 			Name:  aws.String(m[names.AttrName].(string)),
-			Value: aws.String(m["value"].(string)),
+			Value: aws.String(m[names.AttrValue].(string)),
 		})
 	}
 
@@ -757,7 +757,7 @@ func expandTextTransformation(m map[string]interface{}) *wafv2.TextTransformatio
 
 	return &wafv2.TextTransformation{
 		Priority: aws.Int64(int64(m["priority"].(int))),
-		Type:     aws.String(m["type"].(string)),
+		Type:     aws.String(m[names.AttrType].(string)),
 	}
 }
 
@@ -769,7 +769,7 @@ func expandIPSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceStateme
 	m := l[0].(map[string]interface{})
 
 	statement := &wafv2.IPSetReferenceStatement{
-		ARN: aws.String(m["arn"].(string)),
+		ARN: aws.String(m[names.AttrARN].(string)),
 	}
 
 	if v, ok := m["ip_set_forwarded_ip_config"]; ok {
@@ -805,7 +805,7 @@ func expandLabelMatchStatement(l []interface{}) *wafv2.LabelMatchStatement {
 	m := l[0].(map[string]interface{})
 
 	statement := &wafv2.LabelMatchStatement{
-		Key:   aws.String(m["key"].(string)),
+		Key:   aws.String(m[names.AttrKey].(string)),
 		Scope: aws.String(m["scope"].(string)),
 	}
 
@@ -865,7 +865,7 @@ func expandRegexPatternSetReferenceStatement(l []interface{}) *wafv2.RegexPatter
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.RegexPatternSetReferenceStatement{
-		ARN:                 aws.String(m["arn"].(string)),
+		ARN:                 aws.String(m[names.AttrARN].(string)),
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
@@ -1134,7 +1134,7 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 		r.ScopeDownStatement = expandStatement(s[0].(map[string]interface{}))
 	}
 
-	if v, ok := m["version"]; ok && v != "" {
+	if v, ok := m[names.AttrVersion]; ok && v != "" {
 		r.Version = aws.String(v.(string))
 	}
 	if v, ok := m["managed_rule_group_configs"].([]interface{}); ok && len(v) > 0 {
@@ -1573,7 +1573,7 @@ func expandRuleGroupReferenceStatement(l []interface{}) *wafv2.RuleGroupReferenc
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.RuleGroupReferenceStatement{
-		ARN:                 aws.String(m["arn"].(string)),
+		ARN:                 aws.String(m[names.AttrARN].(string)),
 		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
 	}
 }
@@ -1813,7 +1813,7 @@ func flattenCustomResponseBodies(b map[string]*wafv2.CustomResponseBody) interfa
 	i := 0
 	for key, body := range b {
 		out[i] = map[string]interface{}{
-			"key":          key,
+			names.AttrKey:  key,
 			"content":      aws.StringValue(body.Content),
 			"content_type": aws.StringValue(body.ContentType),
 		}
@@ -1867,8 +1867,8 @@ func flattenCustomHeader(h *wafv2.CustomHTTPHeader) map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrName: aws.StringValue(h.Name),
-		"value":        aws.StringValue(h.Value),
+		names.AttrName:  aws.StringValue(h.Name),
+		names.AttrValue: aws.StringValue(h.Value),
 	}
 
 	return m
@@ -2195,7 +2195,7 @@ func flattenTextTransformations(l []*wafv2.TextTransformation) []interface{} {
 	for i, t := range l {
 		m := make(map[string]interface{})
 		m["priority"] = int(aws.Int64Value(t.Priority))
-		m["type"] = aws.StringValue(t.Type)
+		m[names.AttrType] = aws.StringValue(t.Type)
 		out[i] = m
 	}
 	return out
@@ -2207,7 +2207,7 @@ func flattenIPSetReferenceStatement(i *wafv2.IPSetReferenceStatement) interface{
 	}
 
 	m := map[string]interface{}{
-		"arn":                        aws.StringValue(i.ARN),
+		names.AttrARN:                aws.StringValue(i.ARN),
 		"ip_set_forwarded_ip_config": flattenIPSetForwardedIPConfig(i.IPSetForwardedIPConfig),
 	}
 
@@ -2233,8 +2233,8 @@ func flattenLabelMatchStatement(l *wafv2.LabelMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"key":   aws.StringValue(l.Key),
-		"scope": aws.StringValue(l.Scope),
+		names.AttrKey: aws.StringValue(l.Key),
+		"scope":       aws.StringValue(l.Scope),
 	}
 
 	return []interface{}{m}
@@ -2284,7 +2284,7 @@ func flattenRegexPatternSetReferenceStatement(r *wafv2.RegexPatternSetReferenceS
 	}
 
 	m := map[string]interface{}{
-		"arn":                 aws.StringValue(r.ARN),
+		names.AttrARN:         aws.StringValue(r.ARN),
 		"field_to_match":      flattenFieldToMatch(r.FieldToMatch),
 		"text_transformation": flattenTextTransformations(r.TextTransformations),
 	}
@@ -2551,7 +2551,7 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 	}
 
 	if apiObject.Version != nil {
-		tfMap["version"] = aws.StringValue(apiObject.Version)
+		tfMap[names.AttrVersion] = aws.StringValue(apiObject.Version)
 	}
 
 	if apiObject.ManagedRuleGroupConfigs != nil {
@@ -2989,7 +2989,7 @@ func flattenRuleGroupReferenceStatement(apiObject *wafv2.RuleGroupReferenceState
 	}
 
 	tfMap := map[string]interface{}{
-		"arn": aws.StringValue(apiObject.ARN),
+		names.AttrARN: aws.StringValue(apiObject.ARN),
 	}
 
 	if apiObject.RuleActionOverrides != nil {

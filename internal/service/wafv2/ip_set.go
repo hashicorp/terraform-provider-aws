@@ -86,11 +86,11 @@ func ResourceIPSet() *schema.Resource {
 						return false
 					},
 				},
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -142,7 +142,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -175,8 +175,8 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	ipSet := output.IPSet
 	d.Set("addresses", aws.StringValueSlice(ipSet.Addresses))
 	arn := aws.StringValue(ipSet.ARN)
-	d.Set("arn", arn)
-	d.Set("description", ipSet.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ipSet.Description)
 	d.Set("ip_address_version", ipSet.IPAddressVersion)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ipSet.Name)
@@ -187,7 +187,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &wafv2.UpdateIPSetInput{
 			Addresses: aws.StringSlice([]string{}),
 			Id:        aws.String(d.Id()),
@@ -200,7 +200,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
