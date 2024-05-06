@@ -21,11 +21,11 @@ func DataSourceHTTPNamespace() *schema.Resource {
 		ReadWithoutTimeout: dataSourceHTTPNamespaceRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +38,7 @@ func DataSourceHTTPNamespace() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validNamespaceName,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -64,8 +64,8 @@ func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(namespaceID)
 	arn := aws.StringValue(ns.Arn)
-	d.Set("arn", arn)
-	d.Set("description", ns.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.HttpProperties != nil {
 		d.Set("http_name", ns.Properties.HttpProperties.HttpName)
 	} else {
@@ -79,7 +79,7 @@ func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 
