@@ -21,12 +21,12 @@ func DataSourceActivity() *schema.Resource {
 		ReadWithoutTimeout: dataSourceActivityRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"arn",
+					names.AttrARN,
 					names.AttrName,
 				},
 			},
@@ -39,7 +39,7 @@ func DataSourceActivity() *schema.Resource {
 				Computed: true,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"arn",
+					names.AttrARN,
 					names.AttrName,
 				},
 			},
@@ -82,10 +82,10 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		arn := aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
 		d.Set(names.AttrName, activity.Name)
-	} else if v, ok := d.GetOk("arn"); ok {
+	} else if v, ok := d.GetOk(names.AttrARN); ok {
 		arn := v.(string)
 		activity, err := FindActivityByARN(ctx, conn, arn)
 
@@ -95,7 +95,7 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		arn = aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
 		d.Set(names.AttrName, activity.Name)
 	}

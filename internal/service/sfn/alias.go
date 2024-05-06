@@ -39,7 +39,7 @@ func ResourceAlias() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func ResourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -86,7 +86,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	in := &sfn.CreateStateMachineAliasInput{
 		Name:        aws.String(d.Get(names.AttrName).(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
 	if v, ok := d.GetOk("routing_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -122,9 +122,9 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.SFN, create.ErrActionReading, ResNameAlias, d.Id(), err)
 	}
 
-	d.Set("arn", out.StateMachineAliasArn)
+	d.Set(names.AttrARN, out.StateMachineAliasArn)
 	d.Set(names.AttrName, out.Name)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("creation_date", aws.TimeValue(out.CreationDate).Format(time.RFC3339))
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
 
@@ -143,8 +143,8 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		StateMachineAliasArn: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 
