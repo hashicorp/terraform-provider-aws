@@ -470,24 +470,24 @@ func waitStackCreated(ctx context.Context, conn *cloudformation.Client, name, re
 	switch output.StackStatus {
 	// This will be the case if either disable_rollback is false or on_failure is ROLLBACK
 	case awstypes.StackStatusRollbackComplete, awstypes.StackStatusRollbackFailed:
-		if stackRollbackErr := getStackRollbackError(ctx, conn, name, requestToken); stackRollbackErr != nil {
-			tfresource.SetLastError(err, stackRollbackErr)
+		if events := getStackRollbackEvents(ctx, conn, name, requestToken); len(events) > 0 {
+			tfresource.SetLastError(err, stackEventsError(events))
 		} else {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StackStatusReason)))
 		}
 
 	// This will be the case if on_failure is DELETE
 	case awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed:
-		if stackDeletionErr := getStackDeletionError(ctx, conn, name, requestToken); stackDeletionErr != nil {
-			tfresource.SetLastError(err, stackDeletionErr)
+		if events := getStackDeletionEvents(ctx, conn, name, requestToken); len(events) > 0 {
+			tfresource.SetLastError(err, stackEventsError(events))
 		} else {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StackStatusReason)))
 		}
 
 	// This will be the case if either disable_rollback is true or on_failure is DO_NOTHING
 	case awstypes.StackStatusCreateFailed:
-		if stackFailureErr := getStackFailureError(ctx, conn, name, requestToken); stackFailureErr != nil {
-			tfresource.SetLastError(err, stackFailureErr)
+		if events := getStackFailureEvents(ctx, conn, name, requestToken); len(events) > 0 {
+			tfresource.SetLastError(err, stackEventsError(events))
 		} else {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StackStatusReason)))
 		}
@@ -521,8 +521,8 @@ func waitStackUpdated(ctx context.Context, conn *cloudformation.Client, name, re
 
 	switch output.StackStatus {
 	case awstypes.StackStatusUpdateRollbackComplete, awstypes.StackStatusUpdateRollbackFailed:
-		if stackRollbackErr := getStackRollbackError(ctx, conn, name, requestToken); stackRollbackErr != nil {
-			tfresource.SetLastError(err, stackRollbackErr)
+		if events := getStackRollbackEvents(ctx, conn, name, requestToken); len(events) > 0 {
+			tfresource.SetLastError(err, stackEventsError(events))
 		} else {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StackStatusReason)))
 		}
@@ -556,8 +556,8 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 
 	switch output.StackStatus {
 	case awstypes.StackStatusDeleteFailed:
-		if stackFailureErr := getStackFailureError(ctx, conn, name, requestToken); stackFailureErr != nil {
-			tfresource.SetLastError(err, stackFailureErr)
+		if events := getStackFailureEvents(ctx, conn, name, requestToken); len(events) > 0 {
+			tfresource.SetLastError(err, stackEventsError(events))
 		} else {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StackStatusReason)))
 		}
@@ -596,34 +596,34 @@ func findStackEventsForOperation(ctx context.Context, conn *cloudformation.Clien
 	return output, nil
 }
 
-func getStackDeletionError(ctx context.Context, conn *cloudformation.Client, name, requestToken string) error {
+func getStackDeletionEvents(ctx context.Context, conn *cloudformation.Client, name, requestToken string) []awstypes.StackEvent {
 	events, err := findStackEventsForOperation(ctx, conn, name, requestToken, tfslices.PredicateOr(isFailedEvent, isStackDeletionEvent))
 
 	if err != nil {
 		return nil
 	}
 
-	return errors.Join(tfslices.ApplyToAll(events, reasonFromEvent)...)
+	return events
 }
 
-func getStackRollbackError(ctx context.Context, conn *cloudformation.Client, name, requestToken string) error {
+func getStackRollbackEvents(ctx context.Context, conn *cloudformation.Client, name, requestToken string) []awstypes.StackEvent {
 	events, err := findStackEventsForOperation(ctx, conn, name, requestToken, tfslices.PredicateOr(isFailedEvent, isRollbackEvent))
 
 	if err != nil {
 		return nil
 	}
 
-	return errors.Join(tfslices.ApplyToAll(events, reasonFromEvent)...)
+	return events
 }
 
-func getStackFailureError(ctx context.Context, conn *cloudformation.Client, name, requestToken string) error {
+func getStackFailureEvents(ctx context.Context, conn *cloudformation.Client, name, requestToken string) []awstypes.StackEvent {
 	events, err := findStackEventsForOperation(ctx, conn, name, requestToken, isFailedEvent)
 
 	if err != nil {
 		return nil
 	}
 
-	return errors.Join(tfslices.ApplyToAll(events, reasonFromEvent)...)
+	return events
 }
 
 func isFailedEvent(event *awstypes.StackEvent) bool {
@@ -640,8 +640,8 @@ func isStackDeletionEvent(event *awstypes.StackEvent) bool {
 		event.ResourceStatusReason != nil
 }
 
-func reasonFromEvent(event awstypes.StackEvent) error {
-	return errors.New(aws.ToString(event.ResourceStatusReason))
+func stackEventsError(events []awstypes.StackEvent) error {
+	return errors.Join(tfslices.ApplyToAll(events, func(event awstypes.StackEvent) error { return errors.New(aws.ToString(event.ResourceStatusReason)) })...)
 }
 
 func stackHasActualChanges(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
