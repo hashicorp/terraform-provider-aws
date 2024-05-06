@@ -21,7 +21,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_memoryMiBAndVcpuC
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorCount(
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -125,7 +125,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorManufa
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -167,7 +167,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorNames(
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorTotalM
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -271,7 +271,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorTypes(
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -313,7 +313,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_allowedInstanceTy
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -355,7 +355,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_bareMetal(t *test
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -410,7 +410,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_baselineEBSBandwi
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -472,7 +472,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_burstablePerforma
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -527,7 +527,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_cpuManufacturers(
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -569,7 +569,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_excludedInstanceT
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -611,7 +611,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_instanceGeneratio
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -653,7 +653,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_localStorage(t *t
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -708,7 +708,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_localStorageTypes
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -750,7 +750,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_memoryGiBPerVCPU(
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -812,7 +812,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_networkBandwidthG
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -874,7 +874,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_networkInterfaceC
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -936,7 +936,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_onDemandMaxPriceP
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -965,7 +965,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_requireHibernateS
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1007,7 +1007,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_spotMaxPricePerce
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1036,7 +1036,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_totalLocalStorage
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
