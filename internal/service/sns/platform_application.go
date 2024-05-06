@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
@@ -57,7 +58,7 @@ var (
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"name": {
+		names.AttrName: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -126,7 +127,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &sns.CreatePlatformApplicationInput{
 		Attributes: attributes,
 		Name:       aws.String(name),
@@ -171,7 +172,7 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("arn", arn)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("platform", platform)
 
 	err = platformApplicationAttributeMap.APIAttributesToResourceData(attributes, d)
