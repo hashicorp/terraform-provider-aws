@@ -91,10 +91,10 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -156,8 +156,8 @@ func TestAccVPCLatticeAccessLogSubscription_arn(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
 				),
 			},
 			{
@@ -247,8 +247,8 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 
 						return nil
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, names.AttrID),
 				),
 			},
 		},

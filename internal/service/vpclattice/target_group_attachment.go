@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_target_group_attachment", name="Target Group Attachment")
@@ -45,13 +46,13 @@ func resourceTargetGroupAttachment() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -253,11 +254,11 @@ func flattenTargetSummary(apiObject *types.TargetSummary) map[string]interface{}
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -266,11 +267,11 @@ func flattenTargetSummary(apiObject *types.TargetSummary) map[string]interface{}
 func expandTarget(tfMap map[string]interface{}) types.Target {
 	apiObject := types.Target{}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
