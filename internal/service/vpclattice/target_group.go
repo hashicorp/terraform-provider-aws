@@ -184,7 +184,7 @@ func ResourceTargetGroup() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -215,7 +215,7 @@ const (
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	in := &vpclattice.CreateTargetGroupInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
@@ -265,7 +265,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("config", nil)
 	}
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("status", out.Status)
 	d.Set("type", out.Type)
 

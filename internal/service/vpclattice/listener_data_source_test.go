@@ -35,7 +35,7 @@ func TestAccVPCLatticeListenerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccListenerDataSourceConfig_fixedResponseHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.fixed_response.0.status_code", "404"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
