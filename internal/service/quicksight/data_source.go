@@ -1318,9 +1318,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"aurora": []interface{}{
 				map[string]interface{}{
-					"database": parameters.AuroraParameters.Database,
-					"host":     parameters.AuroraParameters.Host,
-					names.AttrPort:     parameters.AuroraParameters.Port,
+					"database":     parameters.AuroraParameters.Database,
+					"host":         parameters.AuroraParameters.Host,
+					names.AttrPort: parameters.AuroraParameters.Port,
 				},
 			},
 		})
@@ -1330,9 +1330,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"aurora_postgresql": []interface{}{
 				map[string]interface{}{
-					"database": parameters.AuroraPostgreSqlParameters.Database,
-					"host":     parameters.AuroraPostgreSqlParameters.Host,
-					names.AttrPort:     parameters.AuroraPostgreSqlParameters.Port,
+					"database":     parameters.AuroraPostgreSqlParameters.Database,
+					"host":         parameters.AuroraPostgreSqlParameters.Host,
+					names.AttrPort: parameters.AuroraPostgreSqlParameters.Port,
 				},
 			},
 		})
@@ -1362,9 +1362,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"maria_db": []interface{}{
 				map[string]interface{}{
-					"database": parameters.MariaDbParameters.Database,
-					"host":     parameters.MariaDbParameters.Host,
-					names.AttrPort:     parameters.MariaDbParameters.Port,
+					"database":     parameters.MariaDbParameters.Database,
+					"host":         parameters.MariaDbParameters.Host,
+					names.AttrPort: parameters.MariaDbParameters.Port,
 				},
 			},
 		})
@@ -1374,9 +1374,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"mysql": []interface{}{
 				map[string]interface{}{
-					"database": parameters.MySqlParameters.Database,
-					"host":     parameters.MySqlParameters.Host,
-					names.AttrPort:     parameters.MySqlParameters.Port,
+					"database":     parameters.MySqlParameters.Database,
+					"host":         parameters.MySqlParameters.Host,
+					names.AttrPort: parameters.MySqlParameters.Port,
 				},
 			},
 		})
@@ -1386,9 +1386,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"oracle": []interface{}{
 				map[string]interface{}{
-					"database": parameters.OracleParameters.Database,
-					"host":     parameters.OracleParameters.Host,
-					names.AttrPort:     parameters.OracleParameters.Port,
+					"database":     parameters.OracleParameters.Database,
+					"host":         parameters.OracleParameters.Host,
+					names.AttrPort: parameters.OracleParameters.Port,
 				},
 			},
 		})
@@ -1398,9 +1398,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"postgresql": []interface{}{
 				map[string]interface{}{
-					"database": parameters.PostgreSqlParameters.Database,
-					"host":     parameters.PostgreSqlParameters.Host,
-					names.AttrPort:     parameters.PostgreSqlParameters.Port,
+					"database":     parameters.PostgreSqlParameters.Database,
+					"host":         parameters.PostgreSqlParameters.Host,
+					names.AttrPort: parameters.PostgreSqlParameters.Port,
 				},
 			},
 		})
@@ -1410,9 +1410,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"presto": []interface{}{
 				map[string]interface{}{
-					"catalog": parameters.PrestoParameters.Catalog,
-					"host":    parameters.PrestoParameters.Host,
-					names.AttrPort:    parameters.PrestoParameters.Port,
+					"catalog":      parameters.PrestoParameters.Catalog,
+					"host":         parameters.PrestoParameters.Host,
+					names.AttrPort: parameters.PrestoParameters.Port,
 				},
 			},
 		})
@@ -1433,10 +1433,10 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"redshift": []interface{}{
 				map[string]interface{}{
-					"cluster_id": parameters.RedshiftParameters.ClusterId,
-					"database":   parameters.RedshiftParameters.Database,
-					"host":       parameters.RedshiftParameters.Host,
-					names.AttrPort:       parameters.RedshiftParameters.Port,
+					"cluster_id":   parameters.RedshiftParameters.ClusterId,
+					"database":     parameters.RedshiftParameters.Database,
+					"host":         parameters.RedshiftParameters.Host,
+					names.AttrPort: parameters.RedshiftParameters.Port,
 				},
 			},
 		})
@@ -1483,7 +1483,7 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"spark": []interface{}{
 				map[string]interface{}{
-					"host": parameters.SparkParameters.Host,
+					"host":         parameters.SparkParameters.Host,
 					names.AttrPort: parameters.SparkParameters.Port,
 				},
 			},
@@ -1494,9 +1494,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"sql_server": []interface{}{
 				map[string]interface{}{
-					"database": parameters.SqlServerParameters.Database,
-					"host":     parameters.SqlServerParameters.Host,
-					names.AttrPort:     parameters.SqlServerParameters.Port,
+					"database":     parameters.SqlServerParameters.Database,
+					"host":         parameters.SqlServerParameters.Host,
+					names.AttrPort: parameters.SqlServerParameters.Port,
 				},
 			},
 		})
@@ -1506,9 +1506,9 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"teradata": []interface{}{
 				map[string]interface{}{
-					"database": parameters.TeradataParameters.Database,
-					"host":     parameters.TeradataParameters.Host,
-					names.AttrPort:     parameters.TeradataParameters.Port,
+					"database":     parameters.TeradataParameters.Database,
+					"host":         parameters.TeradataParameters.Host,
+					names.AttrPort: parameters.TeradataParameters.Port,
 				},
 			},
 		})

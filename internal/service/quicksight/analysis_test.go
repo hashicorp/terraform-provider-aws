@@ -253,12 +253,12 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
 						"data_set_identifier": "1",
 						"expression":          "1",
-						names.AttrName:                "test1",
+						names.AttrName:        "test1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
 						"data_set_identifier": "1",
 						"expression":          "2",
-						names.AttrName:                "test2",
+						names.AttrName:        "test2",
 					}),
 				),
 			},
