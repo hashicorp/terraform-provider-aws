@@ -38,7 +38,7 @@ func ResourceModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -416,7 +416,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.StringValue(model.ModelArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, model.ModelName)
 	d.Set("execution_role_arn", model.ExecutionRoleArn)
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
