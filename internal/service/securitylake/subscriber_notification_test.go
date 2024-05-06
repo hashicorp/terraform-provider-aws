@@ -90,15 +90,17 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", "aws_apigatewayv2_api.test", "api_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_id", resourceName, "subscriber_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
 			},
 		},
 	})
@@ -151,7 +153,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
@@ -176,10 +178,13 @@ func testAccSubscriberNotification_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.http_method",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
 			},
 			{
 				Config: testAccSubscriberNotificationConfig_https_update(rName),
@@ -190,15 +195,18 @@ func testAccSubscriberNotification_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method", "PUT"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.http_method",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
 			},
 		},
 	})
@@ -406,7 +414,7 @@ resource "aws_securitylake_subscriber_notification" "test" {
     https_notification_configuration {
       endpoint        = aws_apigatewayv2_api.test.api_endpoint
       target_role_arn = aws_iam_role.event_bridge.arn
-      http_method     = "POST"
+      http_method     = "PUT"
     }
   }
 }

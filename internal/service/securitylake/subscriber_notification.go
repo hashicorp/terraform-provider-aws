@@ -6,11 +6,13 @@ package securitylake
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -173,9 +175,8 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -194,16 +195,9 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	data.EndpointID = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
 	data.SubscriberEndpoint = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
-
-	if s := aws.ToString(output.SubscriberEndpoint); arn.IsARN(s) {
-		p, _ := arn.Parse(s)
-		if p.Service == "sqs" {
-			configurationValue := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &subscriberNotificationResourceConfigurationModel{
-				HTTPSNotificationConfiguration: fwtypes.NewListNestedObjectValueOfNull[httpsNotificationConfigurationModel](ctx),
-				SqsNotificationConfiguration:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sqsNotificationConfigurationModel{}),
-			})
-			data.Configuration = configurationValue
-		}
+	data.Configuration = refreshConfiguration(ctx, data.Configuration, output, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -312,9 +306,9 @@ func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subs
 			configuration = append(configuration, notificationConfiguration)
 		}
 		if (!item.HTTPSNotificationConfiguration.IsNull()) && (len(item.HTTPSNotificationConfiguration.Elements()) > 0) {
-			var hppsNotificationConfiguration []httpsNotificationConfigurationModel
-			diags.Append(item.HTTPSNotificationConfiguration.ElementsAs(ctx, &hppsNotificationConfiguration, false)...)
-			notificationConfiguration := expandHTTPSNotificationConfigurationModel(ctx, hppsNotificationConfiguration)
+			var httpsNotificationConfiguration []httpsNotificationConfigurationModel
+			diags.Append(item.HTTPSNotificationConfiguration.ElementsAs(ctx, &httpsNotificationConfiguration, false)...)
+			notificationConfiguration := expandHTTPSNotificationConfigurationModel(ctx, httpsNotificationConfiguration)
 			configuration = append(configuration, notificationConfiguration)
 		}
 	}
@@ -360,7 +354,7 @@ const (
 	subscriberNotificationIdPartCount = 2
 )
 
-func (data *subscriberNotificationResourceModel) InitFromID() error {
+func (data *subscriberNotificationResourceModel) initFromID() error {
 	id := data.ID.ValueString()
 	parts, err := flex.ExpandResourceId(id, subscriberNotificationIdPartCount, false)
 
@@ -377,12 +371,82 @@ func (data *subscriberNotificationResourceModel) setID() {
 	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.SubscriberID.ValueString(), "notification"}, subscriberNotificationIdPartCount, false)))
 }
 
+func refreshConfiguration(ctx context.Context, config fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel], subscriber *awstypes.SubscriberResource, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] {
+	var configData *subscriberNotificationResourceConfigurationModel
+	if config.IsNull() {
+		configData = &subscriberNotificationResourceConfigurationModel{}
+	} else {
+		configData, _ = config.ToPtr(ctx)
+		if configData == nil {
+			configData = &subscriberNotificationResourceConfigurationModel{}
+		}
+	}
+	configData.refresh(ctx, subscriber, diags)
+	configurationValue := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, configData)
+
+	return configurationValue
+}
+
 type subscriberNotificationResourceConfigurationModel struct {
 	HTTPSNotificationConfiguration fwtypes.ListNestedObjectValueOf[httpsNotificationConfigurationModel] `tfsdk:"https_notification_configuration"`
 	SqsNotificationConfiguration   fwtypes.ListNestedObjectValueOf[sqsNotificationConfigurationModel]   `tfsdk:"sqs_notification_configuration"`
 }
 
+func (m *subscriberNotificationResourceConfigurationModel) refresh(ctx context.Context, subscriber *awstypes.SubscriberResource, diags *diag.Diagnostics) {
+	switch getNotificationType(subscriber) {
+	case notificationTypeHttps:
+		m.refreshHTTPSConfiguration(ctx, subscriber)
+
+	case notificationTypeSqs:
+		m.refreshSQSConfiguration(ctx, subscriber)
+
+	default:
+		diags.Append(diag.NewWarningDiagnostic(
+			"Unexpected Endpoint Type",
+			fmt.Sprintf("The subscriber endpoint %q references an unexpected endpoint type. ", aws.ToString(subscriber.SubscriberEndpoint))+
+				"Either an SQS topic ARN or an HTTP or HTTPS URL were expected.\n"+
+				"Please report this to the provider developer.",
+		))
+	}
+}
+
+func (m *subscriberNotificationResourceConfigurationModel) refreshHTTPSConfiguration(ctx context.Context, subscriber *awstypes.SubscriberResource) {
+	var configData *httpsNotificationConfigurationModel
+	if m.HTTPSNotificationConfiguration.IsNull() {
+		configData = &httpsNotificationConfigurationModel{}
+	} else {
+		configData, _ = m.HTTPSNotificationConfiguration.ToPtr(ctx)
+		if configData == nil {
+			configData = &httpsNotificationConfigurationModel{}
+		}
+	}
+	configData.refresh(ctx, subscriber)
+	m.HTTPSNotificationConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, configData)
+
+	m.SqsNotificationConfiguration = fwtypes.NewListNestedObjectValueOfNull[sqsNotificationConfigurationModel](ctx)
+}
+
+func (m *subscriberNotificationResourceConfigurationModel) refreshSQSConfiguration(ctx context.Context, subscriber *awstypes.SubscriberResource) {
+	m.HTTPSNotificationConfiguration = fwtypes.NewListNestedObjectValueOfNull[httpsNotificationConfigurationModel](ctx)
+
+	var configData *sqsNotificationConfigurationModel
+	if m.HTTPSNotificationConfiguration.IsNull() {
+		configData = &sqsNotificationConfigurationModel{}
+	} else {
+		configData, _ = m.SqsNotificationConfiguration.ToPtr(ctx)
+		if configData == nil {
+			configData = &sqsNotificationConfigurationModel{}
+		}
+	}
+	configData.refresh(ctx, subscriber)
+	m.SqsNotificationConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, configData)
+}
+
 type sqsNotificationConfigurationModel struct{}
+
+func (m *sqsNotificationConfigurationModel) refresh(_ context.Context, _ *awstypes.SubscriberResource) {
+	// no-op
+}
 
 type httpsNotificationConfigurationModel struct {
 	AuthorizationAPIKeyName  types.String                            `tfsdk:"authorization_api_key_name"`
@@ -390,4 +454,49 @@ type httpsNotificationConfigurationModel struct {
 	Endpoint                 types.String                            `tfsdk:"endpoint"`
 	HTTPMethod               fwtypes.StringEnum[awstypes.HttpMethod] `tfsdk:"http_method"`
 	TargetRoleARN            fwtypes.ARN                             `tfsdk:"target_role_arn"`
+}
+
+func (m *httpsNotificationConfigurationModel) refresh(ctx context.Context, subscriber *awstypes.SubscriberResource) {
+	m.Endpoint = fwflex.StringToFramework(ctx, subscriber.SubscriberEndpoint)
+}
+
+type notificationType int
+
+const (
+	notificationTypeInvalid notificationType = iota
+	notificationTypeHttps
+	notificationTypeSqs
+)
+
+// getNotificationType takes a `*awstypes.SubscriberResource` because subscriber notifications are not really a standalone concept
+func getNotificationType(subscriber *awstypes.SubscriberResource) notificationType {
+	endpoint := aws.ToString(subscriber.SubscriberEndpoint)
+
+	if isSQSEndpoint(endpoint) {
+		return notificationTypeSqs
+	}
+
+	if isHTTPSEndpoint(endpoint) {
+		return notificationTypeHttps
+	}
+
+	return notificationTypeInvalid
+}
+
+func isSQSEndpoint(endpoint string) bool {
+	if !arn.IsARN(endpoint) {
+		return false
+	}
+
+	p, _ := arn.Parse(endpoint)
+	return p.Service == "sqs"
+}
+
+func isHTTPSEndpoint(endpoint string) bool {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return false
+	}
+
+	return u.IsAbs() && (u.Scheme == "http" || u.Scheme == "https")
 }
