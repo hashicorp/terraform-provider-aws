@@ -30,11 +30,11 @@ func TestAccSFNActivityDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSource1Name, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSource1Name, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSource1Name, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSource1Name, names.AttrName),
 
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSource2Name, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSource2Name, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSource2Name, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSource2Name, names.AttrName),
 				),
 			},
 		},
