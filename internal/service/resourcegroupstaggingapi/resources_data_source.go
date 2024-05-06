@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_resourcegroupstaggingapi_resources")
@@ -174,7 +175,7 @@ func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMap
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.ToString(i.ResourceARN),
-			names.AttrTags:         KeyValueTags(ctx, i.Tags).Map(),
+			names.AttrTags: KeyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
