@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_secretsmanager_secret", name="Secret")
@@ -27,7 +28,7 @@ func dataSourceSecret() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"arn", "name"},
+				ExactlyOneOf: []string{"arn", names.AttrName},
 			},
 			"created_date": {
 				Type:     schema.TypeString,
@@ -45,11 +46,11 @@ func dataSourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"arn", "name"},
+				ExactlyOneOf: []string{"arn", names.AttrName},
 			},
 			"policy": {
 				Type:     schema.TypeString,
@@ -68,7 +69,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var secretID string
 	if v, ok := d.GetOk("arn"); ok {
 		secretID = v.(string)
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		secretID = v.(string)
 	}
 
@@ -85,7 +86,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("description", secret.Description)
 	d.Set("kms_key_id", secret.KmsKeyId)
 	d.Set("last_changed_date", aws.String(secret.LastChangedDate.Format(time.RFC3339)))
-	d.Set("name", secret.Name)
+	d.Set(names.AttrName, secret.Name)
 
 	policy, err := findSecretPolicyByID(ctx, conn, d.Id())
 
