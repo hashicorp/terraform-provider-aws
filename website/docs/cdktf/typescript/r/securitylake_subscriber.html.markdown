@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Subscriber.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_subscriber`. Use a `dependsOn` statement.
+
 ## Example Usage
 
 ```typescript
@@ -28,6 +30,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new SecuritylakeSubscriber(this, "example", {
       accessType: "S3",
+      dependsOn: [awsSecuritylakeDataLakeExample],
       source: [
         {
           awsLogSourceResource: [
@@ -38,7 +41,6 @@ class MyConvertedCode extends TerraformStack {
           ],
         },
       ],
-      source_version: "1.0",
       subscriberIdentity: [
         {
           externalId: "example",
@@ -72,14 +74,14 @@ Sources support the following:
 * `awsLogSourceResource` - (Optional) Amazon Security Lake supports log and event collection for natively supported AWS services.
 * `customLogSourceResource` - (Optional) Amazon Security Lake supports custom source types.
 
-Aws Log Source Resource support the following:
+AWS Log Source Resource support the following:
 
-* `sourceName` - (Optional) Provides data expiration details of Amazon Security Lake object.
+* `sourceName` - (Required) Provides data expiration details of Amazon Security Lake object.
 * `sourceVersion` - (Optional) Provides data storage transition details of Amazon Security Lake object.
 
 Custom Log Source Resource support the following:
 
-* `sourceName` - (Optional) The name for a third-party custom source. This must be a Regionally unique value.
+* `sourceName` - (Required) The name for a third-party custom source. This must be a Regionally unique value.
 * `sourceVersion` - (Optional) The version for a third-party custom source. This must be a Regionally unique value.
 
 ## Attribute Reference
@@ -142,4 +144,4 @@ Using `terraform import`, import Security Lake subscriber using the subscriber I
 % terraform import aws_securitylake_subscriber.example 9f3bfe79-d543-474d-a93c-f3846805d208
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-236327fbc88412ff27daff6b466e14ddcb0a303883525382815bf68f46262e47 -->
+<!-- cache-key: cdktf-0.20.1 input-5813978e35963aea6fb3b8ec154f74263bc770a1e3f555c9cbc4b62ceabd04ac -->
