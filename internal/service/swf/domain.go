@@ -39,11 +39,11 @@ func resourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -94,7 +94,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -126,8 +126,8 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := aws.ToString(output.DomainInfo.Arn)
-	d.Set("arn", arn)
-	d.Set("description", output.DomainInfo.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.DomainInfo.Description)
 	d.Set(names.AttrName, output.DomainInfo.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.DomainInfo.Name)))
 	d.Set("workflow_execution_retention_period_in_days", output.Configuration.WorkflowExecutionRetentionPeriodInDays)
