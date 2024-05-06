@@ -34,7 +34,7 @@ func ResourceUser() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -173,7 +173,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.User.Arn)
+	d.Set(names.AttrARN, resp.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("email", resp.User.Email)
 	d.Set("namespace", namespace)

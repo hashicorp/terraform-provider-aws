@@ -46,7 +46,7 @@ func TestAccQuickSightTemplateAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alias_name", aliasName),
 					resource.TestCheckResourceAttrPair(resourceName, "template_id", resourceTemplateName, "template_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "template_version_number", resourceTemplateName, "version_number"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("template/%[1]s/alias/%[2]s", rId, aliasName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("template/%[1]s/alias/%[2]s", rId, aliasName)),
 				),
 			},
 			{

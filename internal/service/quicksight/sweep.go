@@ -428,7 +428,7 @@ func sweepVPCConnections(region string) error {
 	for _, v := range out.VPCConnectionSummaries {
 		vpcConnectionID := aws.StringValue(v.VPCConnectionId)
 		sweepResources = append(sweepResources, framework.NewSweepResource(newResourceVPCConnection, client,
-			framework.NewAttribute("id", createVPCConnectionID(awsAccountId, vpcConnectionID)),
+			framework.NewAttribute(names.AttrID, createVPCConnectionID(awsAccountId, vpcConnectionID)),
 			framework.NewAttribute("aws_account_id", awsAccountId),
 			framework.NewAttribute("vpc_connection_id", vpcConnectionID),
 		))

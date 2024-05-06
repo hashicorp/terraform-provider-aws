@@ -57,7 +57,7 @@ func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"folder_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -201,7 +201,7 @@ func (r *resourceFolderMembership) Delete(ctx context.Context, req resource.Dele
 }
 
 func (r *resourceFolderMembership) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindFolderMembershipByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.MemberIdArnPair, error) {

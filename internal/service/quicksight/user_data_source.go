@@ -29,7 +29,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -97,7 +97,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(out.User.UserName)))
 	d.Set("active", out.User.Active)
-	d.Set("arn", out.User.Arn)
+	d.Set(names.AttrARN, out.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("email", out.User.Email)
 	d.Set("identity_type", out.User.IdentityType)

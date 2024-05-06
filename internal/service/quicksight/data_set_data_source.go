@@ -24,7 +24,7 @@ func DataSourceDataSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -55,7 +55,7 @@ func DataSourceDataSet() *schema.Resource {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
@@ -117,7 +117,7 @@ func DataSourceDataSet() *schema.Resource {
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"description": {
+							names.AttrDescription: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -133,7 +133,7 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem:     logicalTableMapDataSourceSchema(),
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -164,7 +164,7 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
+							names.AttrARN: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -180,7 +180,7 @@ func DataSourceDataSet() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"status": {
+							names.AttrStatus: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -192,7 +192,7 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"status": {
+							names.AttrStatus: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -223,8 +223,8 @@ func DataSourceDataSet() *schema.Resource {
 						},
 					},
 				},
-				"tags": tftags.TagsSchemaComputed(),
-				"tags_all": {
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: {
 					Type:       schema.TypeMap,
 					Optional:   true,
 					Computed:   true,
@@ -346,7 +346,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"tags": {
+									names.AttrTags: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
@@ -449,7 +449,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -480,11 +480,11 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -495,7 +495,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -528,18 +528,18 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -564,11 +564,11 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -639,10 +639,10 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(createDataSetID(awsAccountId, dataSetId))
 
-	d.Set("arn", dataSet.Arn)
+	d.Set(names.AttrARN, dataSet.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("data_set_id", dataSet.DataSetId)
-	d.Set("name", dataSet.Name)
+	d.Set(names.AttrName, dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
@@ -677,7 +677,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
@@ -686,11 +686,11 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 		return diag.Errorf("setting tags_all: %s", err)
 	}
 
