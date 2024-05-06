@@ -39,7 +39,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", servicecatalog.ServiceName, regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, servicecatalog.ServiceName, regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
@@ -50,17 +50,17 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					// which we can check as follows.
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"description": "VPC ID",
-						"key":         "VpcID",
+						names.AttrDescription: "VPC ID",
+						names.AttrKey:         "VpcID",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]*regexp.Regexp{
-						"value": regexache.MustCompile(`vpc-.+`),
+						names.AttrValue: regexache.MustCompile(`vpc-.+`),
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
-					resource.TestCheckResourceAttr(resourceName, "type", "CFN_STACK"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, servicecatalog.StatusAvailable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CFN_STACK"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", servicecatalog.ServiceName, regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, servicecatalog.ServiceName, regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
@@ -116,17 +116,17 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 					// which we can check as follows.
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"description": "VPC ID",
-						"key":         "VpcID",
+						names.AttrDescription: "VPC ID",
+						names.AttrKey:         "VpcID",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]*regexp.Regexp{
-						"value": regexache.MustCompile(`vpc-.+`),
+						names.AttrValue: regexache.MustCompile(`vpc-.+`),
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
-					resource.TestCheckResourceAttr(resourceName, "type", "CFN_STACK"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, servicecatalog.StatusAvailable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CFN_STACK"),
 				),
 			},
 			{
@@ -226,7 +226,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 				),
 			},
 			{
@@ -235,7 +235,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 				),
 			},
 			{
@@ -311,13 +311,13 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"description": "VPC ID",
-						"key":         "VpcID",
+						names.AttrDescription: "VPC ID",
+						names.AttrKey:         "VpcID",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"description": "VPC CIDR",
-						"key":         "VPCPrimaryCIDR",
-						"value":       "10.1.0.0/16",
+						names.AttrDescription: "VPC CIDR",
+						names.AttrKey:         "VPCPrimaryCIDR",
+						names.AttrValue:       "10.1.0.0/16",
 					}),
 				),
 			},
@@ -327,13 +327,13 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"description": "VPC ID",
-						"key":         "VpcID",
+						names.AttrDescription: "VPC ID",
+						names.AttrKey:         "VpcID",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
-						"description": "VPC CIDR",
-						"key":         "VPCPrimaryCIDR",
-						"value":       "10.1.0.1/16",
+						names.AttrDescription: "VPC CIDR",
+						names.AttrKey:         "VPCPrimaryCIDR",
+						names.AttrValue:       "10.1.0.1/16",
 					}),
 				),
 			},
@@ -437,7 +437,7 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.0"),
-					acctest.S3BucketHasTag(ctx, bucketName, "version", "1.0"),
+					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.0"),
 				),
 			},
 			{
@@ -450,7 +450,7 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.5"),
-					acctest.S3BucketHasTag(ctx, bucketName, "version", "1.5"),
+					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.5"),
 				),
 			},
 		},
