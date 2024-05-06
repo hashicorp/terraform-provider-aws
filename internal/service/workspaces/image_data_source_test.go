@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccImageDataSource_basic(t *testing.T) {
@@ -99,7 +100,7 @@ func testAccCheckImageAttributes(n string, image *types.WorkspaceImage) resource
 			return err
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "name", *image.Name)(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrName, *image.Name)(s); err != nil {
 			return err
 		}
 

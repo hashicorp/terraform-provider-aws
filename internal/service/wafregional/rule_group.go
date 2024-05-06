@@ -37,7 +37,7 @@ func resourceRuleGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -99,7 +99,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
@@ -164,7 +164,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}.String()
 	d.Set("arn", arn)
 	d.Set("activated_rule", tfwaf.FlattenActivatedRules(rResp.ActivatedRules))
-	d.Set("name", resp.RuleGroup.Name)
+	d.Set(names.AttrName, resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
 	return diags
