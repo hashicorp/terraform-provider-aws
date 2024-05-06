@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Instance Types From Instance Requirements",
 		},
 		{
+			Factory: newSecurityGroupRuleDataSource,
+			Name:    "Security Group Rule",
+		},
+		{
 			Factory: newSecurityGroupRulesDataSource,
 			Name:    "Security Group Rules",
 		},
