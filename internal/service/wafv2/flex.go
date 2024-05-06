@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandRules(l []interface{}) []*wafv2.Rule {
@@ -35,7 +36,7 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 	rule := &wafv2.Rule{
 		Action:           expandRuleAction(m["action"].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
-		Name:             aws.String(m["name"].(string)),
+		Name:             aws.String(m[names.AttrName].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
@@ -158,7 +159,7 @@ func expandRuleLabels(l []interface{}) []*wafv2.Label {
 		}
 		m := label.(map[string]interface{})
 		labels = append(labels, &wafv2.Label{
-			Name: aws.String(m["name"].(string)),
+			Name: aws.String(m[names.AttrName].(string)),
 		})
 	}
 
@@ -363,7 +364,7 @@ func expandCustomHeaders(l []interface{}) []*wafv2.CustomHTTPHeader {
 		}
 		m := header.(map[string]interface{})
 		headers = append(headers, &wafv2.CustomHTTPHeader{
-			Name:  aws.String(m["name"].(string)),
+			Name:  aws.String(m[names.AttrName].(string)),
 			Value: aws.String(m["value"].(string)),
 		})
 	}
@@ -716,7 +717,7 @@ func expandSingleHeader(l []interface{}) *wafv2.SingleHeader {
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.SingleHeader{
-		Name: aws.String(m["name"].(string)),
+		Name: aws.String(m[names.AttrName].(string)),
 	}
 }
 
@@ -728,7 +729,7 @@ func expandSingleQueryArgument(l []interface{}) *wafv2.SingleQueryArgument {
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.SingleQueryArgument{
-		Name: aws.String(m["name"].(string)),
+		Name: aws.String(m[names.AttrName].(string)),
 	}
 }
 
@@ -985,7 +986,7 @@ func expandWebACLRule(m map[string]interface{}) *wafv2.Rule {
 	rule := &wafv2.Rule{
 		Action:           expandRuleAction(m["action"].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
-		Name:             aws.String(m["name"].(string)),
+		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
@@ -1124,7 +1125,7 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.ManagedRuleGroupStatement{
-		Name:                aws.String(m["name"].(string)),
+		Name:                aws.String(m[names.AttrName].(string)),
 		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
 		VendorName:          aws.String(m["vendor_name"].(string)),
 	}
@@ -1396,7 +1397,7 @@ func expandHeader(tfList []interface{}) *wafv2.ResponseInspectionHeader {
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.ResponseInspectionHeader{
-		Name:          aws.String(m["name"].(string)),
+		Name:          aws.String(m[names.AttrName].(string)),
 		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
 		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
 	}
@@ -1439,7 +1440,7 @@ func expandRateLimitCookie(l []interface{}) *wafv2.RateLimitCookie {
 	}
 	m := l[0].(map[string]interface{})
 	return &wafv2.RateLimitCookie{
-		Name:                aws.String(m["name"].(string)),
+		Name:                aws.String(m[names.AttrName].(string)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -1450,7 +1451,7 @@ func expandRateLimitHeader(l []interface{}) *wafv2.RateLimitHeader {
 	}
 	m := l[0].(map[string]interface{})
 	return &wafv2.RateLimitHeader{
-		Name:                aws.String(m["name"].(string)),
+		Name:                aws.String(m[names.AttrName].(string)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -1471,7 +1472,7 @@ func expandRateLimitQueryArgument(l []interface{}) *wafv2.RateLimitQueryArgument
 	}
 	m := l[0].(map[string]interface{})
 	return &wafv2.RateLimitQueryArgument{
-		Name:                aws.String(m["name"].(string)),
+		Name:                aws.String(m[names.AttrName].(string)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -1601,7 +1602,7 @@ func expandRuleActionOverride(m map[string]interface{}) *wafv2.RuleActionOverrid
 
 	return &wafv2.RuleActionOverride{
 		ActionToUse: expandRuleAction(m["action_to_use"].([]interface{})),
-		Name:        aws.String(m["name"].(string)),
+		Name:        aws.String(m[names.AttrName].(string)),
 	}
 }
 
@@ -1637,7 +1638,7 @@ func flattenRules(r []*wafv2.Rule) interface{} {
 		m := make(map[string]interface{})
 		m["action"] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
-		m["name"] = aws.StringValue(rule.Name)
+		m[names.AttrName] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
@@ -1866,8 +1867,8 @@ func flattenCustomHeader(h *wafv2.CustomHTTPHeader) map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"name":  aws.StringValue(h.Name),
-		"value": aws.StringValue(h.Value),
+		names.AttrName: aws.StringValue(h.Name),
+		"value":        aws.StringValue(h.Value),
 	}
 
 	return m
@@ -1881,7 +1882,7 @@ func flattenRuleLabels(l []*wafv2.Label) []interface{} {
 	out := make([]interface{}, len(l))
 	for i, label := range l {
 		out[i] = map[string]interface{}{
-			"name": aws.StringValue(label.Name),
+			names.AttrName: aws.StringValue(label.Name),
 		}
 	}
 
@@ -2171,7 +2172,7 @@ func flattenSingleHeader(s *wafv2.SingleHeader) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"name": aws.StringValue(s.Name),
+		names.AttrName: aws.StringValue(s.Name),
 	}
 
 	return []interface{}{m}
@@ -2183,7 +2184,7 @@ func flattenSingleQueryArgument(s *wafv2.SingleQueryArgument) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"name": aws.StringValue(s.Name),
+		names.AttrName: aws.StringValue(s.Name),
 	}
 
 	return []interface{}{m}
@@ -2479,7 +2480,7 @@ func flattenWebACLRules(r []*wafv2.Rule) interface{} {
 		m["action"] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
-		m["name"] = aws.StringValue(rule.Name)
+		m[names.AttrName] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
@@ -2534,7 +2535,7 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 
 	if apiObject.RuleActionOverrides != nil {
@@ -2838,7 +2839,7 @@ func flattenRateLimitCookie(apiObject *wafv2.RateLimitCookie) []interface{} {
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"name":                aws.StringValue(apiObject.Name),
+			names.AttrName:        aws.StringValue(apiObject.Name),
 			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
@@ -2850,7 +2851,7 @@ func flattenRateLimitHeader(apiObject *wafv2.RateLimitHeader) []interface{} {
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"name":                aws.StringValue(apiObject.Name),
+			names.AttrName:        aws.StringValue(apiObject.Name),
 			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
@@ -2873,7 +2874,7 @@ func flattenRateLimitQueryArgument(apiObject *wafv2.RateLimitQueryArgument) []in
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"name":                aws.StringValue(apiObject.Name),
+			names.AttrName:        aws.StringValue(apiObject.Name),
 			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
 		},
 	}
@@ -3003,7 +3004,7 @@ func flattenRuleActionOverrides(r []*wafv2.RuleActionOverride) interface{} {
 	for i, override := range r {
 		m := make(map[string]interface{})
 		m["action_to_use"] = flattenRuleAction(override.ActionToUse)
-		m["name"] = aws.StringValue(override.Name)
+		m[names.AttrName] = aws.StringValue(override.Name)
 		out[i] = m
 	}
 
