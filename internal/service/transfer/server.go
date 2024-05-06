@@ -54,7 +54,7 @@ func resourceServer() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func resourceServer() *schema.Resource {
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
@@ -109,7 +109,7 @@ func resourceServer() *schema.Resource {
 							Computed:      true,
 							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ValidateFunc:  validation.NoZeroValues,
@@ -483,7 +483,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("certificate", output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
@@ -563,7 +563,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var newEndpointTypeVpc bool
 		var oldEndpointTypeVpc bool
 
@@ -863,7 +863,7 @@ func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetai
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -871,7 +871,7 @@ func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetai
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -896,7 +896,7 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
@@ -904,7 +904,7 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.StringValue(v)
 	}
 
 	return tfMap

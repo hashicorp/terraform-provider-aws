@@ -26,7 +26,7 @@ func testAccServerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServerDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain", resourceName, "domain"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
@@ -52,7 +52,7 @@ func testAccServerDataSource_Service_managed(t *testing.T) {
 			{
 				Config: testAccServerDataSourceConfig_serviceManaged(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint_type", resourceName, "endpoint_type"),
@@ -82,7 +82,7 @@ func testAccServerDataSource_apigateway(t *testing.T) {
 			{
 				Config: testAccServerDataSourceConfig_apigateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "invocation_role", resourceName, "invocation_role"),
