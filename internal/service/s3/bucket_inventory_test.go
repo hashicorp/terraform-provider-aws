@@ -40,7 +40,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "documents/"),
-					resource.TestCheckResourceAttr(resourceName, "name", inventoryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, inventoryName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "included_object_versions", "All"),
 

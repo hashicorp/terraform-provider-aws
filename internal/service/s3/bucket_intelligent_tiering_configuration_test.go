@@ -39,7 +39,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.0.access_tier", "DEEP_ARCHIVE_ACCESS"),
@@ -100,7 +100,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p1/"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
@@ -123,7 +123,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p2/"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
@@ -145,7 +145,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment", "acctest"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
@@ -164,7 +164,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment1", "test"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment2", "acctest"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
@@ -183,7 +183,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment1", "acctest"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment2", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
