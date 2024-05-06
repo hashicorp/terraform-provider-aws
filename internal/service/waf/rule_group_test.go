@@ -50,9 +50,9 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
-						"type":          waf.WafRuleTypeRegular,
+						names.AttrType:  waf.WafRuleTypeRegular,
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`rulegroup/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{
@@ -160,7 +160,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
-						"type":          waf.WafRuleTypeRegular,
+						names.AttrType:  waf.WafRuleTypeRegular,
 					}),
 				),
 			},
@@ -176,7 +176,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "10",
-						"type":          waf.WafRuleTypeRegular,
+						names.AttrType:  waf.WafRuleTypeRegular,
 					}),
 
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test2", &rule2),
@@ -184,7 +184,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "1",
-						"type":          waf.WafRuleTypeRegular,
+						names.AttrType:  waf.WafRuleTypeRegular,
 					}),
 
 					testAccCheckRuleExists(ctx, "aws_waf_rule.test3", &rule3),
@@ -192,7 +192,7 @@ func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "15",
-						"type":          waf.WafRuleTypeRegular,
+						names.AttrType:  waf.WafRuleTypeRegular,
 					}),
 				),
 			},
@@ -214,12 +214,12 @@ func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority 
 		m := map[string]interface{}{
 			"action": []interface{}{
 				map[string]interface{}{
-					"type": actionType,
+					names.AttrType: actionType,
 				},
 			},
-			"priority": priority,
-			"rule_id":  *rule.RuleId,
-			"type":     waf.WafRuleTypeRegular,
+			"priority":     priority,
+			"rule_id":      *rule.RuleId,
+			names.AttrType: waf.WafRuleTypeRegular,
 		}
 
 		f := schema.HashResource(ruleResource)

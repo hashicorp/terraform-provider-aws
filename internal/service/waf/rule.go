@@ -68,7 +68,7 @@ func ResourceRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
@@ -78,7 +78,7 @@ func ResourceRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -156,9 +156,9 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	for _, predicateSet := range resp.Rule.Predicates {
 		predicate := map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
+			"negated":      *predicateSet.Negated,
+			names.AttrType: *predicateSet.Type,
+			"data_id":      *predicateSet.DataId,
 		}
 		predicates = append(predicates, predicate)
 	}
@@ -169,7 +169,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("rule/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("predicates", predicates)
 	d.Set(names.AttrName, resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
