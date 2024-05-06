@@ -5,8 +5,10 @@ package cloudformation
 
 // Exports for use in tests only.
 var (
-	ResourceStack = resourceStack
-	ResourceType  = resourceType
+	ResourceStack    = resourceStack
+	ResourceStackSet = resourceStackSet
+	ResourceType     = resourceType
 
-	FindTypeByARN = findTypeByARN
+	FindStackSetByName = findStackSetByName
+	FindTypeByARN      = findTypeByARN
 )

@@ -172,7 +172,7 @@ func sweepStackSets(region string) error {
 				continue
 			}
 
-			r := ResourceStackSet()
+			r := resourceStackSet()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("call_as", awstypes.CallAsSelf)
