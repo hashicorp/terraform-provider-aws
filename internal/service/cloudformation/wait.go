@@ -42,10 +42,10 @@ func WaitChangeSetCreated(ctx context.Context, conn *cloudformation.Client, stac
 	return nil, err
 }
 
-func WaitStackSetCreated(ctx context.Context, conn *cloudformation.CloudFormation, name, callAs string, timeout time.Duration) (*cloudformation.StackSet, error) {
+func WaitStackSetCreated(ctx context.Context, conn *cloudformation.Client, name, callAs string, timeout time.Duration) (*awstypes.StackSet, error) {
 	stateConf := retry.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{cloudformation.StackSetStatusActive},
+		Target:  enum.Slice(awstypes.StackSetStatusActive),
 		Timeout: ChangeSetCreatedTimeout,
 		Refresh: StatusStackSet(ctx, conn, name, callAs),
 		Delay:   15 * time.Second,
@@ -53,11 +53,7 @@ func WaitStackSetCreated(ctx context.Context, conn *cloudformation.CloudFormatio
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudformation.StackSet); ok {
-		if status := aws.StringValue(output.Status); status == cloudformation.ChangeSetStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("describing CloudFormation Stack Set (%s) results: %w", name, err))
-		}
-
+	if output, ok := outputRaw.(*awstypes.StackSet); ok {
 		return output, err
 	}
 
