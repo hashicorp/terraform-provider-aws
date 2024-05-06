@@ -57,7 +57,7 @@ func dataSourceServiceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +82,7 @@ func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, m
 			AccountID: accid,
 			Resource:  "user/logs",
 		}.String()
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 
 		return diags
 	}

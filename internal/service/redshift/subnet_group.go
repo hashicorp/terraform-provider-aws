@@ -38,16 +38,16 @@ func resourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -57,7 +57,7 @@ func resourceSubnetGroup() *schema.Resource {
 					validation.StringNotInSlice([]string{"default"}, false),
 				),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,16 +74,16 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
+	subnetIdsSet := d.Get(names.AttrSubnetIDs).(*schema.Set)
 	subnetIds := make([]*string, subnetIdsSet.Len())
 	for i, subnetId := range subnetIdsSet.List() {
 		subnetIds[i] = aws.String(subnetId.(string))
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := redshift.CreateClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(name),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		SubnetIds:              subnetIds,
 		Tags:                   getTagsIn(ctx),
 	}
@@ -123,10 +123,10 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", subnetgroup.Description)
-	d.Set("name", d.Id())
-	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, subnetgroup.Description)
+	d.Set(names.AttrName, d.Id())
+	d.Set(names.AttrSubnetIDs, subnetIdsToSlice(subnetgroup.Subnets))
 
 	setTagsOut(ctx, subnetgroup.Tags)
 
@@ -137,8 +137,8 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChanges("subnet_ids", "description") {
-		_, n := d.GetChange("subnet_ids")
+	if d.HasChanges(names.AttrSubnetIDs, names.AttrDescription) {
+		_, n := d.GetChange(names.AttrSubnetIDs)
 		if n == nil {
 			n = new(schema.Set)
 		}
@@ -151,7 +151,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		input := &redshift.ModifyClusterSubnetGroupInput{
 			ClusterSubnetGroupName: aws.String(d.Id()),
-			Description:            aws.String(d.Get("description").(string)),
+			Description:            aws.String(d.Get(names.AttrDescription).(string)),
 			SubnetIds:              sIds,
 		}
 

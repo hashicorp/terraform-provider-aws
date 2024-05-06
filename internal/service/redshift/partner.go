@@ -53,7 +53,7 @@ func resourcePartner() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
 	d.Set("partner_name", out.PartnerName)
 	d.Set("database_name", out.DatabaseName)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("status_message", out.StatusMessage)
 
 	return diags

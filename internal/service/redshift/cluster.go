@@ -70,7 +70,7 @@ func resourceCluster() *schema.Resource {
 					return true
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -214,7 +214,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -325,7 +325,7 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      5439,
@@ -436,7 +436,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
 		AutomatedSnapshotRetentionPeriod: aws.Int64(int64(d.Get("automated_snapshot_retention_period").(int))),
 		ClusterIdentifier:                aws.String(clusterID),
-		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
 	}
@@ -448,7 +448,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBName:                           aws.String(d.Get("database_name").(string)),
 		MasterUsername:                   aws.String(d.Get("master_username").(string)),
 		NodeType:                         aws.String(d.Get("node_type").(string)),
-		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
 		Tags:                             getTagsIn(ctx),
 	}
@@ -498,7 +498,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.IamRoles = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		inputR.KmsKeyId = aws.String(v.(string))
 		inputC.KmsKeyId = aws.String(v.(string))
 	}
@@ -661,7 +661,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
 	}
@@ -694,7 +694,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v *redshift.ClusterIamRole) string {
 		return aws.StringValue(v.IamRoleArn)
 	}))
-	d.Set("kms_key_id", rsc.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, rsc.KmsKeyId)
 	if err := d.Set("logging", flattenLogging(loggingStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
 	}
@@ -721,13 +721,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("dns_name", nil)
 	d.Set("endpoint", nil)
-	d.Set("port", nil)
+	d.Set(names.AttrPort, nil)
 	if endpoint := rsc.Endpoint; endpoint != nil {
 		if address := aws.StringValue(endpoint.Address); address != "" {
 			d.Set("dns_name", address)
 			if port := aws.Int64Value(endpoint.Port); port != 0 {
 				d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
-				d.Set("port", port)
+				d.Set(names.AttrPort, port)
 			} else {
 				d.Set("endpoint", address)
 			}
@@ -743,7 +743,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "multi_az", "snapshot_copy", "tags", "tags_all", "skip_final_snapshot") {
+	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "multi_az", "snapshot_copy", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
 		input := &redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 		}
@@ -797,8 +797,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnhancedVpcRouting = aws.Bool(d.Get("enhanced_vpc_routing").(bool))
 		}
 
-		if d.Get("encrypted").(bool) && d.HasChange("kms_key_id") {
-			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
+		if d.Get("encrypted").(bool) && d.HasChange(names.AttrKMSKeyID) {
+			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
 		if d.HasChange("master_password") {

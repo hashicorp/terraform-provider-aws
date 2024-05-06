@@ -33,7 +33,7 @@ func resourceScheduledAction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -51,7 +51,7 @@ func resourceScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -154,7 +154,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &redshift.CreateScheduledActionInput{
 		Enable:              aws.Bool(d.Get("enable").(bool)),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
@@ -163,7 +163,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 		TargetAction:        expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ScheduledActionDescription = aws.String(v.(string))
 	}
 
@@ -218,7 +218,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", scheduledAction.ScheduledActionDescription)
+	d.Set(names.AttrDescription, scheduledAction.ScheduledActionDescription)
 	if aws.StringValue(scheduledAction.State) == redshift.ScheduledActionStateActive {
 		d.Set("enable", true)
 	} else {
@@ -230,7 +230,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("end_time", nil)
 	}
 	d.Set("iam_role", scheduledAction.IamRole)
-	d.Set("name", scheduledAction.ScheduledActionName)
+	d.Set(names.AttrName, scheduledAction.ScheduledActionName)
 	d.Set("schedule", scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
 		d.Set("start_time", aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
@@ -254,11 +254,11 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.ModifyScheduledActionInput{
-		ScheduledActionName: aws.String(d.Get("name").(string)),
+		ScheduledActionName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if d.HasChange("description") {
-		input.ScheduledActionDescription = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.ScheduledActionDescription = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("enable") {
