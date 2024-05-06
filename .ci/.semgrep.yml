@@ -642,7 +642,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -662,7 +662,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -682,7 +682,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -702,7 +702,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -722,7 +722,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -742,7 +742,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -762,7 +762,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -782,7 +782,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -802,7 +802,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -822,7 +822,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -842,7 +842,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -862,7 +862,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -882,7 +882,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -902,7 +902,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -922,7 +922,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -942,7 +942,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -962,7 +962,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -982,7 +982,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -1002,7 +1002,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -1022,7 +1022,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -1042,7 +1042,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -1062,7 +1062,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -1082,7 +1082,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
@@ -1102,7 +1102,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
-        - "internal/service/rds/*.go"
+        - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
         - "internal/service/u*/*.go"
