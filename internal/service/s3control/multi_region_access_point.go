@@ -65,7 +65,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -388,7 +388,7 @@ func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *typ
 
 	apiObject := &types.CreateMultiRegionAccessPointInput{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -481,7 +481,7 @@ func flattenMultiRegionAccessPointReport(apiObject *types.MultiRegionAccessPoint
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.PublicAccessBlock; v != nil {

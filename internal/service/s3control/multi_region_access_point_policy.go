@@ -55,7 +55,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -237,7 +237,7 @@ func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *
 
 	apiObject := &types.PutMultiRegionAccessPointPolicyInput{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -260,7 +260,7 @@ func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.M
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["name"] = name
+	tfMap[names.AttrName] = name
 
 	if v := apiObject.Proposed; v != nil {
 		if v := v.Policy; v != nil {

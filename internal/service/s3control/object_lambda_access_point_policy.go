@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_object_lambda_access_point_policy")
@@ -45,7 +46,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -76,7 +77,7 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	id := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 	input := &s3control.PutAccessPointPolicyForObjectLambdaInput{
 		AccountId: aws.String(accountID),
@@ -117,7 +118,7 @@ func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.Re
 
 	d.Set("account_id", accountID)
 	d.Set("has_public_access_policy", status.IsPublic)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	if policy != "" {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
