@@ -65,7 +65,7 @@ func resourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -78,7 +78,7 @@ func resourceEventSubscription() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validEventSubscriptionName,
 			},
 			"sns_topic": {
@@ -108,7 +108,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &rds.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
@@ -163,7 +163,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("customer_aws_id", sub.CustomerAwsId)
 	d.Set("enabled", sub.Enabled)
 	d.Set("event_categories", sub.EventCategoriesList)
-	d.Set("name", sub.CustSubscriptionId)
+	d.Set(names.AttrName, sub.CustSubscriptionId)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
 	d.Set("source_ids", sub.SourceIdsList)

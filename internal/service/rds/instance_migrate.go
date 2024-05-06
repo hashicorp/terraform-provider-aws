@@ -21,7 +21,7 @@ import (
 func resourceInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

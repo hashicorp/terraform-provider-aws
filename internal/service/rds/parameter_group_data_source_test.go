@@ -35,7 +35,7 @@ func TestAccRDSParameterGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "family", resourceName, "family"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},

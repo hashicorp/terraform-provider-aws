@@ -58,7 +58,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -71,7 +71,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"parameter": {
@@ -84,7 +84,7 @@ func ResourceParameterGroup() *schema.Resource {
 							Optional: true,
 							Default:  "immediate",
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -108,7 +108,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
@@ -149,7 +149,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("arn", arn)
 	d.Set("description", dbParameterGroup.Description)
 	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
-	d.Set("name", dbParameterGroup.DBParameterGroupName)
+	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
 
 	input := &rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -383,7 +383,7 @@ func resourceParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["name"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrName].(string))))
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
 	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
 

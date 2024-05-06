@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
@@ -19,7 +20,7 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		"Valid-Name1",
 	}
 	for _, v := range validNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid RDS Event Subscription Name: %q", v, errors)
 		}
@@ -38,7 +39,7 @@ func TestValidEventSubscriptionName(t *testing.T) {
 		strings.Repeat("W", 256),
 	}
 	for _, v := range invalidNames {
-		_, errors := validEventSubscriptionName(v, "name")
+		_, errors := validEventSubscriptionName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid RDS Event Subscription Name", v)
 		}

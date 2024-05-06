@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
@@ -223,8 +224,8 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 			}
 
 			optionSetting := map[string]interface{}{
-				"name":  aws.StringValue(apiOptionSetting.Name),
-				"value": aws.StringValue(apiOptionSetting.Value),
+				names.AttrName: aws.StringValue(apiOptionSetting.Name),
+				"value":        aws.StringValue(apiOptionSetting.Value),
 			}
 
 			// Some values, like passwords, are sent back from the API as ****.
@@ -237,7 +238,7 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 		}
 		optionSettingsResource := &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -283,7 +284,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 		data := oRaw.(map[string]interface{})
 
 		o := &rds.OptionSetting{
-			Name:  aws.String(data["name"].(string)),
+			Name:  aws.String(data[names.AttrName].(string)),
 			Value: aws.String(data["value"].(string)),
 		}
 
@@ -303,12 +304,12 @@ func expandParameters(configured []interface{}) []*rds.Parameter {
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		if data["name"].(string) == "" {
+		if data[names.AttrName].(string) == "" {
 			continue
 		}
 
 		p := &rds.Parameter{
-			ParameterName:  aws.String(strings.ToLower(data["name"].(string))),
+			ParameterName:  aws.String(strings.ToLower(data[names.AttrName].(string))),
 			ParameterValue: aws.String(data["value"].(string)),
 		}
 
@@ -332,7 +333,7 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 				r["apply_method"] = strings.ToLower(aws.StringValue(i.ApplyMethod))
 			}
 
-			r["name"] = strings.ToLower(aws.StringValue(i.ParameterName))
+			r[names.AttrName] = strings.ToLower(aws.StringValue(i.ParameterName))
 
 			// Default empty string, guard against nil parameter values
 			r["value"] = ""

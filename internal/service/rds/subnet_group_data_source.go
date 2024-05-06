@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_subnet_group", name="DB Subnet Group")
@@ -30,7 +31,7 @@ func dataSourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -60,7 +61,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	v, err := findDBSubnetGroupByName(ctx, conn, d.Get("name").(string))
+	v, err := findDBSubnetGroupByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS DB Subnet Group", err))
@@ -69,7 +70,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(v.DBSubnetGroupName))
 	d.Set("arn", v.DBSubnetGroupArn)
 	d.Set("description", v.DBSubnetGroupDescription)
-	d.Set("name", v.DBSubnetGroupName)
+	d.Set(names.AttrName, v.DBSubnetGroupName)
 	d.Set("status", v.SubnetGroupStatus)
 	d.Set("subnet_ids", tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
