@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_portfolio")
@@ -50,7 +51,7 @@ func DataSourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("arn", detail.ARN)
 	d.Set("description", detail.Description)
-	d.Set("name", detail.DisplayName)
+	d.Set(names.AttrName, detail.DisplayName)
 	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig

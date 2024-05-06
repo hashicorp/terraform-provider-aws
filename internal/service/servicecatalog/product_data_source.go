@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_product")
@@ -56,7 +57,7 @@ func DataSourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +113,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("description", pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)
 	d.Set("has_default_path", pvs.HasDefaultPath)
-	d.Set("name", pvs.Name)
+	d.Set(names.AttrName, pvs.Name)
 	d.Set("owner", pvs.Owner)
 	d.Set("status", output.ProductViewDetail.Status)
 	d.Set("support_description", pvs.SupportDescription)

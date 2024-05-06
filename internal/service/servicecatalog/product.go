@@ -74,7 +74,7 @@ func ResourceProduct() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -100,7 +100,7 @@ func ResourceProduct() *schema.Resource {
 							ForceNew: true,
 							Default:  false,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -168,7 +168,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
@@ -250,7 +250,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)
 	d.Set("has_default_path", pvs.HasDefaultPath)
-	d.Set("name", pvs.Name)
+	d.Set(names.AttrName, pvs.Name)
 	d.Set("owner", pvs.Owner)
 	d.Set("status", output.ProductViewDetail.Status)
 	d.Set("support_description", pvs.SupportDescription)
@@ -283,7 +283,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Distributor = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -419,7 +419,7 @@ func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *service
 
 	apiObject.Info = info
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -438,7 +438,7 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 	m := map[string]interface{}{
 		"description":                 aws.StringValue(apiObject.ProvisioningArtifactDetail.Description),
 		"disable_template_validation": false, // set default because it cannot be read
-		"name":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Name),
+		names.AttrName:                aws.StringValue(apiObject.ProvisioningArtifactDetail.Name),
 		"type":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Type),
 	}
 
