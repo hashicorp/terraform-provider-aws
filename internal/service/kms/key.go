@@ -88,13 +88,6 @@ func resourceKey() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"rotation_period_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(90, 2560),
-				RequiredWith: []string{"enable_key_rotation"},
-			},
 			"is_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -128,6 +121,13 @@ func resourceKey() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
+			},
+			"rotation_period_in_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(90, 2560),
+				RequiredWith: []string{"enable_key_rotation"},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -251,11 +251,11 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
-	d.Set("rotation_period_in_days", key.rotation_period_in_days)
 	d.Set("is_enabled", key.metadata.Enabled)
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
+	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
 	if key.metadata.XksKeyConfiguration != nil {
 		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
 	} else {
@@ -354,11 +354,11 @@ func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 type kmsKeyInfo struct {
-	metadata                *awstypes.KeyMetadata
-	policy                  string
-	rotation                *bool
-	rotation_period_in_days *int32
-	tags                    []awstypes.Tag
+	metadata             *awstypes.KeyMetadata
+	policy               string
+	rotation             *bool
+	rotationPeriodInDays *int32
+	tags                 []awstypes.Tag
 }
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
@@ -386,7 +386,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		}
 
 		if key.metadata.Origin == awstypes.OriginTypeAwsKms {
-			key.rotation, key.rotation_period_in_days, err = findKeyRotationEnabledByKeyID(ctx, conn, keyID)
+			key.rotation, key.rotationPeriodInDays, err = findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 			if err != nil {
 				return nil, fmt.Errorf("reading KMS Key (%s) rotation enabled: %w", keyID, err)
@@ -638,7 +638,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	if err := waitKeyRotationEnabledPropagated(ctx, conn, keyID, enabled, int32(rotationPeriod)); err != nil {
+	if err := waitKeyRotationEnabledPropagated(ctx, conn, keyID, enabled, rotationPeriod); err != nil {
 		return fmt.Errorf("waiting for %s (%s) rotation update: %w", resourceTypeName, keyID, err)
 	}
 
@@ -737,9 +737,9 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, polic
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
-func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool, rotationPeriod int32) error {
+func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool, rotationPeriodWant int) error {
 	checkFunc := func() (bool, error) {
-		rotation, rotationPeriodConsolidated, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
+		rotation, rotationPeriodGot, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -749,8 +749,8 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, key
 			return false, err
 		}
 
-		if rotationPeriod != 0 && rotationPeriodConsolidated != nil {
-			return aws.ToBool(rotation) == enabled && aws.ToInt32(rotationPeriodConsolidated) == rotationPeriod, nil
+		if rotationPeriodWant != 0 && rotationPeriodGot != nil {
+			return aws.ToBool(rotation) == enabled && aws.ToInt32(rotationPeriodGot) == int32(rotationPeriodWant), nil
 		}
 
 		return aws.ToBool(rotation) == enabled, nil
