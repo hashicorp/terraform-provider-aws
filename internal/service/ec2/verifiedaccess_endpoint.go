@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -191,6 +192,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	input := &ec2.CreateVerifiedAccessEndpointInput{
 		ApplicationDomain:     aws.String(d.Get("application_domain").(string)),
 		AttachmentType:        types.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
+		ClientToken:           aws.String(id.UniqueId()),
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
 		EndpointType:          types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
@@ -291,6 +293,7 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChangesExcept("policy_document", "tags", "tags_all") {
 		input := &ec2.ModifyVerifiedAccessEndpointInput{
+			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
 
@@ -349,6 +352,7 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
 	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &ec2.DeleteVerifiedAccessEndpointInput{
+		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessEndpointId: aws.String(d.Id()),
 	})
 

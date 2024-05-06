@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -56,29 +55,27 @@ func TestStringEnumTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestStringEnumTypeValidate(t *testing.T) {
+func TestStringEnumValidateAttribute(t *testing.T) {
 	t.Parallel()
 
-	type testCase struct {
-		val         tftypes.Value
+	tests := map[string]struct {
+		val         fwtypes.StringEnum[awstypes.AclPermission]
 		expectError bool
-	}
-	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
-			expectError: true,
+	}{
+		"null value": {
+			val: fwtypes.StringEnumNull[awstypes.AclPermission](),
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"unknown value": {
+			val: fwtypes.StringEnumUnknown[awstypes.AclPermission](),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
+		"zero value enum": {
+			val: fwtypes.StringEnumValue(awstypes.AclPermission("")),
 		},
 		"valid enum": {
-			val: tftypes.NewValue(tftypes.String, string(awstypes.AclPermissionWrite)),
+			val: fwtypes.StringEnumValue(awstypes.AclPermissionRead),
 		},
 		"invalid enum": {
-			val:         tftypes.NewValue(tftypes.String, "LIST"),
+			val:         fwtypes.StringEnumValue(awstypes.AclPermission("invalid")),
 			expectError: true,
 		},
 	}
@@ -90,15 +87,22 @@ func TestStringEnumTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.StringEnumType[awstypes.AclPermission]().(xattr.TypeWithValidate).Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
 		})
+	}
+}
+
+func TestStringEnumZeroValue(t *testing.T) {
+	t.Parallel()
+
+	var x fwtypes.StringEnum[awstypes.AclPermission]
+	if got, want := x.IsNull(), true; got != want {
+		t.Errorf("IsNull = %t, want %t", got, want)
 	}
 }

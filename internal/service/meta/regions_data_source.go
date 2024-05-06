@@ -19,7 +19,6 @@ import (
 // @FrameworkDataSource(name=Regions)
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -71,7 +70,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 
 	input := &ec2.DescribeRegionsInput{
 		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),
-		Filters:    tfec2.BuildCustomFiltersV2(ctx, data.Filters),
+		Filters:    tfec2.NewCustomFilterListFrameworkV2(ctx, data.Filters),
 	}
 
 	output, err := conn.DescribeRegions(ctx, input)

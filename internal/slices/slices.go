@@ -3,12 +3,7 @@
 
 package slices
 
-import "golang.org/x/exp/slices"
-
-// Of returns a slice from varargs.
-func Of[E any](vs ...E) []E {
-	return vs
-}
+import "slices"
 
 // Reverse returns a reversed copy of the slice `s`.
 func Reverse[S ~[]E, E any](s S) S {
@@ -50,6 +45,13 @@ func ApplyToAll[S ~[]E1, E1, E2 any](s S, f func(E1) E2) []E2 {
 func ToPointers[S ~[]E, E any](s S) []*E {
 	return ApplyToAll(s, func(e E) *E {
 		return &e
+	})
+}
+
+// Values returns a new slice containing values from the pointers in each element of the original slice `s`.
+func Values[S ~[]*E, E any](s S) []E {
+	return ApplyToAll(s, func(e *E) E {
+		return *e
 	})
 }
 

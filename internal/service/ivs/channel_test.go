@@ -35,7 +35,7 @@ func TestAccIVSChannel_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVS)
 			testAccChannelPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccIVSChannel_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVS)
 			testAccChannelPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +125,7 @@ func TestAccIVSChannel_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVS)
 			testAccChannelPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccIVSChannel_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccChannelPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -196,7 +196,7 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccChannelPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{

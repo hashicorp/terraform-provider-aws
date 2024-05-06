@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
@@ -184,6 +185,10 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.DeletePortfolioWithContext(ctx, &servicecatalog.DeletePortfolioInput{
 		Id: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Portfolio (%s): %s", d.Id(), err)

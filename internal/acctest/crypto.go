@@ -32,6 +32,12 @@ var (
 	tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
 )
 
+// TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries removes RSA private key
+// pre and post encapsulation boundaries from a PEM string.
+func TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(pem string) string {
+	return removePEMEncapsulationBoundaries(pem, PEMBlockTypeRSAPrivateKey)
+}
+
 // TLSPEMRemovePublicKeyEncapsulationBoundaries removes public key
 // pre and post encapsulation boundaries from a PEM string.
 func TLSPEMRemovePublicKeyEncapsulationBoundaries(pem string) string {
@@ -55,6 +61,8 @@ func pemPostEncapsulationBoundary(label string) string {
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
 func TLSECDSAPrivateKeyPEM(t *testing.T, curveName string) string {
+	t.Helper()
+
 	curve := ellipticCurveForName(curveName)
 
 	if curve == nil {
@@ -83,6 +91,8 @@ func TLSECDSAPrivateKeyPEM(t *testing.T, curveName string) string {
 
 // TLSECDSAPublicKeyPEM generates an ECDSA public key PEM string and fingerprint.
 func TLSECDSAPublicKeyPEM(t *testing.T, keyPem string) (string, string) {
+	t.Helper()
+
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParseECPrivateKey(keyBlock.Bytes)
@@ -115,6 +125,8 @@ func TLSECDSAPublicKeyPEM(t *testing.T, keyPem string) (string, string) {
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
 func TLSRSAPrivateKeyPEM(t *testing.T, bits int) string {
+	t.Helper()
+
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 
 	if err != nil {
@@ -133,6 +145,8 @@ func TLSRSAPrivateKeyPEM(t *testing.T, bits int) string {
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: public_key_pem = "%[1]s"
 func TLSRSAPublicKeyPEM(t *testing.T, keyPem string) string {
+	t.Helper()
+
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -159,6 +173,8 @@ func TLSRSAPublicKeyPEM(t *testing.T, keyPem string) string {
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: certificate_pem = "%[1]s"
 func TLSRSAX509LocallySignedCertificatePEM(t *testing.T, caKeyPem, caCertificatePem, keyPem, commonName string) string {
+	t.Helper()
+
 	caCertificateBlock, _ := pem.Decode([]byte(caCertificatePem))
 
 	caCertificate, err := x509.ParseCertificate(caCertificateBlock.Bytes)
@@ -220,6 +236,8 @@ func TLSRSAX509LocallySignedCertificatePEM(t *testing.T, caKeyPem, caCertificate
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: root_certificate_pem = "%[1]s"
 func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
+	t.Helper()
+
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -277,6 +295,8 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: root_certificate_pem = "%[1]s"
 func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.T, keyPem string) string {
+	t.Helper()
+
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -333,6 +353,8 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: private_key_pem = "%[1]s"
 func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string) string {
+	t.Helper()
+
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
@@ -379,6 +401,8 @@ func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string)
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
 // configurations such as: certificate_signing_request_pem = "%[1]s" private_key_pem = "%[2]s"
 func TLSRSAX509CertificateRequestPEM(t *testing.T, keyBits int, commonName string) (string, string) {
+	t.Helper()
+
 	keyBytes, err := rsa.GenerateKey(rand.Reader, keyBits)
 
 	if err != nil {

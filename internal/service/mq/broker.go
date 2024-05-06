@@ -30,9 +30,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
@@ -103,6 +103,28 @@ func resourceBroker() *schema.Resource {
 						},
 					},
 				},
+			},
+			"data_replication_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.DataReplicationMode](),
+				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+					// Suppress differences when the configured data replication mode
+					// matches a non-empty, pending replication mode. This scenario
+					// can exist when the mode has been set, but the broker has not
+					// yet been rebooted.
+					if n != "" && n == d.Get("pending_data_replication_mode").(string) {
+						return true
+					}
+					return false
+				},
+			},
+			"data_replication_primary_broker_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true, // Can only be set on Create
+				ValidateFunc: verify.ValidARN,
 			},
 			"deployment_mode": {
 				Type:             schema.TypeString,
@@ -269,6 +291,10 @@ func resourceBroker() *schema.Resource {
 					},
 				},
 			},
+			"pending_data_replication_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -352,7 +378,7 @@ func resourceBroker() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
-						if v, _, _ := nullable.Bool(v.(string)).Value(); v {
+						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
 							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
 						}
 					}
@@ -391,6 +417,12 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = types.DeploymentMode(v.(string))
+	}
+	if v, ok := d.GetOk("data_replication_mode"); ok {
+		input.DataReplicationMode = types.DataReplicationMode(v.(string))
+	}
+	if v, ok := d.GetOk("data_replication_primary_broker_arn"); ok {
+		input.DataReplicationPrimaryBrokerArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EncryptionOptions = expandEncryptionOptions(d.Get("encryption_options").([]interface{}))
@@ -451,11 +483,13 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
 	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
 	d.Set("broker_name", output.BrokerName)
+	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
 	d.Set("engine_version", output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
+	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
 	d.Set("publicly_accessible", output.PubliclyAccessible)
 	d.Set("security_groups", output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
@@ -595,6 +629,21 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
+		}
+
+		requiresReboot = true
+	}
+
+	if d.HasChange("data_replication_mode") {
+		input := &mq.UpdateBrokerInput{
+			BrokerId:            aws.String(d.Id()),
+			DataReplicationMode: types.DataReplicationMode(d.Get("data_replication_mode").(string)),
+		}
+
+		_, err := conn.UpdateBroker(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) data replication mode: %s", d.Id(), err)
 		}
 
 		requiresReboot = true
@@ -1120,7 +1169,7 @@ func expandLogs(engineType string, l []interface{}) *types.Logs {
 
 	// When the engine type is "RabbitMQ", the parameter audit cannot be set at all.
 	if v, ok := m["audit"]; ok {
-		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			if !strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) {
 				logs.Audit = aws.Bool(v)
 			}

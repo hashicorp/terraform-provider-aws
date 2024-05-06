@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
@@ -60,7 +61,7 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
@@ -83,7 +84,7 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd"),

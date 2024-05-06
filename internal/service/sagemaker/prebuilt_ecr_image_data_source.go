@@ -260,6 +260,7 @@ var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
 // https://github.com/aws/sagemaker-tensorflow-serving-container
 
 var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
+	endpoints.AfSouth1RegionID:     "626614931356",
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
 	endpoints.ApNortheast2RegionID: "763104351884",
@@ -422,7 +423,7 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 		region = v.(string)
 	}
 
-	suffix := meta.(*conns.AWSClient).DNSSuffix
+	suffix := meta.(*conns.AWSClient).DNSSuffix(ctx)
 	if v, ok := d.GetOk("dns_suffix"); ok {
 		suffix = v.(string)
 	}

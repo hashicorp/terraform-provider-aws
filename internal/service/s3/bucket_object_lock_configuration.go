@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_object_lock_configuration")
-func ResourceBucketObjectLockConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_object_lock_configuration", name="Bucket Object Lock Configuration")
+func resourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketObjectLockConfigurationRead,

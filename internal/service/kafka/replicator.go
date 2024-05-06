@@ -564,7 +564,7 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 	}
 
 	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
-		tfMap["detect_and_copy_new_topics"] = apiObject.CopyAccessControlListsForTopics
+		tfMap["detect_and_copy_new_topics"] = apiObject.DetectAndCopyNewTopics
 	}
 
 	return tfMap

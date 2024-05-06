@@ -52,7 +52,7 @@ func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState ma
 		rawState["qualifier"].(string),
 	}
 
-	id, err := flex.FlattenResourceId(parts, ProvisionedConcurrencyIDPartCount, false)
+	id, err := flex.FlattenResourceId(parts, provisionedConcurrencyConfigResourceIDPartCount, false)
 	if err != nil {
 		return rawState, err
 	}

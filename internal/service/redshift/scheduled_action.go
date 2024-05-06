@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_redshift_scheduled_action")
-func ResourceScheduledAction() *schema.Resource {
+// @SDKResource("aws_redshift_scheduled_action", name="Scheduled Action")
+func resourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduledActionCreate,
 		ReadWithoutTimeout:   resourceScheduledActionRead,
@@ -206,7 +206,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	scheduledAction, err := FindScheduledActionByName(ctx, conn, d.Id())
+	scheduledAction, err := findScheduledActionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())

@@ -253,7 +253,7 @@ func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguratio
 }
 
 func expandResultConfigurationEncryptionConfig(config []interface{}) *types.EncryptionConfiguration {
-	if len(config) <= 0 {
+	if len(config) == 0 {
 		return nil
 	}
 
@@ -271,7 +271,7 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *types.Encr
 }
 
 func expandResultConfigurationACLConfig(config []interface{}) *types.AclConfiguration {
-	if len(config) <= 0 {
+	if len(config) == 0 {
 		return nil
 	}
 

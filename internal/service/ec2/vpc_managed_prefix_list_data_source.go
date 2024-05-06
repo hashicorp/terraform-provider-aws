@@ -51,7 +51,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -86,7 +86,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeManagedPrefixListsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"prefix-list-name": d.Get("name").(string),
 		}),
 	}
@@ -95,7 +95,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 		input.PrefixListIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

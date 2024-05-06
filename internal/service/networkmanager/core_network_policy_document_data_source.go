@@ -157,7 +157,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 17,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"location": {

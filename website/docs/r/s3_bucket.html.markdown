@@ -12,6 +12,8 @@ Provides a S3 bucket resource.
 
 -> This resource provides functionality for managing S3 general purpose buckets in an AWS Partition. To manage Amazon S3 Express directory buckets, use the [`aws_directory_bucket`](/docs/providers/aws/r/s3_directory_bucket.html) resource. To manage [S3 on Outposts](https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html), use the [`aws_s3control_bucket`](/docs/providers/aws/r/s3control_bucket.html) resource.
 
+-> Object Lock can be enabled by using the `object_lock_enable` attribute or by using the [`aws_s3_bucket_object_lock_configuration`](/docs/providers/aws/r/s3_bucket_object_lock_configuration.html) resource. Please note, that by using the resource, Object Lock can be enabled/disabled without destroying and recreating the bucket.
+
 ## Example Usage
 
 ### Private Bucket With Tags

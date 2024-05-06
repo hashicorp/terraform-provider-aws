@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_fsx_windows_file_system", name="Windows File System")
 // @Tags(identifierAttribute="arn")
-func ResourceWindowsFileSystem() *schema.Resource {
+func resourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWindowsFileSystemCreate,
 		ReadWithoutTimeout:   resourceWindowsFileSystemRead,
@@ -418,7 +418,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindWindowsFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := findWindowsFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for Windows File Server File System (%s) not found, removing from state", d.Id())
@@ -716,9 +716,21 @@ func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAudit
 	}
 
 	data := l[0].(map[string]interface{})
+	fileAccessAuditLogLevel, ok1 := data["file_access_audit_log_level"].(string)
+	fileShareAccessAuditLogLevel, ok2 := data["file_share_access_audit_log_level"].(string)
+
+	if !ok1 || !ok2 {
+		return nil
+	}
+
 	req := &fsx.WindowsAuditLogCreateConfiguration{
-		FileAccessAuditLogLevel:      aws.String(data["file_access_audit_log_level"].(string)),
-		FileShareAccessAuditLogLevel: aws.String(data["file_share_access_audit_log_level"].(string)),
+		FileAccessAuditLogLevel:      aws.String(fileAccessAuditLogLevel),
+		FileShareAccessAuditLogLevel: aws.String(fileShareAccessAuditLogLevel),
+	}
+
+	// audit_log_destination cannot be included in the request if the log levels are disabled
+	if fileAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled && fileShareAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled {
+		return req
 	}
 
 	if v, ok := data["audit_log_destination"].(string); ok && v != "" {
@@ -796,7 +808,7 @@ func windowsAuditLogStateFunc(v interface{}) string {
 	return value
 }
 
-func FindWindowsFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findWindowsFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeWindows)
 
 	if err != nil {

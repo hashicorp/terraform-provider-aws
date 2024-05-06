@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_cloudwatch_log_metric_filter")
@@ -249,7 +249,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTrans
 	apiObject := &types.MetricTransformation{}
 
 	if v, ok := tfMap["default_value"].(string); ok {
-		if v, null, _ := nullable.Float(v).Value(); !null {
+		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 			apiObject.DefaultValue = aws.Float64(v)
 		}
 	}

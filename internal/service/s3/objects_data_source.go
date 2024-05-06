@@ -20,8 +20,8 @@ import (
 
 const keyRequestPageSize = 1000
 
-// @SDKDataSource("aws_s3_objects")
-func DataSourceObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_objects", name="Objects")
+func dataSourceObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectsRead,
 

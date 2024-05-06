@@ -7,25 +7,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func BuildSnapshotFiltersDataSource(set *schema.Set) []*fsx.SnapshotFilter {
-	var filters []*fsx.SnapshotFilter
-	for _, v := range set.List() {
-		m := v.(map[string]interface{})
-		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
-		}
-		filters = append(filters, &fsx.SnapshotFilter{
-			Name:   aws.String(m["name"].(string)),
-			Values: filterValues,
-		})
+func newSnapshotFilterList(s *schema.Set) []*fsx.SnapshotFilter {
+	if s == nil {
+		return []*fsx.SnapshotFilter{}
 	}
-	return filters
+
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *fsx.SnapshotFilter {
+		tfMap := tfList.(map[string]interface{})
+		return &fsx.SnapshotFilter{
+			Name:   aws.String(tfMap["name"].(string)),
+			Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
+		}
+	})
 }
 
-func DataSourceSnapshotFiltersSchema() *schema.Schema {
+func snapshotFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -35,36 +35,33 @@ func DataSourceSnapshotFiltersSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-
 				"values": {
 					Type:     schema.TypeList,
 					Required: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
 			},
 		},
 	}
 }
 
-func BuildStorageVirtualMachineFiltersDataSource(set *schema.Set) []*fsx.StorageVirtualMachineFilter {
-	var filters []*fsx.StorageVirtualMachineFilter
-	for _, v := range set.List() {
-		m := v.(map[string]interface{})
-		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
-		}
-
-		filters = append(filters, &fsx.StorageVirtualMachineFilter{
-			Name:   aws.String(m["name"].(string)),
-			Values: filterValues,
-		})
+func newStorageVirtualMachineFilterList(s *schema.Set) []*fsx.StorageVirtualMachineFilter {
+	if s == nil {
+		return []*fsx.StorageVirtualMachineFilter{}
 	}
 
-	return filters
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *fsx.StorageVirtualMachineFilter {
+		tfMap := tfList.(map[string]interface{})
+		return &fsx.StorageVirtualMachineFilter{
+			Name:   aws.String(tfMap["name"].(string)),
+			Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
+		}
+	})
 }
 
-func DataSourceStorageVirtualMachineFiltersSchema() *schema.Schema {
+func storageVirtualMachineFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -77,7 +74,9 @@ func DataSourceStorageVirtualMachineFiltersSchema() *schema.Schema {
 				"values": {
 					Type:     schema.TypeList,
 					Required: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
 			},
 		},
