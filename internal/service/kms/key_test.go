@@ -458,6 +458,54 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 	})
 }
 
+func TestAccKMSKey_rotation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key1, key2, key3 awstypes.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_enabledRotation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key1),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+			{
+				Config: testAccKeyConfig_enabledRotationPeriod(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key2),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
+				),
+			},
+			{
+				Config: testAccKeyConfig_enabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key3),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKMSKey_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key awstypes.KeyMetadata
@@ -1121,6 +1169,17 @@ resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   enable_key_rotation     = true
+}
+`, rName)
+}
+
+func testAccKeyConfig_enabledRotationPeriod(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  rotation_period_in_days = "91"
 }
 `, rName)
 }

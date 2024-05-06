@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_kms_key: Add `rotation_period_in_days` argument
+```

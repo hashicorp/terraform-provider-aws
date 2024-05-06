@@ -122,6 +122,13 @@ func resourceKey() *schema.Resource {
 					return json
 				},
 			},
+			"rotation_period_in_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(90, 2560),
+				RequiredWith: []string{"enable_key_rotation"},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"xks_key_id": {
@@ -189,8 +196,8 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
-		if err := updateKeyRotationEnabled(ctx, conn, "KMS Key", d.Id(), enableKeyRotation); err != nil {
+	if enableKeyRotation, rotationPeriod := d.Get("enable_key_rotation").(bool), d.Get("rotation_period_in_days").(int); enableKeyRotation {
+		if err := updateKeyRotationEnabled(ctx, conn, "KMS Key", d.Id(), enableKeyRotation, rotationPeriod); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -248,6 +255,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
+	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
 	if key.metadata.XksKeyConfiguration != nil {
 		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
 	} else {
@@ -279,8 +287,10 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if hasChange, enable := d.HasChange("enable_key_rotation"), d.Get("enable_key_rotation").(bool); hasChange {
-		if err := updateKeyRotationEnabled(ctx, conn, "KMS Key", d.Id(), enable); err != nil {
+	if hasChange, hasChangedRotationPeriod,
+		enable, rotationPeriod := d.HasChange("enable_key_rotation"), d.HasChange("rotation_period_in_days"),
+		d.Get("enable_key_rotation").(bool), d.Get("rotation_period_in_days").(int); hasChange || (enable && hasChangedRotationPeriod) {
+		if err := updateKeyRotationEnabled(ctx, conn, "KMS Key", d.Id(), enable, rotationPeriod); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -344,10 +354,11 @@ func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 type kmsKeyInfo struct {
-	metadata *awstypes.KeyMetadata
-	policy   string
-	rotation *bool
-	tags     []awstypes.Tag
+	metadata             *awstypes.KeyMetadata
+	policy               string
+	rotation             *bool
+	rotationPeriodInDays *int32
+	tags                 []awstypes.Tag
 }
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
@@ -375,7 +386,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		}
 
 		if key.metadata.Origin == awstypes.OriginTypeAwsKms {
-			key.rotation, err = findKeyRotationEnabledByKeyID(ctx, conn, keyID)
+			key.rotation, key.rotationPeriodInDays, err = findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 			if err != nil {
 				return nil, fmt.Errorf("reading KMS Key (%s) rotation enabled: %w", keyID, err)
@@ -486,7 +497,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	return output.Policy, nil
 }
 
-func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID string) (*bool, error) {
+func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID string) (*bool, *int32, error) {
 	input := &kms.GetKeyRotationStatusInput{
 		KeyId: aws.String(keyID),
 	}
@@ -494,21 +505,21 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	output, err := conn.GetKeyRotationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return aws.Bool(output.KeyRotationEnabled), nil
+	return aws.Bool(output.KeyRotationEnabled), output.RotationPeriodInDays, nil
 }
 
 func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, description string) error {
@@ -597,7 +608,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 	return nil
 }
 
-func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
+func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool, rotationPeriod int) error {
 	var action string
 
 	updateFunc := func() (interface{}, error) {
@@ -605,9 +616,13 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 
 		if enabled {
 			action = "enabling"
-			_, err = conn.EnableKeyRotation(ctx, &kms.EnableKeyRotationInput{
+			input := kms.EnableKeyRotationInput{
 				KeyId: aws.String(keyID),
-			})
+			}
+			if rotationPeriod > 0 {
+				input.RotationPeriodInDays = aws.Int32(int32(rotationPeriod))
+			}
+			_, err = conn.EnableKeyRotation(ctx, &input)
 		} else {
 			action = "disabling"
 			_, err = conn.DisableKeyRotation(ctx, &kms.DisableKeyRotationInput{
@@ -623,7 +638,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	if err := waitKeyRotationEnabledPropagated(ctx, conn, keyID, enabled); err != nil {
+	if err := waitKeyRotationEnabledPropagated(ctx, conn, keyID, enabled, rotationPeriod); err != nil {
 		return fmt.Errorf("waiting for %s (%s) rotation update: %w", resourceTypeName, keyID, err)
 	}
 
@@ -722,9 +737,9 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, polic
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
 }
 
-func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
+func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool, rotationPeriodWant int) error {
 	checkFunc := func() (bool, error) {
-		output, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
+		rotation, rotationPeriodGot, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -734,7 +749,11 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, key
 			return false, err
 		}
 
-		return aws.ToBool(output) == enabled, nil
+		if rotationPeriodWant != 0 && rotationPeriodGot != nil {
+			return aws.ToBool(rotation) == enabled && aws.ToInt32(rotationPeriodGot) == int32(rotationPeriodWant), nil
+		}
+
+		return aws.ToBool(rotation) == enabled, nil
 	}
 	opts := tfresource.WaitOpts{
 		ContinuousTargetOccurence: 5,
