@@ -146,7 +146,7 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		"name": {
+		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
@@ -158,7 +158,7 @@ var (
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name"},
+			ConflictsWith: []string{names.AttrName},
 		},
 		"owner": {
 			Type:     schema.TypeString,
@@ -353,7 +353,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	name := arn.Resource
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	if d.Get("fifo_topic").(bool) {
 		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
 	} else {
@@ -472,7 +472,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 }
 
 func topicName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_topic").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}

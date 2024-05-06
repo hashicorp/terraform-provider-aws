@@ -43,7 +43,7 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -97,7 +97,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input := &waf.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 			Tags:        getTagsIn(ctx),
 		}
 
@@ -105,7 +105,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Rule (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Rule (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	resp := out.(*waf.CreateRuleOutput)
@@ -171,7 +171,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}.String()
 	d.Set("arn", arn)
 	d.Set("predicates", predicates)
-	d.Set("name", resp.Rule.Name)
+	d.Set(names.AttrName, resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
 	return diags

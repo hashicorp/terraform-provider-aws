@@ -38,7 +38,7 @@ func resourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +87,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleInput{
 			ChangeToken: token,
@@ -144,7 +144,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}.String()
 	d.Set("arn", arn)
 	d.Set("predicate", flattenPredicates(resp.Rule.Predicates))
-	d.Set("name", resp.Rule.Name)
+	d.Set(names.AttrName, resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
 	return diags

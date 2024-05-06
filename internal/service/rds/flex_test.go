@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestExpandParameters(t *testing.T) {
@@ -16,7 +17,7 @@ func TestExpandParameters(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"name":         "character_set_client",
+			names.AttrName: "character_set_client",
 			"value":        "utf8",
 			"apply_method": "immediate",
 		},
@@ -53,8 +54,8 @@ func TestFlattenParameters(t *testing.T) {
 			},
 			Output: []map[string]interface{}{
 				{
-					"name":  "character_set_client",
-					"value": "utf8",
+					names.AttrName: "character_set_client",
+					"value":        "utf8",
 				},
 			},
 		},
@@ -68,7 +69,7 @@ func TestFlattenParameters(t *testing.T) {
 			},
 			Output: []map[string]interface{}{
 				{
-					"name":         "character_set_client",
+					names.AttrName: "character_set_client",
 					"value":        "utf8",
 					"apply_method": "immediate",
 				},

@@ -37,7 +37,7 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},

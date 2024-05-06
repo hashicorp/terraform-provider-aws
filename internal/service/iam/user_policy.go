@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_policy", name="User Policy")
@@ -37,7 +38,7 @@ func resourceUserPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -49,7 +50,7 @@ func resourceUserPolicy() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"policy": {
 				Type:                  schema.TypeString,
@@ -81,7 +82,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	userName := d.Get("user").(string)
-	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	policyName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &iam.PutUserPolicyInput{
 		PolicyDocument: aws.String(policyDoc),
 		PolicyName:     aws.String(policyName),
@@ -140,7 +141,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("name", policyName)
+	d.Set(names.AttrName, policyName)
 	d.Set("name_prefix", create.NamePrefixFromName(policyName))
 	d.Set("policy", policyToSet)
 	d.Set("user", userName)

@@ -247,7 +247,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
-	dk, err := kms.FindDefaultKey(ctx, meta.(*conns.AWSClient), "dynamodb", replicaRegion)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, meta.(*conns.AWSClient).KMSClient(ctx), "dynamodb", replicaRegion)
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
@@ -363,7 +363,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange(names.AttrKMSKeyARN) && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
-		dk, err := kms.FindDefaultKey(ctx, meta.(*conns.AWSClient), "dynamodb", replicaRegion)
+		dk, err := kms.FindDefaultKeyARNForService(ctx, meta.(*conns.AWSClient).KMSClient(ctx), "dynamodb", replicaRegion)
 		if err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", replicaRegion, err))
 		}

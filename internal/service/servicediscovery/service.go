@@ -127,7 +127,7 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -156,7 +156,7 @@ func ResourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateServiceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
@@ -237,7 +237,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("health_check_custom_config", nil)
 	}
-	d.Set("name", service.Name)
+	d.Set(names.AttrName, service.Name)
 	d.Set("namespace_id", service.NamespaceId)
 	d.Set("type", service.Type)
 

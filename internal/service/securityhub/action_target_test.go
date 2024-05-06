@@ -34,7 +34,7 @@ func testAccActionTarget_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a test custom action"),
 					resource.TestCheckResourceAttr(resourceName, "identifier", "testaction"),
-					resource.TestCheckResourceAttr(resourceName, "name", "Test action"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Test action"),
 				),
 			},
 			{
@@ -115,7 +115,7 @@ func testAccActionTarget_Name(t *testing.T) {
 				Config: testAccActionTargetConfig_name("name1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "name1"),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func testAccActionTarget_Name(t *testing.T) {
 				Config: testAccActionTargetConfig_name("name2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "name2"),
 				),
 			},
 		},

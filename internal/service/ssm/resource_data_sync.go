@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_resource_data_sync")
@@ -31,7 +32,7 @@ func ResourceResourceDataSync() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +81,7 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	input := &ssm.CreateResourceDataSyncInput{
 		S3Destination: expandResourceDataSyncS3Destination(d),
@@ -125,7 +126,7 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SSM Resource Data Sync (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", syncItem.SyncName)
+	d.Set(names.AttrName, syncItem.SyncName)
 	d.Set("s3_destination", flattenResourceDataSyncS3Destination(syncItem.S3Destination))
 	return diags
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_receipt_filter")
@@ -34,7 +35,7 @@ func ResourceReceiptFilter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -73,7 +74,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	createOpts := &ses.CreateReceiptFilterInput{
 		Filter: &ses.ReceiptFilter{
@@ -123,7 +124,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("cidr", filter.IpFilter.Cidr)
 	d.Set("policy", filter.IpFilter.Policy)
-	d.Set("name", filter.Name)
+	d.Set(names.AttrName, filter.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

@@ -121,7 +121,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "path", path),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -155,7 +155,7 @@ func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),
 			},
 			{
@@ -186,7 +186,7 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
 					resource.TestCheckResourceAttr(resourceName, "custom_suffix", "CustomResource"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),
 			},
 			{

@@ -87,7 +87,7 @@ func ResourceStateMachine() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -103,7 +103,7 @@ func ResourceStateMachine() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
@@ -168,7 +168,7 @@ func ResourceStateMachine() *schema.Resource {
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
@@ -234,7 +234,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("logging_configuration", nil)
 	}
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("publish", d.Get("publish").(bool))
 	d.Set("role_arn", output.RoleArn)

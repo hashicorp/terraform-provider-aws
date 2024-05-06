@@ -117,7 +117,7 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 			"arn",
 			"description",
 			"kms_key_id",
-			"name",
+			names.AttrName,
 			"policy",
 			"tags.#",
 		}

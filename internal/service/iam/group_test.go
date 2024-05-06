@@ -37,7 +37,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					// arn:${Partition}:iam::${Account}:group/${GroupNameWithPath}
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 				),
@@ -93,7 +93,7 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("group/%s", rName1)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("group/%s", rName2)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -125,7 +125,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("group/path1/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/path1/"),
 				),
 			},
@@ -139,7 +139,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("group/path2/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/path2/"),
 				),
 			},
@@ -182,7 +182,7 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *awstypes.Group) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.Attributes["name"])
+		output, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

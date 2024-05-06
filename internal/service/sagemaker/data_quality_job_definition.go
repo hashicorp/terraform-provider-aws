@@ -371,7 +371,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -460,7 +460,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -521,7 +521,7 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 	}
 
 	d.Set("arn", jobDefinition.JobDefinitionArn)
-	d.Set("name", jobDefinition.JobDefinitionName)
+	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
 	d.Set("role_arn", jobDefinition.RoleArn)
 
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {

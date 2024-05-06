@@ -51,7 +51,7 @@ func ResourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,7 +85,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	in := &sfn.CreateStateMachineAliasInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		Description: aws.String(d.Get("description").(string)),
 	}
 
@@ -95,11 +95,11 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	out, err := conn.CreateStateMachineAliasWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get("name").(string), err)
+		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.StateMachineAliasArn == nil {
-		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
@@ -123,7 +123,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", out.StateMachineAliasArn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("description", out.Description)
 	d.Set("creation_date", aws.TimeValue(out.CreationDate).Format(time.RFC3339))
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))

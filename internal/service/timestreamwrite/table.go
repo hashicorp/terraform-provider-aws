@@ -145,7 +145,7 @@ func resourceTable() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.PartitionKeyEnforcementLevel](),
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -515,7 +515,7 @@ func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
 		apiObject.EnforcementInRecord = types.PartitionKeyEnforcementLevel(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -577,7 +577,7 @@ func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap

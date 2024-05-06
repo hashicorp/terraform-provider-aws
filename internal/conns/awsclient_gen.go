@@ -95,6 +95,7 @@ import (
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kms"
 	lakeformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
@@ -163,6 +164,7 @@ import (
 	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
+	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -211,7 +213,6 @@ import (
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
-	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
@@ -770,8 +771,8 @@ func (c *AWSClient) IoTEventsConn(ctx context.Context) *iotevents_sdkv1.IoTEvent
 	return errs.Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents, make(map[string]any)))
 }
 
-func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
-	return errs.Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS, make(map[string]any)))
+func (c *AWSClient) KMSClient(ctx context.Context) *kms_sdkv2.Client {
+	return errs.Must(client[*kms_sdkv2.Client](ctx, c, names.KMS, make(map[string]any)))
 }
 
 func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
@@ -1232,6 +1233,10 @@ func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
 	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces, make(map[string]any)))
+}
+
+func (c *AWSClient) WorkSpacesWebClient(ctx context.Context) *workspacesweb_sdkv2.Client {
+	return errs.Must(client[*workspacesweb_sdkv2.Client](ctx, c, names.WorkSpacesWeb, make(map[string]any)))
 }
 
 func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {

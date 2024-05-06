@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_template")
@@ -36,7 +37,7 @@ func ResourceTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,7 +64,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	templateName := d.Get("name").(string)
+	templateName := d.Get(names.AttrName).(string)
 
 	template := ses.Template{
 		TemplateName: aws.String(templateName),
@@ -114,7 +115,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("html", gto.Template.HtmlPart)
-	d.Set("name", gto.Template.TemplateName)
+	d.Set(names.AttrName, gto.Template.TemplateName)
 	d.Set("subject", gto.Template.SubjectPart)
 	d.Set("text", gto.Template.TextPart)
 

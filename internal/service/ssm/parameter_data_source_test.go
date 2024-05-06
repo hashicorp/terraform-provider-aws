@@ -28,7 +28,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
@@ -39,7 +39,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 				Config: testAccParameterDataSourceConfig_basic(name, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "true"),
@@ -63,7 +63,7 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),

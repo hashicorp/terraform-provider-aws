@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // SSMContacts resources depend on a replication set existing and
@@ -31,7 +32,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"contactId":       testContactChannel_contactID,
 			"deliveryAddress": testContactChannel_deliveryAddress,
 			"disappears":      testContactChannel_disappears,
-			"name":            testContactChannel_name,
+			names.AttrName:    testContactChannel_name,
 			"type":            testContactChannel_type,
 		},
 		"Contact Channel Data Source Tests": {

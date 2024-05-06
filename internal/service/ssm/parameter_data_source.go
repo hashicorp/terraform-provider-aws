@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssm_parameter")
@@ -28,7 +29,7 @@ func DataSourceParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,7 +59,7 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	paramInput := &ssm.GetParameterInput{
 		Name:           aws.String(name),
@@ -81,7 +82,7 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
 	}
-	d.Set("name", param.Name)
+	d.Set(names.AttrName, param.Name)
 	d.Set("type", param.Type)
 	d.Set("version", param.Version)
 

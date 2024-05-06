@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_parameter_group")
@@ -34,7 +35,7 @@ func DataSourceParameterGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,7 +47,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	groupName := d.Get("name").(string)
+	groupName := d.Get(names.AttrName).(string)
 
 	input := rds.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(groupName),
@@ -54,7 +55,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := conn.DescribeDBParameterGroupsWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Groups (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Groups (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	if len(output.DBParameterGroups) != 1 || aws.StringValue(output.DBParameterGroups[0].DBParameterGroupName) != groupName {
@@ -62,7 +63,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.StringValue(output.DBParameterGroups[0].DBParameterGroupName))
-	d.Set("name", output.DBParameterGroups[0].DBParameterGroupName)
+	d.Set(names.AttrName, output.DBParameterGroups[0].DBParameterGroupName)
 	d.Set("arn", output.DBParameterGroups[0].DBParameterGroupArn)
 	d.Set("family", output.DBParameterGroups[0].DBParameterGroupFamily)
 	d.Set("description", output.DBParameterGroups[0].Description)

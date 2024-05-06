@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_worklink_fleet")
@@ -40,7 +41,7 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -139,7 +140,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.CreateFleetInput{
-		FleetName:                  aws.String(d.Get("name").(string)),
+		FleetName:                  aws.String(d.Get(names.AttrName).(string)),
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
@@ -190,7 +191,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", d.Id())
-	d.Set("name", resp.FleetName)
+	d.Set(names.AttrName, resp.FleetName)
 	d.Set("display_name", resp.DisplayName)
 	d.Set("optimize_for_end_user_location", resp.OptimizeForEndUserLocation)
 	d.Set("company_code", resp.CompanyCode)

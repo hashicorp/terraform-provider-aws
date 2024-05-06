@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_maintenance_window_task")
@@ -109,7 +110,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 				},
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
@@ -150,7 +151,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -269,7 +270,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -329,7 +330,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 4096),
 									},
 
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 80),
@@ -548,7 +549,7 @@ func expandTaskInvocationStepFunctionsParameters(config []interface{}) *ssm.Main
 	if attr, ok := configParam["input"]; ok && len(attr.(string)) != 0 {
 		params.Input = aws.String(attr.(string))
 	}
-	if attr, ok := configParam["name"]; ok && len(attr.(string)) != 0 {
+	if attr, ok := configParam[names.AttrName]; ok && len(attr.(string)) != 0 {
 		params.Name = aws.String(attr.(string))
 	}
 
@@ -562,7 +563,7 @@ func flattenTaskInvocationStepFunctionsParameters(parameters *ssm.MaintenanceWin
 		result["input"] = aws.StringValue(parameters.Input)
 	}
 	if parameters.Name != nil {
-		result["name"] = aws.StringValue(parameters.Name)
+		result[names.AttrName] = aws.StringValue(parameters.Name)
 	}
 	return []interface{}{result}
 }
@@ -644,7 +645,7 @@ func expandTaskInvocationCommonParameters(config []interface{}) map[string][]*st
 
 	for _, v := range config {
 		paramConfig := v.(map[string]interface{})
-		params[paramConfig["name"].(string)] = flex.ExpandStringList(paramConfig["values"].([]interface{}))
+		params[paramConfig[names.AttrName].(string)] = flex.ExpandStringList(paramConfig["values"].([]interface{}))
 	}
 
 	return params
@@ -665,8 +666,8 @@ func flattenTaskInvocationCommonParameters(parameters map[string][]*string) []in
 			values = append(values, aws.StringValue(value))
 		}
 		params := map[string]interface{}{
-			"name":   key,
-			"values": values,
+			names.AttrName: key,
+			"values":       values,
 		}
 		attributes = append(attributes, params)
 	}
@@ -706,7 +707,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 		params.ServiceRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		params.Name = aws.String(v.(string))
 	}
 
@@ -760,7 +761,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("service_role_arn", resp.ServiceRoleArn)
 	d.Set("task_arn", resp.TaskArn)
 	d.Set("priority", resp.Priority)
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 	d.Set("description", resp.Description)
 	d.Set("cutoff_behavior", resp.CutoffBehavior)
 
@@ -822,7 +823,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 		params.CutoffBehavior = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		params.Name = aws.String(v.(string))
 	}
 

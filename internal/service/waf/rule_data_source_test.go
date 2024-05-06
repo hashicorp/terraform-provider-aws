@@ -34,7 +34,7 @@ func TestAccWAFRuleDataSource_basic(t *testing.T) {
 				Config: testAccRuleDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},

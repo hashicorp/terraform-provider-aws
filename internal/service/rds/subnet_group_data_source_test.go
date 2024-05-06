@@ -28,7 +28,7 @@ func TestAccRDSSubnetGroupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "supported_network_types.#", dataSourceName, "supported_network_types.#"),

@@ -66,7 +66,7 @@ func TestAccSSMDocument_name(t *testing.T) {
 				Config: testAccDocumentConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccSSMDocument_name(t *testing.T) {
 				Config: testAccDocumentConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
@@ -34,7 +35,7 @@ func ResourceIPSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -76,12 +77,12 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateIPSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 		return conn.CreateIPSetWithContext(ctx, params)
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF IPSet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 	resp := out.(*waf.CreateIPSetOutput)
 	d.SetId(aws.StringValue(resp.IPSet.IPSetId))
@@ -112,7 +113,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "reading WAF IPSet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	var descriptors []map[string]interface{}
@@ -127,7 +128,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("ip_set_descriptors", descriptors)
 
-	d.Set("name", resp.IPSet.Name)
+	d.Set(names.AttrName, resp.IPSet.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_signer_signing_profile")
@@ -21,7 +22,7 @@ func DataSourceSigningProfile() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSigningProfileRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -95,7 +96,7 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	profileName := d.Get("name").(string)
+	profileName := d.Get(names.AttrName).(string)
 	signingProfileOutput, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(profileName),
 	})

@@ -210,7 +210,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("default/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression_timezone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
@@ -476,7 +476,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 				Config: testAccScheduleConfig_groupName(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", names.AttrName),
 				),
 			},
 			{
@@ -571,7 +571,7 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 				Config: testAccScheduleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -607,7 +607,7 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 				Config: testAccScheduleConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -1459,8 +1459,8 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key1",
-							"value": "value1",
+							names.AttrName: "key1",
+							"value":        "value1",
 						}),
 				),
 			},
@@ -1477,14 +1477,14 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key1",
-							"value": "value1updated",
+							names.AttrName: "key1",
+							"value":        "value1updated",
 						}),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key2",
-							"value": "value2",
+							names.AttrName: "key2",
+							"value":        "value2",
 						}),
 				),
 			},
@@ -1501,8 +1501,8 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key2",
-							"value": "value2",
+							names.AttrName: "key2",
+							"value":        "value2",
 						}),
 				),
 			},

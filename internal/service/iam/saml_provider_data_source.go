@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_saml_provider", name="SAML Provider")
@@ -31,7 +32,7 @@ func dataSourceSAMLProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +74,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		d.Set("create_date", nil)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))

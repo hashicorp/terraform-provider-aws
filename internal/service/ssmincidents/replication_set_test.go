@@ -48,12 +48,12 @@ func testReplicationSet_basic(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName: region1,
+						"kms_key_arn":  "DefaultKey",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region2,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName: region2,
+						"kms_key_arn":  "DefaultKey",
 					}),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
@@ -93,8 +93,8 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName: region1,
+						"kms_key_arn":  "DefaultKey",
 					}),
 
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
@@ -112,12 +112,12 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName: region1,
+						"kms_key_arn":  "DefaultKey",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region2,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName: region2,
+						"kms_key_arn":  "DefaultKey",
 					}),
 
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
@@ -135,8 +135,8 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name":        region1,
-						"kms_key_arn": "DefaultKey",
+						names.AttrName: region1,
+						"kms_key_arn":  "DefaultKey",
 					}),
 
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
@@ -176,7 +176,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.Region(),
+						names.AttrName: acctest.Region(),
 					}),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
@@ -193,10 +193,10 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.Region(),
+						names.AttrName: acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.AlternateRegion(),
+						names.AttrName: acctest.AlternateRegion(),
 					}),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
@@ -213,7 +213,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
-						"name": acctest.Region(),
+						names.AttrName: acctest.Region(),
 					}),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),

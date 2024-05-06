@@ -40,7 +40,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -71,7 +71,7 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				Config: testAccSecretConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},

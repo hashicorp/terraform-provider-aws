@@ -48,7 +48,7 @@ func ResourceHTTPNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -65,7 +65,7 @@ func ResourceHTTPNamespace() *schema.Resource {
 func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
@@ -123,7 +123,7 @@ func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("http_name", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
 	return nil
 }

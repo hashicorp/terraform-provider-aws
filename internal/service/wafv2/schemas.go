@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var listOfEmptyObjectSchema *schema.Schema = &schema.Schema{
@@ -33,7 +34,7 @@ func ruleLabelsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
@@ -355,7 +356,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -374,7 +375,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -684,7 +685,7 @@ func customRequestHandlingSchema() *schema.Schema {
 					MinItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
@@ -730,7 +731,7 @@ func customResponseSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
@@ -961,7 +962,7 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
@@ -1009,7 +1010,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
@@ -1026,7 +1027,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
@@ -1059,7 +1060,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
@@ -1141,7 +1142,7 @@ func ruleActionOverrideSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"action_to_use": actionToUseSchema(),
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
@@ -1501,7 +1502,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								// TODO: ValidateFunc: length > 0
 							},
-							"name": {
+							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),

@@ -62,7 +62,7 @@ func resourcePolicy() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -75,7 +75,7 @@ func resourcePolicy() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(policyNamePrefixMaxLen),
 			},
 			"path": {
@@ -116,7 +116,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &iam.CreatePolicyInput{
 		Description:    aws.String(d.Get("description").(string)),
 		Path:           aws.String(d.Get("path").(string)),
@@ -200,7 +200,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("arn", policy.Arn)
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set("description", policy.Description)
-	d.Set("name", policy.PolicyName)
+	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)

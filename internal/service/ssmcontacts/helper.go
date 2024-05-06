@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func setContactResourceData(d *schema.ResourceData, getContactOutput *ssmcontacts.GetContactOutput) error { //nolint:unparam
@@ -26,7 +27,7 @@ func setContactChannelResourceData(d *schema.ResourceData, out *ssmcontacts.GetC
 	if err := d.Set("delivery_address", flattenContactChannelAddress(out.DeliveryAddress)); err != nil {
 		return fmt.Errorf("setting delivery_address: %w", err)
 	}
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("type", out.Type)
 
 	return nil

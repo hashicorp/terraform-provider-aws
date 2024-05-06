@@ -1,4 +1,29 @@
 ## 5.49.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_datazone_environment_blueprint` ([#36600](https://github.com/hashicorp/terraform-provider-aws/issues/36600))
+* **New Resource:** `aws_bedrockagent_data_source` ([#37158](https://github.com/hashicorp/terraform-provider-aws/issues/37158))
+* **New Resource:** `aws_datazone_domain` ([#36600](https://github.com/hashicorp/terraform-provider-aws/issues/36600))
+* **New Resource:** `aws_datazone_environment_blueprint_configuration` ([#36600](https://github.com/hashicorp/terraform-provider-aws/issues/36600))
+
+ENHANCEMENTS:
+
+* resource/aws_kms_key: Add `rotation_period_in_days` argument ([#37140](https://github.com/hashicorp/terraform-provider-aws/issues/37140))
+
+BUG FIXES:
+
+* data-source/aws_rds_orderable_db_instance: Fix `InvalidParameterValue: Invalid value 3412 for MaxRecords. Must be between 20 and 1000` errors ([#37251](https://github.com/hashicorp/terraform-provider-aws/issues/37251))
+* resource/aws_kms_custom_key_store: Change `trust_anchor_certificate` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#37092](https://github.com/hashicorp/terraform-provider-aws/issues/37092))
+* resource/aws_securitylake_aws_log_source: Correctly handles unspecified `source_version` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_aws_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_custom_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_custom_log_source: Validates length of `source_name` parameter ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Allow more than one log source ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Correctly handles unspecified `access_type` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Correctly handles unspecified `source_version` parameter for `aws_log_source_resource` and `custom_log_source_resource` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Correctly requires `source_name` parameter for `aws_log_source_resource` and `custom_log_source_resource` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+
 ## 5.48.0 (May  2, 2024)
 
 FEATURES:

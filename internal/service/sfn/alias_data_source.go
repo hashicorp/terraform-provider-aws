@@ -35,7 +35,7 @@ func DataSourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -86,7 +86,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	for _, in := range out.StateMachineAliases {
-		if v := aws.StringValue(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get("name").(string)) {
+		if v := aws.StringValue(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get(names.AttrName).(string)) {
 			aliasArn = v
 		}
 	}
@@ -103,7 +103,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aliasArn)
 	d.Set("arn", output.StateMachineAliasArn)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("description", output.Description)
 	d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 

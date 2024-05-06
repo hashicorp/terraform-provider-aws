@@ -954,8 +954,7 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 }
 
 func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
-	ctx := //nosemgrep:ci.ssm-in-func-name
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 	var param ssm.Parameter
 	webhookName := sdkacctest.RandString(16)
 	rName := fmt.Sprintf("/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/%s", webhookName)
@@ -1118,7 +1117,7 @@ func testAccCheckParameterExists(ctx context.Context, n string, param *ssm.Param
 
 		paramInput := &ssm.GetParametersInput{
 			Names: []*string{
-				aws.String(rs.Primary.Attributes["name"]),
+				aws.String(rs.Primary.Attributes[names.AttrName]),
 			},
 			WithDecryption: aws.Bool(true),
 		}
@@ -1149,7 +1148,7 @@ func testAccCheckParameterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			paramInput := &ssm.GetParametersInput{
 				Names: []*string{
-					aws.String(rs.Primary.Attributes["name"]),
+					aws.String(rs.Primary.Attributes[names.AttrName]),
 				},
 			}
 

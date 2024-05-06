@@ -45,7 +45,7 @@ func ResourceSigningProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -58,7 +58,7 @@ func ResourceSigningProfile() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
 			},
 			"platform_display_name": {
@@ -154,7 +154,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("terraform_"),
 	).Generate()
@@ -204,7 +204,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("arn", output.Arn)
-	d.Set("name", output.ProfileName)
+	d.Set(names.AttrName, output.ProfileName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.ProfileName)))
 	d.Set("platform_display_name", output.PlatformDisplayName)
 	d.Set("platform_id", output.PlatformId)

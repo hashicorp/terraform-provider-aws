@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssm_document")
@@ -46,7 +47,7 @@ func DataSourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,7 +59,7 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.GetDocumentInput{
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		Name:           aws.String(name),
@@ -92,7 +93,7 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("document_format", output.DocumentFormat)
 	d.Set("document_type", output.DocumentType)
 	d.Set("document_version", output.DocumentVersion)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }

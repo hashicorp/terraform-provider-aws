@@ -116,7 +116,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -151,7 +151,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -242,7 +242,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -283,7 +283,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -311,7 +311,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -429,7 +429,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -464,7 +464,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -556,7 +556,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -597,7 +597,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -625,7 +625,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -866,7 +866,7 @@ func expandCopyStepDetails(tfMap []interface{}) *transfer.CopyStepDetails {
 		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
 	}
 
-	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -893,7 +893,7 @@ func flattenCopyStepDetails(apiObject *transfer.CopyStepDetails) []interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OverwriteExisting; v != nil {
@@ -916,7 +916,7 @@ func expandCustomStepDetails(tfMap []interface{}) *transfer.CustomStepDetails {
 
 	apiObject := &transfer.CustomStepDetails{}
 
-	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -943,7 +943,7 @@ func flattenCustomStepDetails(apiObject *transfer.CustomStepDetails) []interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceFileLocation; v != nil {
@@ -974,7 +974,7 @@ func expandDecryptStepDetails(tfMap []interface{}) *transfer.DecryptStepDetails 
 		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
 	}
 
-	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1005,7 +1005,7 @@ func flattenDecryptStepDetails(apiObject *transfer.DecryptStepDetails) []interfa
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OverwriteExisting; v != nil {
@@ -1032,7 +1032,7 @@ func expandDeleteStepDetails(tfMap []interface{}) *transfer.DeleteStepDetails {
 
 	apiObject := &transfer.DeleteStepDetails{}
 
-	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1051,7 +1051,7 @@ func flattenDeleteStepDetails(apiObject *transfer.DeleteStepDetails) []interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceFileLocation; v != nil {
@@ -1070,7 +1070,7 @@ func expandTagStepDetails(tfMap []interface{}) *transfer.TagStepDetails {
 
 	apiObject := &transfer.TagStepDetails{}
 
-	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1093,7 +1093,7 @@ func flattenTagStepDetails(apiObject *transfer.TagStepDetails) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceFileLocation; v != nil {

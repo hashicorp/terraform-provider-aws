@@ -42,7 +42,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -98,7 +98,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -140,7 +140,7 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("arn", monitoringSchedule.MonitoringScheduleArn)
-	d.Set("name", monitoringSchedule.MonitoringScheduleName)
+	d.Set(names.AttrName, monitoringSchedule.MonitoringScheduleName)
 
 	if err := d.Set("monitoring_schedule_config", flattenMonitoringScheduleConfig(monitoringSchedule.MonitoringScheduleConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker Monitoring Schedule (%s): %s", d.Id(), err)

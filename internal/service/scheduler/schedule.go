@@ -92,7 +92,7 @@ func resourceSchedule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -108,7 +108,7 @@ func resourceSchedule() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
@@ -390,7 +390,7 @@ func resourceSchedule() *schema.Resource {
 										Set:      sagemakerPipelineParameterHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
@@ -434,7 +434,7 @@ const (
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 
 	in := &scheduler.CreateScheduleInput{
 		Name:               aws.String(name),
@@ -545,7 +545,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("group_name", out.GroupName)
 	d.Set("kms_key_arn", out.KmsKeyArn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set("schedule_expression", out.ScheduleExpression)
 	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
@@ -571,7 +571,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
 		GroupName:          aws.String(d.Get("group_name").(string)),
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
 		Target:             expandTarget(ctx, d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
@@ -698,7 +698,7 @@ func ResourceScheduleParseID(id string) (groupName, scheduleName string, err err
 
 func sagemakerPipelineParameterHash(v interface{}) int {
 	m := v.(map[string]interface{})
-	return create.StringHashcode(fmt.Sprintf("%s-%s", m["name"].(string), m["value"].(string)))
+	return create.StringHashcode(fmt.Sprintf("%s-%s", m[names.AttrName].(string), m["value"].(string)))
 }
 
 func capacityProviderHash(v interface{}) int {

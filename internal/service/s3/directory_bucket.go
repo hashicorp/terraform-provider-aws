@@ -100,7 +100,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),

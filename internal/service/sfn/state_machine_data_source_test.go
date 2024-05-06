@@ -29,7 +29,7 @@ func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "definition", dataSourceName, "definition"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceName, "role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "revision_id", dataSourceName, "revision_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),

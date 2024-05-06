@@ -44,7 +44,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_successful_provisioning_record_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
 					// While another output will describe the output parameter configured in the S3 object resource,
 					// which we can check as follows.
@@ -110,7 +110,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_successful_provisioning_record_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
 					// While another output will describe the output parameter configured in the S3 object resource,
 					// which we can check as follows.
@@ -161,7 +161,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, "10.1.0.0/16", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "2"),
@@ -186,7 +186,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, "10.1.0.0/16", 3, 4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "4"),
@@ -198,7 +198,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "0"),
 				),
 			},
@@ -225,7 +225,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 				Config: testAccProvisionedProductConfig_productName(rName, "10.1.0.0/16", productName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 				),
 			},
@@ -234,7 +234,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 				Config: testAccProvisionedProductConfig_productName(rName, "10.1.0.0/16", productNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 				),
 			},
@@ -284,7 +284,7 @@ func TestAccServiceCatalogProvisionedProduct_ProvisioningArtifactName_update(t *
 				Config: testAccProvisionedProductConfig_ProvisionedArtifactName_update(rName, "10.1.0.0/16", artifactName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod2),
-					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", artifactResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", artifactResourceName, names.AttrName),
 					testAccCheckProvisionedProductProvisioningArtifactIDChanged(&pprod1, &pprod2),
 				),
 			},

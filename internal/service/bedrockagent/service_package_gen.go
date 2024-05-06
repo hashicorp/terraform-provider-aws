@@ -43,6 +43,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newDataSourceResource,
+			Name:    "Data Source",
+		},
+		{
 			Factory: newKnowledgeBaseResource,
 			Name:    "Knowledge Base",
 			Tags: &types.ServicePackageResourceTags{

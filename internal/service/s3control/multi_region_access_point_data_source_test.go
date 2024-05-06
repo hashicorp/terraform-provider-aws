@@ -37,7 +37,7 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", dataSourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "details.0.name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "details.0.name", dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.block_public_acls", dataSourceName, "public_access_block.0.block_public_acls"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.block_public_policy", dataSourceName, "public_access_block.0.block_public_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "details.0.public_access_block.0.ignore_public_acls", dataSourceName, "public_access_block.0.ignore_public_acls"),

@@ -33,7 +33,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
@@ -72,7 +72,7 @@ func TestAccSageMakerEndpointConfiguration_nameGenerated(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -100,7 +100,7 @@ func TestAccSageMakerEndpointConfiguration_namePrefix(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
 			},
@@ -128,7 +128,7 @@ func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T
 				Config: testAccEndpointConfigurationConfig_shadowProductionVariants(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),
@@ -472,7 +472,7 @@ func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_async(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
@@ -505,7 +505,7 @@ func TestAccSageMakerEndpointConfiguration_async_includeInference(t *testing.T) 
 				Config: testAccEndpointConfigurationConfig_asyncNotifInferenceIn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.0.notification_config.#", "1"),
@@ -540,7 +540,7 @@ func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_asyncKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
@@ -573,7 +573,7 @@ func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_asyncNotif(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.output_config.#", "1"),
@@ -607,7 +607,7 @@ func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_asyncClient(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", "1"),
@@ -639,7 +639,7 @@ func TestAccSageMakerEndpointConfiguration_Async_client_failurePath(t *testing.T
 				Config: testAccEndpointConfigurationConfig_asyncClientFailure(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.0.max_concurrent_invocations_per_instance", "1"),
@@ -677,7 +677,7 @@ func TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess(t *testing.T
 				Config: testAccEndpointConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.model_name", rName),

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_service_discovery_service")
@@ -91,7 +92,7 @@ func DataSourceService() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -115,7 +116,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	serviceSummary, err := findServiceByNameAndNamespaceID(ctx, conn, name, d.Get("namespace_id").(string))
 
 	if err != nil {
@@ -155,7 +156,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("health_check_custom_config", nil)
 	}
-	d.Set("name", service.Name)
+	d.Set(names.AttrName, service.Name)
 	d.Set("namespace_id", service.NamespaceId)
 
 	tags, err := listTags(ctx, conn, arn)

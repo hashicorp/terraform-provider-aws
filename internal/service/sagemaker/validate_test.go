@@ -6,6 +6,8 @@ package sagemaker
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidName(t *testing.T) {
@@ -19,7 +21,7 @@ func TestValidName(t *testing.T) {
 		strings.Repeat("W", 63),
 	}
 	for _, v := range validNames {
-		_, errors := validName(v, "name")
+		_, errors := validName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid SageMaker name with maximum length 63 chars: %q", v, errors)
 		}
@@ -32,7 +34,7 @@ func TestValidName(t *testing.T) {
 		strings.Repeat("W", 64), // length > 63
 	}
 	for _, v := range invalidNames {
-		_, errors := validName(v, "name")
+		_, errors := validName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid SageMaker name", v)
 		}

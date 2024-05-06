@@ -50,7 +50,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 			},
 			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				// Name cannot be updated despite being present in the update API struct.
 				//

@@ -46,7 +46,7 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 				Config: testAccListenerConfig_fixedResponseHTTPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
@@ -58,7 +58,7 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 				Config: testAccListenerConfig_forwardTargetGroupHTTPSServiceID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
@@ -98,7 +98,7 @@ func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 				Config: testAccListenerConfig_fixedResponseHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
@@ -137,7 +137,7 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 				Config: testAccListenerConfig_fixedResponseHTTPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
@@ -177,7 +177,7 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
@@ -218,7 +218,7 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceIDCustomPort(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),
@@ -259,7 +259,7 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceName, "arn"),
@@ -301,7 +301,7 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 				Config: testAccListenerConfig_forwardTargetGroupHTTPSServiceIDCustomPort(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceName, "arn"),
@@ -345,7 +345,7 @@ func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 				Config: testAccListenerConfig_forwardMultiTargetGroupHTTP(rName, targetGroupName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, "id"),

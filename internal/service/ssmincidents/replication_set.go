@@ -55,7 +55,7 @@ func ResourceReplicationSet() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -225,7 +225,7 @@ func regionListToRegionMap(list []interface{}) map[string]string {
 	regionMap := make(map[string]string)
 	for _, region := range list {
 		regionData := region.(map[string]interface{})
-		regionName := regionData["name"].(string)
+		regionName := regionData[names.AttrName].(string)
 		regionMap[regionName] = regionData["kms_key_arn"].(string)
 	}
 

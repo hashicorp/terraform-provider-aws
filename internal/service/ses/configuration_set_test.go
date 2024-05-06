@@ -39,7 +39,7 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),

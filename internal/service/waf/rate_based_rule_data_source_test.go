@@ -34,7 +34,7 @@ func testAccWAFRateBasedRuleDataSource_basic(t *testing.T) {
 				Config: testAccRateBasedRuleDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},

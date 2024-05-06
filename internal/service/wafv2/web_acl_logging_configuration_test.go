@@ -327,7 +327,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(webACLResourceName, "name", rName),
+					resource.TestCheckResourceAttr(webACLResourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
@@ -337,7 +337,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(webACLResourceName, "name", rNameNew),
+					resource.TestCheckResourceAttr(webACLResourceName, names.AttrName, rNameNew),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
@@ -371,7 +371,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rName)),
+					resource.TestCheckResourceAttr(kinesisResourceName, names.AttrName, fmt.Sprintf("aws-waf-logs-%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
@@ -381,7 +381,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 				Config: testAccWebACLLoggingConfigurationConfig_updateLogDestination(rName, rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
+					resource.TestCheckResourceAttr(kinesisResourceName, names.AttrName, fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),

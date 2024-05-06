@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_receipt_rule")
@@ -138,7 +139,7 @@ func ResourceReceiptRule() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -276,7 +277,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
@@ -496,7 +497,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("after") {
 		input := &ses.SetReceiptRulePositionInput{
 			After:       aws.String(d.Get("after").(string)),
-			RuleName:    aws.String(d.Get("name").(string)),
+			RuleName:    aws.String(d.Get(names.AttrName).(string)),
 			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 		}
 
@@ -537,7 +538,7 @@ func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta i
 	ruleName := idParts[1]
 
 	d.Set("rule_set_name", ruleSetName)
-	d.Set("name", ruleName)
+	d.Set(names.AttrName, ruleName)
 	d.SetId(ruleName)
 
 	return []*schema.ResourceData{d}, nil
@@ -571,7 +572,7 @@ func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.SES, ruleName, r
 
 func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 	receiptRule := &ses.ReceiptRule{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("enabled"); ok {

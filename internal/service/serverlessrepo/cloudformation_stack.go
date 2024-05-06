@@ -69,7 +69,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(serverlessrepo.Capability_Values(), false),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -151,7 +151,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 
 	// Serverless Application Repo prefixes the stack name with "serverlessrepo-", so remove it from the saved string
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), CloudFormationStackNamePrefix)
-	d.Set("name", &stackName)
+	d.Set(names.AttrName, &stackName)
 
 	tags := tfcloudformation.KeyValueTags(ctx, stack.Tags)
 	var applicationID, semanticVersion string
@@ -299,7 +299,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 	serverlessConn := client.ServerlessRepoConn(ctx)
 	cfConn := client.CloudFormationConn(ctx)
 
-	stackName := d.Get("name").(string)
+	stackName := d.Get(names.AttrName).(string)
 	changeSetRequest := serverlessrepo.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),

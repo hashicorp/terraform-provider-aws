@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.CapacityProviderStrategyItem {
@@ -514,7 +515,7 @@ func expandSageMakerPipelineParameter(tfMap map[string]interface{}) types.SageMa
 
 	a := types.SageMakerPipelineParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		a.Name = aws.String(v)
 	}
 
@@ -529,7 +530,7 @@ func flattenSageMakerPipelineParameter(apiObject types.SageMakerPipelineParamete
 	m := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {

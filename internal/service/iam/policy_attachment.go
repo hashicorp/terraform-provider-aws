@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_policy_attachment", name="Policy Attachment")
@@ -40,7 +41,7 @@ func resourcePolicyAttachment() *schema.Resource {
 				Elem:         &schema.Schema{Type: schema.TypeString},
 				AtLeastOneOf: []string{"groups", "roles", "users"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -92,7 +93,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(d.Get(names.AttrName).(string))
 
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }

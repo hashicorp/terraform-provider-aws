@@ -42,7 +42,7 @@ func TestAccRDSProxy_basic(t *testing.T) {
 				Config: testAccProxyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db-proxy:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
@@ -93,7 +93,7 @@ func TestAccRDSProxy_name(t *testing.T) {
 				Config: testAccProxyConfig_name(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccRDSProxy_name(t *testing.T) {
 				Config: testAccProxyConfig_name(rName, nName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "name", nName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, nName),
 				),
 			},
 		},
