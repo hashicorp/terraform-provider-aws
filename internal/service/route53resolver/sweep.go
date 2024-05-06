@@ -548,7 +548,7 @@ func sweepRuleAssociations(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("resolver_rule_id", v.ResolverRuleId)
-			d.Set("vpc_id", v.VPCId)
+			d.Set(names.AttrVPCID, v.VPCId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

@@ -37,7 +37,7 @@ func ResourceRuleAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -49,7 +49,7 @@ func ResourceRuleAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,10 +64,10 @@ func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := &route53resolver.AssociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
-		VPCId:          aws.String(d.Get("vpc_id").(string)),
+		VPCId:          aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -101,9 +101,9 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("reading Route53 Resolver Rule Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", ruleAssociation.Name)
+	d.Set(names.AttrName, ruleAssociation.Name)
 	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)
-	d.Set("vpc_id", ruleAssociation.VPCId)
+	d.Set(names.AttrVPCID, ruleAssociation.VPCId)
 
 	return nil
 }
@@ -114,7 +114,7 @@ func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule Association: %s", d.Id())
 	_, err := conn.DisassociateResolverRuleWithContext(ctx, &route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
-		VPCId:          aws.String(d.Get("vpc_id").(string)),
+		VPCId:          aws.String(d.Get(names.AttrVPCID).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {

@@ -27,7 +27,7 @@ func DataSourceRules() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.Any(
@@ -70,7 +70,7 @@ func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta inter
 			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.StringValue(rule.Name)) {
 				continue
 			}
-			if v, ok := d.GetOk("owner_id"); ok && aws.StringValue(rule.OwnerId) != v.(string) {
+			if v, ok := d.GetOk(names.AttrOwnerID); ok && aws.StringValue(rule.OwnerId) != v.(string) {
 				continue
 			}
 			if v, ok := d.GetOk("resolver_endpoint_id"); ok && aws.StringValue(rule.ResolverEndpointId) != v.(string) {
