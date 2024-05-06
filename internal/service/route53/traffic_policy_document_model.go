@@ -4,7 +4,7 @@
 package route53
 
 const (
-	trafficPolicyDocEndpointValue      = "value"
+	trafficPolicyDocEndpointValue      = names.AttrValue
 	trafficPolicyDocEndpointCloudFront = "cloudfront"
 	trafficPolicyDocEndpointElastic    = "elastic-load-balancer"
 	trafficPolicyDocEndpointS3         = "s3-website"
@@ -13,7 +13,7 @@ const (
 // TrafficPolicyDocEndpointType_values returns all elements of the endpoints types
 func TrafficPolicyDocEndpointType_values() []string {
 	return []string{
-		trafficPolicyDocEndpointValue,
+		names.AttrValue,
 		trafficPolicyDocEndpointCloudFront,
 		trafficPolicyDocEndpointElastic,
 		trafficPolicyDocEndpointS3,

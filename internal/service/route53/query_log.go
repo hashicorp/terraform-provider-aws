@@ -31,7 +31,7 @@ func ResourceQueryLog() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Service:   "route53",
 		Resource:  fmt.Sprintf("queryloggingconfig/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogsLogGroupArn)
 	d.Set("zone_id", output.HostedZoneId)
 

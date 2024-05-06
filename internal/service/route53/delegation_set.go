@@ -31,7 +31,7 @@ func ResourceDelegationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta
 		Service:   "route53",
 		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

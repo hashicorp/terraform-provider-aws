@@ -37,7 +37,7 @@ func ResourceTrafficPolicyInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 32),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -69,7 +69,7 @@ func ResourceTrafficPolicyInstance() *schema.Resource {
 func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &route53.CreateTrafficPolicyInstanceInput{
 		HostedZoneId:         aws.String(d.Get("hosted_zone_id").(string)),
 		Name:                 aws.String(name),
@@ -112,7 +112,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("hosted_zone_id", trafficPolicyInstance.HostedZoneId)
-	d.Set("name", strings.TrimSuffix(aws.StringValue(trafficPolicyInstance.Name), "."))
+	d.Set(names.AttrName, strings.TrimSuffix(aws.StringValue(trafficPolicyInstance.Name), "."))
 	d.Set("traffic_policy_id", trafficPolicyInstance.TrafficPolicyId)
 	d.Set("traffic_policy_version", trafficPolicyInstance.TrafficPolicyVersion)
 	d.Set("ttl", trafficPolicyInstance.TTL)

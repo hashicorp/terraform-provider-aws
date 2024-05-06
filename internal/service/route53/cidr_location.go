@@ -58,8 +58,8 @@ func (r *resourceCIDRLocation) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -278,7 +278,7 @@ func (r *resourceCIDRLocation) Delete(ctx context.Context, request resource.Dele
 	}
 
 	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 
 	input := &route53.ChangeCidrCollectionInput{
@@ -301,7 +301,7 @@ func (r *resourceCIDRLocation) Delete(ctx context.Context, request resource.Dele
 }
 
 func (r *resourceCIDRLocation) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceCIDRLocationData struct {

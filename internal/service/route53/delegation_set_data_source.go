@@ -23,11 +23,11 @@ func DataSourceDelegationSet() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDelegationSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -48,7 +48,7 @@ func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	dSetID := d.Get("id").(string)
+	dSetID := d.Get(names.AttrID).(string)
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(dSetID),
@@ -73,7 +73,7 @@ func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, me
 		Service:   "route53",
 		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
