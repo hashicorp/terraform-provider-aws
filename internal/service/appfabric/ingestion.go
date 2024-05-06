@@ -137,10 +137,10 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 	plan.AppBundleArn = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
 	plan.AppBundleIdentifier = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
 	plan.ARN = flex.StringToFramework(ctx, out.Ingestion.Arn)
+	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
 	plan.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.IngestionType)))
 	plan.State = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
 	plan.TenantId = flex.StringToFramework(ctx, out.Ingestion.TenantId)
-	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -186,7 +186,6 @@ func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateReque
 	plan.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.IngestionType)))
 	plan.State = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
 	plan.TenantId = flex.StringToFramework(ctx, out.Ingestion.TenantId)
-	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
