@@ -39,7 +39,7 @@ func resourceBucketInventory() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceBucketInventory() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -117,7 +117,7 @@ func resourceBucketInventory() *schema.Resource {
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Default:  true,
 				Optional: true,
@@ -180,11 +180,11 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	inventoryConfiguration := &types.InventoryConfiguration{
 		Id:        aws.String(name),
-		IsEnabled: aws.Bool(d.Get("enabled").(bool)),
+		IsEnabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
 	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})["bucket"].([]interface{})[0].(map[string]interface{})
+		tfMap := v.([]interface{})[0].(map[string]interface{})[names.AttrBucket].([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Destination = &types.InventoryDestination{
 			S3BucketDestination: expandInventoryBucketDestination(tfMap),
 		}
@@ -209,7 +209,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutBucketInventoryConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
@@ -264,16 +264,16 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("reading S3 Bucket Inventory (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if v := ic.Destination; v != nil {
 		tfMap := map[string]interface{}{
-			"bucket": flattenInventoryBucketDestination(v.S3BucketDestination),
+			names.AttrBucket: flattenInventoryBucketDestination(v.S3BucketDestination),
 		}
 		if err := d.Set("destination", []map[string]interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 		}
 	}
-	d.Set("enabled", ic.IsEnabled)
+	d.Set(names.AttrEnabled, ic.IsEnabled)
 	if err := d.Set("filter", flattenInventoryFilter(ic.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
