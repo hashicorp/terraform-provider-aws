@@ -5,5 +5,9 @@ package cloudformation
 
 // Exports for use in other modules.
 var (
-	FindTypeByName = findTypeByName
+	FindStackByName  = findStackByName
+	FindTypeByName   = findTypeByName
+	WaitStackCreated = waitStackCreated
+	WaitStackDeleted = waitStackDeleted
+	WaitStackUpdated = waitStackUpdated
 )

@@ -44,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceStack,
+			Factory:  resourceStack,
 			TypeName: "aws_cloudformation_stack",
 			Name:     "Stack",
 			Tags:     &types.ServicePackageResourceTags{},

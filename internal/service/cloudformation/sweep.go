@@ -236,7 +236,7 @@ func sweepStacks(region string) error {
 				continue
 			}
 
-			r := ResourceStack()
+			r := resourceStack()
 			d := r.Data(nil)
 			d.SetId(name)
 
