@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_insight", name="Insight")
@@ -139,7 +140,7 @@ func resourceInsight() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -150,7 +151,7 @@ func resourceInsight() *schema.Resource {
 func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &securityhub.CreateInsightInput{
 		GroupByAttribute: aws.String(d.Get("group_by_attribute").(string)),
 		Name:             aws.String(name),
@@ -191,7 +192,7 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("setting filters: %s", err)
 	}
 	d.Set("group_by_attribute", insight.GroupByAttribute)
-	d.Set("name", insight.Name)
+	d.Set(names.AttrName, insight.Name)
 
 	return nil
 }
@@ -211,7 +212,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.GroupByAttribute = aws.String(d.Get("group_by_attribute").(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 

@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_metric", name="Bucket Metric")
@@ -68,7 +69,7 @@ func resourceBucketMetric() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -82,7 +83,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	metricsConfiguration := &types.MetricsConfiguration{
 		Id: aws.String(name),
 	}
@@ -154,7 +155,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting filter")
 		}
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	return diags
 }

@@ -36,7 +36,7 @@ func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
@@ -94,7 +94,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(originalACName, originalBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
-					resource.TestCheckResourceAttr(resourceName, "name", originalACName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, originalACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
@@ -104,7 +104,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(updatedACName, originalBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),
@@ -114,7 +114,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				Config: testAccBucketAnalyticsConfigurationConfig_update(updatedACName, originalBucketName, updatedBucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "0"),

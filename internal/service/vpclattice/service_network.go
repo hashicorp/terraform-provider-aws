@@ -50,7 +50,7 @@ func resourceServiceNetwork() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.AuthType](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -73,7 +73,7 @@ func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 
 	in := &vpclattice.CreateServiceNetworkInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -84,7 +84,7 @@ func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.CreateServiceNetwork(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetwork, d.Get("name").(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetwork, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -109,7 +109,7 @@ func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", out.Arn)
 	d.Set("auth_type", out.AuthType)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 
 	return nil
 }

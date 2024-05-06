@@ -46,7 +46,7 @@ func ResourceRegistry() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +67,7 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &schemas.CreateRegistryInput{
 		RegistryName: aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -107,7 +107,7 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("arn", output.RegistryArn)
 	d.Set("description", output.Description)
-	d.Set("name", output.RegistryName)
+	d.Set(names.AttrName, output.RegistryName)
 
 	return diags
 }

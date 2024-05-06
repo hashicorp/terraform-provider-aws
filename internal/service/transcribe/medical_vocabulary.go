@@ -95,7 +95,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if out == nil {
-		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get("name").(string))
+		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))

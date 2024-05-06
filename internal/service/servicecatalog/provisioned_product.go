@@ -90,7 +90,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -285,7 +285,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(id.UniqueId()),
-		ProvisionedProductName: aws.String(d.Get("name").(string)),
+		ProvisionedProductName: aws.String(d.Get(names.AttrName).(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -429,7 +429,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("last_record_id", detail.LastRecordId)
 	d.Set("last_successful_provisioning_record_id", detail.LastSuccessfulProvisioningRecordId)
 	d.Set("launch_role_arn", detail.LaunchRoleArn)
-	d.Set("name", detail.Name)
+	d.Set(names.AttrName, detail.Name)
 	d.Set("product_id", detail.ProductId)
 	d.Set("provisioning_artifact_id", detail.ProvisioningArtifactId)
 	d.Set("status", detail.Status)

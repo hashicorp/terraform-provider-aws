@@ -62,7 +62,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 				Required:    true,
 			},
 			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"start_time": schema.StringAttribute{

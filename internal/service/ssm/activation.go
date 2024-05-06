@@ -60,7 +60,7 @@ func ResourceActivation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -86,7 +86,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateActivationInput{
 		DefaultInstanceName: aws.String(name),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
@@ -142,7 +142,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
-	d.Set("name", activation.DefaultInstanceName)
+	d.Set(names.AttrName, activation.DefaultInstanceName)
 	d.Set("registration_count", activation.RegistrationsCount)
 	d.Set("registration_limit", activation.RegistrationLimit)
 

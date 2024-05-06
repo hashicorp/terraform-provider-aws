@@ -109,7 +109,7 @@ func ResourceCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -276,7 +276,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &synthetics.CreateCanaryInput{
 		ArtifactS3Location: aws.String(d.Get("artifact_s3_location").(string)),
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
@@ -388,7 +388,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("execution_role_arn", canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
-	d.Set("name", canary.Name)
+	d.Set(names.AttrName, canary.Name)
 	d.Set("runtime_version", canary.RuntimeVersion)
 	d.Set("source_location_arn", canary.Code.SourceLocationArn)
 	d.Set("status", canary.Status.State)

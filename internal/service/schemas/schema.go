@@ -59,7 +59,7 @@ func ResourceSchema() *schema.Resource {
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -102,7 +102,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	registryName := d.Get("registry_name").(string)
 	input := &schemas.CreateSchemaInput{
 		Content:      aws.String(d.Get("content").(string)),
@@ -160,7 +160,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("last_modified", nil)
 	}
-	d.Set("name", output.SchemaName)
+	d.Set(names.AttrName, output.SchemaName)
 	d.Set("registry_name", registryName)
 	d.Set("type", output.Type)
 	d.Set("version", output.SchemaVersion)

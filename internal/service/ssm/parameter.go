@@ -81,7 +81,7 @@ func ResourceParameter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -149,7 +149,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	value := d.Get("value").(string)
 	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
@@ -256,7 +256,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	param := resp.Parameter
 	d.Set("arn", param.ARN)
 	name := aws.StringValue(param.Name)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("type", param.Type)
 	d.Set("version", param.Version)
 
@@ -311,7 +311,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			value = v
 		}
 		paramInput := &ssm.PutParameterInput{
-			Name:           aws.String(d.Get("name").(string)),
+			Name:           aws.String(d.Get(names.AttrName).(string)),
 			Type:           aws.String(d.Get("type").(string)),
 			Tier:           aws.String(d.Get("tier").(string)),
 			Value:          aws.String(value),
@@ -340,7 +340,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err := conn.PutParameterWithContext(ctx, paramInput)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-			log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get("name").(string), d.Get("tier").(string))
+			log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get(names.AttrName).(string), d.Get("tier").(string))
 			paramInput.Tier = nil
 			_, err = conn.PutParameterWithContext(ctx, paramInput)
 		}
@@ -358,7 +358,7 @@ func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) {

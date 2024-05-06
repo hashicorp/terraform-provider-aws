@@ -42,7 +42,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 			"id": schema.StringAttribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"application_tag": schema.MapAttribute{

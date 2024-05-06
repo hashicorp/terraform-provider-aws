@@ -76,7 +76,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 				Config: testAccListenerRuleConfig_fixedResponse(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "priority", "10"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", "404"),
 				),
@@ -106,7 +106,7 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 				Config: testAccListenerRuleConfig_methodMatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "priority", "40"),
 				),
 			},

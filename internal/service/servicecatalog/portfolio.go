@@ -60,7 +60,7 @@ func ResourcePortfolio() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -81,7 +81,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(name),
@@ -128,7 +128,7 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", portfolioDetail.ARN)
 	d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339))
 	d.Set("description", portfolioDetail.Description)
-	d.Set("name", portfolioDetail.DisplayName)
+	d.Set(names.AttrName, portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
 	setTagsOut(ctx, output.Tags)
@@ -153,8 +153,8 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	if d.HasChange("name") {
-		input.DisplayName = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		input.DisplayName = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("provider_name") {

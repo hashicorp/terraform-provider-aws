@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_event_destination")
@@ -111,7 +112,7 @@ func ResourceEventDestination() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(ses.EventType_Values(), false),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -145,7 +146,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
-	eventDestinationName := d.Get("name").(string)
+	eventDestinationName := d.Get(names.AttrName).(string)
 	enabled := d.Get("enabled").(bool)
 	matchingEventTypes := d.Get("matching_types").(*schema.Set)
 
@@ -232,7 +233,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("configuration_set_name", output.ConfigurationSet.Name)
 	d.Set("enabled", thisEventDestination.Enabled)
-	d.Set("name", thisEventDestination.Name)
+	d.Set(names.AttrName, thisEventDestination.Name)
 	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_destination: %s", err)
 	}

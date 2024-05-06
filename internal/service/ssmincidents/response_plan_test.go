@@ -45,7 +45,7 @@ func testResponsePlan_basic(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(rName, rTitle, rImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", rImpact),
 
@@ -98,7 +98,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(iniName, iniTitle, iniImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", iniName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", iniTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", iniImpact),
 
@@ -115,7 +115,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(iniName, updTitle, updImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", iniName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
@@ -132,7 +132,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(updName, updTitle, updImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", updName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
@@ -669,7 +669,7 @@ func testResponsePlan_action(t *testing.T) {
 						resourceName,
 						"action.0.ssm_automation.0.document_name",
 						"aws_ssm_document.document1",
-						"name",
+						names.AttrName,
 					),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
@@ -730,7 +730,7 @@ func testResponsePlan_action(t *testing.T) {
 						resourceName,
 						"action.0.ssm_automation.0.document_name",
 						"aws_ssm_document.document2",
-						"name",
+						names.AttrName,
 					),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,

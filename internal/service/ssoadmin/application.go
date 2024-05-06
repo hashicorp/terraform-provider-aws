@@ -82,7 +82,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"status": schema.StringAttribute{

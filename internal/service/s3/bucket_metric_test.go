@@ -40,7 +40,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", metricName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, metricName),
 				),
 			},
 			{

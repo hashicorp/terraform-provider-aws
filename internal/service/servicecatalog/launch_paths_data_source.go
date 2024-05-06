@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_launch_paths")
@@ -61,7 +62,7 @@ func DataSourceLaunchPaths() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -109,7 +110,7 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject *servicecatalog.Lau
 	}
 
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 
 	tags := KeyValueTags(ctx, apiObject.Tags)

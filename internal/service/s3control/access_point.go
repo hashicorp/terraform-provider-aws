@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_access_point")
@@ -78,7 +79,7 @@ func resourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -163,7 +164,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &s3control.CreateAccessPointInput{
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(d.Get("bucket").(string)),
@@ -285,7 +286,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set("endpoints", output.Endpoints)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
 		if err := d.Set("public_access_block_configuration", []interface{}{flattenPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)}); err != nil {

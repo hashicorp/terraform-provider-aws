@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_configuration_policy", name="Configuration Policy")
@@ -128,7 +129,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
@@ -251,7 +252,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.StringMatch(
@@ -268,7 +269,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &securityhub.CreateConfigurationPolicyInput{
 		Name: aws.String(name),
 	}
@@ -317,7 +318,7 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting configuration_policy: %s", err)
 	}
 	d.Set("description", output.Description)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
@@ -328,7 +329,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 
 	input := &securityhub.UpdateConfigurationPolicyInput{
 		Identifier: aws.String(d.Id()),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("configuration_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -567,7 +568,7 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 
 			parameterConfiguration.Value = parameterValue
 
-			if v, ok := tfMap["name"].(string); ok && len(v) > 0 {
+			if v, ok := tfMap[names.AttrName].(string); ok && len(v) > 0 {
 				apiObject.Parameters[v] = parameterConfiguration
 			}
 		}
@@ -634,8 +635,8 @@ func flattenSecurityControlCustomParameter(apiObject types.SecurityControlCustom
 
 	for name, apiObject := range apiObject.Parameters {
 		tfMap := map[string]interface{}{
-			"name":       name,
-			"value_type": apiObject.ValueType,
+			names.AttrName: name,
+			"value_type":   apiObject.ValueType,
 		}
 
 		switch apiObject := apiObject.Value.(type) {

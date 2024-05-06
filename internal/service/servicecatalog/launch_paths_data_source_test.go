@@ -33,7 +33,7 @@ func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", resourceNameProduct, "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "summaries.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "summaries.0.name", resourceNamePortfolio, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "summaries.0.name", resourceNamePortfolio, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "summaries.0.path_id"),
 				),
 			},

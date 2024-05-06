@@ -1117,7 +1117,7 @@ func testAccCheckParameterExists(ctx context.Context, n string, param *ssm.Param
 
 		paramInput := &ssm.GetParametersInput{
 			Names: []*string{
-				aws.String(rs.Primary.Attributes["name"]),
+				aws.String(rs.Primary.Attributes[names.AttrName]),
 			},
 			WithDecryption: aws.Bool(true),
 		}
@@ -1148,7 +1148,7 @@ func testAccCheckParameterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			paramInput := &ssm.GetParametersInput{
 				Names: []*string{
-					aws.String(rs.Primary.Attributes["name"]),
+					aws.String(rs.Primary.Attributes[names.AttrName]),
 				},
 			}
 

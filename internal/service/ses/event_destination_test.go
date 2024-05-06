@@ -47,9 +47,9 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
 					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
 					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
-					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
-					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
-					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
+					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(kinesisDestinationResourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(snsDestinationResourceName, names.AttrName, rName3),
 				),
 			},
 			{

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_object_lambda_access_point")
@@ -122,7 +123,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -138,7 +139,7 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	id := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 	input := &s3control.CreateAccessPointForObjectLambdaInput{
 		AccountId: aws.String(accountID),
@@ -193,7 +194,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	outputAlias, err := findObjectLambdaAccessPointAliasByTwoPartKey(ctx, conn, accountID, name)
 

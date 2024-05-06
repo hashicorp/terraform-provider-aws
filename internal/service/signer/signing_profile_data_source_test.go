@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningProfileDataSource_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccSignerSigningProfileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSigningProfileDataSourceConfig_basic(profileName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform_id", resourceName, "platform_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signature_validity_period.value", resourceName, "signature_validity_period.value"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signature_validity_period.type", resourceName, "signature_validity_period.type"),

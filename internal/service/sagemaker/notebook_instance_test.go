@@ -49,7 +49,7 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
@@ -217,7 +217,7 @@ func TestAccSageMakerNotebookInstance_lifecycleName(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_lifecycleName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttrPair(resourceName, "lifecycle_config_name", sagemakerLifecycleConfigResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "lifecycle_config_name", sagemakerLifecycleConfigResourceName, names.AttrName),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func TestAccSageMakerNotebookInstance_lifecycleName(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_lifecycleName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttrPair(resourceName, "lifecycle_config_name", sagemakerLifecycleConfigResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "lifecycle_config_name", sagemakerLifecycleConfigResourceName, names.AttrName),
 				),
 			},
 		},

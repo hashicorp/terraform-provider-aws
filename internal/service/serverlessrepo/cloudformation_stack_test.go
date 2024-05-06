@@ -45,7 +45,7 @@ func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 				Config: testAccCloudFormationStackConfig_basic(stackName, appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, stackName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(resourceName, "semantic_version"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
@@ -310,7 +310,7 @@ func testAccCloudFormationStackNameImportStateIdFunc(resourceName string) resour
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s%s", tfserverlessrepo.CloudFormationStackNamePrefix, rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s%s", tfserverlessrepo.CloudFormationStackNamePrefix, rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 
@@ -321,7 +321,7 @@ func testAccCloudFormationStackNameNoPrefixImportStateIdFunc(resourceName string
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["name"], nil
+		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

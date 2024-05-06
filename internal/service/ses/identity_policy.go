@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_identity_policy")
@@ -38,7 +39,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +68,7 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity := d.Get("identity").(string)
-	policyName := d.Get("name").(string)
+	policyName := d.Get(names.AttrName).(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -156,7 +157,7 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("identity", identity)
-	d.Set("name", policyName)
+	d.Set(names.AttrName, policyName)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
 	if err != nil {

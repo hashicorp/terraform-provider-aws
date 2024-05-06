@@ -45,7 +45,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					chatChannelTopic,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.title", dataSourceName, "incident_template.0.title"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.impact", dataSourceName, "incident_template.0.impact"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.dedupe_string", dataSourceName, "incident_template.0.dedupe_string"),
@@ -67,7 +67,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 						dataSourceName,
 						"action.0.ssm_automation.0.document_name",
 						"aws_ssm_document.document",
-						"name",
+						names.AttrName,
 					),
 					resource.TestCheckTypeSetElemAttrPair(
 						dataSourceName,

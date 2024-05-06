@@ -57,17 +57,17 @@ func dataSourceService() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "service_identifier"},
+				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
 			"service_identifier": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "service_identifier"},
+				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -92,7 +92,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		out = service
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		filter := func(x types.ServiceSummary) bool {
 			return aws.ToString(x.Name) == v.(string)
 		}
@@ -124,7 +124,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("dns_entry", nil)
 	}
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("service_identifier", out.Id)
 	d.Set("status", out.Status)
 

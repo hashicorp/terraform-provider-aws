@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_inventory", name="Bucket Inventory")
@@ -139,7 +140,7 @@ func resourceBucketInventory() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.InventoryIncludedObjectVersions](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -176,7 +177,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	inventoryConfiguration := &types.InventoryConfiguration{
 		Id:        aws.String(name),
 		IsEnabled: aws.Bool(d.Get("enabled").(bool)),
@@ -277,7 +278,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set("included_object_versions", ic.IncludedObjectVersions)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("optional_fields", ic.OptionalFields)
 	if err := d.Set("schedule", flattenInventorySchedule(ic.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)

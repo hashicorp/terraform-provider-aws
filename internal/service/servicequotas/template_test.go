@@ -56,7 +56,7 @@ func testAccTemplate_basic(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
 					resource.TestCheckResourceAttr(resourceName, "value", lambdaStorageValue),
@@ -120,7 +120,7 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
 					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValue),
@@ -135,7 +135,7 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValueUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
 					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValueUpdated),
