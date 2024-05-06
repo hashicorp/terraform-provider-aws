@@ -18,6 +18,7 @@ import (
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Prerequisite: the current account must be either:
@@ -44,7 +45,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 		"DataLake": {
 			"basic":           testAccDataLake_basic,
 			"disappears":      testAccDataLake_disappears,
-			"tags":            testAccDataLake_tags,
+			names.AttrTags:    testAccDataLake_tags,
 			"lifecycle":       testAccDataLake_lifeCycle,
 			"lifecycleUpdate": testAccDataLake_lifeCycleUpdate,
 			"replication":     testAccDataLake_replication,
@@ -55,7 +56,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"customLogs":      testAccSubscriber_customLogSource,
 			"disappears":      testAccSubscriber_disappears,
 			"multipleSources": testAccSubscriber_multipleSources,
-			"tags":            testAccSubscriber_tags,
+			names.AttrTags:    testAccSubscriber_tags,
 			"updated":         testAccSubscriber_update,
 			"migrateSource":   testAccSubscriber_migrate_source,
 		},
