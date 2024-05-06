@@ -13,23 +13,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_cloudformation_export")
-func DataSourceExport() *schema.Resource {
+// @SDKDataSource("aws_cloudformation_export", name="Export")
+func dataSourceExport() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExportRead,
 
 		Schema: map[string]*schema.Schema{
+			"exporting_stack_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"value": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"exporting_stack_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,32 +41,33 @@ func DataSourceExport() *schema.Resource {
 func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
-	var value string
+
+	var value *string
 	name := d.Get("name").(string)
-	region := meta.(*conns.AWSClient).Region
-	d.SetId(fmt.Sprintf("cloudformation-exports-%s-%s", region, name))
 	input := &cloudformation.ListExportsInput{}
 
 	pages := cloudformation.NewListExportsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Failed listing CloudFormation exports: %s", err)
+			return sdkdiag.AppendErrorf(diags, "listing CloudFormation Exports: %s", err)
 		}
 
-		for _, e := range page.Exports {
-			if name == aws.ToString(e.Name) {
-				value = aws.ToString(e.Value)
-				d.Set("value", e.Value)
-				d.Set("exporting_stack_id", e.ExportingStackId)
+		for _, v := range page.Exports {
+			if name == aws.ToString(v.Name) {
+				d.Set("exporting_stack_id", v.ExportingStackId)
+				value = v.Value
+				d.Set("value", value)
 			}
 		}
 	}
 
-	if value == "" {
-		return sdkdiag.AppendErrorf(diags, "%s was not found in CloudFormation Exports for region %s", name, region)
+	if value == nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.NewEmptyResultError(name))
 	}
+
+	d.SetId(fmt.Sprintf("cloudformation-exports-%s-%s", meta.(*conns.AWSClient).Region, name))
+
 	return diags
 }
