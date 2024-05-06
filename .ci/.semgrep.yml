@@ -642,6 +642,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/rds/*.go"
     patterns:
       - pattern: '"name"'
     severity: ERROR

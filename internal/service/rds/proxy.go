@@ -108,7 +108,7 @@ func resourceProxy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validIdentifier,
@@ -146,7 +146,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &rds.CreateDBProxyInput{
 		Auth:         expandUserAuthConfigs(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(name),
@@ -205,7 +205,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("arn", dbProxy.DBProxyArn)
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
-	d.Set("name", dbProxy.DBProxyName)
+	d.Set(names.AttrName, dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
@@ -223,7 +223,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		oName, nName := d.GetChange("name")
+		oName, nName := d.GetChange(names.AttrName)
 		input := &rds.ModifyDBProxyInput{
 			Auth:           expandUserAuthConfigs(d.Get("auth").(*schema.Set).List()),
 			DBProxyName:    aws.String(oName.(string)),

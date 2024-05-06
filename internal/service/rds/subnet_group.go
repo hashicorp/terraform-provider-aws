@@ -49,7 +49,7 @@ func resourceSubnetGroup() *schema.Resource {
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -62,7 +62,7 @@ func resourceSubnetGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
 			"subnet_ids": {
@@ -91,7 +91,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		DBSubnetGroupName:        aws.String(name),
@@ -127,7 +127,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("arn", v.DBSubnetGroupArn)
 	d.Set("description", v.DBSubnetGroupDescription)
-	d.Set("name", v.DBSubnetGroupName)
+	d.Set(names.AttrName, v.DBSubnetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
 	d.Set("subnet_ids", tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
