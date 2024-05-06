@@ -37,7 +37,7 @@ func testContactChannelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "activation_status", contactChannelResourceName, "activation_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delivery_address.#", contactChannelResourceName, "delivery_address.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "delivery_address.0.simple_address", contactChannelResourceName, "delivery_address.0.simple_address"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", contactChannelResourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, contactChannelResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type", contactChannelResourceName, "type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "contact_id", contactChannelResourceName, "contact_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", contactChannelResourceName, "arn"),

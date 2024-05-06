@@ -38,7 +38,7 @@ func testRotationDataSource_basic(t *testing.T) {
 			{
 				Config: testRotationDataSourceConfig_basic(rName, startTime),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.number_of_on_calls", dataSourceName, "recurrence.0.number_of_on_calls"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.recurrence_multiplier", dataSourceName, "recurrence.0.recurrence_multiplier"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.#", dataSourceName, "recurrence.0.weekly_settings.#"),

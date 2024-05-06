@@ -47,7 +47,7 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				Computed:    true,
 			},
 			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"recurrence": schema.ListAttribute{

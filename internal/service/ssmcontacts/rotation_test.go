@@ -49,7 +49,7 @@ func testRotation_basic(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "time_zone_id", timeZoneId),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.number_of_on_calls", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.recurrence_multiplier", "1"),
