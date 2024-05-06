@@ -39,7 +39,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	volume := output.CachediSCSIVolumes[0]
 
 	arn := aws.StringValue(volume.VolumeARN)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("snapshot_id", volume.SourceSnapshotId)
 	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
