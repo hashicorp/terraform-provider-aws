@@ -477,22 +477,6 @@ func testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx context.Contex
 	}
 }
 
-func testAccCheckStackSetInstanceStackExists(ctx context.Context, stackInstance *awstypes.StackInstance, v *awstypes.Stack) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
-
-		output, err := tfcloudformation.FindStackByName(ctx, conn, aws.ToString(stackInstance.StackId))
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
 func testAccCheckStackSetInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
