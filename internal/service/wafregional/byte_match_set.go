@@ -52,7 +52,7 @@ func resourceByteMatchSet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -146,8 +146,8 @@ func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 
 	for i, tuple := range in {
 		fieldToMatchMap := map[string]interface{}{
-			"data": aws.StringValue(tuple.FieldToMatch.Data),
-			"type": aws.StringValue(tuple.FieldToMatch.Type),
+			"data":         aws.StringValue(tuple.FieldToMatch.Data),
+			names.AttrType: aws.StringValue(tuple.FieldToMatch.Type),
 		}
 
 		m := map[string]interface{}{

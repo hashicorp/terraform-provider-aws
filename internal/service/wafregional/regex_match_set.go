@@ -59,7 +59,7 @@ func resourceRegexMatchSet() *schema.Resource {
 											return strings.ToLower(v.(string))
 										},
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},

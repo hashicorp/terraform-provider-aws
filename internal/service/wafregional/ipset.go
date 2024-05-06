@@ -41,7 +41,7 @@ func resourceIPSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,11 +50,11 @@ func resourceIPSet() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -115,7 +115,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }
@@ -125,8 +125,8 @@ func flattenIPSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 
 	for i, descriptor := range in {
 		d := map[string]interface{}{
-			"type":  *descriptor.Type,
-			"value": *descriptor.Value,
+			names.AttrType:  *descriptor.Type,
+			names.AttrValue: *descriptor.Value,
 		}
 		descriptors[i] = d
 	}
@@ -232,8 +232,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 		updates = append(updates, &waf.IPSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  aws.String(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}
@@ -249,8 +249,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 		updates = append(updates, &waf.IPSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  aws.String(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}
