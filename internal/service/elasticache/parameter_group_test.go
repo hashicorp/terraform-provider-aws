@@ -455,7 +455,7 @@ func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfelasticache.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
+			_, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -485,7 +485,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *elastica
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		output, err := tfelasticache.FindParameterGroupByName(ctx, conn, rs.Primary.ID)
+		output, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -588,37 +588,6 @@ resource "aws_elasticache_parameter_group" "test" {
   }
 }
 `, family, rName, tagName1, tagValue1, tagName2, tagValue2)
-}
-
-func TestFlattenParameters(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		Input  []*elasticache.Parameter
-		Output []map[string]interface{}
-	}{
-		{
-			Input: []*elasticache.Parameter{
-				{
-					ParameterName:  aws.String("activerehashing"),
-					ParameterValue: aws.String("yes"),
-				},
-			},
-			Output: []map[string]interface{}{
-				{
-					"name":  "activerehashing",
-					"value": "yes",
-				},
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		output := tfelasticache.FlattenParameters(tc.Input)
-		if !reflect.DeepEqual(output, tc.Output) {
-			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
-		}
-	}
 }
 
 func TestParameterChanges(t *testing.T) {

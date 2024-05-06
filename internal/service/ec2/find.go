@@ -637,13 +637,11 @@ func FindEBSVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, insta
 	return nil, &retry.NotFoundError{}
 }
 
-func FindEIPs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address, error) {
-	var addresses []*ec2.Address
+func findEIPs(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesInput) ([]awstypes.Address, error) {
+	output, err := conn.DescribeAddresses(ctx, input)
 
-	output, err := conn.DescribeAddressesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) ||
-		tfawserr.ErrMessageContains(err, errCodeAuthFailure, "does not belong to you") {
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) ||
+		tfawserr_sdkv2.ErrMessageContains(err, errCodeAuthFailure, "does not belong to you") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -654,38 +652,36 @@ func FindEIPs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesIn
 		return nil, err
 	}
 
-	for _, v := range output.Addresses {
-		if v != nil {
-			addresses = append(addresses, v)
-		}
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return addresses, nil
+	return output.Addresses, nil
 }
 
-func FindEIP(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) (*ec2.Address, error) {
-	output, err := FindEIPs(ctx, conn, input)
+func findEIP(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesInput) (*awstypes.Address, error) {
+	output, err := findEIPs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindEIPByAllocationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Address, error) {
-	input := &ec2.DescribeAddressesInput{
-		AllocationIds: aws.StringSlice([]string{id}),
+func findEIPByAllocationID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Address, error) {
+	input := &ec2_sdkv2.DescribeAddressesInput{
+		AllocationIds: []string{id},
 	}
 
-	output, err := FindEIP(ctx, conn, input)
+	output, err := findEIP(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.AllocationId) != id {
+	if aws_sdkv2.ToString(output.AllocationId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -694,21 +690,70 @@ func FindEIPByAllocationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return output, nil
 }
 
-func FindEIPByAssociationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Address, error) {
-	input := &ec2.DescribeAddressesInput{
-		Filters: newAttributeFilterList(map[string]string{
+func findEIPByAssociationID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Address, error) {
+	input := &ec2_sdkv2.DescribeAddressesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"association-id": id,
 		}),
 	}
 
-	output, err := FindEIP(ctx, conn, input)
+	output, err := findEIP(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.AssociationId) != id {
+	if aws_sdkv2.ToString(output.AssociationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEIPAttributes(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesAttributeInput) ([]awstypes.AddressAttribute, error) {
+	var output []awstypes.AddressAttribute
+
+	pages := ec2_sdkv2.NewDescribeAddressesAttributePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Addresses...)
+	}
+
+	return output, nil
+}
+
+func findEIPAttribute(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesAttributeInput) (*awstypes.AddressAttribute, error) {
+	output, err := findEIPAttributes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEIPDomainNameAttributeByAllocationID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.AddressAttribute, error) {
+	input := &ec2_sdkv2.DescribeAddressesAttributeInput{
+		AllocationIds: []string{id},
+		Attribute:     awstypes.AddressAttributeNameDomainName,
+	}
+
+	output, err := findEIPAttribute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.AllocationId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -1479,17 +1524,6 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 	}
 
 	return output, nil
-}
-
-func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
-	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"attachment.instance-owner-id": attachmentInstanceOwnerID,
-			"description":                  description,
-		}),
-	}
-
-	return FindNetworkInterfaces(ctx, conn, input)
 }
 
 func FindNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {

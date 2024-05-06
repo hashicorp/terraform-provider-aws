@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -411,15 +411,15 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 	var result awstypes.VariableValue
 
 	// Only one of these values can be set at a time
-	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).Value(); !null {
+	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).ValueBool(); !null {
 		result = &awstypes.VariableValueMemberBoolValue{
 			Value: val,
 		}
-	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).Value(); !null {
+	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).ValueInt64(); !null {
 		result = &awstypes.VariableValueMemberLongValue{
 			Value: v,
 		}
-	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).Value(); !null {
+	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).ValueFloat64(); !null {
 		result = &awstypes.VariableValueMemberDoubleValue{
 			Value: v,
 		}

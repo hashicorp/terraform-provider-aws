@@ -214,7 +214,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
-		MaxRecords: aws.Int64(3412),
+		MaxRecords: aws.Int64(1000),
 	}
 
 	if v, ok := d.GetOk("availability_zone_group"); ok {

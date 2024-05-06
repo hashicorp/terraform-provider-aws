@@ -98,7 +98,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 		return
 	}
 
-	data.AutoScalingConfigurationARN = fwtypes.ARNValueMust(aws.ToString(output.AutoScalingConfigurationArn))
+	data.AutoScalingConfigurationARN = fwtypes.ARNValue(aws.ToString(output.AutoScalingConfigurationArn))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

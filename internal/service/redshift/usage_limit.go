@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_redshift_usage_limit", name="Usage Limit")
 // @Tags(identifierAttribute="arn")
-func ResourceUsageLimit() *schema.Resource {
+func resourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsageLimitCreate,
 		ReadWithoutTimeout:   resourceUsageLimitRead,
@@ -119,7 +119,8 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := FindUsageLimitByID(ctx, conn, d.Id())
+	out, err := findUsageLimitByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Usage Limit (%s) not found, removing from state", d.Id())
 		d.SetId("")

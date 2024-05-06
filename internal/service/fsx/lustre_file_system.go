@@ -34,12 +34,13 @@ import (
 
 // @SDKResource("aws_fsx_lustre_file_system", name="Lustre File System")
 // @Tags(identifierAttribute="arn")
-func ResourceLustreFileSystem() *schema.Resource {
+func resourceLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLustreFileSystemCreate,
 		ReadWithoutTimeout:   resourceLustreFileSystemRead,
 		UpdateWithoutTimeout: resourceLustreFileSystemUpdate,
 		DeleteWithoutTimeout: resourceLustreFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -433,7 +434,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindLustreFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := findLustreFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for Lustre File System (%s) not found, removing from state", d.Id())
@@ -661,7 +662,7 @@ func logStateFunc(v interface{}) string {
 	return value
 }
 
-func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeLustre)
 
 	if err != nil {

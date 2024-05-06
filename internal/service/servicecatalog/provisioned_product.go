@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
+// @Testing(tagsTest=config-only, existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true)
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -528,9 +529,9 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningPreferences = expandUpdateProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if d.HasChanges("tags", "tags_all") {
-		input.Tags = getTagsIn(ctx)
-	}
+	// Send tags each time the resource is updated. This is necessary to automatically apply tags
+	// to provisioned AWS objects during update if the tags don't change.
+	input.Tags = getTagsIn(ctx)
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateProvisionedProductWithContext(ctx, input)

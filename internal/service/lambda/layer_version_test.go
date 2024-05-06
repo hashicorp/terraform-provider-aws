@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -51,6 +51,29 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaLayerVersion_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_layer_version.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLayerVersionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLayerVersionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceLayerVersion(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -205,7 +228,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "compatible_architectures.*", lambda.ArchitectureX8664),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compatible_architectures.*", string(awstypes.ArchitectureX8664)),
 				),
 			},
 			{
@@ -328,14 +351,14 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 
 func testAccCheckLayerVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_layer_version" {
 				continue
 			}
 
-			layerName, versionNumber, err := tflambda.LayerVersionParseID(rs.Primary.ID)
+			layerName, versionNumber, err := tflambda.LayerVersionParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
@@ -364,12 +387,12 @@ func testAccCheckLayerVersionExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		layerName, versionNumber, err := tflambda.LayerVersionParseID(rs.Primary.ID)
+		layerName, versionNumber, err := tflambda.LayerVersionParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		_, err = tflambda.FindLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
 

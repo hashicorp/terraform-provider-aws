@@ -171,7 +171,6 @@ func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	var output []awstypes.NetworkAcl
 
 	pages := ec2.NewDescribeNetworkAclsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -192,7 +191,7 @@ func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
-func FindVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
+func findVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"group-name": DefaultSecurityGroupName,
@@ -228,7 +227,6 @@ func findRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	var output []awstypes.RouteTable
 
 	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -263,7 +261,6 @@ func findSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	var output []awstypes.SecurityGroup
 
 	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -307,4 +304,112 @@ func findIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2
 	}
 
 	return output, nil
+}
+
+func findNetworkInterfacesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
+	var output []awstypes.NetworkInterface
+
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInterfaces...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) (*awstypes.NetworkInterface, error) {
+	output, err := findNetworkInterfacesV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInterfaceByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: []string{id},
+	}
+
+	output, err := findNetworkInterfaceV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInterfaceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func findNetworkInterfaceAttachmentByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterfaceAttachment, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface.Attachment, nil
+}
+
+/*
+	func findNetworkInterfaceByAttachmentIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+		input := &ec2.DescribeNetworkInterfacesInput{
+			Filters: newAttributeFilterListV2(map[string]string{
+				"attachment.attachment-id": id,
+			}),
+		}
+
+		networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if networkInterface == nil {
+			return nil, tfresource.NewEmptyResultError(input)
+		}
+
+		return networkInterface, nil
+	}
+*/
+
+func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx context.Context, conn *ec2.Client, attachmentInstanceOwnerID, description string) ([]awstypes.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"attachment.instance-owner-id": attachmentInstanceOwnerID,
+			"description":                  description,
+		}),
+	}
+
+	return findNetworkInterfacesV2(ctx, conn, input)
 }

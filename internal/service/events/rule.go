@@ -80,6 +80,11 @@ func resourceRule() *schema.Resource {
 					return json
 				},
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
@@ -226,6 +231,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 		d.Set("event_pattern", pattern)
 	}
+	d.Set("force_destroy", d.Get("force_destroy").(bool))
 	switch output.State {
 	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
 		d.Set("is_enabled", true)
@@ -245,7 +251,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("tags", "tags_all", "force_destroy") {
 		_, ruleName, err := ruleParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -275,8 +281,13 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &eventbridge.DeleteRuleInput{
 		Name: aws.String(ruleName),
 	}
+
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
+	}
+
+	if v, ok := d.GetOk("force_destroy"); ok {
+		input.Force = v.(bool)
 	}
 
 	const (

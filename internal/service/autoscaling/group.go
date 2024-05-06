@@ -32,10 +32,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -232,6 +232,22 @@ func resourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"alarm_specification": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"alarms": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
 									"auto_rollback": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -3302,13 +3318,17 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 
 	apiObject := &awstypes.RefreshPreferences{}
 
+	if v, ok := tfMap["alarm_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AlarmSpecification = expandAlarmSpecification(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["auto_rollback"].(bool); ok {
 		apiObject.AutoRollback = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
-		if v, null, _ := nullable.Int(v).Value(); !null {
-			apiObject.CheckpointDelay = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(v).ValueInt32(); !null {
+			apiObject.CheckpointDelay = aws.Int32(v)
 		}
 	}
 
@@ -3317,8 +3337,8 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 	}
 
 	if v, ok := tfMap["instance_warmup"].(string); ok {
-		if v, null, _ := nullable.Int(v).Value(); !null {
-			apiObject.InstanceWarmup = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(v).ValueInt32(); !null {
+			apiObject.InstanceWarmup = aws.Int32(v)
 		}
 	}
 
@@ -3340,6 +3360,20 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 
 	if v, ok := tfMap["standby_instances"].(string); ok {
 		apiObject.StandbyInstances = awstypes.StandbyInstances(v)
+	}
+
+	return apiObject
+}
+
+func expandAlarmSpecification(tfMap map[string]interface{}) *awstypes.AlarmSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AlarmSpecification{}
+
+	if v, ok := tfMap["alarms"].([]interface{}); ok {
+		apiObject.Alarms = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject

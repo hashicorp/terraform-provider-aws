@@ -36,7 +36,7 @@ const (
 
 // @SDKResource("aws_iam_policy", name="Policy")
 // @Tags(identifierAttribute="id", resourceType="Policy")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.Policy")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Policy")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -51,6 +51,10 @@ func resourcePolicy() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"attachment_count": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"description": {
@@ -194,6 +198,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	policy := output.policy
 
 	d.Set("arn", policy.Arn)
+	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(policy.PolicyName)))

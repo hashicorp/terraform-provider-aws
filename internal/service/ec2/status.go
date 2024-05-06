@@ -1107,6 +1107,26 @@ func StatusVPNGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.
 	}
 }
 
+func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, allocationID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.PtrRecordUpdate == nil {
+			return output, "", nil
+		}
+
+		return output, aws_sdkv2.ToString(output.PtrRecordUpdate.Status), nil
+	}
+}
+
 func StatusHostState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindHostByID(ctx, conn, id)
@@ -1468,7 +1488,7 @@ func StatusIPAMScopeState(ctx context.Context, conn *ec2.EC2, id string) retry.S
 	}
 }
 
-func StatusInstanceConnectEndpointState(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
+func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindInstanceConnectEndpointByID(ctx, conn, id)
 
