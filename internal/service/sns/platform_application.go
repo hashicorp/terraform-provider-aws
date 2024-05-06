@@ -34,7 +34,7 @@ var (
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -171,7 +171,7 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("reading SNS Platform Application (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, name)
 	d.Set("platform", platform)
 

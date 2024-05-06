@@ -63,7 +63,7 @@ var (
 				return json
 			},
 		},
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -164,7 +164,7 @@ var (
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"policy": {
+		names.AttrPolicy: {
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
@@ -212,7 +212,7 @@ var (
 		"application_success_feedback_role_arn":    topicAttributeNameApplicationSuccessFeedbackRoleARN,
 		"application_success_feedback_sample_rate": topicAttributeNameApplicationSuccessFeedbackSampleRate,
 		"archive_policy":                           topicAttributeNameArchivePolicy,
-		"arn":                                      topicAttributeNameTopicARN,
+		names.AttrARN:                              topicAttributeNameTopicARN,
 		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
 		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
@@ -229,13 +229,13 @@ var (
 		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
 		"owner":                                    topicAttributeNameOwner,
-		"policy":                                   topicAttributeNamePolicy,
+		names.AttrPolicy:                           topicAttributeNamePolicy,
 		"signature_version":                        topicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":            topicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":         topicAttributeNameSQSSuccessFeedbackSampleRate,
 		"tracing_config":                           topicAttributeNameTracingConfig,
-	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
+	}, topicSchema).WithIAMPolicyAttribute(names.AttrPolicy).WithMissingSetToNil("*")
 )
 
 // @SDKResource("aws_sns_topic", name="Topic")
@@ -366,7 +366,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
 			return diag.FromErr(err)
