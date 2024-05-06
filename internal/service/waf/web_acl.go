@@ -40,7 +40,7 @@ func ResourceWebACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -168,7 +168,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			ChangeToken:   token,
 			DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
-			Name:          aws.String(d.Get("name").(string)),
+			Name:          aws.String(d.Get(names.AttrName).(string)),
 			Tags:          getTagsIn(ctx),
 		}
 
@@ -176,7 +176,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Web ACL (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Web ACL (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	resp := out.(*waf.CreateWebACLOutput)
@@ -256,7 +256,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("default_action", FlattenAction(resp.WebACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
-	d.Set("name", resp.WebACL.Name)
+	d.Set(names.AttrName, resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
 	if err := d.Set("rules", FlattenWebACLRules(resp.WebACL.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rules: %s", err)
