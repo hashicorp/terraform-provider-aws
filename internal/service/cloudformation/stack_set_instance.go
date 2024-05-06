@@ -214,8 +214,6 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	// is composed with stack_set_name and region to form the resources ID.
 	accountOrOrgID := accountID
 
-	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
-
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
 		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
@@ -238,6 +236,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
