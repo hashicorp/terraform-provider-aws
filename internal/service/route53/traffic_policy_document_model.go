@@ -3,6 +3,8 @@
 
 package route53
 
+import "github.com/hashicorp/terraform-provider-aws/names"
+
 const (
 	trafficPolicyDocEndpointValue      = names.AttrValue
 	trafficPolicyDocEndpointCloudFront = "cloudfront"

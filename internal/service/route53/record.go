@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -424,7 +425,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 		name := NormalizeAliasName(aws.StringValue(alias.DNSName))
 		v := []map[string]interface{}{{
 			"zone_id":                aws.StringValue(alias.HostedZoneId),
-			names.AttrName:                   name,
+			names.AttrName:           name,
 			"evaluate_target_health": aws.BoolValue(alias.EvaluateTargetHealth),
 		}}
 		if err := d.Set("alias", v); err != nil {

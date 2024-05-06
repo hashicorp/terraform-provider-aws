@@ -634,8 +634,8 @@ func flattenVPCs(vpcs []*route53.VPC) []interface{} {
 		}
 
 		m := map[string]interface{}{
-			names.AttrVPCID:     aws.StringValue(vpc.VPCId),
-			"vpc_region": aws.StringValue(vpc.VPCRegion),
+			names.AttrVPCID: aws.StringValue(vpc.VPCId),
+			"vpc_region":    aws.StringValue(vpc.VPCRegion),
 		}
 
 		l = append(l, m)
