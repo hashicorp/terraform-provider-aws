@@ -43,7 +43,7 @@ func ResourceOptionGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,18 +96,18 @@ func ResourceOptionGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -173,7 +173,7 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Option Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", option.OptionGroupArn)
+	d.Set(names.AttrARN, option.OptionGroupArn)
 	d.Set("engine_name", option.EngineName)
 	d.Set("major_engine_version", option.MajorEngineVersion)
 	d.Set(names.AttrName, option.OptionGroupName)

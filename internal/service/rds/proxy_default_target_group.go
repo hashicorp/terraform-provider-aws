@@ -43,7 +43,7 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,7 +154,7 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Default Target Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", tg.TargetGroupArn)
+	d.Set(names.AttrARN, tg.TargetGroupArn)
 	if tg.ConnectionPoolConfig != nil {
 		if err := d.Set("connection_pool_config", []interface{}{flattenConnectionPoolConfigurationInfo(tg.ConnectionPoolConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_pool_config: %s", err)

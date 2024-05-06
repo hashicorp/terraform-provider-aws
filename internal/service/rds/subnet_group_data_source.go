@@ -23,11 +23,11 @@ func dataSourceSubnetGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,11 +35,11 @@ func dataSourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -49,7 +49,7 @@ func dataSourceSubnetGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,15 +68,15 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(aws.ToString(v.DBSubnetGroupName))
-	d.Set("arn", v.DBSubnetGroupArn)
-	d.Set("description", v.DBSubnetGroupDescription)
+	d.Set(names.AttrARN, v.DBSubnetGroupArn)
+	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
 	d.Set(names.AttrName, v.DBSubnetGroupName)
-	d.Set("status", v.SubnetGroupStatus)
-	d.Set("subnet_ids", tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
+	d.Set(names.AttrStatus, v.SubnetGroupStatus)
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
 	}))
 	d.Set("supported_network_types", v.SupportedNetworkTypes)
-	d.Set("vpc_id", v.VpcId)
+	d.Set(names.AttrVPCID, v.VpcId)
 
 	return diags
 }
