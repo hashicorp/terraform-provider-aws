@@ -110,7 +110,7 @@ func TestAccSSOAdminApplication_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "text1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text1"),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccSSOAdminApplication_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "text2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text2"),
 				),
 			},
 		},
@@ -204,7 +204,7 @@ func TestAccSSOAdminApplication_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ApplicationStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ApplicationStatusEnabled)),
 				),
 			},
 			{
@@ -217,7 +217,7 @@ func TestAccSSOAdminApplication_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ApplicationStatusDisabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ApplicationStatusDisabled)),
 				),
 			},
 			{
@@ -225,7 +225,7 @@ func TestAccSSOAdminApplication_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ApplicationStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ApplicationStatusEnabled)),
 				),
 			},
 		},
