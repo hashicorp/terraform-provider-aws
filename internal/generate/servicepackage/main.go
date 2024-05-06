@@ -202,6 +202,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				switch attr {
+				case "arn":
+					d.TagsIdentifierAttribute = "names.AttrARN"
+				case "bucket":
+					d.TagsIdentifierAttribute = "names.AttrBucket"
+				case "id":
+					d.TagsIdentifierAttribute = "names.AttrID"
 				case "name":
 					d.TagsIdentifierAttribute = "names.AttrName"
 				default:
