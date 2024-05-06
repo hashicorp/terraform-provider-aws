@@ -643,6 +643,8 @@ rules:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
         - "internal/service/rds/*.go"
+        - "internal/service/w*/*.go"
+        - "internal/service/x*/*.go"
     patterns:
       - pattern: '"name"'
     severity: ERROR
