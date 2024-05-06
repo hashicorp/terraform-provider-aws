@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_service_discovery_dns_namespace")
@@ -33,7 +34,7 @@ func DataSourceDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -55,7 +56,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	nsType := d.Get("type").(string)
 	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
 
@@ -80,7 +81,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		d.Set("hosted_zone", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
 	tags, err := listTags(ctx, conn, arn)
 

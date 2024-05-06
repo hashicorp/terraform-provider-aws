@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_service_discovery_http_namespace")
@@ -32,7 +33,7 @@ func DataSourceHTTPNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validNamespaceName,
@@ -46,7 +47,7 @@ func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, servicediscovery.NamespaceTypeHttp)
 
 	if err != nil {
@@ -70,7 +71,7 @@ func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, me
 	} else {
 		d.Set("http_name", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
 	tags, err := listTags(ctx, conn, arn)
 
