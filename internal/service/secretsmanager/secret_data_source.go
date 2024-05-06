@@ -23,22 +23,22 @@ func dataSourceSecret() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSecretRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"arn", names.AttrName},
+				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
 			},
 			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,13 +50,13 @@ func dataSourceSecret() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"arn", names.AttrName},
+				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -67,7 +67,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var secretID string
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		secretID = v.(string)
 	} else if v, ok := d.GetOk(names.AttrName); ok {
 		secretID = v.(string)
@@ -81,10 +81,10 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	arn := aws.ToString(secret.ARN)
 	d.SetId(arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", aws.String(secret.CreatedDate.Format(time.RFC3339)))
-	d.Set("description", secret.Description)
-	d.Set("kms_key_id", secret.KmsKeyId)
+	d.Set(names.AttrDescription, secret.Description)
+	d.Set(names.AttrKMSKeyID, secret.KmsKeyId)
 	d.Set("last_changed_date", aws.String(secret.LastChangedDate.Format(time.RFC3339)))
 	d.Set(names.AttrName, secret.Name)
 
@@ -93,17 +93,17 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
 	} else if v := policy.ResourcePolicy; v != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(v))
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(v))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	} else {
-		d.Set("policy", "")
+		d.Set(names.AttrPolicy, "")
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, secret.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, secret.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
