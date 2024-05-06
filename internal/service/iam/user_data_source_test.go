@@ -31,7 +31,7 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "unique_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "permissions_boundary", ""),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 				),

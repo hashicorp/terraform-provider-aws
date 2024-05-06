@@ -116,7 +116,7 @@ func TestAccIAMSessionContextDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_id", resourceName, "unique_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -139,7 +139,7 @@ func TestAccIAMSessionContextDataSource_withPath(t *testing.T) {
 				Config: testAccSessionContextDataSourceConfig_basic(rName, "/this/is/a/long/path/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},

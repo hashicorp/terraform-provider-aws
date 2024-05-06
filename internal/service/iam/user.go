@@ -52,7 +52,7 @@ func resourceUser() *schema.Resource {
 				Default:     false,
 				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
@@ -94,7 +94,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	path := d.Get("path").(string)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
@@ -160,7 +160,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	user := outputRaw.(*awstypes.User)
 
 	d.Set("arn", user.Arn)
-	d.Set("name", user.UserName)
+	d.Set(names.AttrName, user.UserName)
 	d.Set("path", user.Path)
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
@@ -178,8 +178,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChanges("name", "path") {
-		o, n := d.GetChange("name")
+	if d.HasChanges(names.AttrName, "path") {
+		o, n := d.GetChange(names.AttrName)
 		input := &iam.UpdateUserInput{
 			UserName:    aws.String(o.(string)),
 			NewUserName: aws.String(n.(string)),

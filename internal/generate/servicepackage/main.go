@@ -201,7 +201,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
-				d.TagsIdentifierAttribute = attr
+				switch attr {
+				case "name":
+					d.TagsIdentifierAttribute = "names.AttrName"
+				default:
+					d.TagsIdentifierAttribute = fmt.Sprintf("\"%s\"", attr)
+				}
 			}
 
 			if attr, ok := args.Keyword["resourceType"]; ok {

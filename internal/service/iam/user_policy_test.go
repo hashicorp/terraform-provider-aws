@@ -47,7 +47,7 @@ func TestAccIAMUserPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(ctx, resourceName, &userPolicy),
 					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "policy", policy1),
 					resource.TestCheckResourceAttr(resourceName, "user", rName),
@@ -114,7 +114,7 @@ func TestAccIAMUserPolicy_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(ctx, resourceName, &userPolicy),
 					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -146,7 +146,7 @@ func TestAccIAMUserPolicy_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(ctx, resourceName, &userPolicy),
 					testAccCheckUserPolicyExpectedPolicies(ctx, userResourceName, 1),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
