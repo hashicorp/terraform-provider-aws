@@ -393,9 +393,9 @@ func flattenRuleTargetIPs(targetAddresses []*route53resolver.TargetAddress) []in
 
 	for _, targetAddress := range targetAddresses {
 		mTargetIp := map[string]interface{}{
-			"ip":       aws.StringValue(targetAddress.Ip),
-			names.AttrPort:     int(aws.Int64Value(targetAddress.Port)),
-			"protocol": aws.StringValue(targetAddress.Protocol),
+			"ip":           aws.StringValue(targetAddress.Ip),
+			names.AttrPort: int(aws.Int64Value(targetAddress.Port)),
+			"protocol":     aws.StringValue(targetAddress.Protocol),
 		}
 
 		vTargetIps = append(vTargetIps, mTargetIp)

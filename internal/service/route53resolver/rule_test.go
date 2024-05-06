@@ -251,7 +251,7 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.6",
+						"ip":           "192.0.2.6",
 						names.AttrPort: "53",
 					}),
 				),
@@ -272,11 +272,11 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.7",
+						"ip":           "192.0.2.7",
 						names.AttrPort: "53",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.17",
+						"ip":           "192.0.2.17",
 						names.AttrPort: "54",
 					}),
 				),
@@ -292,11 +292,11 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.7",
+						"ip":           "192.0.2.7",
 						names.AttrPort: "53",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.17",
+						"ip":           "192.0.2.17",
 						names.AttrPort: "54",
 					}),
 				),
@@ -329,9 +329,9 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":       "192.0.2.6",
-						names.AttrPort:     "53",
-						"protocol": "Do53",
+						"ip":           "192.0.2.6",
+						names.AttrPort: "53",
+						"protocol":     "Do53",
 					}),
 				),
 			},
@@ -350,9 +350,9 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":       "192.0.2.6",
-						names.AttrPort:     "53",
-						"protocol": "DoH",
+						"ip":           "192.0.2.6",
+						names.AttrPort: "53",
+						"protocol":     "DoH",
 					}),
 				),
 			},
@@ -366,9 +366,9 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":       "192.0.2.6",
-						names.AttrPort:     "53",
-						"protocol": "Do53",
+						"ip":           "192.0.2.6",
+						names.AttrPort: "53",
+						"protocol":     "Do53",
 					}),
 				),
 			},
@@ -400,7 +400,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.6",
+						"ip":           "192.0.2.6",
 						names.AttrPort: "53",
 					}),
 				),
@@ -416,7 +416,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
-						"ip":   "192.0.2.6",
+						"ip":           "192.0.2.6",
 						names.AttrPort: "53",
 					}),
 				),
