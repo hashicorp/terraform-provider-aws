@@ -49,7 +49,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeBool,
 									},
@@ -62,7 +62,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeFloat,
 									},
@@ -75,7 +75,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeString,
 									},
@@ -88,7 +88,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeList,
 										Elem: &schema.Schema{
@@ -104,7 +104,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required:     true,
 										Type:         schema.TypeInt,
 										ValidateFunc: validation.IntAtMost(math.MaxInt32),
@@ -118,7 +118,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeList,
 										Elem: &schema.Schema{
@@ -140,7 +140,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeString,
 									},
@@ -153,7 +153,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"value": {
+									names.AttrValue: {
 										Required: true,
 										Type:     schema.TypeList,
 										Elem: &schema.Schema{
@@ -173,7 +173,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -248,7 +248,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 						},
 					},
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
@@ -282,7 +282,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		input.ConfigurationPolicy = policy
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -313,11 +313,11 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Configuration Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	if err := d.Set("configuration_policy", []interface{}{flattenPolicy(output.ConfigurationPolicy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration_policy: %s", err)
 	}
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrName, output.Name)
 
 	return diags
@@ -340,7 +340,7 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 		input.ConfigurationPolicy = policy
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -507,37 +507,37 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 			if v, ok := tfMap["bool"].([]interface{}); ok && len(v) > 0 { // block defined
 				parameterValue = &types.ParameterValueMemberBoolean{}
 				if v[0] != nil { // block defined with non-defaults
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberBoolean{Value: val.(bool)}
 				}
 			} else if v, ok := tfMap["double"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberDouble{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberDouble{Value: val.(float64)}
 				}
 			} else if v, ok := tfMap["enum"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberEnum{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberEnum{Value: val.(string)}
 				}
 			} else if v, ok := tfMap["string"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberString{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberString{Value: val.(string)}
 				}
 			} else if v, ok := tfMap["int"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberInteger{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					parameterValue = &types.ParameterValueMemberInteger{Value: int32(val.(int))}
 				}
 			} else if v, ok := tfMap["int_list"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberIntegerList{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					var vals []int32
 					for _, s := range val.([]interface{}) {
 						vals = append(vals, int32(s.(int)))
@@ -547,7 +547,7 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 			} else if v, ok := tfMap["enum_list"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberEnumList{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					var vals []string
 					for _, s := range val.([]interface{}) {
 						vals = append(vals, s.(string))
@@ -557,7 +557,7 @@ func expandSecurityControlCustomParameter(tfMap map[string]interface{}) types.Se
 			} else if v, ok := tfMap["string_list"].([]interface{}); ok && len(v) > 0 {
 				parameterValue = &types.ParameterValueMemberStringList{}
 				if v[0] != nil {
-					val := v[0].(map[string]interface{})["value"]
+					val := v[0].(map[string]interface{})[names.AttrValue]
 					var vals []string
 					for _, s := range val.([]interface{}) {
 						vals = append(vals, s.(string))
@@ -643,49 +643,49 @@ func flattenSecurityControlCustomParameter(apiObject types.SecurityControlCustom
 		case *types.ParameterValueMemberBoolean:
 			tfMap["bool"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberDouble:
 			tfMap["double"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberEnum:
 			tfMap["enum"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberEnumList:
 			tfMap["enum_list"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberInteger:
 			tfMap["int"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberIntegerList:
 			tfMap["int_list"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberString:
 			tfMap["string"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		case *types.ParameterValueMemberStringList:
 			tfMap["string_list"] = []interface{}{
 				map[string]interface{}{
-					"value": apiObject.Value,
+					names.AttrValue: apiObject.Value,
 				},
 			}
 		}

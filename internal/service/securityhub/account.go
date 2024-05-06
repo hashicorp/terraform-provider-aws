@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_account", name="Account")
@@ -52,7 +53,7 @@ func resourceAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +147,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.HubArn)
+	d.Set(names.AttrARN, output.HubArn)
 	d.Set("auto_enable_controls", output.AutoEnableControls)
 	d.Set("control_finding_generator", output.ControlFindingGenerator)
 	// enable_default_standards is never returned

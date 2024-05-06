@@ -47,7 +47,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a disabled policy"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a disabled policy"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", "0"),
@@ -64,7 +64,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is an enabled policy"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is an enabled policy"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", "1"),

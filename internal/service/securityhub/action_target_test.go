@@ -31,8 +31,8 @@ func testAccActionTarget_basic(t *testing.T) {
 				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test custom action"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "securityhub", "action/custom/testaction"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test custom action"),
 					resource.TestCheckResourceAttr(resourceName, "identifier", "testaction"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Test action"),
 				),
@@ -82,7 +82,7 @@ func testAccActionTarget_Description(t *testing.T) {
 				Config: testAccActionTargetConfig_description("description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -94,7 +94,7 @@ func testAccActionTarget_Description(t *testing.T) {
 				Config: testAccActionTargetConfig_description("description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
