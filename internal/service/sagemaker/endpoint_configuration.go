@@ -230,7 +230,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -243,7 +243,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
 			"production_variants": {
@@ -533,7 +533,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
@@ -584,7 +584,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("arn", endpointConfig.EndpointConfigArn)
-	d.Set("name", endpointConfig.EndpointConfigName)
+	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
 	d.Set("kms_key_arn", endpointConfig.KmsKeyId)
 

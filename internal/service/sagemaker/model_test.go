@@ -35,7 +35,7 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),

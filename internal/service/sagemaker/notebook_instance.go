@@ -106,7 +106,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -166,7 +166,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
 		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{})),
 		InstanceType:                         aws.String(d.Get("instance_type").(string)),
@@ -256,7 +256,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("instance_type", notebookInstance.InstanceType)
 	d.Set("kms_key_id", notebookInstance.KmsKeyId)
 	d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName)
-	d.Set("name", notebookInstance.NotebookInstanceName)
+	d.Set(names.AttrName, notebookInstance.NotebookInstanceName)
 	d.Set("network_interface_id", notebookInstance.NetworkInterfaceId)
 	d.Set("platform_identifier", notebookInstance.PlatformIdentifier)
 	d.Set("role_arn", notebookInstance.RoleArn)
@@ -279,7 +279,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateNotebookInstanceInput{
-			NotebookInstanceName: aws.String(d.Get("name").(string)),
+			NotebookInstanceName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if d.HasChange("accelerator_types") {

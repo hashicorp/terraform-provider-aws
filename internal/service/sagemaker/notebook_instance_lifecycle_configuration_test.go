@@ -37,7 +37,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
 
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_create"),
 					resource.TestCheckNoResourceAttr(resourceName, "on_start"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("notebook-instance-lifecycle-config/%s", rName)),
@@ -69,7 +69,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
 
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{

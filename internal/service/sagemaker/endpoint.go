@@ -219,7 +219,7 @@ func ResourceEndpoint() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validName,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -239,7 +239,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -290,7 +290,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", endpoint.EndpointName)
+	d.Set(names.AttrName, endpoint.EndpointName)
 	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
 	d.Set("arn", endpoint.EndpointArn)
 
