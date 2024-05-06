@@ -6,6 +6,7 @@ package dynamodb
 // Exports for use in tests only.
 var (
 	ResourceContributorInsights         = resourceContributorInsights
+	ResourceGlobalTable                 = resourceGlobalTable
 	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
@@ -13,6 +14,7 @@ var (
 	ARNForNewRegion                              = arnForNewRegion
 	ContributorInsightsParseResourceID           = contributorInsightsParseResourceID
 	FindContributorInsightsByTwoPartKey          = findContributorInsightsByTwoPartKey
+	FindGlobalTableByName                        = findGlobalTableByName
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	ListTags                                     = listTags

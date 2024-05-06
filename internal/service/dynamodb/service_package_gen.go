@@ -46,8 +46,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Contributor Insights",
 		},
 		{
-			Factory:  ResourceGlobalTable,
+			Factory:  resourceGlobalTable,
 			TypeName: "aws_dynamodb_global_table",
+			Name:     "Global Table",
 		},
 		{
 			Factory:  resourceKinesisStreamingDestination,
