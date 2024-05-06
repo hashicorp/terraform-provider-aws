@@ -14157,6 +14157,15 @@ var awsPartition = partition{
 					Hostname: "fsx-fips.ca-central-1.amazonaws.com",
 				},
 				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "ca-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "fsx-fips.ca-west-1.amazonaws.com",
+				},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -14190,11 +14199,29 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "fips-ca-west-1",
+				}: endpoint{
+					Hostname: "fsx-fips.ca-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "fips-prod-ca-central-1",
 				}: endpoint{
 					Hostname: "fsx-fips.ca-central-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ca-central-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "fips-prod-ca-west-1",
+				}: endpoint{
+					Hostname: "fsx-fips.ca-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-west-1",
 					},
 					Deprecated: boxedTrue,
 				},
@@ -14294,6 +14321,24 @@ var awsPartition = partition{
 					Hostname: "fsx-fips.ca-central-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ca-central-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "prod-ca-west-1",
+				}: endpoint{
+					CredentialScope: credentialScope{
+						Region: "ca-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region:  "prod-ca-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "fsx-fips.ca-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-west-1",
 					},
 					Deprecated: boxedTrue,
 				},
@@ -30443,6 +30488,9 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "il-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -32999,6 +33047,9 @@ var awsPartition = partition{
 				}: endpoint{
 					Hostname: "transfer-fips.ca-central-1.amazonaws.com",
 				},
+				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
 				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
