@@ -6,15 +6,18 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +42,14 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"architecture_types": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(
+						enum.FrameworkValidate[awstypes.ArchitectureType](),
+					),
+				},
 			},
 			"id": framework.IDAttribute(),
 			"instance_types": schema.ListAttribute{
@@ -48,53 +57,107 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 				Computed:    true,
 			},
 			"virtualization_types": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(
+						enum.FrameworkValidate[awstypes.VirtualizationType](),
+					),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"instance_requirements": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[instanceRequirementsData](ctx),
 				Attributes: map[string]schema.Attribute{
 					"accelerator_manufacturers": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
+						Validators: []validator.List{
+							listvalidator.ValueStringsAre(
+								enum.FrameworkValidate[awstypes.AcceleratorManufacturer](),
+							),
+						},
 					},
 					"accelerator_names": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
+						Validators: []validator.List{
+							listvalidator.ValueStringsAre(
+								enum.FrameworkValidate[awstypes.AcceleratorName](),
+							),
+						},
 					},
 					"accelerator_types": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
+						Validators: []validator.List{
+							listvalidator.ValueStringsAre(
+								enum.FrameworkValidate[awstypes.AcceleratorType](),
+							),
+						},
 					},
 					"allowed_instance_types": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
 					},
 					"bare_metal": schema.StringAttribute{
 						Optional: true,
+						Validators: []validator.String{
+							enum.FrameworkValidate[awstypes.BareMetal](),
+						},
 					},
 					"burstable_performance": schema.StringAttribute{
 						Optional: true,
+						Validators: []validator.String{
+							enum.FrameworkValidate[awstypes.BurstablePerformance](),
+						},
 					},
 					"cpu_manufacturers": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
+						Validators: []validator.List{
+							listvalidator.ValueStringsAre(
+								enum.FrameworkValidate[awstypes.CpuManufacturer](),
+							),
+						},
 					},
 					"excluded_instance_types": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
 					},
 					"instance_generations": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
+						Validators: []validator.List{
+							listvalidator.ValueStringsAre(
+								enum.FrameworkValidate[awstypes.InstanceGeneration](),
+							),
+						},
 					},
 					"local_storage": schema.StringAttribute{
 						Optional: true,
+						Validators: []validator.String{
+							enum.FrameworkValidate[awstypes.LocalStorage](),
+						},
 					},
 					"local_storage_types": schema.ListAttribute{
+						CustomType:  fwtypes.ListOfStringType,
 						ElementType: types.StringType,
 						Optional:    true,
+						Validators: []validator.List{
+							listvalidator.ValueStringsAre(
+								enum.FrameworkValidate[awstypes.LocalStorageType](),
+							),
+						},
 					},
 					"on_demand_max_price_percentage_over_lowest_price": schema.Int64Attribute{
 						Optional: true,
@@ -108,6 +171,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 				},
 				Blocks: map[string]schema.Block{
 					"memory_mib": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Int64Attribute{
 								Required: true,
@@ -118,6 +182,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"vcpu_count": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Int64Attribute{
 								Required: true,
@@ -128,6 +193,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"accelerator_count": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Int64Attribute{
 								Optional: true,
@@ -138,6 +204,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"accelerator_total_memory_mib": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Int64Attribute{
 								Optional: true,
@@ -148,6 +215,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"baseline_ebs_bandwidth_mbps": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Int64Attribute{
 								Optional: true,
@@ -158,6 +226,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"memory_gib_per_vcpu": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Float64Attribute{
 								Optional: true,
@@ -168,6 +237,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"network_bandwidth_gbps": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Float64Attribute{
 								Optional: true,
@@ -178,6 +248,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"network_interface_count": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Int64Attribute{
 								Optional: true,
@@ -188,6 +259,7 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 						},
 					},
 					"total_local_storage_gb": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
 						Attributes: map[string]schema.Attribute{
 							"min": schema.Float64Attribute{
 								Optional: true,
@@ -202,8 +274,9 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Schema(ctx context.Con
 		},
 	}
 }
+
 func (d *dataSourceInstanceTypesFromInstanceRequirements) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().EC2Conn(ctx)
+	conn := d.Meta().EC2Client(ctx)
 
 	var data dataSourceInstanceTypesFromInstanceRequirementsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -211,10 +284,10 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Read(ctx context.Conte
 		return
 	}
 
-	input := &ec2.GetInstanceTypesFromInstanceRequirementsInput{
-		ArchitectureTypes:    flex.ExpandFrameworkStringList(ctx, data.ArchitectureTypes),
-		VirtualizationTypes:  flex.ExpandFrameworkStringList(ctx, data.VirtualizationTypes),
-		InstanceRequirements: expandInstanceRequirementsRequestOptions(ctx, data.InstanceRequirements, &resp.Diagnostics),
+	input := &ec2.GetInstanceTypesFromInstanceRequirementsInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	out, err := findInstanceTypesFromInstanceRequirements(ctx, conn, input)
@@ -232,340 +305,59 @@ func (d *dataSourceInstanceTypesFromInstanceRequirements) Read(ctx context.Conte
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func expandInstanceRequirementsRequestOptions(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.InstanceRequirementsRequest {
-	var options instanceRequirementsData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx, diags)
-}
-
-func findInstanceTypesFromInstanceRequirements(ctx context.Context, conn *ec2.EC2, input *ec2.GetInstanceTypesFromInstanceRequirementsInput) ([]*string, error) {
+func findInstanceTypesFromInstanceRequirements(ctx context.Context, conn *ec2.Client, input *ec2.GetInstanceTypesFromInstanceRequirementsInput) ([]*string, error) {
 	var output []*string
 
-	err := conn.GetInstanceTypesFromInstanceRequirementsPagesWithContext(ctx, input, func(page *ec2.GetInstanceTypesFromInstanceRequirementsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	paginator := ec2.NewGetInstanceTypesFromInstanceRequirementsPaginator(conn, input)
 
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
 		for _, v := range page.InstanceTypes {
-			if v != nil {
-				output = append(output, v.InstanceType)
-			}
+			output = append(output, v.InstanceType)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
 }
 
 type dataSourceInstanceTypesFromInstanceRequirementsData struct {
-	ArchitectureTypes    types.List   `tfsdk:"architecture_types"`
-	InstanceRequirements types.Object `tfsdk:"instance_requirements"`
-	InstanceTypes        types.List   `tfsdk:"instance_types"`
-	ID                   types.String `tfsdk:"id"`
-	VirtualizationTypes  types.List   `tfsdk:"virtualization_types"`
+	ArchitectureTypes    fwtypes.ListValueOf[types.String]               `tfsdk:"architecture_types"`
+	InstanceRequirements fwtypes.ObjectValueOf[instanceRequirementsData] `tfsdk:"instance_requirements"`
+	InstanceTypes        types.List                                      `tfsdk:"instance_types"`
+	ID                   types.String                                    `tfsdk:"id"`
+	VirtualizationTypes  fwtypes.ListValueOf[types.String]               `tfsdk:"virtualization_types"`
 }
 
 type instanceRequirementsData struct {
-	MemoryMiB                                 types.Object `tfsdk:"memory_mib"`
-	VCPUCount                                 types.Object `tfsdk:"vcpu_count"`
-	AcceleratorCount                          types.Object `tfsdk:"accelerator_count"`
-	AcceleratorManufacturers                  types.List   `tfsdk:"accelerator_manufacturers"`
-	AcceleratorNames                          types.List   `tfsdk:"accelerator_names"`
-	AcceleratorTotalMemoryMiB                 types.Object `tfsdk:"accelerator_total_memory_mib"`
-	AcceleratorTypes                          types.List   `tfsdk:"accelerator_types"`
-	AllowedInstanceTypes                      types.List   `tfsdk:"allowed_instance_types"`
-	BareMetal                                 types.String `tfsdk:"bare_metal"`
-	BaselineEBSBandwidthMbps                  types.Object `tfsdk:"baseline_ebs_bandwidth_mbps"`
-	BurstablePerformance                      types.String `tfsdk:"burstable_performance"`
-	CPUManufacturers                          types.List   `tfsdk:"cpu_manufacturers"`
-	ExcludedInstanceTypes                     types.List   `tfsdk:"excluded_instance_types"`
-	InstanceGenerations                       types.List   `tfsdk:"instance_generations"`
-	LocalStorage                              types.String `tfsdk:"local_storage"`
-	LocalStorageTypes                         types.List   `tfsdk:"local_storage_types"`
-	MemoryGiBPerVCPU                          types.Object `tfsdk:"memory_gib_per_vcpu"`
-	NetworkBandwidthGbps                      types.Object `tfsdk:"network_bandwidth_gbps"`
-	NetworkInterfaceCount                     types.Object `tfsdk:"network_interface_count"`
-	OnDemandMaxPricePercentageOverLowestPrice types.Int64  `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
-	RequireHibernateSupport                   types.Bool   `tfsdk:"require_hibernate_support"`
-	SpotMaxPricePercentageOverLowestPrice     types.Int64  `tfsdk:"spot_max_price_percentage_over_lowest_price"`
-	TotalLocalStorageGB                       types.Object `tfsdk:"total_local_storage_gb"`
+	MemoryMiB                                 fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"memory_mib"`
+	VCPUCount                                 fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"vcpu_count"`
+	AcceleratorCount                          fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_count"`
+	AcceleratorManufacturers                  fwtypes.ListValueOf[types.String]            `tfsdk:"accelerator_manufacturers"`
+	AcceleratorNames                          fwtypes.ListValueOf[types.String]            `tfsdk:"accelerator_names"`
+	AcceleratorTotalMemoryMiB                 fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_total_memory_mib"`
+	AcceleratorTypes                          fwtypes.ListValueOf[types.String]            `tfsdk:"accelerator_types"`
+	AllowedInstanceTypes                      fwtypes.ListValueOf[types.String]            `tfsdk:"allowed_instance_types"`
+	BareMetal                                 types.String                                 `tfsdk:"bare_metal"`
+	BaselineEBSBandwidthMbps                  fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"baseline_ebs_bandwidth_mbps"`
+	BurstablePerformance                      types.String                                 `tfsdk:"burstable_performance"`
+	CPUManufacturers                          fwtypes.ListValueOf[types.String]            `tfsdk:"cpu_manufacturers"`
+	ExcludedInstanceTypes                     fwtypes.ListValueOf[types.String]            `tfsdk:"excluded_instance_types"`
+	InstanceGenerations                       fwtypes.ListValueOf[types.String]            `tfsdk:"instance_generations"`
+	LocalStorage                              types.String                                 `tfsdk:"local_storage"`
+	LocalStorageTypes                         fwtypes.ListValueOf[types.String]            `tfsdk:"local_storage_types"`
+	MemoryGiBPerVCPU                          fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"memory_gib_per_vcpu"`
+	NetworkBandwidthGbps                      fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"network_bandwidth_gbps"`
+	NetworkInterfaceCount                     fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"network_interface_count"`
+	OnDemandMaxPricePercentageOverLowestPrice types.Int64                                  `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
+	RequireHibernateSupport                   types.Bool                                   `tfsdk:"require_hibernate_support"`
+	SpotMaxPricePercentageOverLowestPrice     types.Int64                                  `tfsdk:"spot_max_price_percentage_over_lowest_price"`
+	TotalLocalStorageGB                       fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"total_local_storage_gb"`
 }
 
-func (ir *instanceRequirementsData) expand(ctx context.Context, diags *diag.Diagnostics) *ec2.InstanceRequirementsRequest {
-	if ir == nil {
-		return nil
-	}
-
-	result := &ec2.InstanceRequirementsRequest{
-		MemoryMiB:                expandMemoryMiBData(ctx, ir.MemoryMiB, diags),
-		VCpuCount:                expandVCPUCountData(ctx, ir.VCPUCount, diags),
-		AcceleratorManufacturers: flex.ExpandFrameworkStringList(ctx, ir.AcceleratorManufacturers),
-		AcceleratorNames:         flex.ExpandFrameworkStringList(ctx, ir.AcceleratorNames),
-		AcceleratorTypes:         flex.ExpandFrameworkStringList(ctx, ir.AcceleratorTypes),
-		AllowedInstanceTypes:     flex.ExpandFrameworkStringList(ctx, ir.AllowedInstanceTypes),
-		BareMetal:                flex.StringFromFramework(ctx, ir.BareMetal),
-		BurstablePerformance:     flex.StringFromFramework(ctx, ir.BurstablePerformance),
-		CpuManufacturers:         flex.ExpandFrameworkStringList(ctx, ir.CPUManufacturers),
-		ExcludedInstanceTypes:    flex.ExpandFrameworkStringList(ctx, ir.ExcludedInstanceTypes),
-		InstanceGenerations:      flex.ExpandFrameworkStringList(ctx, ir.InstanceGenerations),
-		LocalStorage:             flex.StringFromFramework(ctx, ir.LocalStorage),
-		LocalStorageTypes:        flex.ExpandFrameworkStringList(ctx, ir.LocalStorageTypes),
-		OnDemandMaxPricePercentageOverLowestPrice: flex.Int64FromFramework(ctx, ir.OnDemandMaxPricePercentageOverLowestPrice),
-		RequireHibernateSupport:                   flex.BoolFromFramework(ctx, ir.RequireHibernateSupport),
-		SpotMaxPricePercentageOverLowestPrice:     flex.Int64FromFramework(ctx, ir.SpotMaxPricePercentageOverLowestPrice),
-	}
-
-	if !ir.AcceleratorCount.IsNull() {
-		result.AcceleratorCount = expandAcceleratorCountData(ctx, ir.AcceleratorCount, diags)
-	}
-
-	if !ir.AcceleratorTotalMemoryMiB.IsNull() {
-		result.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBData(ctx, ir.AcceleratorTotalMemoryMiB, diags)
-	}
-
-	if !ir.BaselineEBSBandwidthMbps.IsNull() {
-		result.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsData(ctx, ir.BaselineEBSBandwidthMbps, diags)
-	}
-
-	if !ir.MemoryGiBPerVCPU.IsNull() {
-		result.MemoryGiBPerVCpu = expandMemoryGiBPerVCPUData(ctx, ir.MemoryGiBPerVCPU, diags)
-	}
-
-	if !ir.NetworkBandwidthGbps.IsNull() {
-		result.NetworkBandwidthGbps = expandNetworkBandwidthGbpsData(ctx, ir.NetworkBandwidthGbps, diags)
-	}
-
-	if !ir.NetworkInterfaceCount.IsNull() {
-		result.NetworkInterfaceCount = expandNetworkInterfaceCountData(ctx, ir.NetworkInterfaceCount, diags)
-	}
-
-	if !ir.TotalLocalStorageGB.IsNull() {
-		result.TotalLocalStorageGB = expandTotalLocalStorageGBData(ctx, ir.TotalLocalStorageGB, diags)
-	}
-
-	return result
-}
-
-type memoryMiBData struct {
-	Min types.Int64 `tfsdk:"min"`
-	Max types.Int64 `tfsdk:"max"`
-}
-
-func (m *memoryMiBData) expand(ctx context.Context) *ec2.MemoryMiBRequest {
-	if m == nil {
-		return nil
-	}
-	return &ec2.MemoryMiBRequest{
-		Min: flex.Int64FromFramework(ctx, m.Min),
-		Max: flex.Int64FromFramework(ctx, m.Max),
-	}
-}
-
-func expandMemoryMiBData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.MemoryMiBRequest {
-	var options memoryMiBData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type vcpuCountData struct {
-	Min types.Int64 `tfsdk:"min"`
-	Max types.Int64 `tfsdk:"max"`
-}
-
-func (v *vcpuCountData) expand(ctx context.Context) *ec2.VCpuCountRangeRequest {
-	if v == nil {
-		return nil
-	}
-	return &ec2.VCpuCountRangeRequest{
-		Min: flex.Int64FromFramework(ctx, v.Min),
-		Max: flex.Int64FromFramework(ctx, v.Max),
-	}
-}
-
-func expandVCPUCountData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.VCpuCountRangeRequest {
-	var options vcpuCountData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type acceleratorCountData struct {
-	Min types.Int64 `tfsdk:"min"`
-	Max types.Int64 `tfsdk:"max"`
-}
-
-func (a *acceleratorCountData) expand(ctx context.Context) *ec2.AcceleratorCountRequest {
-	if a == nil {
-		return nil
-	}
-	return &ec2.AcceleratorCountRequest{
-		Min: flex.Int64FromFramework(ctx, a.Min),
-		Max: flex.Int64FromFramework(ctx, a.Max),
-	}
-}
-
-func expandAcceleratorCountData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.AcceleratorCountRequest {
-	var options acceleratorCountData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type acceleratorTotalMemoryMiBData struct {
-	Min types.Int64 `tfsdk:"min"`
-	Max types.Int64 `tfsdk:"max"`
-}
-
-func (a *acceleratorTotalMemoryMiBData) expand(ctx context.Context) *ec2.AcceleratorTotalMemoryMiBRequest {
-	if a == nil {
-		return nil
-	}
-	return &ec2.AcceleratorTotalMemoryMiBRequest{
-		Min: flex.Int64FromFramework(ctx, a.Min),
-		Max: flex.Int64FromFramework(ctx, a.Max),
-	}
-}
-
-func expandAcceleratorTotalMemoryMiBData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.AcceleratorTotalMemoryMiBRequest {
-	var options acceleratorTotalMemoryMiBData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type baselineEBSBandwidthMbpsData struct {
-	Min types.Int64 `tfsdk:"min"`
-	Max types.Int64 `tfsdk:"max"`
-}
-
-func (b *baselineEBSBandwidthMbpsData) expand(ctx context.Context) *ec2.BaselineEbsBandwidthMbpsRequest {
-	if b == nil {
-		return nil
-	}
-	return &ec2.BaselineEbsBandwidthMbpsRequest{
-		Min: flex.Int64FromFramework(ctx, b.Min),
-		Max: flex.Int64FromFramework(ctx, b.Max),
-	}
-}
-
-func expandBaselineEBSBandwidthMbpsData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.BaselineEbsBandwidthMbpsRequest {
-	var options baselineEBSBandwidthMbpsData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type memoryGiBPerVCPUData struct {
-	Min types.Float64 `tfsdk:"min"`
-	Max types.Float64 `tfsdk:"max"`
-}
-
-func (m *memoryGiBPerVCPUData) expand(ctx context.Context) *ec2.MemoryGiBPerVCpuRequest {
-	if m == nil {
-		return nil
-	}
-	return &ec2.MemoryGiBPerVCpuRequest{
-		Min: flex.Float64FromFramework(ctx, m.Min),
-		Max: flex.Float64FromFramework(ctx, m.Max),
-	}
-}
-
-func expandMemoryGiBPerVCPUData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.MemoryGiBPerVCpuRequest {
-	var options memoryGiBPerVCPUData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type networkBandwidthGbpsData struct {
-	Min types.Float64 `tfsdk:"min"`
-	Max types.Float64 `tfsdk:"max"`
-}
-
-func (n *networkBandwidthGbpsData) expand(ctx context.Context) *ec2.NetworkBandwidthGbpsRequest {
-	if n == nil {
-		return nil
-	}
-	return &ec2.NetworkBandwidthGbpsRequest{
-		Min: flex.Float64FromFramework(ctx, n.Min),
-		Max: flex.Float64FromFramework(ctx, n.Max),
-	}
-}
-
-func expandNetworkBandwidthGbpsData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.NetworkBandwidthGbpsRequest {
-	var options networkBandwidthGbpsData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type networkInterfaceCountData struct {
-	Min types.Int64 `tfsdk:"min"`
-	Max types.Int64 `tfsdk:"max"`
-}
-
-func (n *networkInterfaceCountData) expand(ctx context.Context) *ec2.NetworkInterfaceCountRequest {
-	if n == nil {
-		return nil
-	}
-	return &ec2.NetworkInterfaceCountRequest{
-		Min: flex.Int64FromFramework(ctx, n.Min),
-		Max: flex.Int64FromFramework(ctx, n.Max),
-	}
-}
-
-func expandNetworkInterfaceCountData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.NetworkInterfaceCountRequest {
-	var options networkInterfaceCountData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
-}
-
-type totalLocalStorageGBData struct {
-	Min types.Float64 `tfsdk:"min"`
-	Max types.Float64 `tfsdk:"max"`
-}
-
-func (t *totalLocalStorageGBData) expand(ctx context.Context) *ec2.TotalLocalStorageGBRequest {
-	if t == nil {
-		return nil
-	}
-	return &ec2.TotalLocalStorageGBRequest{
-		Min: flex.Float64FromFramework(ctx, t.Min),
-		Max: flex.Float64FromFramework(ctx, t.Max),
-	}
-}
-
-func expandTotalLocalStorageGBData(ctx context.Context, object types.Object, diags *diag.Diagnostics) *ec2.TotalLocalStorageGBRequest {
-	var options totalLocalStorageGBData
-	diags.Append(object.As(ctx, &options, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-	return options.expand(ctx)
+type minMax[T comparable] struct {
+	Min T `tfsdk:"min"`
+	Max T `tfsdk:"max"`
 }
