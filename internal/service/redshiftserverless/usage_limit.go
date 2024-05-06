@@ -32,7 +32,7 @@ func resourceUsageLimit() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.UsageLimitArn)
+	d.Set(names.AttrARN, out.UsageLimitArn)
 	d.Set("breach_action", out.BreachAction)
 	d.Set("period", out.Period)
 	d.Set("usage_type", out.UsageType)
