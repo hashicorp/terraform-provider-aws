@@ -173,7 +173,7 @@ linters-settings:
       - performance
       - experimental
       - opinionated
-  gomnd:
+  mnd:
     checks:
       - argument
     ignored-functions:
