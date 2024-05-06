@@ -77,7 +77,7 @@ func resourcePatchBaseline() *schema.Resource {
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
@@ -117,11 +117,11 @@ func resourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -132,7 +132,7 @@ func resourcePatchBaseline() *schema.Resource {
 				MaxItems: 4,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
@@ -250,7 +250,7 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -317,8 +317,8 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("approved_patches", aws.StringValueSlice(output.ApprovedPatches))
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
-	d.Set("arn", arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
 	}
@@ -338,7 +338,7 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ssm.UpdatePatchBaselineInput{
 			BaselineId: aws.String(d.Id()),
 		}
@@ -359,8 +359,8 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("global_filter") {
@@ -454,7 +454,7 @@ func expandPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {
 		config := fConfig.(map[string]interface{})
 
 		filter := &ssm.PatchFilter{
-			Key:    aws.String(config["key"].(string)),
+			Key:    aws.String(config[names.AttrKey].(string)),
 			Values: flex.ExpandStringList(config["values"].([]interface{})),
 		}
 
@@ -475,7 +475,7 @@ func flattenPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]interface
 
 	for _, filter := range group.PatchFilters {
 		f := make(map[string]interface{})
-		f["key"] = aws.StringValue(filter.Key)
+		f[names.AttrKey] = aws.StringValue(filter.Key)
 		f["values"] = flex.FlattenStringList(filter.Values)
 
 		result = append(result, f)
@@ -499,7 +499,7 @@ func expandPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 			fCfg := fConfig.(map[string]interface{})
 
 			filter := &ssm.PatchFilter{
-				Key:    aws.String(fCfg["key"].(string)),
+				Key:    aws.String(fCfg[names.AttrKey].(string)),
 				Values: flex.ExpandStringList(fCfg["values"].([]interface{})),
 			}
 
@@ -605,7 +605,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 
 func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
-		"description",
+		names.AttrDescription,
 		"global_filter",
 		"approval_rule",
 		"approved_patches",

@@ -45,8 +45,8 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -113,8 +113,8 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_patchBaselineARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -154,8 +154,8 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, types.OperatingSystemAmazonLinux2022),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -215,8 +215,8 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_systemDefault(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineDataSourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineDataSourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -257,16 +257,16 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, types.OperatingSystemWindows),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 				),
 			},
 			{
 				Config: testAccDefaultPatchBaselineConfig_updated(rName, types.OperatingSystemWindows),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineUpdatedResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineUpdatedResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineUpdatedResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineUpdatedResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
@@ -309,12 +309,12 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &main),
-					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, baselineResourceName, "operating_system"),
 
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &alternate),
-					resource.TestCheckResourceAttrPair(resourceAlternateName, "baseline_id", baselineAlternateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceAlternateName, "id", baselineAlternateResourceName, "operating_system"),
+					resource.TestCheckResourceAttrPair(resourceAlternateName, "baseline_id", baselineAlternateResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceAlternateName, names.AttrID, baselineAlternateResourceName, "operating_system"),
 				),
 			},
 			// Import by OS
