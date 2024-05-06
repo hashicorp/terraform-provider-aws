@@ -245,7 +245,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("template_body", template)
 
 	if len(stack.Capabilities) > 0 {
-		d.Set("capabilities", flex.FlattenStringyValueList[awstypes.Capability](stack.Capabilities))
+		d.Set("capabilities", stack.Capabilities)
 	}
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)

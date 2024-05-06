@@ -30,8 +30,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Export",
 		},
 		{
-			Factory:  DataSourceStack,
+			Factory:  dataSourceStack,
 			TypeName: "aws_cloudformation_stack",
+			Name:     "Stack",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceType,
