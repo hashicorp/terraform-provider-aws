@@ -637,7 +637,7 @@ rules:
 
   - id: literal-name-string-constant
     languages: [go]
-    message: Use the constant `Name` for the string literal `name`
+    message: Use the constant `names.AttrName` for the string literal `name`
     paths:
       include:
         - "internal/service/iam/*.go"
