@@ -641,6 +641,7 @@ rules:
     paths:
       include:
         - "internal/service/iam/*.go"
+        - "internal/service/meta/*.go"
     patterns:
       - pattern: '"name"'
     severity: ERROR
