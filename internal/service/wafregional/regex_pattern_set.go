@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafregional_regex_pattern_set", name="Regex Pattern Set")
@@ -33,7 +34,7 @@ func resourceRegexPatternSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -52,7 +53,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRegexPatternSetInput{
 			ChangeToken: token,
@@ -87,7 +88,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("reading WAF Regional Regex Pattern Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", set.Name)
+	d.Set(names.AttrName, set.Name)
 	d.Set("regex_pattern_strings", aws.StringValueSlice(set.RegexPatternStrings))
 
 	return diags

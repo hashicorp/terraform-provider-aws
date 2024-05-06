@@ -38,7 +38,7 @@ func TestAccWAFRegionalGeoMatchSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", geoMatchSet),
+						resourceName, names.AttrName, geoMatchSet),
 					resource.TestCheckResourceAttr(
 						resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
@@ -78,7 +78,7 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", geoMatchSet),
+						resourceName, names.AttrName, geoMatchSet),
 					resource.TestCheckResourceAttr(
 						resourceName, "geo_match_constraint.#", "2"),
 				),
@@ -89,7 +89,7 @@ func TestAccWAFRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &after),
 					testAccCheckGeoMatchSetIdDiffers(&before, &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", geoMatchSetNewName),
+						resourceName, names.AttrName, geoMatchSetNewName),
 					resource.TestCheckResourceAttr(
 						resourceName, "geo_match_constraint.#", "2"),
 				),
@@ -144,7 +144,7 @@ func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
@@ -162,7 +162,7 @@ func TestAccWAFRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
@@ -201,7 +201,7 @@ func TestAccWAFRegionalGeoMatchSet_noConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "geo_match_constraint.#", "0"),
 				),
