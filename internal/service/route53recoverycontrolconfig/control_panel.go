@@ -28,7 +28,7 @@ func ResourceControlPanel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +41,7 @@ func ResourceControlPanel() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -49,7 +49,7 @@ func ResourceControlPanel() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &r53rcc.CreateControlPanelInput{
 		ClientToken:      aws.String(id.UniqueId()),
 		ClusterArn:       aws.String(d.Get("cluster_arn").(string)),
-		ControlPanelName: aws.String(d.Get("name").(string)),
+		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	output, err := conn.CreateControlPanelWithContext(ctx, input)
@@ -112,12 +112,12 @@ func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	result := output.ControlPanel
-	d.Set("arn", result.ControlPanelArn)
+	d.Set(names.AttrARN, result.ControlPanelArn)
 	d.Set("cluster_arn", result.ClusterArn)
 	d.Set("default_control_panel", result.DefaultControlPanel)
-	d.Set("name", result.Name)
+	d.Set(names.AttrName, result.Name)
 	d.Set("routing_control_count", result.RoutingControlCount)
-	d.Set("status", result.Status)
+	d.Set(names.AttrStatus, result.Status)
 
 	return diags
 }
@@ -127,8 +127,8 @@ func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.UpdateControlPanelInput{
-		ControlPanelName: aws.String(d.Get("name").(string)),
-		ControlPanelArn:  aws.String(d.Get("arn").(string)),
+		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
+		ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
 	_, err := conn.UpdateControlPanelWithContext(ctx, input)

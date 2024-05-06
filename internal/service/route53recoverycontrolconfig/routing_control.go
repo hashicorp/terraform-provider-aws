@@ -28,7 +28,7 @@ func ResourceRoutingControl() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,11 +42,11 @@ func ResourceRoutingControl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &r53rcc.CreateRoutingControlInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		ClusterArn:         aws.String(d.Get("cluster_arn").(string)),
-		RoutingControlName: aws.String(d.Get("name").(string)),
+		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("control_panel_arn"); ok {
@@ -113,10 +113,10 @@ func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	result := output.RoutingControl
-	d.Set("arn", result.RoutingControlArn)
+	d.Set(names.AttrARN, result.RoutingControlArn)
 	d.Set("control_panel_arn", result.ControlPanelArn)
-	d.Set("name", result.Name)
-	d.Set("status", result.Status)
+	d.Set(names.AttrName, result.Name)
+	d.Set(names.AttrStatus, result.Status)
 
 	return diags
 }
@@ -126,8 +126,8 @@ func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.UpdateRoutingControlInput{
-		RoutingControlName: aws.String(d.Get("name").(string)),
-		RoutingControlArn:  aws.String(d.Get("arn").(string)),
+		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
+		RoutingControlArn:  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
 	_, err := conn.UpdateRoutingControlWithContext(ctx, input)
