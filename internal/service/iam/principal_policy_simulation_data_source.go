@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_principal_policy_simulation", name="Principal Policy Simulation")
@@ -44,12 +45,12 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: `The key name of the context entry, such as "aws:CurrentTime".`,
 						},
-						"type": {
+						names.AttrType: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: `The type that the simulator should use to interpret the strings given in argument "values".`,
@@ -199,7 +200,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 					},
 				},
 			},
-			"id": {
+			names.AttrID: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: `Do not use`,
@@ -230,8 +231,8 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	for _, entryRaw := range d.Get("context").(*schema.Set).List() {
 		entryRaw := entryRaw.(map[string]interface{})
 		entry := awstypes.ContextEntry{
-			ContextKeyName:   aws.String(entryRaw["key"].(string)),
-			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw["type"].(string)),
+			ContextKeyName:   aws.String(entryRaw[names.AttrKey].(string)),
+			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw[names.AttrType].(string)),
 			ContextKeyValues: setAsAWSStringSlice(entryRaw["values"]),
 		}
 		input.ContextEntries = append(input.ContextEntries, entry)
