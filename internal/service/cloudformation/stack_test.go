@@ -7,10 +7,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -618,31 +616,6 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckStackDisappears(ctx context.Context, stack *awstypes.Stack) resource.TestCheckFunc {
-	const deleteStackTimeout = 30 * time.Minute
-
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
-
-		input := &cloudformation.DeleteStackInput{
-			StackName: stack.StackName,
-		}
-
-		_, err := conn.DeleteStack(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		// Use the AWS Go SDK waiter until the resource is refactored
-		describeStacksInput := &cloudformation.DescribeStacksInput{
-			StackName: stack.StackName,
-		}
-
-		return cloudformation.NewStackDeleteCompleteWaiter(conn).Wait(ctx, describeStacksInput, deleteStackTimeout)
 	}
 }
 

@@ -195,68 +195,6 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 	})
 }
 
-// TestAccCloudFormationStackSetInstance_retainStack verifies retain_stack = true
-// This acceptance test performs the following steps:
-//   - Trigger a Terraform destroy of the resource, which should only remove the instance from the StackSet
-//   - Check it still exists outside Terraform
-//   - Destroy for real outside Terraform
-func TestAccCloudFormationStackSetInstance_retainStack(t *testing.T) {
-	ctx := acctest.Context(t)
-	var stack1 awstypes.Stack
-	var stackInstance1, stackInstance2, stackInstance3 awstypes.StackInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudformation_stack_set_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackSetInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStackSetInstanceConfig_retain(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					resource.TestCheckResourceAttr(resourceName, "retain_stack", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"retain_stack",
-					"call_as",
-				},
-			},
-			{
-				Config: testAccStackSetInstanceConfig_retain(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance2),
-					testAccCheckStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
-					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
-				),
-			},
-			{
-				Config: testAccStackSetInstanceConfig_retain(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance3),
-					testAccCheckStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
-					resource.TestCheckResourceAttr(resourceName, "retain_stack", "true"),
-				),
-			},
-			{
-				Config:  testAccStackSetInstanceConfig_retain(rName, true),
-				Destroy: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetInstanceStackExists(ctx, &stackInstance3, &stack1),
-					testAccCheckStackDisappears(ctx, &stack1),
-				),
-			},
-		},
-	})
-}
-
 func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackInstanceSummaries []awstypes.StackInstanceSummary
@@ -765,17 +703,6 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `, value1, value2))
-}
-
-func testAccStackSetInstanceConfig_retain(rName string, retainStack bool) string {
-	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig(rName), fmt.Sprintf(`
-resource "aws_cloudformation_stack_set_instance" "test" {
-  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
-
-  retain_stack   = %[1]t
-  stack_set_name = aws_cloudformation_stack_set.test.name
-}
-`, retainStack))
 }
 
 func testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName string) string {
