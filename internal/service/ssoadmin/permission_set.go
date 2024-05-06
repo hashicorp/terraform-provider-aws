@@ -69,7 +69,7 @@ func ResourcePermissionSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -105,7 +105,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
 		Name:        aws.String(name),
@@ -160,7 +160,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
 	d.Set("description", permissionSet.Description)
 	d.Set("instance_arn", instanceARN)
-	d.Set("name", permissionSet.Name)
+	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 

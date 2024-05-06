@@ -72,7 +72,7 @@ func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"trusted_token_issuer_type": schema.StringAttribute{

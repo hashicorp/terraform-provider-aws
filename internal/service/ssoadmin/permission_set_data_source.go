@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssoadmin_permission_set")
@@ -31,7 +32,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"arn", "name"},
+				ExactlyOneOf: []string{"arn", names.AttrName},
 			},
 			"created_date": {
 				Type:     schema.TypeString,
@@ -46,7 +47,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -54,7 +55,7 @@ func DataSourcePermissionSet() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
 				),
-				ExactlyOneOf: []string{"name", "arn"},
+				ExactlyOneOf: []string{names.AttrName, "arn"},
 			},
 			"relay_state": {
 				Type:     schema.TypeString,
@@ -96,7 +97,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		permissionSet = output.PermissionSet
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 
 		input := &ssoadmin.ListPermissionSetsInput{
@@ -146,7 +147,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
 	d.Set("description", permissionSet.Description)
 	d.Set("instance_arn", instanceArn)
-	d.Set("name", permissionSet.Name)
+	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 

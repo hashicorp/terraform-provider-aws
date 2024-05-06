@@ -55,7 +55,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				CustomType: fwtypes.ARNType,
 				Computed:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"status": schema.StringAttribute{
