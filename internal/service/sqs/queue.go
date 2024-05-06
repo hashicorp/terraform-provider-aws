@@ -96,7 +96,7 @@ var (
 			Default:      defaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-		"name": {
+		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
@@ -108,7 +108,7 @@ var (
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name"},
+			ConflictsWith: []string{names.AttrName},
 		},
 		"policy": {
 			Type:                  schema.TypeString,
@@ -297,7 +297,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("kms_data_key_reuse_period_seconds", defaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	if d.Get("fifo_queue").(bool) {
 		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
 	} else {
@@ -387,7 +387,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 }
 
 func queueName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
