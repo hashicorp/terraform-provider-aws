@@ -34,7 +34,7 @@ func expandRule(m map[string]interface{}) awstypes.Rule {
 		Action:           expandRuleAction(m["action"].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
-		Priority:         aws.Int64(int64(m["priority"].(int))),
+		Priority:         int32(m["priority"].(int)),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -1133,7 +1133,6 @@ func expandManagedRuleGroupStatement(l []interface{}) *awstypes.ManagedRuleGroup
 	}
 
 	m := l[0].(map[string]interface{})
-  
 	r := &awstypes.ManagedRuleGroupStatement{
 		Name:                aws.String(m[names.AttrName].(string)),
 		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
@@ -1462,7 +1461,7 @@ func expandRateLimitHeader(l []interface{}) *awstypes.RateLimitHeader {
 		return nil
 	}
 	m := l[0].(map[string]interface{})
-  
+
 	return &awstypes.RateLimitHeader{
 		Name:                aws.String(m[names.AttrName].(string)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
@@ -1868,8 +1867,8 @@ func flattenCustomHeader(h *awstypes.CustomHTTPHeader) map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrName:  aws.ToString(h.Name),
-		"value": aws.ToString(h.Value),
+		names.AttrName: aws.ToString(h.Name),
+		"value":        aws.ToString(h.Value),
 	}
 
 	return m

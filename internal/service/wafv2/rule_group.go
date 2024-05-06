@@ -270,7 +270,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 RuleGroup: %s", d.Id())
-	_, err := tfresource.RetryWhenIsOneOf[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, ruleGroupDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, ruleGroupDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteRuleGroup(ctx, input)
 	})
 

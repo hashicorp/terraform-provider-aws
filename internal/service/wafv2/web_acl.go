@@ -338,7 +338,7 @@ func retryResourceWebACLUpdateOptmisticLockFailure(ctx context.Context, conn *wa
 	} else if aws.ToString(webAcl.LockToken) != lockToken {
 		// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 		input.LockToken = webAcl.LockToken
-		_, err := tfresource.RetryWhenIsOneOf[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
 			return conn.UpdateWebACL(ctx, input)
 		})
 
@@ -366,7 +366,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL: %s", d.Id())
-	_, err := tfresource.RetryWhenIsOneOf[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteWebACL(ctx, input)
 	})
 
@@ -395,7 +395,7 @@ func retryResourceWebACLDeleteOptmisticLockFailure(ctx context.Context, conn *wa
 			Name:      aws.String(name),
 			Scope:     awstypes.Scope(scope),
 		}
-		_, err := tfresource.RetryWhenIsOneOf[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
 			return conn.DeleteWebACL(ctx, retryInput)
 		})
 
