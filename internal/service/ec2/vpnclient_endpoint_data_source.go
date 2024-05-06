@@ -8,15 +8,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_client_vpn_endpoint")
@@ -180,20 +182,20 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 
 func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
 
 	if v, ok := d.GetOk("client_vpn_endpoint_id"); ok {
-		input.ClientVpnEndpointIds = aws.StringSlice([]string{v.(string)})
+		input.ClientVpnEndpointIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -207,10 +209,10 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Client VPN Endpoint", err))
 	}
 
-	d.SetId(aws.StringValue(ep.ClientVpnEndpointId))
+	d.SetId(aws.ToString(ep.ClientVpnEndpointId))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
@@ -244,12 +246,12 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("description", ep.Description)
 	d.Set("dns_name", ep.DnsName)
-	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
-	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
-	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
-		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
+	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
+	d.Set("security_group_ids", aws.StringSlice(ep.SecurityGroupIds))
+	if aws.ToString(ep.SelfServicePortalUrl) != "" {
+		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
-		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
+		d.Set("self_service_portal", awstypes.SelfServicePortalDisabled)
 	}
 	d.Set("self_service_portal_url", ep.SelfServicePortalUrl)
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)

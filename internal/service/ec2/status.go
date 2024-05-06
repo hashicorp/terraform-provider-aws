@@ -97,7 +97,7 @@ func StatusLocalGatewayRouteTableVPCAssociationState(ctx context.Context, conn *
 	}
 }
 
-func StatusClientVPNEndpointState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+func StatusClientVPNEndpointState(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClientVPNEndpointByID(ctx, conn, id)
 
@@ -109,11 +109,11 @@ func StatusClientVPNEndpointState(ctx context.Context, conn *ec2.EC2, id string)
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Code), nil
+		return output, string(output.Status.Code), nil
 	}
 }
 
-func StatusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+func StatusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
 
@@ -125,11 +125,11 @@ func StatusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Contex
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Code), nil
+		return output, string(output.Status.Code), nil
 	}
 }
 
-func StatusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) retry.StateRefreshFunc {
+func StatusClientVPNAuthorizationRule(ctx context.Context, conn *ec2_sdkv2.Client, endpointID, targetNetworkCIDR, accessGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
 
@@ -141,11 +141,11 @@ func StatusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.EC2, endpoi
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Code), nil
+		return output, string(output.Status.Code), nil
 	}
 }
 
-func StatusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.EC2, associationID, endpointID string) retry.StateRefreshFunc {
+func StatusClientVPNNetworkAssociation(ctx context.Context, conn *ec2_sdkv2.Client, associationID, endpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, associationID, endpointID)
 
@@ -157,11 +157,11 @@ func StatusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.EC2, assoc
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Code), nil
+		return output, string(output.Status.Code), nil
 	}
 }
 
-func StatusClientVPNRoute(ctx context.Context, conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) retry.StateRefreshFunc {
+func StatusClientVPNRoute(ctx context.Context, conn *ec2_sdkv2.Client, endpointID, targetSubnetID, destinationCIDR string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
@@ -173,7 +173,7 @@ func StatusClientVPNRoute(ctx context.Context, conn *ec2.EC2, endpointID, target
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Code), nil
+		return output, string(output.Status.Code), nil
 	}
 }
 
