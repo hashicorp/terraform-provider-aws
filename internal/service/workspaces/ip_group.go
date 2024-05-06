@@ -33,7 +33,7 @@ func ResourceIPGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	rules := d.Get("rules").(*schema.Set).List()
 	resp, err := conn.CreateIpGroup(ctx, &workspaces.CreateIpGroupInput{
-		GroupName: aws.String(d.Get("name").(string)),
+		GroupName: aws.String(d.Get(names.AttrName).(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
 		UserRules: expandIPGroupRules(rules),
 		Tags:      getTagsIn(ctx),
@@ -116,7 +116,7 @@ func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	ipGroup := ipGroups[0]
 
-	d.Set("name", ipGroup.GroupName)
+	d.Set(names.AttrName, ipGroup.GroupName)
 	d.Set("description", ipGroup.GroupDesc)
 	d.Set("rules", flattenIPGroupRules(ipGroup.UserRules))
 
