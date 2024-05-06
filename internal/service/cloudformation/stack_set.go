@@ -274,7 +274,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			output, err := conn.CreateStackSet(ctx, input)
+			_, err := conn.CreateStackSet(ctx, input)
 
 			if err != nil {
 				return nil, err
@@ -283,7 +283,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 			operation, err := waitStackSetCreated(ctx, conn, name, d.Get("call_as").(string), d.Timeout(schema.TimeoutCreate))
 
 			if err != nil {
-				return nil, fmt.Errorf("waiting for CloudFormation StackSet (%s) create: %w", aws.ToString(output.StackSetId), err)
+				return nil, fmt.Errorf("waiting for create: %w", err)
 			}
 
 			return operation, nil

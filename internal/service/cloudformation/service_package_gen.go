@@ -58,8 +58,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceStackSetInstance,
+			Factory:  resourceStackSetInstance,
 			TypeName: "aws_cloudformation_stack_set_instance",
+			Name:     "Stack Set Instance",
 		},
 		{
 			Factory:  resourceType,

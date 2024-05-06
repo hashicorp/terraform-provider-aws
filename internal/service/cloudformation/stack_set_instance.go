@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -15,7 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,11 +26,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_cloudformation_stack_set_instance")
-func ResourceStackSetInstance() *schema.Resource {
+const (
+	stackSetInstanceResourceIDPartCount = 3
+)
+
+// @SDKResource("aws_cloudformation_stack_set_instance", name="Stack Set Instance")
+func resourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetInstanceCreate,
 		ReadWithoutTimeout:   resourceStackSetInstanceRead,
@@ -183,10 +190,6 @@ func ResourceStackSetInstance() *schema.Resource {
 	}
 }
 
-var (
-	accountIDRegexp = regexache.MustCompile(`^\d{12}$`)
-)
-
 func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
@@ -210,6 +213,8 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	// organizational_unit_id's from the deployment_targets argument. This
 	// is composed with stack_set_name and region to form the resources ID.
 	accountOrOrgID := accountID
+
+	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
@@ -235,7 +240,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			input.OperationId = aws.String(id.UniqueId())
+			input.OperationId = aws.String(sdkid.UniqueId())
 
 			output, err := conn.CreateStackInstances(ctx, input)
 
@@ -243,12 +248,14 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 				return nil, err
 			}
 
-			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountOrOrgID, region))
+			d.SetId(id)
 
 			operation, err := waitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+
 			if err != nil {
-				return nil, fmt.Errorf("waiting for completion: %w", err)
+				return nil, fmt.Errorf("waiting for create: %w", err)
 			}
+
 			return operation, nil
 		},
 		func(err error) (bool, error) {
@@ -301,19 +308,20 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
+	parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	d.Set("region", region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)
 
-	if accountIDRegexp.MatchString(accountOrOrgID) {
+	if itypes.IsAWSAccountID(accountOrOrgID) {
 		// Stack instances deployed by account ID
-		stackInstance, err := FindStackInstanceByName(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
+		stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
@@ -337,7 +345,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		// Stack instances deployed by organizational unit ID
 		orgIDs := strings.Split(accountOrOrgID, "/")
 
-		summaries, err := FindStackInstanceSummariesByOrgIDs(ctx, conn, stackSetName, region, callAs, orgIDs)
+		summaries, err := findStackInstanceSummariesByFourPartKey(ctx, conn, stackSetName, region, callAs, orgIDs)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
@@ -361,14 +369,15 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
-		stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
+		parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
+		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 		input := &cloudformation.UpdateStackInstancesInput{
 			Accounts:           []string{accountOrOrgID},
-			OperationId:        aws.String(id.UniqueId()),
+			OperationId:        aws.String(sdkid.UniqueId()),
 			ParameterOverrides: []awstypes.Parameter{},
 			Regions:            []string{region},
 			StackSetName:       aws.String(stackSetName),
@@ -412,14 +421,15 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
+	parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	input := &cloudformation.DeleteStackInstancesInput{
 		Accounts:     []string{accountOrOrgID},
-		OperationId:  aws.String(id.UniqueId()),
+		OperationId:  aws.String(sdkid.UniqueId()),
 		Regions:      []string{region},
 		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
 		StackSetName: aws.String(stackSetName),
@@ -459,35 +469,81 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceStackSetInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	switch parts := strings.Split(d.Id(), stackSetInstanceResourceIDSeparator); len(parts) {
+	switch parts := strings.Split(d.Id(), flex.ResourceIdSeparator); len(parts) {
 	case 3:
 	case 4:
-		d.SetId(strings.Join([]string{parts[0], parts[1], parts[2]}, stackSetInstanceResourceIDSeparator))
+		d.SetId(strings.Join([]string{parts[0], parts[1], parts[2]}, flex.ResourceIdSeparator))
 		d.Set("call_as", parts[3])
 	default:
-		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: STACKSETNAME%[2]sACCOUNTID%[2]sREGION or STACKSETNAME%[2]sACCOUNTID%[2]sREGION%[2]sCALLAS", d.Id(), stackSetInstanceResourceIDSeparator)
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: STACKSETNAME%[2]sACCOUNTID%[2]sREGION or STACKSETNAME%[2]sACCOUNTID%[2]sREGION%[2]sCALLAS", d.Id(), flex.ResourceIdSeparator)
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-const stackSetInstanceResourceIDSeparator = ","
+func findStackInstanceSummariesByFourPartKey(ctx context.Context, conn *cloudformation.Client, stackSetName, region, callAs string, orgIDs []string) ([]awstypes.StackInstanceSummary, error) {
+	input := &cloudformation.ListStackInstancesInput{
+		StackInstanceRegion: aws.String(region),
+		StackSetName:        aws.String(stackSetName),
+	}
+	if callAs != "" {
+		input.CallAs = awstypes.CallAs(callAs)
+	}
+	var output []awstypes.StackInstanceSummary
 
-func StackSetInstanceCreateResourceID(stackSetName, accountID, region string) string {
-	parts := []string{stackSetName, accountID, region}
-	id := strings.Join(parts, stackSetInstanceResourceIDSeparator)
+	pages := cloudformation.NewListStackInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	return id
-}
+		if errs.IsA[*awstypes.StackSetNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
 
-func StackSetInstanceParseResourceID(id string) (string, string, string, error) {
-	parts := strings.Split(id, stackSetInstanceResourceIDSeparator)
+		if err != nil {
+			return nil, err
+		}
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
+		for _, v := range page.Summaries {
+			if slices.Contains(orgIDs, aws.ToString(v.OrganizationalUnitId)) {
+				output = append(output, v)
+			}
+		}
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected STACKSETNAME%[2]sACCOUNTID%[2]sREGION", id, stackSetInstanceResourceIDSeparator)
+	return output, nil
+}
+
+func findStackInstanceByFourPartKey(ctx context.Context, conn *cloudformation.Client, stackSetName, accountID, region, callAs string) (*awstypes.StackInstance, error) {
+	input := &cloudformation.DescribeStackInstanceInput{
+		StackInstanceAccount: aws.String(accountID),
+		StackInstanceRegion:  aws.String(region),
+		StackSetName:         aws.String(stackSetName),
+	}
+	if callAs != "" {
+		input.CallAs = awstypes.CallAs(callAs)
+	}
+
+	output, err := conn.DescribeStackInstance(ctx, input)
+
+	if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StackInstance == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.StackInstance, nil
 }
 
 func expandDeploymentTargets(tfList []interface{}) *awstypes.DeploymentTargets {

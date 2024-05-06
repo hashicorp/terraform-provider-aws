@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -445,17 +446,16 @@ func testAccCheckStackSetInstanceExists(ctx context.Context, resourceName string
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		callAs := rs.Primary.Attributes["call_as"]
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
-		stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
-
+		parts, err := flex.ExpandResourceId(rs.Primary.ID, tfcloudformation.StackSetInstanceResourceIDPartCount, false)
 		if err != nil {
 			return err
 		}
 
-		output, err := tfcloudformation.FindStackInstanceByName(ctx, conn, stackSetName, accountID, region, callAs)
+		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
+		callAs := rs.Primary.Attributes["call_as"]
+		output, err := tfcloudformation.FindStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 
 		if err != nil {
 			return err
@@ -477,17 +477,17 @@ func testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx context.Context
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		callAs := rs.Primary.Attributes["call_as"]
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
-		stackSetName, accountOrOrgID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
+		parts, err := flex.ExpandResourceId(rs.Primary.ID, tfcloudformation.StackSetInstanceResourceIDPartCount, false)
 		if err != nil {
 			return err
 		}
-		orgIDs := strings.Split(accountOrOrgID, "/")
 
-		output, err := tfcloudformation.FindStackInstanceSummariesByOrgIDs(ctx, conn, stackSetName, region, callAs, orgIDs)
+		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
+		orgIDs := strings.Split(accountOrOrgID, "/")
+		callAs := rs.Primary.Attributes["call_as"]
+		output, err := tfcloudformation.FindStackInstanceSummariesByFourPartKey(ctx, conn, stackSetName, region, callAs, orgIDs)
 
 		if err != nil {
 			return err
@@ -511,15 +511,15 @@ func testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx context.Contex
 				continue
 			}
 
-			callAs := rs.Primary.Attributes["call_as"]
-
-			stackSetName, accountOrOrgID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
+			parts, err := flex.ExpandResourceId(rs.Primary.ID, tfcloudformation.StackSetInstanceResourceIDPartCount, false)
 			if err != nil {
 				return err
 			}
-			orgIDs := strings.Split(accountOrOrgID, "/")
 
-			output, err := tfcloudformation.FindStackInstanceSummariesByOrgIDs(ctx, conn, stackSetName, region, callAs, orgIDs)
+			stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
+			orgIDs := strings.Split(accountOrOrgID, "/")
+			callAs := rs.Primary.Attributes["call_as"]
+			output, err := tfcloudformation.FindStackInstanceSummariesByFourPartKey(ctx, conn, stackSetName, region, callAs, orgIDs)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -564,15 +564,14 @@ func testAccCheckStackSetInstanceDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			callAs := rs.Primary.Attributes["call_as"]
-
-			stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(rs.Primary.ID)
-
+			parts, err := flex.ExpandResourceId(rs.Primary.ID, tfcloudformation.StackSetInstanceResourceIDPartCount, false)
 			if err != nil {
 				return err
 			}
 
-			_, err = tfcloudformation.FindStackInstanceByName(ctx, conn, stackSetName, accountID, region, callAs)
+			stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
+			callAs := rs.Primary.Attributes["call_as"]
+			_, err = tfcloudformation.FindStackInstanceByFourPartKey(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
 
 			if tfresource.NotFound(err) {
 				continue
