@@ -71,7 +71,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dms_event_subscription",
 			Name:     "Event Subscription",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -79,7 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dms_replication_config",
 			Name:     "Replication Config",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
