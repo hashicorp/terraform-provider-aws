@@ -30,7 +30,7 @@ func testAccTemplatesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTemplatesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "region", regionDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "region", regionDataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "templates.#", "1"),
 				),
 			},
