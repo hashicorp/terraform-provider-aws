@@ -20,12 +20,15 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.ConfigMultipleRegionProvider(2)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_basic(rName),
+				Config: testAccGlobalClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "database_name", resourceName, "database_name"),
@@ -53,7 +56,7 @@ data "aws_region" "current" {}
 resource "aws_rds_global_cluster" "test" {
 		global_cluster_identifier = "%[1]s"
 		engine                    = "aurora-postgresql"
-		engine_version            = "12.4"
+		engine_version            = "15.5"
 		database_name             = "example_db"
 }
 
@@ -65,7 +68,6 @@ resource "aws_rds_cluster" "primary" {
 		master_password           = "somepass123"
 		database_name             = "example_db"
 		global_cluster_identifier = aws_rds_global_cluster.test.id
-		db_subnet_group_name      = "test"
 		skip_final_snapshot       = true
 		
 		depends_on = [
@@ -76,8 +78,7 @@ resource "aws_rds_cluster" "primary" {
 resource "aws_rds_cluster_instance" "primary" {
 		identifier           = "test-primary-cluster-instance"
 		cluster_identifier   = aws_rds_cluster.primary.id
-		instance_class       = "db.r4.large"
-		db_subnet_group_name = "test"
+		instance_class       = "db.r5.large"
 		engine               = aws_rds_global_cluster.test.engine
 		engine_version       = aws_rds_global_cluster.test.engine_version
 		
@@ -94,7 +95,6 @@ resource "aws_rds_cluster" "secondary" {
 		global_cluster_identifier = aws_rds_global_cluster.test.id
 		replication_source_identifier = aws_rds_cluster.primary.arn
 		source_region 			  = data.aws_region.alternate.name
-		db_subnet_group_name      = "test"
 		skip_final_snapshot       = true
 		depends_on = [
 			aws_rds_cluster_instance.primary
@@ -105,8 +105,7 @@ resource "aws_rds_cluster_instance" "secondary" {
 		provider             = "awsalternate"
 		identifier           = "test-secondary-cluster-instance"
 		cluster_identifier   = aws_rds_cluster.secondary.id
-		instance_class       = "db.r4.large"
-		db_subnet_group_name = "test"
+		instance_class       = "db.r5.large"
 		engine               = aws_rds_global_cluster.test.engine
 		engine_version       = aws_rds_global_cluster.test.engine_version
 	  
