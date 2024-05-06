@@ -36,9 +36,9 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexache.MustCompile(`resource-share/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -68,9 +68,9 @@ func TestAccRAMResourceShare_permission(t *testing.T) {
 				Config: testAccResourceShareConfig_namePermission(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexache.MustCompile(`resource-share/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -136,7 +136,7 @@ func TestAccRAMResourceShare_name(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -148,7 +148,7 @@ func TestAccRAMResourceShare_name(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

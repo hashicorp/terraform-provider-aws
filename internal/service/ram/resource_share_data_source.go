@@ -26,7 +26,7 @@ func dataSourceResourceShare() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceShareRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +35,7 @@ func dataSourceResourceShare() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -47,7 +47,7 @@ func dataSourceResourceShare() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -73,11 +73,11 @@ func dataSourceResourceShare() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -91,7 +91,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 		ResourceOwner: aws.String(resourceOwner),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		inputG.Name = aws.String(v.(string))
 	}
 
@@ -111,10 +111,10 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 
 	arn := aws.StringValue(share.ResourceShareArn)
 	d.SetId(arn)
-	d.Set("arn", arn)
-	d.Set("name", share.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, share.Name)
 	d.Set("owning_account_id", share.OwningAccountId)
-	d.Set("status", share.Status)
+	d.Set(names.AttrStatus, share.Status)
 
 	setTagsOut(ctx, share.Tags)
 
@@ -143,7 +143,7 @@ func expandTagFilter(tfMap map[string]interface{}) *ram.TagFilter {
 
 	apiObject := &ram.TagFilter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
