@@ -66,7 +66,7 @@ This argument supports the following arguments:
 
 ### Contact Blocks
 
-The `admin_contact`, `registrant_contact` and `tech_contact` blocks support the following:
+The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` blocks support the following:
 
 * `address_line_1` - (Optional) First line of the contact's address.
 * `address_line_2` - (Optional) Second line of contact's address, if any.
@@ -139,4 +139,4 @@ Using `terraform import`, import domains using the domain name. For example:
 % terraform import aws_route53domains_registered_domain.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c569bdb14e20e946199538f9489aec56d2ab0d9ba80660ce3c540c45817507e9 -->
+<!-- cache-key: cdktf-0.20.1 input-7cc92ab48d14443f131e023a18d60187c4e0e6ecc769f7e453f63191990e5316 -->

@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Data Lake.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating other Security Lake resources. Use a `dependsOn` statement.
+
 ## Example Usage
 
 ```typescript
@@ -181,4 +183,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securitylake_data_lake.example arn:aws:securitylake:eu-west-1:123456789012:data-lake/default
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a5bc47b9a47e04dc9cb7d96bbd914efb6ccf589fd31e41381faa82220c3aca2e -->
+<!-- cache-key: cdktf-0.20.1 input-cd4f7b125108e23d500096c3b34e293b2a53008e5efa8927c049ea69bd7889ab -->

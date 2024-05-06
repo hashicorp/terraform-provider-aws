@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Custom Log Source.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_custom_log_source`. Use a `dependsOn` statement.
+
 ## Example Usage
 
 ### Basic Usage
@@ -44,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
           ],
         },
       ],
+      dependsOn: [awsSecuritylakeDataLakeExample],
       eventClasses: ["FILE_ACTIVITY"],
       sourceName: "example-name",
       sourceVersion: "1.0",
@@ -63,8 +66,10 @@ This resource supports the following arguments:
     * `providerIdentity` - (Required) The identity of the log provider for the third-party custom source.
         * `externalId` - (Required) The external ID used to estalish trust relationship with the AWS identity.
         * `principal` - (Required) The AWS identity principal.
-* `eventClasses` - (Required) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
-* `sourceName` - (Required) Specify the name for a third-party custom source. This must be a Regionally unique value.
+* `eventClasses` - (Optional) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
+* `sourceName` - (Required) Specify the name for a third-party custom source.
+  This must be a Regionally unique value.
+  Has a maximum length of 20.
 * `sourceVersion` - (Optional) Specify the source version for the third-party custom source, to limit log collection to a specific version of custom data source.
 
 ## Attribute Reference
@@ -74,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `attributes` - The attributes of a third-party custom source.
     * `crawler_arn` - The ARN of the AWS Glue crawler.
     * `database_arn` - The ARN of the AWS Glue database where results are written.
-    * `table_arn` - The ARN of the AWS Glue table.
+    * `tableArn` - The ARN of the AWS Glue table.
 * `providerDetails` - The details of the log provider for a third-party custom source.
     * `location` - The location of the partition in the Amazon S3 bucket for Security Lake.
     * `roleArn` - The ARN of the IAM role to be used by the entity putting logs into your custom source partition.
@@ -111,4 +116,4 @@ Using `terraform import`, import Custom log sources using the source name. For e
 % terraform import aws_securitylake_custom_log_source.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bdb52023589de4d31122cd46341ede7c69c309abe20aa5a3742b45830460065a -->
+<!-- cache-key: cdktf-0.20.1 input-fe7ea5dfcf4721825eec4e59e42112d25a58abf1f74522209383f9ff03f0244a -->
