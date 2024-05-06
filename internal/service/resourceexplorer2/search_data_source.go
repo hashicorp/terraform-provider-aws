@@ -43,7 +43,7 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 			"query_string": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"view_arn": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
@@ -69,7 +69,7 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"arn": schema.StringAttribute{
+						names.AttrARN: schema.StringAttribute{
 							Computed: true,
 						},
 						"last_reported_at": schema.StringAttribute{
@@ -99,7 +99,7 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 									"last_reported_at": schema.StringAttribute{
 										Computed: true,
 									},
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Computed: true,
 									},
 								},

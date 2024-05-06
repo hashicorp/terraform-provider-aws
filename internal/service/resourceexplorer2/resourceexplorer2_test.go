@@ -16,15 +16,15 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 		"Index": {
 			"basic":      testAccIndex_basic,
 			"disappears": testAccIndex_disappears,
-			"tags":       testAccIndex_tags,
-			"type":       testAccIndex_type,
+			names.AttrTags:       testAccIndex_tags,
+			names.AttrType:       testAccIndex_type,
 		},
 		"View": {
 			"basic":       testAccView_basic,
 			"defaultView": testAccView_defaultView,
 			"disappears":  testAccView_disappears,
 			"filter":      testAccView_filter,
-			"tags":        testAccView_tags,
+			names.AttrTags:        testAccView_tags,
 		},
 		"SearchDataSource": {
 			"basic":     testAccSearchDataSource_basic,
