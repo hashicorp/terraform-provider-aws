@@ -49,7 +49,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -190,7 +190,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
