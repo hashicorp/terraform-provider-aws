@@ -297,7 +297,20 @@ func findTypeByARN(ctx context.Context, conn *cloudformation.Client, arn string)
 		Arn: aws.String(arn),
 	}
 
-	return findType(ctx, conn, input)
+	output, err := findType(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.DeprecatedStatus; status == awstypes.DeprecatedStatusDeprecated {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+			Message:     string(status),
+		}
+	}
+
+	return output, nil
 }
 
 func findTypeByName(ctx context.Context, conn *cloudformation.Client, name string) (*cloudformation.DescribeTypeOutput, error) {
@@ -325,13 +338,6 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if status := output.DeprecatedStatus; status == awstypes.DeprecatedStatusDeprecated {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-			Message:     string(status),
-		}
 	}
 
 	return output, nil

@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudformation_type")
-func DataSourceType() *schema.Resource {
+// @SDKDataSource("aws_cloudformation_type", name="Type")
+func dataSourceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTypeRead,
 
@@ -114,7 +114,6 @@ func DataSourceType() *schema.Resource {
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
@@ -135,18 +134,13 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeType(ctx, input)
+	output, err := findType(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: empty response")
-	}
-
 	d.SetId(aws.ToString(output.Arn))
-
 	d.Set("arn", output.Arn)
 	d.Set("default_version_id", output.DefaultVersionId)
 	d.Set("deprecated_status", output.DeprecatedStatus)

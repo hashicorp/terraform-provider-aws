@@ -34,8 +34,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_cloudformation_stack",
 		},
 		{
-			Factory:  DataSourceType,
+			Factory:  dataSourceType,
 			TypeName: "aws_cloudformation_type",
+			Name:     "Type",
 		},
 	}
 }
