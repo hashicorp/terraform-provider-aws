@@ -153,10 +153,6 @@ func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.T
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudFormation Type ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 		_, err := tfcloudformation.FindTypeByARN(ctx, conn, rs.Primary.ID)

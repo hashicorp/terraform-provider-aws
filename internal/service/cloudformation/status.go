@@ -58,19 +58,3 @@ func StatusStackSetOperation(ctx context.Context, conn *cloudformation.Client, s
 		return output, string(output.Status), nil
 	}
 }
-
-func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindTypeRegistrationByToken(ctx, conn, registrationToken)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.ProgressStatus), nil
-	}
-}

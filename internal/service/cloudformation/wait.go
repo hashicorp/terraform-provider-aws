@@ -104,24 +104,3 @@ func WaitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 
 	return nil, waitErr
 }
-
-const (
-	TypeRegistrationTimeout = 5 * time.Minute
-)
-
-func WaitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudformation.Client, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.RegistrationStatusInProgress),
-		Target:  enum.Slice(awstypes.RegistrationStatusComplete),
-		Refresh: StatusTypeRegistrationProgress(ctx, conn, registrationToken),
-		Timeout: TypeRegistrationTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*cloudformation.DescribeTypeRegistrationOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}
