@@ -35,7 +35,7 @@ func setResponsePlanResourceData(
 	if err := d.Set("action", flattenAction(getResponsePlanOutput.Actions)); err != nil {
 		return d, err
 	}
-	if err := d.Set("arn", getResponsePlanOutput.Arn); err != nil {
+	if err := d.Set(names.AttrARN, getResponsePlanOutput.Arn); err != nil {
 		return d, err
 	}
 	if err := d.Set("chat_channel", flattenChatChannel(getResponsePlanOutput.ChatChannel)); err != nil {

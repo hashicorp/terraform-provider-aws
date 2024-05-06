@@ -24,7 +24,7 @@ func dataSourceTopic() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTopicRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	topicARN := aws.ToString(topic.TopicArn)
 	d.SetId(topicARN)
-	d.Set("arn", topicARN)
+	d.Set(names.AttrARN, topicARN)
 
 	return nil
 }

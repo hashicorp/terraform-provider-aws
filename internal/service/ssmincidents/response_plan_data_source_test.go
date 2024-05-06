@@ -53,10 +53,10 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.%", dataSourceName, "incident_template.0.incident_tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.a", dataSourceName, "incident_template.0.incident_tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.b", dataSourceName, "incident_template.0.incident_tags.b"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "display_name", dataSourceName, "display_name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "chat_channel.0", chatChannelTopic, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "chat_channel.0", chatChannelTopic, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"engagements.0",
@@ -73,7 +73,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 						dataSourceName,
 						"action.0.ssm_automation.0.role_arn",
 						"aws_iam_role.role",
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttrPair(
 						resourceName,
@@ -175,7 +175,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "tags.a", dataSourceName, "tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.b", dataSourceName, "tags.b"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
 				),
 			},
 		},

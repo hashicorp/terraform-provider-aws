@@ -40,11 +40,11 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_db_instance.test", "address"),
-					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_db_instance.test", "port"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_db_instance.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "type", "RDS_INSTANCE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "RDS_INSTANCE"),
 				),
 			},
 			{
@@ -77,11 +77,11 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_rds_cluster.test", "port"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_rds_cluster.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "type", "TRACKED_CLUSTER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "TRACKED_CLUSTER"),
 				),
 			},
 			{

@@ -21,7 +21,7 @@ func DataSourceStateMachine() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStateMachineRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +33,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +41,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,14 +95,14 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(arn)
-	d.Set("arn", output.StateMachineArn)
+	d.Set(names.AttrARN, output.StateMachineArn)
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrName, output.Name)
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 
 	return nil
 }

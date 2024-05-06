@@ -48,8 +48,8 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
-						"data": "",
-						"type": "BODY",
+						"data":         "",
+						names.AttrType: "BODY",
 					}),
 				),
 			},
@@ -155,8 +155,8 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
-						"data": "",
-						"type": "BODY",
+						"data":         "",
+						names.AttrType: "BODY",
 					}),
 				),
 			},
@@ -175,8 +175,8 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
-						"data": "",
-						"type": "BODY",
+						"data":         "",
+						names.AttrType: "BODY",
 					}),
 				),
 			},

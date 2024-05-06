@@ -27,11 +27,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
 	subscriptionSchema = map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -82,7 +83,7 @@ var (
 			Computed:     true, // When filter_policy is set, this defaults to MessageAttributes.
 			ValidateFunc: validation.StringInSlice(subscriptionFilterPolicyScope_Values(), false),
 		},
-		"owner_id": {
+		names.AttrOwnerID: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -137,13 +138,13 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"arn":                            subscriptionAttributeNameSubscriptionARN,
+		names.AttrARN:                    subscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
 		"endpoint":                       subscriptionAttributeNameEndpoint,
 		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
-		"owner_id":                       subscriptionAttributeNameOwner,
+		names.AttrOwnerID:                subscriptionAttributeNameOwner,
 		"pending_confirmation":           subscriptionAttributeNamePendingConfirmation,
 		"protocol":                       subscriptionAttributeNameProtocol,
 		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,

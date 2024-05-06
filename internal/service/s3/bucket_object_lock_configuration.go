@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_object_lock_configuration", name="Bucket Object Lock Configuration")
@@ -35,7 +36,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -99,7 +100,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
@@ -167,7 +168,7 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("reading S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled)
 	if err := d.Set("rule", flattenObjectLockRule(objLockConfig.Rule)); err != nil {

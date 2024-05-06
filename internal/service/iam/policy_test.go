@@ -37,12 +37,12 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "attachment_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "policy", expectedPolicyText),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
 				),
@@ -72,7 +72,7 @@ func TestAccIAMPolicy_description(t *testing.T) {
 				Config: testAccPolicyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -223,14 +223,14 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "policy", policy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, policy1),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "policy", policy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, policy2),
 				),
 			},
 			{

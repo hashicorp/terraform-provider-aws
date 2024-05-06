@@ -39,7 +39,7 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`og:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`og:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "engine_name", "mysql"),
 					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "8.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -286,7 +286,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*.option_settings.*", map[string]string{
-						"value": "UTC",
+						names.AttrValue: "UTC",
 					}),
 				),
 			},
@@ -305,7 +305,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*.option_settings.*", map[string]string{
-						"value": "US/Pacific",
+						names.AttrValue: "US/Pacific",
 					}),
 				),
 			},
@@ -558,7 +558,7 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"port": "3872",
+						names.AttrPort: "3872",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
 						"option_name": "SQLT",
@@ -577,15 +577,15 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"port": "3873",
+						names.AttrPort: "3873",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"option_name": "SQLT",
-						"version":     "2018-07-25.v1",
+						"option_name":     "SQLT",
+						names.AttrVersion: "2018-07-25.v1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"option_name": "S3_INTEGRATION",
-						"version":     "1.0",
+						"option_name":     "S3_INTEGRATION",
+						names.AttrVersion: "1.0",
 					}),
 				),
 			},

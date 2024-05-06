@@ -96,7 +96,7 @@ func testAccCheckImageAttributes(n string, image *types.WorkspaceImage) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "id", *image.ImageId)(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrID, *image.ImageId)(s); err != nil {
 			return err
 		}
 
@@ -104,7 +104,7 @@ func testAccCheckImageAttributes(n string, image *types.WorkspaceImage) resource
 			return err
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "description", *image.Description)(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrDescription, *image.Description)(s); err != nil {
 			return err
 		}
 
@@ -116,7 +116,7 @@ func testAccCheckImageAttributes(n string, image *types.WorkspaceImage) resource
 			return err
 		}
 
-		if err := resource.TestCheckResourceAttr(n, "state", string(image.State))(s); err != nil {
+		if err := resource.TestCheckResourceAttr(n, names.AttrState, string(image.State))(s); err != nil {
 			return err
 		}
 

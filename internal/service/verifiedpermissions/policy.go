@@ -62,8 +62,8 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id":        framework.IDAttribute(),
-			"policy_id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
+			"policy_id":  framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -90,7 +90,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"description": schema.StringAttribute{
+									names.AttrDescription: schema.StringAttribute{
 										Optional: true,
 									},
 									"statement": schema.StringAttribute{

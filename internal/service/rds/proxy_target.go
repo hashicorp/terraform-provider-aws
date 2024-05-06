@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_db_proxy_target", name="DB Proxy Target")
@@ -65,7 +66,7 @@ func resourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -87,7 +88,7 @@ func resourceProxyTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -162,12 +163,12 @@ func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("db_proxy_name", dbProxyName)
 	d.Set("endpoint", dbProxyTarget.Endpoint)
-	d.Set("port", dbProxyTarget.Port)
+	d.Set(names.AttrPort, dbProxyTarget.Port)
 	d.Set("rds_resource_id", dbProxyTarget.RdsResourceId)
 	d.Set("target_arn", dbProxyTarget.TargetArn)
 	d.Set("target_group_name", targetGroupName)
 	d.Set("tracked_cluster_id", dbProxyTarget.TrackedClusterId)
-	d.Set("type", dbProxyTarget.Type)
+	d.Set(names.AttrType, dbProxyTarget.Type)
 
 	return diags
 }

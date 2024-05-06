@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_signer_signing_job")
@@ -95,11 +96,11 @@ func DataSourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -119,15 +120,15 @@ func DataSourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -137,7 +138,7 @@ func DataSourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -218,7 +219,7 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
-	if err := d.Set("status", describeSigningJobOutput.Status); err != nil {
+	if err := d.Set(names.AttrStatus, describeSigningJobOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 

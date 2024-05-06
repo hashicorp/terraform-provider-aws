@@ -38,7 +38,7 @@ func TestAccSESV2EmailIdentityPolicy_basic(t *testing.T) {
 					testAccCheckEmailIdentityPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", emailIdentity),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{

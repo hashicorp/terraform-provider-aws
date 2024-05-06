@@ -46,8 +46,8 @@ func testContact_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "PERSONAL"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`contact/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PERSONAL"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/+.`)),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func testContact_updateType(t *testing.T) {
 				Config: testAccContactConfig_type(name, personalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", personalType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, personalType),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func testContact_updateType(t *testing.T) {
 				Config: testAccContactConfig_type(name, escalationType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", escalationType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, escalationType),
 				),
 			},
 			{

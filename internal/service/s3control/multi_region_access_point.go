@@ -53,7 +53,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 							MaxItems: 20,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -142,7 +142,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -214,13 +214,13 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 	}.String()
 	d.Set("account_id", accountID)
 	d.Set("alias", alias)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
 		return diag.Errorf("setting details: %s", err)
 	}
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
 	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
-	d.Set("status", accessPoint.Status)
+	d.Set(names.AttrStatus, accessPoint.Status)
 
 	return nil
 }
@@ -436,7 +436,7 @@ func expandRegion(tfMap map[string]interface{}) *types.Region {
 
 	apiObject := &types.Region{}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
 	}
 
@@ -525,7 +525,7 @@ func flattenRegionReport(apiObject types.RegionReport) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.BucketAccountId; v != nil {

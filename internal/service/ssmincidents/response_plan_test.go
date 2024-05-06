@@ -49,7 +49,7 @@ func testResponsePlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", rImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", iniTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", iniImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", updName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", updName)),
 				),
 			},
 			{
@@ -391,8 +391,8 @@ func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.dedupe_string", rDedupeStringIni),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.summary", rSummaryIni),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.incident_tags."+rTagKeyIni, rTagValIni),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
 				),
 			},
 			{
@@ -409,8 +409,8 @@ func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.dedupe_string", rDedupeStringUpd),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.summary", rSummaryUpd),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.incident_tags."+rTagKeyUpd, rTagValUpd),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic3, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic3, names.AttrARN),
 				),
 			},
 			{
@@ -500,7 +500,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic1, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic1, names.AttrARN),
 				),
 			},
 			{
@@ -514,7 +514,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic2, names.AttrARN),
 				),
 			},
 			{
@@ -528,8 +528,8 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic1, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic1, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic2, names.AttrARN),
 				),
 			},
 			{
@@ -675,7 +675,7 @@ func testResponsePlan_action(t *testing.T) {
 						resourceName,
 						"action.0.ssm_automation.0.role_arn",
 						"aws_iam_role.role1",
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -690,7 +690,7 @@ func testResponsePlan_action(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.name",
-						"key",
+						names.AttrKey,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -736,7 +736,7 @@ func testResponsePlan_action(t *testing.T) {
 						resourceName,
 						"action.0.ssm_automation.0.role_arn",
 						"aws_iam_role.role2",
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,

@@ -25,7 +25,7 @@ func DataSourceDocument() *schema.Resource {
 		ReadWithoutTimeout: dataDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,9 +85,9 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 			AccountID: meta.(*conns.AWSClient).AccountID,
 			Resource:  fmt.Sprintf("document/%s", name),
 		}.String()
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 	} else {
-		d.Set("arn", name)
+		d.Set(names.AttrARN, name)
 	}
 	d.Set("content", output.Content)
 	d.Set("document_format", output.DocumentFormat)

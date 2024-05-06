@@ -31,7 +31,7 @@ func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +129,7 @@ func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *
 		}
 	}
 
-	if err := d.Set("arn", lifecycleConfig.NotebookInstanceLifecycleConfigArn); err != nil {
+	if err := d.Set(names.AttrARN, lifecycleConfig.NotebookInstanceLifecycleConfigArn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arn for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 

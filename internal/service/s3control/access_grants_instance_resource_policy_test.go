@@ -32,14 +32,14 @@ func testAccAccessGrantsInstanceResourcePolicy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 		},
 	})

@@ -38,7 +38,7 @@ func ResourceRateBasedRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceRateBasedRule() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
@@ -154,7 +154,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, rule.Name)
 	d.Set("metric_name", rule.MetricName)
 	d.Set("rate_key", rule.RateKey)
@@ -164,9 +164,9 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 
 	for _, predicateSet := range rule.MatchPredicates {
 		predicate := map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
+			"negated":      *predicateSet.Negated,
+			names.AttrType: *predicateSet.Type,
+			"data_id":      *predicateSet.DataId,
 		}
 		predicates = append(predicates, predicate)
 	}

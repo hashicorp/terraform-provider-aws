@@ -31,7 +31,7 @@ func TestAccVPCLatticeServiceNetworkDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServiceNetworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
@@ -64,7 +64,7 @@ func TestAccVPCLatticeServiceNetworkDataSource_shared(t *testing.T) {
 			{
 				Config: testAccServiceNetworkDataSourceConfig_shared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),

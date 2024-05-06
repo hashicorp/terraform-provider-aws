@@ -43,11 +43,11 @@ func ResourceParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -88,7 +88,7 @@ func ResourceParameterGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -112,7 +112,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -124,7 +124,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
 
 	// Set for update
-	d.Set("arn", output.DBParameterGroup.DBParameterGroupArn)
+	d.Set(names.AttrARN, output.DBParameterGroup.DBParameterGroupArn)
 
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
@@ -146,8 +146,8 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := aws.StringValue(dbParameterGroup.DBParameterGroupArn)
-	d.Set("arn", arn)
-	d.Set("description", dbParameterGroup.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, dbParameterGroup.Description)
 	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
 
@@ -385,7 +385,7 @@ func resourceParameterHash(v interface{}) int {
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrName].(string))))
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrValue].(string)))
 
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).

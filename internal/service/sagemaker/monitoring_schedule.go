@@ -38,7 +38,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", monitoringSchedule.MonitoringScheduleArn)
+	d.Set(names.AttrARN, monitoringSchedule.MonitoringScheduleArn)
 	d.Set(names.AttrName, monitoringSchedule.MonitoringScheduleName)
 
 	if err := d.Set("monitoring_schedule_config", flattenMonitoringScheduleConfig(monitoringSchedule.MonitoringScheduleConfig)); err != nil {

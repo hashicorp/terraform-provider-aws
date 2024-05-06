@@ -107,7 +107,7 @@ func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetwork, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("auth_type", out.AuthType)
 	d.Set(names.AttrName, out.Name)
 
@@ -117,7 +117,7 @@ func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, met
 func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateServiceNetworkInput{
 			ServiceNetworkIdentifier: aws.String(d.Id()),
 		}

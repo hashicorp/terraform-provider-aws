@@ -60,7 +60,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -85,7 +85,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -117,7 +117,7 @@ func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.Resour
 		params.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		params.Description = aws.String(v.(string))
 	}
 
@@ -169,7 +169,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 			d.Set("window_id", t.WindowId)
 			d.Set("resource_type", t.ResourceType)
 			d.Set(names.AttrName, t.Name)
-			d.Set("description", t.Description)
+			d.Set(names.AttrDescription, t.Description)
 
 			if err := d.Set("targets", flattenTargets(t.Targets)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting targets: %s", err)
@@ -204,8 +204,8 @@ func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.Resour
 		params.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		params.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("owner_information") {

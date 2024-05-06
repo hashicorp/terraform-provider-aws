@@ -44,7 +44,7 @@ func ResourceResourceDataSync() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -184,7 +184,7 @@ func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destinatio
 	result["region"] = aws.StringValue(dest.Region)
 	result["sync_format"] = aws.StringValue(dest.SyncFormat)
 	if dest.AWSKMSKeyARN != nil {
-		result["kms_key_arn"] = aws.StringValue(dest.AWSKMSKeyARN)
+		result[names.AttrKMSKeyARN] = aws.StringValue(dest.AWSKMSKeyARN)
 	}
 	if dest.Prefix != nil {
 		result["prefix"] = aws.StringValue(dest.Prefix)
@@ -199,7 +199,7 @@ func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDa
 		Region:     aws.String(raw["region"].(string)),
 		SyncFormat: aws.String(raw["sync_format"].(string)),
 	}
-	if v, ok := raw["kms_key_arn"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrKMSKeyARN].(string); ok && v != "" {
 		s3dest.AWSKMSKeyARN = aws.String(v)
 	}
 	if v, ok := raw["prefix"].(string); ok && v != "" {

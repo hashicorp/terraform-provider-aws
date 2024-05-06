@@ -82,7 +82,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -275,7 +275,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -292,7 +292,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -331,7 +331,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -643,7 +643,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EngineVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -670,7 +670,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -773,7 +773,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -793,7 +793,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.NetworkType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -893,7 +893,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -920,7 +920,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1043,7 +1043,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -1071,7 +1071,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.NetworkType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1168,7 +1168,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("allocated_storage", dbc.AllocatedStorage)
 	clusterARN := aws.StringValue(dbc.DBClusterArn)
-	d.Set("arn", clusterARN)
+	d.Set(names.AttrARN, clusterARN)
 	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
@@ -1215,7 +1215,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("iops", dbc.Iops)
-	d.Set("kms_key_id", dbc.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 
 	// Note: the following attributes are not returned by the API
 	// when conducting a read after a create, so we rely on Terraform's
@@ -1237,7 +1237,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
-	d.Set("port", dbc.Port)
+	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
@@ -1408,8 +1408,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
-		if d.HasChange("port") {
-			input.Port = aws.Int64(int64(d.Get("port").(int)))
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int64(int64(d.Get(names.AttrPort).(int)))
 		}
 
 		if d.HasChange("preferred_backup_window") {
@@ -1487,7 +1487,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
 		}
 
-		clusterARN := d.Get("arn").(string)
+		clusterARN := d.Get(names.AttrARN).(string)
 		input := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(o),
@@ -1534,7 +1534,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 	if d.Get("global_cluster_identifier").(string) != "" {
-		clusterARN := d.Get("arn").(string)
+		clusterARN := d.Get(names.AttrARN).(string)
 		globalClusterID := d.Get("global_cluster_identifier").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(clusterARN),

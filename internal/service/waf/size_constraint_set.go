@@ -84,7 +84,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("sizeconstraintset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrName, sizeConstraintSet.Name)
 	if err := d.Set("size_constraints", FlattenSizeConstraints(sizeConstraintSet.SizeConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting size_constraints: %s", err)

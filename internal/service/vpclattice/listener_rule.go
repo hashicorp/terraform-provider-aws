@@ -111,7 +111,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -310,7 +310,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("priority", out.Priority)
 	d.Set(names.AttrName, out.Name)
 	d.Set("listener_identifier", listenerId)
@@ -335,7 +335,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	listenerId := d.Get("listener_identifier").(string)
 	ruleId := d.Get("rule_id").(string)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateRuleInput{
 			RuleIdentifier:     aws.String(ruleId),
 			ListenerIdentifier: aws.String(listenerId),

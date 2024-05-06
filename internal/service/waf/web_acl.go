@@ -36,7 +36,7 @@ func ResourceWebACL() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func ResourceWebACL() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -89,7 +89,7 @@ func ResourceWebACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -113,7 +113,7 @@ func ResourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -126,7 +126,7 @@ func ResourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -137,7 +137,7 @@ func ResourceWebACL() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      waf.WafRuleTypeRegular,
@@ -250,7 +250,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	d.Set("arn", resp.WebACL.WebACLArn)
+	d.Set(names.AttrARN, resp.WebACL.WebACLArn)
 	arn := aws.StringValue(resp.WebACL.WebACLArn)
 
 	if err := d.Set("default_action", FlattenAction(resp.WebACL.DefaultAction)); err != nil {
@@ -312,7 +312,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get(names.AttrARN).(string)),
 			}
 
 			if _, err := conn.PutLoggingConfigurationWithContext(ctx, input); err != nil {
@@ -320,7 +320,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		} else {
 			input := &waf.DeleteLoggingConfigurationInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
+				ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 			}
 
 			if _, err := conn.DeleteLoggingConfigurationWithContext(ctx, input); err != nil {
@@ -444,7 +444,7 @@ func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},

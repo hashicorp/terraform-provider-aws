@@ -31,7 +31,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,7 +180,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -195,7 +195,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -231,7 +231,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,

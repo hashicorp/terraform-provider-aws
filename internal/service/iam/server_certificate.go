@@ -44,7 +44,7 @@ func resourceServerCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,7 +180,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 
 	metadata := cert.ServerCertificateMetadata
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
-	d.Set("arn", metadata.Arn)
+	d.Set(names.AttrARN, metadata.Arn)
 	d.Set("certificate_body", cert.CertificateBody)
 	d.Set("certificate_chain", cert.CertificateChain)
 	if metadata.Expiration != nil {

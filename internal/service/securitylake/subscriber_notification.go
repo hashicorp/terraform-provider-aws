@@ -53,7 +53,7 @@ func (r *subscriberNotificationResource) Metadata(_ context.Context, req resourc
 func (r *subscriberNotificationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"endpoint_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -283,7 +283,7 @@ func (r *subscriberNotificationResource) Delete(ctx context.Context, req resourc
 }
 
 func (r *subscriberNotificationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findSubscriberNotificationByEndPointID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*string, *string, error) {

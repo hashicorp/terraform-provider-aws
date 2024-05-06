@@ -43,7 +43,7 @@ func ResourceReservedInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -176,7 +176,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id(), err)
 	}
 
-	d.Set("arn", reservation.ReservedDBInstanceArn)
+	d.Set(names.AttrARN, reservation.ReservedDBInstanceArn)
 	d.Set("currency_code", reservation.CurrencyCode)
 	d.Set("db_instance_class", reservation.DBInstanceClass)
 	d.Set("duration", reservation.Duration)
@@ -190,7 +190,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("reservation_id", reservation.ReservedDBInstanceId)
 	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
-	d.Set("state", reservation.State)
+	d.Set(names.AttrState, reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
 	return nil

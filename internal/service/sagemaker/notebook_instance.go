@@ -61,7 +61,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				MaxItems: 3,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -123,7 +123,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2)$`), ""),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -171,7 +171,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{})),
 		InstanceType:                         aws.String(d.Get("instance_type").(string)),
 		NotebookInstanceName:                 aws.String(name),
-		RoleArn:                              aws.String(d.Get("role_arn").(string)),
+		RoleArn:                              aws.String(d.Get(names.AttrRoleARN).(string)),
 		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		Tags:                                 getTagsIn(ctx),
 	}
@@ -192,7 +192,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.DirectInternetAccess = aws.String(v.(string))
 	}
 
-	if k, ok := d.GetOk("kms_key_id"); ok {
+	if k, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(k.(string))
 	}
 
@@ -250,16 +250,16 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("accelerator_types", aws.StringValueSlice(notebookInstance.AcceleratorTypes))
 	d.Set("additional_code_repositories", aws.StringValueSlice(notebookInstance.AdditionalCodeRepositories))
-	d.Set("arn", notebookInstance.NotebookInstanceArn)
+	d.Set(names.AttrARN, notebookInstance.NotebookInstanceArn)
 	d.Set("default_code_repository", notebookInstance.DefaultCodeRepository)
 	d.Set("direct_internet_access", notebookInstance.DirectInternetAccess)
 	d.Set("instance_type", notebookInstance.InstanceType)
-	d.Set("kms_key_id", notebookInstance.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, notebookInstance.KmsKeyId)
 	d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName)
 	d.Set(names.AttrName, notebookInstance.NotebookInstanceName)
 	d.Set("network_interface_id", notebookInstance.NetworkInterfaceId)
 	d.Set("platform_identifier", notebookInstance.PlatformIdentifier)
-	d.Set("role_arn", notebookInstance.RoleArn)
+	d.Set(names.AttrRoleARN, notebookInstance.RoleArn)
 	d.Set("root_access", notebookInstance.RootAccess)
 	d.Set("security_groups", aws.StringValueSlice(notebookInstance.SecurityGroups))
 	d.Set("subnet_id", notebookInstance.SubnetId)
@@ -277,7 +277,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateNotebookInstanceInput{
 			NotebookInstanceName: aws.String(d.Get(names.AttrName).(string)),
 		}
@@ -322,8 +322,8 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("root_access") {

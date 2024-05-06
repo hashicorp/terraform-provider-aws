@@ -35,7 +35,7 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Synthetics Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", group.Arn)
+	d.Set(names.AttrARN, group.Arn)
 	d.Set("group_id", group.Id)
 	d.Set(names.AttrName, group.Name)
 

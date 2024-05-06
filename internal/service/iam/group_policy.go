@@ -57,7 +57,7 @@ func resourceGroupPolicy() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -76,7 +76,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -136,7 +136,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -144,7 +144,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("group", groupName)
 	d.Set(names.AttrName, policyName)
 	d.Set("name_prefix", create.NamePrefixFromName(policyName))
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }

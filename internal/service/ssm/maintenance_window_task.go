@@ -37,7 +37,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -117,7 +117,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -711,7 +711,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 		params.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		params.Description = aws.String(v.(string))
 	}
 
@@ -762,7 +762,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("task_arn", resp.TaskArn)
 	d.Set("priority", resp.Priority)
 	d.Set(names.AttrName, resp.Name)
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("cutoff_behavior", resp.CutoffBehavior)
 
 	if resp.TaskInvocationParameters != nil {
@@ -782,7 +782,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("windowtask/%s", windowTaskID),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
@@ -827,7 +827,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 		params.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		params.Description = aws.String(v.(string))
 	}
 

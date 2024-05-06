@@ -36,7 +36,7 @@ func ResourceContactChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func ResourceContactChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": {
+			names.AttrType: {
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Required: true,
@@ -84,7 +84,7 @@ func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, m
 		DeferActivation: aws.Bool(true),
 		DeliveryAddress: delivery_address,
 		Name:            aws.String(d.Get(names.AttrName).(string)),
-		Type:            types.ChannelType(d.Get("type").(string)),
+		Type:            types.ChannelType(d.Get(names.AttrType).(string)),
 	}
 
 	out, err := conn.CreateContactChannel(ctx, in)

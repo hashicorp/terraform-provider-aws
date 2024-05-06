@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
@@ -40,7 +41,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 									Type: schema.TypeString,
 								},
 							},
-							"type": {
+							names.AttrType: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -144,7 +145,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 						},
 					},
 				},
-				"version": {
+				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  "2012-10-17",
@@ -198,7 +199,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 
 	// process the current document
 	doc := &IAMPolicyDoc{
-		Version: d.Get("version").(string),
+		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	if policyID, hasPolicyID := d.GetOk("policy_id"); hasPolicyID {
@@ -364,7 +365,7 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 		var err error
 		item := itemI.(map[string]interface{})
 		out[i] = IAMPolicyStatementPrincipal{
-			Type: item["type"].(string),
+			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
 			policyDecodeConfigStringList(

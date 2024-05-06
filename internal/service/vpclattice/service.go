@@ -90,7 +90,7 @@ func resourceService() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 40),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -157,7 +157,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameService, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("auth_type", out.AuthType)
 	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
@@ -169,7 +169,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("dns_entry", nil)
 	}
 	d.Set(names.AttrName, out.Name)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 
 	return nil
 }
@@ -177,7 +177,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateServiceInput{
 			ServiceIdentifier: aws.String(d.Id()),
 		}

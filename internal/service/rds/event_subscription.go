@@ -47,7 +47,7 @@ func resourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -110,7 +110,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &rds.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsInV2(ctx),
@@ -159,9 +159,9 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", sub.EventSubscriptionArn)
+	d.Set(names.AttrARN, sub.EventSubscriptionArn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-	d.Set("enabled", sub.Enabled)
+	d.Set(names.AttrEnabled, sub.Enabled)
 	d.Set("event_categories", sub.EventCategoriesList)
 	d.Set(names.AttrName, sub.CustSubscriptionId)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
@@ -176,12 +176,12 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
 		input := &rds.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringValueSet(d.Get("event_categories").(*schema.Set))

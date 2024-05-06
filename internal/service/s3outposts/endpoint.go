@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3outposts_endpoint")
@@ -41,7 +42,7 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(s3outposts.EndpointAccessType_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +144,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("access_type", endpoint.AccessType)
-	d.Set("arn", endpoint.EndpointArn)
+	d.Set(names.AttrARN, endpoint.EndpointArn)
 	d.Set("cidr_block", endpoint.CidrBlock)
 	if endpoint.CreationTime != nil {
 		d.Set("creation_time", aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))

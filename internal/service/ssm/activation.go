@@ -39,7 +39,7 @@ func ResourceActivation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -138,7 +138,7 @@ func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading SSM Activation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", activation.Description)
+	d.Set(names.AttrDescription, activation.Description)
 	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)

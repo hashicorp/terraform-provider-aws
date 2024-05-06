@@ -69,7 +69,7 @@ func ResourceReceiptRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,7 +106,7 @@ func ResourceReceiptRule() *schema.Resource {
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -169,7 +169,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -315,7 +315,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("enabled", rule.Enabled)
+	d.Set(names.AttrEnabled, rule.Enabled)
 	d.Set("recipients", flex.FlattenStringSet(rule.Recipients))
 	d.Set("scan_enabled", rule.ScanEnabled)
 	d.Set("tls_policy", rule.TlsPolicy)
@@ -381,7 +381,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.S3Action.KmsKeyArn != nil {
-				s3Action["kms_key_arn"] = aws.StringValue(element.S3Action.KmsKeyArn)
+				s3Action[names.AttrKMSKeyARN] = aws.StringValue(element.S3Action.KmsKeyArn)
 			}
 
 			if element.S3Action.ObjectKeyPrefix != nil {
@@ -474,7 +474,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
@@ -575,7 +575,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("enabled"); ok {
+	if v, ok := d.GetOk(names.AttrEnabled); ok {
 		receiptRule.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -660,8 +660,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				BucketName: aws.String(elem["bucket_name"].(string)),
 			}
 
-			if elem["kms_key_arn"] != "" {
-				s3Action.KmsKeyArn = aws.String(elem["kms_key_arn"].(string))
+			if elem[names.AttrKMSKeyARN] != "" {
+				s3Action.KmsKeyArn = aws.String(elem[names.AttrKMSKeyARN].(string))
 			}
 
 			if elem["object_key_prefix"] != "" {

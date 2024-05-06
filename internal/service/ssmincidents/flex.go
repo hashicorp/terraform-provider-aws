@@ -22,7 +22,7 @@ func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 
 		input := types.RegionMapInputValue{}
 
-		if kmsKey := regionData["kms_key_arn"].(string); kmsKey != "DefaultKey" {
+		if kmsKey := regionData[names.AttrKMSKeyARN].(string); kmsKey != "DefaultKey" {
 			input.SseKmsKeyId = aws.String(kmsKey)
 		}
 
@@ -42,8 +42,8 @@ func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{
 		region := make(map[string]interface{})
 
 		region[names.AttrName] = regionName
-		region["status"] = regionData.Status
-		region["kms_key_arn"] = aws.ToString(regionData.SseKmsKeyId)
+		region[names.AttrStatus] = regionData.Status
+		region[names.AttrKMSKeyARN] = aws.ToString(regionData.SseKmsKeyId)
 
 		if v := regionData.StatusMessage; v != nil {
 			region["status_message"] = aws.ToString(v)
@@ -219,7 +219,7 @@ func expandSSMAutomations(automations []interface{}) []types.Action {
 			ssmAutomation.DocumentName = aws.String(v)
 		}
 
-		if v, ok := automationData["role_arn"].(string); ok {
+		if v, ok := automationData[names.AttrRoleARN].(string); ok {
 			ssmAutomation.RoleArn = aws.String(v)
 		}
 
@@ -261,7 +261,7 @@ func flattenSSMAutomations(actions []types.Action) []interface{} {
 			}
 
 			if v := ssmAutomation.RoleArn; v != nil {
-				a["role_arn"] = aws.ToString(v)
+				a[names.AttrRoleARN] = aws.ToString(v)
 			}
 
 			if v := ssmAutomation.DocumentVersion; v != nil {

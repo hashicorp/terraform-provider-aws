@@ -23,7 +23,7 @@ func dataSourceSAMLProvider() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSAMLProviderRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -40,7 +40,7 @@ func dataSourceSAMLProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"valid_until": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,7 +55,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 	output, err := findSAMLProviderByARN(ctx, conn, arn)
 
 	if err != nil {
@@ -85,7 +85,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

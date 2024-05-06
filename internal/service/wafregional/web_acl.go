@@ -38,7 +38,7 @@ func resourceWebACL() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func resourceWebACL() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -91,7 +91,7 @@ func resourceWebACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(wafregional.MatchFieldType_Values(), false),
@@ -121,7 +121,7 @@ func resourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -139,7 +139,7 @@ func resourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -154,7 +154,7 @@ func resourceWebACL() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  waf.WafRuleTypeRegular,
@@ -283,7 +283,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 			Service:   "waf-regional",
 		}.String()
 	}
-	d.Set("arn", webACLARN)
+	d.Set(names.AttrARN, webACLARN)
 
 	if err := d.Set("default_action", tfwaf.FlattenAction(resp.WebACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
@@ -295,7 +295,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	getLoggingConfigurationInput := &waf.GetLoggingConfigurationInput{
-		ResourceArn: aws.String(d.Get("arn").(string)),
+		ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 	}
 	loggingConfiguration := []interface{}{}
 
@@ -346,7 +346,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get(names.AttrARN).(string)),
 			}
 
 			log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
@@ -355,7 +355,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		} else {
 			input := &waf.DeleteLoggingConfigurationInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
+				ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 			}
 
 			log.Printf("[DEBUG] Deleting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
@@ -486,7 +486,7 @@ func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
