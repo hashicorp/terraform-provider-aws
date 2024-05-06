@@ -5,7 +5,6 @@ package cloudformation
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -17,36 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	ChangeSetCreatedTimeout = 5 * time.Minute
-)
-
-func WaitChangeSetCreated(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
-	stateConf := retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ChangeSetStatusCreateInProgress, awstypes.ChangeSetStatusCreatePending),
-		Target:  enum.Slice(awstypes.ChangeSetStatusCreateComplete),
-		Timeout: ChangeSetCreatedTimeout,
-		Refresh: StatusChangeSet(ctx, conn, stackID, changeSetName),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*cloudformation.DescribeChangeSetOutput); ok {
-		if output.Status == awstypes.ChangeSetStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitStackSetCreated(ctx context.Context, conn *cloudformation.Client, name, callAs string, timeout time.Duration) (*awstypes.StackSet, error) {
 	stateConf := retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.StackSetStatusActive),
-		Timeout: ChangeSetCreatedTimeout,
+		Timeout: timeout,
 		Refresh: StatusStackSet(ctx, conn, name, callAs),
 		Delay:   15 * time.Second,
 	}

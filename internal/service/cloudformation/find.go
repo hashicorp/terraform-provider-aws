@@ -15,32 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindChangeSetByStackIDAndChangeSetName(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
-	input := &cloudformation.DescribeChangeSetInput{
-		ChangeSetName: aws.String(changeSetName),
-		StackName:     aws.String(stackID),
-	}
-
-	output, err := conn.DescribeChangeSet(ctx, input)
-
-	if errs.IsA[*awstypes.ChangeSetNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformation.Client, stackSetName, region, callAs string, orgIDs []string) ([]awstypes.StackInstanceSummary, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),

@@ -11,22 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusChangeSet(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindChangeSetByStackIDAndChangeSetName(ctx, conn, stackID, changeSetName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
-}
-
 func StatusStackSet(ctx context.Context, conn *cloudformation.Client, name, callAs string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStackSetByName(ctx, conn, name, callAs)
