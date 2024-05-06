@@ -41,7 +41,7 @@ func resourceSamplingRule() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceSamplingRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
@@ -130,7 +130,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		ServiceName:   aws.String(d.Get("service_name").(string)),
 		ServiceType:   aws.String(d.Get("service_type").(string)),
 		URLPath:       aws.String(d.Get("url_path").(string)),
-		Version:       aws.Int32(int32(d.Get("version").(int))),
+		Version:       aws.Int32(int32(d.Get(names.AttrVersion).(int))),
 	}
 
 	if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
@@ -169,7 +169,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading XRay Sampling Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", samplingRule.RuleARN)
+	d.Set(names.AttrARN, samplingRule.RuleARN)
 	d.Set("attributes", samplingRule.Attributes)
 	d.Set("fixed_rate", samplingRule.FixedRate)
 	d.Set("host", samplingRule.Host)
@@ -181,7 +181,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("service_name", samplingRule.ServiceName)
 	d.Set("service_type", samplingRule.ServiceType)
 	d.Set("url_path", samplingRule.URLPath)
-	d.Set("version", samplingRule.Version)
+	d.Set(names.AttrVersion, samplingRule.Version)
 
 	return diags
 }
@@ -190,7 +190,7 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		samplingRuleUpdate := &types.SamplingRuleUpdate{
 			FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
 			Host:          aws.String(d.Get("host").(string)),
