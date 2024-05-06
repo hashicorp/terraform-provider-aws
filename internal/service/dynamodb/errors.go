@@ -4,5 +4,6 @@
 package dynamodb
 
 const (
+	errCodeThrottlingException = "ThrottlingException"
 	errCodeValidationException = "ValidationException"
 )

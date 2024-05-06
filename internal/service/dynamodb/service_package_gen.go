@@ -56,7 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Kinesis Streaming Destination",
 		},
 		{
-			Factory:  ResourceTable,
+			Factory:  resourceTable,
 			TypeName: "aws_dynamodb_table",
 			Name:     "Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -64,8 +64,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTableExport,
+			Factory:  resourceTableExport,
 			TypeName: "aws_dynamodb_table_export",
+			Name:     "Table Export",
 		},
 		{
 			Factory:  ResourceTableItem,

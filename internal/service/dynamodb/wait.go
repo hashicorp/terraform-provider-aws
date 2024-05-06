@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	createTableExportTimeout                   = 60 * time.Minute
 	createTableTimeout                         = 30 * time.Minute
 	deleteTableTimeout                         = 10 * time.Minute
 	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
@@ -242,22 +241,6 @@ func waitReplicaSSEUpdated(ctx context.Context, client *conns.AWSClient, region 
 
 	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
 		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTableExportCreated(ctx context.Context, conn *dynamodb.DynamoDB, id string, timeout time.Duration) (*dynamodb.ExportDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{dynamodb.ExportStatusInProgress},
-		Target:  []string{dynamodb.ExportStatusCompleted, dynamodb.ExportStatusFailed},
-		Refresh: statusTableExport(ctx, conn, id),
-		Timeout: maxDuration(createTableExportTimeout, timeout),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*dynamodb.ExportDescription); ok {
-		return out, err
 	}
 
 	return nil, err

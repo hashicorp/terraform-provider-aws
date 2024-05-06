@@ -8,6 +8,8 @@ var (
 	ResourceContributorInsights         = resourceContributorInsights
 	ResourceGlobalTable                 = resourceGlobalTable
 	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
+	ResourceTable                       = resourceTable
+	ResourceTableExport                 = resourceTableExport
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
 
@@ -17,6 +19,8 @@ var (
 	FindGlobalTableByName                        = findGlobalTableByName
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
+	FindTableByName                              = findTableByName
+	FindTableExportByARN                         = findTableExportByARN
 	ListTags                                     = listTags
 	RegionFromARN                                = regionFromARN
 	TableNameFromARN                             = tableNameFromARN
