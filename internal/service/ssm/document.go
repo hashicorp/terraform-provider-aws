@@ -65,7 +65,7 @@ func ResourceDocument() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ssm.AttachmentsSourceKey_Values(), false),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
@@ -128,7 +128,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -154,7 +154,7 @@ func ResourceDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -254,7 +254,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateDocumentInput{
 		Content:        aws.String(d.Get("content").(string)),
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
@@ -345,7 +345,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
-	d.Set("name", doc.Name)
+	d.Set(names.AttrName, doc.Name)
 	d.Set("owner", doc.Owner)
 	if err := d.Set("parameter", flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
@@ -534,7 +534,7 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] Deleting SSM Document: %s", d.Id())
 	_, err := conn.DeleteDocumentWithContext(ctx, &ssm.DeleteDocumentInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
@@ -648,7 +648,7 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSourc
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -701,7 +701,7 @@ func flattenDocumentParameter(apiObject *ssm.DocumentParameter) map[string]inter
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Type; v != nil {

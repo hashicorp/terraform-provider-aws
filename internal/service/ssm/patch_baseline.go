@@ -154,7 +154,7 @@ func resourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -195,7 +195,7 @@ func resourcePatchBaseline() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -230,7 +230,7 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreatePatchBaselineInput{
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		Name:                           aws.String(name),
@@ -323,7 +323,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
 	}
 	d.Set("json", jsonString)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("operating_system", output.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
@@ -367,8 +367,8 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.GlobalFilters = expandPatchFilterGroup(d)
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("rejected_patches") {
@@ -566,7 +566,7 @@ func expandPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 		config := sConfig.(map[string]interface{})
 
 		source := &ssm.PatchSource{
-			Name:          aws.String(config["name"].(string)),
+			Name:          aws.String(config[names.AttrName].(string)),
 			Configuration: aws.String(config["configuration"].(string)),
 			Products:      flex.ExpandStringList(config["products"].([]interface{})),
 		}
@@ -586,7 +586,7 @@ func flattenPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
 
 	for _, source := range sources {
 		s := make(map[string]interface{})
-		s["name"] = aws.StringValue(source.Name)
+		s[names.AttrName] = aws.StringValue(source.Name)
 		s["configuration"] = aws.StringValue(source.Configuration)
 		s["products"] = flex.FlattenStringList(source.Products)
 		result = append(result, s)

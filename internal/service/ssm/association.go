@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_association")
@@ -85,7 +86,7 @@ func ResourceAssociation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -172,7 +173,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
 	associationInput := &ssm.CreateAssociationInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("apply_only_at_cron_interval"); ok {
@@ -276,7 +277,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	d.Set("association_name", association.AssociationName)
 	d.Set("instance_id", association.InstanceId)
-	d.Set("name", association.Name)
+	d.Set(names.AttrName, association.Name)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
 	d.Set("sync_compliance", association.SyncCompliance)
