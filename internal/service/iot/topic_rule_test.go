@@ -590,9 +590,9 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "elasticsearch.*", map[string]string{
-						names.AttrID:    "myIdentifier",
-						"index": "myindex",
-						names.AttrType:  "mydocument",
+						names.AttrID:   "myIdentifier",
+						"index":        "myindex",
+						names.AttrType: "mydocument",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
@@ -626,9 +626,9 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "elasticsearch.*", map[string]string{
-						names.AttrID:    "myIdentifier",
-						"index": "updatedindex",
-						names.AttrType:  "mydocument",
+						names.AttrID:   "myIdentifier",
+						"index":        "updatedindex",
+						names.AttrType: "mydocument",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
@@ -1778,7 +1778,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3.*", map[string]string{
 						"bucket_name": "mybucket",
 						"canned_acl":  "private",
-						names.AttrKey:         "mykey",
+						names.AttrKey: "mykey",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
@@ -1809,7 +1809,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3.*", map[string]string{
 						"bucket_name": "yourbucket",
 						"canned_acl":  "private",
-						names.AttrKey:         "mykey",
+						names.AttrKey: "mykey",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),

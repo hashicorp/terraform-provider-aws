@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
@@ -24,7 +25,7 @@ func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProp
 
 func flattenThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
 	m := map[string]interface{}{
-		names.AttrDescription:           "",
+		names.AttrDescription:   "",
 		"searchable_attributes": flex.FlattenStringSet(nil),
 	}
 
