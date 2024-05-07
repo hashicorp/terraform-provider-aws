@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_devicefarm_upload")
@@ -31,7 +32,7 @@ func ResourceUpload() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +49,7 @@ func ResourceUpload() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -59,7 +60,7 @@ func ResourceUpload() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -78,9 +79,9 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	input := &devicefarm.CreateUploadInput{
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Type:       aws.String(d.Get("type").(string)),
+		Type:       aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("content_type"); ok {
@@ -116,13 +117,13 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := aws.StringValue(upload.Arn)
-	d.Set("name", upload.Name)
-	d.Set("type", upload.Type)
+	d.Set(names.AttrName, upload.Name)
+	d.Set(names.AttrType, upload.Type)
 	d.Set("content_type", upload.ContentType)
 	d.Set("url", upload.Url)
 	d.Set("category", upload.Category)
 	d.Set("metadata", upload.Metadata)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	projectArn, err := decodeProjectARN(arn, "upload", meta)
 	if err != nil {
@@ -142,8 +143,8 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		Arn: aws.String(d.Id()),
 	}
 
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("content_type") {
