@@ -411,6 +411,6 @@ const (
 
 func (propertyName) Values() []propertyName {
 	return []propertyName{
-		names.AttrTags,
+		propertyNameTags,
 	}
 }
