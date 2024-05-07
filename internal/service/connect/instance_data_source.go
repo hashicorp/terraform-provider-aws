@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_instance")
@@ -21,7 +22,7 @@ func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +74,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,7 +137,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
-	d.Set("arn", matchedInstance.Arn)
+	d.Set(names.AttrARN, matchedInstance.Arn)
 	if matchedInstance.CreatedTime != nil {
 		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
 	}
@@ -145,7 +146,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
 	d.Set("service_role", matchedInstance.ServiceRole)
-	d.Set("status", matchedInstance.InstanceStatus)
+	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {
 		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)

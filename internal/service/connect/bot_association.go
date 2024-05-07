@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_bot_association")
@@ -47,7 +48,7 @@ func ResourceBotAssociation() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -207,7 +208,7 @@ func expandLexBot(l []interface{}) *connect.LexBot {
 	}
 
 	result := &connect.LexBot{
-		Name: aws.String(tfMap["name"].(string)),
+		Name: aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	if v, ok := tfMap["lex_region"].(string); ok && v != "" {
@@ -223,8 +224,8 @@ func flattenLexBot(bot *connect.LexBot) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"lex_region": bot.LexRegion,
-		"name":       bot.Name,
+		"lex_region":   bot.LexRegion,
+		names.AttrName: bot.Name,
 	}
 
 	return []interface{}{m}

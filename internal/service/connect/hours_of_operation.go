@@ -40,7 +40,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
@@ -113,7 +113,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -134,7 +134,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	config := expandConfigs(d.Get("config").(*schema.Set).List())
 	input := &connect.CreateHoursOfOperationInput{
 		Config:     config,
@@ -144,7 +144,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 		TimeZone:   aws.String(d.Get("time_zone").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -198,11 +198,11 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set(names.AttrARN, resp.HoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
-	d.Set("description", resp.HoursOfOperation.Description)
-	d.Set("name", resp.HoursOfOperation.Name)
+	d.Set(names.AttrDescription, resp.HoursOfOperation.Description)
+	d.Set(names.AttrName, resp.HoursOfOperation.Name)
 	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
 
 	setTagsOut(ctx, resp.HoursOfOperation.Tags)
@@ -221,13 +221,13 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("config", "description", "name", "time_zone") {
+	if d.HasChanges("config", names.AttrDescription, names.AttrName, "time_zone") {
 		_, err = conn.UpdateHoursOfOperationWithContext(ctx, &connect.UpdateHoursOfOperationInput{
 			Config:             expandConfigs(d.Get("config").(*schema.Set).List()),
-			Description:        aws.String(d.Get("description").(string)),
+			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			HoursOfOperationId: aws.String(hoursOfOperationID),
 			InstanceId:         aws.String(instanceID),
-			Name:               aws.String(d.Get("name").(string)),
+			Name:               aws.String(d.Get(names.AttrName).(string)),
 			TimeZone:           aws.String(d.Get("time_zone").(string)),
 		})
 		if err != nil {
