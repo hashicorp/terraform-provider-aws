@@ -644,6 +644,80 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_workflow(rName, imagebuilder.OnWorkflowFailureAbort, "test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", imagebuilder.OnWorkflowFailureAbort),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_workflow(rName, imagebuilder.OnWorkflowFailureContinue, "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", imagebuilder.OnWorkflowFailureContinue),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_workflowParameter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_workflowParameter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
@@ -704,6 +778,8 @@ func testAccImagePipelineConfig_base(rName string) string {
 data "aws_region" "current" {}
 
 data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
 
 resource "aws_iam_instance_profile" "test" {
   name = aws_iam_role.role.name
@@ -1104,4 +1180,105 @@ resource "aws_imagebuilder_image_pipeline" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccImagePipelineConfig_workflow(rName, onFailure, parallelGroup string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_workflow" "test" {
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
+
+  data = <<-EOT
+  name: test-image
+  description: Workflow to test an image
+  schemaVersion: 1.0
+
+  steps:
+    - name: LaunchTestInstance
+      action: LaunchInstance
+      onFailure: Abort
+      inputs:
+        waitFor: "ssmAgent"
+
+    - name: TerminateTestInstance
+      action: TerminateInstance
+      onFailure: Continue
+      inputs:
+        instanceId.$: "$.stepOutputs.LaunchTestInstance.instanceId"
+  EOT
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  execution_role = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/imagebuilder.amazonaws.com/AWSServiceRoleForImageBuilder"
+
+  workflow {
+    on_failure     = %[2]q
+    parallel_group = %[3]q
+    workflow_arn   = aws_imagebuilder_workflow.test.arn
+  }
+}
+`, rName, onFailure, parallelGroup))
+}
+
+func testAccImagePipelineConfig_workflowParameter(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_workflow" "test" {
+  name    = %[1]q
+  version = "1.0.0"
+  type    = "TEST"
+
+  data = <<-EOT
+  name: test-image
+  description: Workflow to test an image
+  schemaVersion: 1.0
+
+  parameters:
+    - name: waitForActionAtEnd
+      type: boolean
+
+  steps:
+    - name: LaunchTestInstance
+      action: LaunchInstance
+      onFailure: Abort
+      inputs:
+        waitFor: "ssmAgent"
+
+    - name: TerminateTestInstance
+      action: TerminateInstance
+      onFailure: Continue
+      inputs:
+        instanceId.$: "$.stepOutputs.LaunchTestInstance.instanceId"
+
+    - name: WaitForActionAtEnd
+      action: WaitForAction
+      if:
+        booleanEquals: true
+        value: "$.parameters.waitForActionAtEnd"
+  EOT
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  execution_role = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/imagebuilder.amazonaws.com/AWSServiceRoleForImageBuilder"
+
+  workflow {
+    on_failure     = "ABORT"
+    parallel_group = "test"
+    workflow_arn   = aws_imagebuilder_workflow.test.arn
+
+    parameter {
+      name  = "waitForActionAtEnd"
+      value = "true"
+    }
+  }
+}
+`, rName))
 }
