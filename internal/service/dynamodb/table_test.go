@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
@@ -64,7 +65,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"projection_type": "ALL",
 				},
 			},
-			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{},
+			ExpectedUpdates: nil,
 		},
 		{ // No-op => ignore ordering of non_key_attributes
 			Old: []interface{}{
@@ -87,7 +88,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 					"non_key_attributes": schema.NewSet(schema.HashString, []interface{}{"attr1", "attr2", "attr3"}),
 				},
 			},
-			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{},
+			ExpectedUpdates: nil,
 		},
 
 		{ // Creation
@@ -318,13 +319,12 @@ func TestUpdateDiffGSI(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// Convert to strings to avoid dealing with pointers
-		opsS := fmt.Sprintf("%v", ops)
-		opsExpectedS := fmt.Sprintf("%v", tc.ExpectedUpdates)
-
-		if opsS != opsExpectedS {
-			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s",
-				i, opsS, opsExpectedS)
+		if got, want := ops, tc.ExpectedUpdates; !reflect.DeepEqual(got, want) {
+			t.Errorf(
+				"%d: Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+				i,
+				got,
+				want)
 		}
 	}
 }
