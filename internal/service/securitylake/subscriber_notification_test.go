@@ -232,7 +232,7 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, "example-key"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key"),
@@ -252,7 +252,7 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, "example-key-updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key-updated"),
@@ -292,7 +292,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key", "example-value"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key"),
@@ -313,7 +313,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key", "example-value-updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key"),
@@ -334,7 +334,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key-updated", "example-value-three"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key-updated"),
