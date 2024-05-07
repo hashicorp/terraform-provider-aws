@@ -44,7 +44,7 @@ func ResourceJobTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -234,13 +234,13 @@ func ResourceJobTemplate() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -262,7 +262,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateJobTemplateInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
@@ -273,7 +273,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.JobTemplateData = expandJobTemplateData(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyArn = aws.String(v.(string))
 	}
 
@@ -305,7 +305,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Job Template (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vc.Arn)
+	d.Set(names.AttrARN, vc.Arn)
 	if vc.JobTemplateData != nil {
 		if err := d.Set("job_template_data", []interface{}{flattenJobTemplateData(vc.JobTemplateData)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting job_template_data: %s", err)
@@ -313,8 +313,8 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("job_template_data", nil)
 	}
-	d.Set("name", vc.Name)
-	d.Set("kms_key_arn", vc.KmsKeyArn)
+	d.Set(names.AttrName, vc.Name)
+	d.Set(names.AttrKMSKeyARN, vc.KmsKeyArn)
 
 	setTagsOut(ctx, vc.Tags)
 
