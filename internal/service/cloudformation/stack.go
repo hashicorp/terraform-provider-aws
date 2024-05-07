@@ -70,7 +70,7 @@ func resourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func resourceStack() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
@@ -146,7 +146,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	requestToken := id.UniqueId()
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(name),
@@ -168,7 +168,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("on_failure"); ok {
 		input.OnFailure = awstypes.OnFailure(v.(string))
 	}
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("policy_body"); ok {
@@ -258,14 +258,14 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 	d.Set("iam_role_arn", stack.RoleARN)
-	d.Set("name", stack.StackName)
+	d.Set(names.AttrName, stack.StackName)
 	if len(stack.NotificationARNs) > 0 {
 		d.Set("notification_arns", stack.NotificationARNs)
 	}
 	if err := d.Set("outputs", flattenOutputs(stack.Outputs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outputs: %s", err)
 	}
-	if err := d.Set("parameters", flattenParameters(stack.Parameters, d.Get("parameters").(map[string]interface{}))); err != nil {
+	if err := d.Set(names.AttrParameters, flattenParameters(stack.Parameters, d.Get(names.AttrParameters).(map[string]interface{}))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
@@ -297,7 +297,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.NotificationARNs = flex.ExpandStringValueSet(d.Get("notification_arns").(*schema.Set))
 	}
 	// Parameters must be present whether they are changed or not
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 	if d.HasChange("policy_body") {

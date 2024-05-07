@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudformation_export", name="Export")
@@ -26,11 +27,11 @@ func dataSourceExport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +44,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	var value *string
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.ListExportsInput{}
 
 	pages := cloudformation.NewListExportsPaginator(conn, input)
@@ -58,7 +59,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 			if name == aws.ToString(v.Name) {
 				d.Set("exporting_stack_id", v.ExportingStackId)
 				value = v.Value
-				d.Set("value", value)
+				d.Set(names.AttrValue, value)
 			}
 		}
 	}

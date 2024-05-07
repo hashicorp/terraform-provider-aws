@@ -8,13 +8,14 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	arnSeparator = "/"
 	arnService   = "cloudformation"
 
-	arnResourcePrefixType = "type"
+	arnResourcePrefixType = names.AttrType
 )
 
 // typeVersionARNToTypeARNAndVersionID converts Type Version Amazon Resource Name (ARN) to Type ARN and Version ID.
@@ -38,7 +39,7 @@ func typeVersionARNToTypeARNAndVersionID(inputARN string) (string, string, error
 		return "", "", fmt.Errorf("expected %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
 	}
 
-	if actual, expected := resourceParts[0], arnResourcePrefixType; actual != expected {
+	if actual, expected := resourceParts[0], names.AttrType; actual != expected {
 		return "", "", fmt.Errorf("expected resource prefix %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
