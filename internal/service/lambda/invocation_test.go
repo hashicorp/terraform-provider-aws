@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -372,8 +372,8 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 		if ok {
 			return fmt.Errorf("Still found resource in state: %s", name)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
-		res, err := conn.GetParameterWithContext(ctx, &ssm.GetParameterInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		res, err := conn.GetParameter(ctx, &ssm.GetParameterInput{
 			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),
 		})
@@ -394,8 +394,8 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 	}
 }
 
-func removeSSMParameter(ctx context.Context, conn *ssm.SSM, name string) error {
-	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
+func removeSSMParameter(ctx context.Context, conn *ssm.Client, name string) error {
+	_, err := conn.DeleteParameter(ctx, &ssm.DeleteParameterInput{
 		Name: aws.String(name),
 	})
 	return err

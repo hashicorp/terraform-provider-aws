@@ -41,7 +41,7 @@ func ResourceImage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,7 +147,7 @@ func ResourceImage() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,7 +169,7 @@ func ResourceImage() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"description": {
+									names.AttrDescription: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -177,7 +177,7 @@ func ResourceImage() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -214,7 +214,7 @@ func ResourceImage() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -243,13 +243,13 @@ func ResourceImage() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -359,7 +359,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	image := output.Image
 
-	d.Set("arn", image.Arn)
+	d.Set(names.AttrARN, image.Arn)
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
 	}
@@ -385,7 +385,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
-	d.Set("name", image.Name)
+	d.Set(names.AttrName, image.Name)
 	d.Set("os_version", image.OsVersion)
 	if image.OutputResources != nil {
 		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
@@ -393,7 +393,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("output_resources", nil)
 	}
 	d.Set("platform", image.Platform)
-	d.Set("version", image.Version)
+	d.Set(names.AttrVersion, image.Version)
 	if image.Workflows != nil {
 		d.Set("workflow", flattenWorkflowConfigurations(image.Workflows))
 	} else {
@@ -464,7 +464,7 @@ func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Image; v != nil {
@@ -472,7 +472,7 @@ func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_workforce")
@@ -32,7 +33,7 @@ func ResourceWorkforce() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -174,7 +175,7 @@ func ResourceWorkforce() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -241,7 +242,7 @@ func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workforce (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", workforce.WorkforceArn)
+	d.Set(names.AttrARN, workforce.WorkforceArn)
 	d.Set("subdomain", workforce.SubDomain)
 	d.Set("workforce_name", workforce.WorkforceName)
 
@@ -427,7 +428,7 @@ func expandWorkforceVPCConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequ
 	config := &sagemaker.WorkforceVpcConfigRequest{
 		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
 		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
-		VpcId:            aws.String(m["vpc_id"].(string)),
+		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
 
 	return config
@@ -442,7 +443,7 @@ func flattenWorkforceVPCConfig(config *sagemaker.WorkforceVpcConfigResponse) []m
 		"security_group_ids": flex.FlattenStringSet(config.SecurityGroupIds),
 		"subnets":            flex.FlattenStringSet(config.Subnets),
 		"vpc_endpoint_id":    aws.StringValue(config.VpcEndpointId),
-		"vpc_id":             aws.StringValue(config.VpcId),
+		names.AttrVPCID:      aws.StringValue(config.VpcId),
 	}
 
 	return []map[string]interface{}{m}

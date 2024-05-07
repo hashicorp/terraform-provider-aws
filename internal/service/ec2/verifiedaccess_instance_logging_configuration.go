@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -50,7 +51,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -77,7 +78,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -106,7 +107,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Computed:     true, // Describe API returns this value if not set
 										ValidateFunc: verify.ValidAccountID,
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -311,7 +312,7 @@ func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []interface{}) *types.
 	}
 
 	result := &types.VerifiedAccessLogCloudWatchLogsDestinationOptions{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
 	if v, ok := tfMap["log_group"].(string); ok && v != "" {
@@ -332,7 +333,7 @@ func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []interface{
 	}
 
 	result := &types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
 	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
@@ -353,7 +354,7 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 	}
 
 	result := &types.VerifiedAccessLogS3DestinationOptions{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
 	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
@@ -362,7 +363,7 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 
 	// if enabled is true, pass bucket owner, otherwise don't pass it
 	// api error InvalidParameterCombination: The parameter AccessLogs.S3.BucketOwner cannot be used when AccessLogs.S3.Enabled is false
-	if v, ok := tfMap["enabled"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok && v {
 		if v, ok := tfMap["bucket_owner"].(string); ok && v != "" {
 			result.BucketOwner = aws.String(v)
 		}
@@ -403,7 +404,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 
 func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCloudWatchLogsDestination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.LogGroup; v != nil {
@@ -415,7 +416,7 @@ func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCl
 
 func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccessLogKinesisDataFirehoseDestination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.DeliveryStream; v != nil {
@@ -427,7 +428,7 @@ func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccess
 
 func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination) []interface{} {
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.BucketName; v != nil {

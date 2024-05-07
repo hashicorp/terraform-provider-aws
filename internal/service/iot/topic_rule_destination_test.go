@@ -34,8 +34,8 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "iot", regexache.MustCompile(`ruledestination/vpc/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(`ruledestination/vpc/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", "1"),
@@ -94,7 +94,7 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -106,14 +106,14 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 			{
 				Config: testAccTopicRuleDestinationConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			// Delete everything but the IAM Role assumed by the IoT service.

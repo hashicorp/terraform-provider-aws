@@ -31,7 +31,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				Config: testAccEBSEncryptionByDefaultConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(ctx, resourceName, false),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -43,7 +43,7 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(ctx, resourceName, true),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},

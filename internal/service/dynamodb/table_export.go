@@ -38,7 +38,7 @@ func ResourceTableExport() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	desc := out.ExportDescription
 
-	d.Set("arn", desc.ExportArn)
+	d.Set(names.AttrARN, desc.ExportArn)
 	d.Set("billed_size_in_bytes", desc.BilledSizeBytes)
 	d.Set("item_count", desc.ItemCount)
 	d.Set("manifest_files_s3_key", desc.ExportManifest)

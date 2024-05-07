@@ -54,7 +54,7 @@ func resourceLocationAzureBlob() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +182,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("access_tier", output.AccessTier)
 	d.Set("agent_arns", output.AgentArns)
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("blob_type", output.BlobType)
 	d.Set("container_url", containerURL)
@@ -197,7 +197,7 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationAzureBlobInput{
 			LocationArn: aws.String(d.Id()),
 		}

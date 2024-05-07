@@ -27,14 +27,14 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_period", "72"),
 					resource.TestCheckResourceAttr(dataSourceName, "shard_level_metrics.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(dataSourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
 				),

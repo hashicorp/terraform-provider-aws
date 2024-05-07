@@ -11,8 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -48,17 +48,17 @@ func (r *resourceLifecyclePolicy) Metadata(_ context.Context, _ resource.Metadat
 	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
 }
 
-func (r *resourceLifecyclePolicy) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
@@ -67,8 +67,8 @@ func (r *resourceLifecyclePolicy) Schema(_ context.Context, _ resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"policy": schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Required:   true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
@@ -80,7 +80,7 @@ func (r *resourceLifecyclePolicy) Schema(_ context.Context, _ resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -268,7 +268,7 @@ type resourceLifecyclePolicyData struct {
 	Description   types.String                                     `tfsdk:"description"`
 	ID            types.String                                     `tfsdk:"id"`
 	Name          types.String                                     `tfsdk:"name"`
-	Policy        jsontypes.Normalized                             `tfsdk:"policy"`
+	Policy        fwtypes.SmithyJSON[document.Interface]           `tfsdk:"policy"`
 	PolicyVersion types.String                                     `tfsdk:"policy_version"`
 	Type          fwtypes.StringEnum[awstypes.LifecyclePolicyType] `tfsdk:"type"`
 }

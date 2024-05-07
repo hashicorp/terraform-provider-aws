@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -163,7 +164,7 @@ func sweepPolicyAttachments(region string) error {
 			r := ResourcePolicyAttachment()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s|%s", aws.ToString(policyName), v))
-			d.Set("policy", policyName)
+			d.Set(names.AttrPolicy, policyName)
 			d.Set("target", v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -536,7 +537,7 @@ func sweepAuthorizers(region string) error {
 		r := ResourceAuthorizer()
 		d := r.Data(nil)
 		d.SetId(aws.ToString(v.AuthorizerName))
-		d.Set("status", awstypes.AuthorizerStatusActive)
+		d.Set(names.AttrStatus, awstypes.AuthorizerStatusActive)
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -597,7 +598,7 @@ func sweepDomainConfigurations(region string) error {
 		r := ResourceDomainConfiguration()
 		d := r.Data(nil)
 		d.SetId(name)
-		d.Set("status", output.DomainConfigurationStatus)
+		d.Set(names.AttrStatus, output.DomainConfigurationStatus)
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}

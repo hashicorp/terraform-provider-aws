@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_policy")
@@ -19,7 +20,7 @@ func DataSourcePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,11 +32,11 @@ func DataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +44,7 @@ func DataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,12 +65,12 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	policySummary := policy.PolicySummary
 	d.SetId(aws.StringValue(policySummary.Id))
-	d.Set("arn", policySummary.Arn)
+	d.Set(names.AttrARN, policySummary.Arn)
 	d.Set("aws_managed", policySummary.AwsManaged)
 	d.Set("content", policy.Content)
-	d.Set("description", policySummary.Description)
-	d.Set("name", policySummary.Name)
-	d.Set("type", policySummary.Type)
+	d.Set(names.AttrDescription, policySummary.Description)
+	d.Set(names.AttrName, policySummary.Name)
+	d.Set(names.AttrType, policySummary.Type)
 
 	return diags
 }

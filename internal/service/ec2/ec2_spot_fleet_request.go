@@ -160,7 +160,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -290,7 +290,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -330,7 +330,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"tags": tftags.TagsSchemaForceNew(),
+						names.AttrTags: tftags.TagsSchemaForceNew(),
 						"user_data": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -372,19 +372,19 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
+									names.AttrID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: verify.ValidLaunchTemplateID,
 									},
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: verify.ValidLaunchTemplateName,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -1113,7 +1113,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifySpotFleetRequestInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
@@ -1277,7 +1277,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 		}
 	}
 
-	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
+	if m, ok := d[names.AttrTags].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
 
 		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
@@ -1352,7 +1352,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Encrypted = aws.Bool(v)
 			}
 
-			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrKMSKeyID].(string); ok && v != "" {
 				ebs.KmsKeyId = aws.String(v)
 			}
 
@@ -1405,7 +1405,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Encrypted = aws.Bool(v)
 			}
 
-			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrKMSKeyID].(string); ok && v != "" {
 				ebs.KmsKeyId = aws.String(v)
 			}
 
@@ -1512,15 +1512,15 @@ func expandFleetLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.F
 
 	apiObject := &ec2.FleetLaunchTemplateSpecification{}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.LaunchTemplateId = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -1950,7 +1950,7 @@ func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, r
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if aws.StringValue(tagSpecs.ResourceType) == ec2.ResourceTypeInstance {
-				m["tags"] = KeyValueTags(ctx, tagSpecs.Tags).IgnoreAWS().Map()
+				m[names.AttrTags] = KeyValueTags(ctx, tagSpecs.Tags).IgnoreAWS().Map()
 			}
 		}
 	}
@@ -1988,7 +1988,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.KmsKeyId != nil {
-				m["kms_key_id"] = aws.StringValue(ebs.KmsKeyId)
+				m[names.AttrKMSKeyID] = aws.StringValue(ebs.KmsKeyId)
 			}
 
 			if ebs.VolumeSize != nil {
@@ -2049,7 +2049,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				}
 
 				if val.Ebs.KmsKeyId != nil {
-					m["kms_key_id"] = aws.StringValue(val.Ebs.KmsKeyId)
+					m[names.AttrKMSKeyID] = aws.StringValue(val.Ebs.KmsKeyId)
 				}
 
 				if val.Ebs.VolumeSize != nil {
@@ -2160,15 +2160,15 @@ func flattenFleetLaunchTemplateSpecificationForSpotFleetRequest(apiObject *ec2.F
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
-		tfMap["id"] = aws.StringValue(v)
+		tfMap[names.AttrID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LaunchTemplateName; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.StringValue(v)
+		tfMap[names.AttrVersion] = aws.StringValue(v)
 	}
 
 	return tfMap

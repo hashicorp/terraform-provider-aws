@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_access_point")
@@ -48,11 +49,11 @@ func resourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -78,7 +79,7 @@ func resourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,7 +89,7 @@ func resourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -144,7 +145,7 @@ func resourceAccessPoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -163,10 +164,10 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &s3control.CreateAccessPointInput{
 		AccountId: aws.String(accountID),
-		Bucket:    aws.String(d.Get("bucket").(string)),
+		Bucket:    aws.String(d.Get(names.AttrBucket).(string)),
 		Name:      aws.String(name),
 	}
 
@@ -200,7 +201,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(resourceID)
 
-	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+	if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
@@ -264,8 +265,8 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			),
 		}
 
-		d.Set("arn", name)
-		d.Set("bucket", bucketARN.String())
+		d.Set(names.AttrARN, name)
+		d.Set(names.AttrBucket, bucketARN.String())
 	} else {
 		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
 		accessPointARN := arn.ARN{
@@ -276,8 +277,8 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
 		}
 
-		d.Set("arn", accessPointARN.String())
-		d.Set("bucket", output.Bucket)
+		d.Set(names.AttrARN, accessPointARN.String())
+		d.Set(names.AttrBucket, output.Bucket)
 	}
 
 	d.Set("account_id", accountID)
@@ -285,7 +286,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set("endpoints", output.Endpoints)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
 		if err := d.Set("public_access_block_configuration", []interface{}{flattenPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)}); err != nil {
@@ -311,15 +312,15 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			d.Set("has_public_access_policy", status.IsPublic)
 		}
 
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	} else if policy == "" || tfresource.NotFound(err) {
 		d.Set("has_public_access_policy", false)
-		d.Set("policy", nil)
+		d.Set(names.AttrPolicy, nil)
 	} else {
 		return diag.Errorf("reading S3 Access Point (%s) policy: %s", d.Id(), err)
 	}
@@ -335,8 +336,8 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+	if d.HasChange(names.AttrPolicy) {
+		if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
 				return diag.FromErr(err)
@@ -471,7 +472,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.VpcConfiguratio
 
 	apiObject := &types.VpcConfiguration{}
 
-	if v, ok := tfMap["vpc_id"].(string); ok {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -486,7 +487,7 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.ToString(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -42,10 +42,10 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
 			},
 			{
@@ -78,10 +78,10 @@ func TestAccOpenSearchServerlessCollection_standbyReplicas(t *testing.T) {
 				Config: testAccCollectionConfig_standbyReplicas(rName, standbyReplicas),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, "standby_replicas", standbyReplicas),
 				),
 			},
@@ -156,19 +156,19 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollectionConfig_update(rName, "description"),
+				Config: testAccCollectionConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
 				Config: testAccCollectionConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
 			},
 		},

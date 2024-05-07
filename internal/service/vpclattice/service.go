@@ -84,13 +84,13 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 40),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	in := &vpclattice.CreateServiceInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -130,7 +130,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	out, err := conn.CreateService(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -157,7 +157,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameService, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("auth_type", out.AuthType)
 	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
@@ -168,8 +168,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("dns_entry", nil)
 	}
-	d.Set("name", out.Name)
-	d.Set("status", out.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Status)
 
 	return nil
 }
@@ -177,7 +177,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateServiceInput{
 			ServiceIdentifier: aws.String(d.Id()),
 		}

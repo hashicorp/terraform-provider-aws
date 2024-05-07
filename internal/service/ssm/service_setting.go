@@ -32,7 +32,7 @@ func ResourceServiceSetting() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +44,7 @@ func ResourceServiceSetting() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,8 +91,8 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 	// but setting_id in the output is only a part of ARN.
 	d.Set("setting_id", output.ARN)
 	d.Set("setting_value", output.SettingValue)
-	d.Set("arn", output.ARN)
-	d.Set("status", output.Status)
+	d.Set(names.AttrARN, output.ARN)
+	d.Set(names.AttrStatus, output.Status)
 
 	return diags
 }

@@ -41,7 +41,7 @@ func ResourceDomainConfiguration() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func ResourceDomainConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -92,7 +92,7 @@ func ResourceDomainConfiguration() *schema.Resource {
 				Default:          awstypes.ServiceTypeData,
 				ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.DomainConfigurationStatusEnabled,
@@ -129,7 +129,7 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateDomainConfigurationInput{
 		DomainConfigurationName: aws.String(name),
 		Tags:                    getTagsIn(ctx),
@@ -186,7 +186,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading IoT Domain Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.DomainConfigurationArn)
+	d.Set(names.AttrARN, output.DomainConfigurationArn)
 	if output.AuthorizerConfig != nil {
 		if err := d.Set("authorizer_config", []interface{}{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authorizer_config: %s", err)
@@ -196,12 +196,12 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("domain_name", output.DomainName)
 	d.Set("domain_type", output.DomainType)
-	d.Set("name", output.DomainConfigurationName)
+	d.Set(names.AttrName, output.DomainConfigurationName)
 	d.Set("server_certificate_arns", tfslices.ApplyToAll(output.ServerCertificates, func(v awstypes.ServerCertificateSummary) string {
 		return aws.ToString(v.ServerCertificateArn)
 	}))
 	d.Set("service_type", output.ServiceType)
-	d.Set("status", output.DomainConfigurationStatus)
+	d.Set(names.AttrStatus, output.DomainConfigurationStatus)
 	if output.TlsConfig != nil {
 		if err := d.Set("tls_config", []interface{}{flattenTlsConfig(output.TlsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
@@ -218,7 +218,7 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName: aws.String(d.Id()),
 		}
@@ -231,7 +231,7 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			}
 		}
 
-		if d.HasChange("status") {
+		if d.HasChange(names.AttrStatus) {
 			input.DomainConfigurationStatus = awstypes.DomainConfigurationStatus(d.Get("status").(string))
 		}
 
@@ -255,7 +255,7 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	if d.Get("status").(string) == string(awstypes.DomainConfigurationStatusEnabled) {
+	if d.Get(names.AttrStatus).(string) == string(awstypes.DomainConfigurationStatusEnabled) {
 		log.Printf("[DEBUG] Disabling IoT Domain Configuration: %s", d.Id())
 		_, err := conn.UpdateDomainConfiguration(ctx, &iot.UpdateDomainConfigurationInput{
 			DomainConfigurationName:   aws.String(d.Id()),

@@ -308,13 +308,13 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	// set connection information
 	if instance.PublicIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": *instance.PublicIpAddress,
+			names.AttrType: "ssh",
+			"host":         *instance.PublicIpAddress,
 		})
 	} else if instance.PrivateIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": *instance.PrivateIpAddress,
+			names.AttrType: "ssh",
+			"host":         *instance.PrivateIpAddress,
 		})
 	}
 	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {

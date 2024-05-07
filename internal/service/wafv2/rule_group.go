@@ -52,7 +52,7 @@ func ResourceRuleGroup() *schema.Resource {
 				name := idParts[1]
 				scope := idParts[2]
 				d.SetId(id)
-				d.Set("name", name)
+				d.Set(names.AttrName, name)
 				d.Set("scope", scope)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -60,7 +60,7 @@ func ResourceRuleGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -71,7 +71,7 @@ func ResourceRuleGroup() *schema.Resource {
 					ValidateFunc: validation.IntAtLeast(1),
 				},
 				"custom_response_body": customResponseBodySchema(),
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -80,7 +80,7 @@ func ResourceRuleGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
@@ -96,7 +96,7 @@ func ResourceRuleGroup() *schema.Resource {
 					Optional:      true,
 					Computed:      true,
 					ForceNew:      true,
-					ConflictsWith: []string{"name"},
+					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -122,7 +122,7 @@ func ResourceRuleGroup() *schema.Resource {
 								},
 							},
 							"captcha_config": outerCaptchaConfigSchema(),
-							"name": {
+							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 128),
@@ -156,7 +156,7 @@ func ResourceRuleGroup() *schema.Resource {
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &wafv2.CreateRuleGroupInput{
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Name:             aws.String(name),
@@ -170,7 +170,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,7 +183,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*wafv2.CreateRuleGroupOutput).Summary.Id))
-	d.Set("name", name) // Required in Read.
+	d.Set(names.AttrName, name) // Required in Read.
 
 	return resourceRuleGroupRead(ctx, d, meta)
 }
@@ -191,7 +191,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	output, err := FindRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+	output, err := FindRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
@@ -204,14 +204,14 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	ruleGroup := output.RuleGroup
-	d.Set("arn", ruleGroup.ARN)
+	d.Set(names.AttrARN, ruleGroup.ARN)
 	d.Set("capacity", ruleGroup.Capacity)
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(ruleGroup.CustomResponseBodies)); err != nil {
 		return diag.Errorf("setting custom_response_body: %s", err)
 	}
-	d.Set("description", ruleGroup.Description)
+	d.Set(names.AttrDescription, ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
-	d.Set("name", ruleGroup.Name)
+	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(ruleGroup.Name)))
 	if err := d.Set("rule", flattenRules(ruleGroup.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
@@ -226,11 +226,11 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &wafv2.UpdateRuleGroupInput{
 			Id:               aws.String(d.Id()),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
-			Name:             aws.String(d.Get("name").(string)),
+			Name:             aws.String(d.Get(names.AttrName).(string)),
 			Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
 			Scope:            aws.String(d.Get("scope").(string)),
 			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
@@ -240,7 +240,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -262,7 +262,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	input := &wafv2.DeleteRuleGroupInput{
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Scope:     aws.String(d.Get("scope").(string)),
 	}
 

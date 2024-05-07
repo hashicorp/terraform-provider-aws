@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -143,7 +144,7 @@ func sweepClusters(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("apply_immediately", true)
-			d.Set("arn", arn)
+			d.Set(names.AttrARN, arn)
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
 

@@ -36,7 +36,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_basic(t *testing.T) {
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
@@ -68,7 +68,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -77,7 +77,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 				Config: testAccWebACLLoggingConfigurationConfig_updateTwoSingleHeaderRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -92,7 +92,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *t
 				Config: testAccWebACLLoggingConfigurationConfig_updateSingleHeaderRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -127,7 +127,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -136,7 +136,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "method"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -171,7 +171,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *te
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -180,7 +180,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *te
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "query_string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -215,7 +215,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testin
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -224,7 +224,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateURIPathRedactedField(t *testin
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -259,7 +259,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -271,7 +271,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 				Config: testAccWebACLLoggingConfigurationConfig_updateTwoRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -286,7 +286,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 				Config: testAccWebACLLoggingConfigurationConfig_updateThreeRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
@@ -327,8 +327,8 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(webACLResourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttr(webACLResourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -337,8 +337,8 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(webACLResourceName, "name", rNameNew),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttr(webACLResourceName, names.AttrName, rNameNew),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -371,8 +371,8 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttr(kinesisResourceName, names.AttrName, fmt.Sprintf("aws-waf-logs-%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -381,8 +381,8 @@ func TestAccWAFV2WebACLLoggingConfiguration_changeLogDestinationsForceNew(t *tes
 				Config: testAccWebACLLoggingConfigurationConfig_updateLogDestination(rName, rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttr(kinesisResourceName, names.AttrName, fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -437,7 +437,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
 				Config: testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -468,7 +468,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
@@ -477,7 +477,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing
 				Config: testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{

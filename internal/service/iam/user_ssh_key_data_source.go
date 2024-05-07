@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_user_ssh_key", name="User SSH Key")
@@ -38,7 +39,7 @@ func dataSourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +79,7 @@ func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.ToString(publicKey.SSHPublicKeyId))
 	d.Set("fingerprint", publicKey.Fingerprint)
 	d.Set("public_key", publicKeyBody)
-	d.Set("status", publicKey.Status)
+	d.Set(names.AttrStatus, publicKey.Status)
 
 	return diags
 }

@@ -56,7 +56,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,7 +118,7 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("access_key_id", out.AccessKeyId)
 	d.Set("bucket_name", d.Get("bucket_name").(string))
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 
 	return diags
 }

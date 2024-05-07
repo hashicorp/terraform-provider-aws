@@ -38,11 +38,11 @@ func resourceSnapshotCopyGrant() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -71,7 +71,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -117,8 +117,8 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotcopygrant:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("kms_key_id", grant.KmsKeyId)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrKMSKeyID, grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
 
 	setTagsOut(ctx, grant.Tags)

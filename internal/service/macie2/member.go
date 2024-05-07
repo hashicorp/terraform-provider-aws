@@ -46,7 +46,7 @@ func ResourceMember() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -220,7 +220,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("master_account_id", resp.MasterAccountId)
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
-	d.Set("arn", resp.Arn)
+	d.Set(names.AttrARN, resp.Arn)
 
 	setTagsOut(ctx, resp.Tags)
 
@@ -242,7 +242,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if aws.StringValue(resp.RelationshipStatus) == macie2.RelationshipStatusPaused {
 		status = macie2.MacieStatusPaused
 	}
-	d.Set("status", status)
+	d.Set(names.AttrStatus, status)
 
 	return diags
 }
@@ -317,10 +317,10 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// End Invitation workflow
 
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		input := &macie2.UpdateMemberSessionInput{
 			Id:     aws.String(d.Id()),
-			Status: aws.String(d.Get("status").(string)),
+			Status: aws.String(d.Get(names.AttrStatus).(string)),
 		}
 
 		_, err := conn.UpdateMemberSessionWithContext(ctx, input)

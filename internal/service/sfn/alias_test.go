@@ -44,8 +44,8 @@ func TestAccSFNAlias_basic(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &alias),
 					testAccCheckAliasAttributes(&alias),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestCheckResourceAttr(resourceName, "name", aliasName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", functionArnResourcePart),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, aliasName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", functionArnResourcePart),
 				),
 			},
 			{

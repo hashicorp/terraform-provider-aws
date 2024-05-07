@@ -40,16 +40,16 @@ func resourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -62,10 +62,10 @@ func resourceSubnetGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -77,7 +77,7 @@ func resourceSubnetGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,11 +91,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBSubnetGroupInput{
-		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
+		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		DBSubnetGroupName:        aws.String(name),
-		SubnetIds:                flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsInV2(ctx),
 	}
 
@@ -125,15 +125,15 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", v.DBSubnetGroupArn)
-	d.Set("description", v.DBSubnetGroupDescription)
-	d.Set("name", v.DBSubnetGroupName)
+	d.Set(names.AttrARN, v.DBSubnetGroupArn)
+	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
+	d.Set(names.AttrName, v.DBSubnetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
-	d.Set("subnet_ids", tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
 	}))
 	d.Set("supported_network_types", v.SupportedNetworkTypes)
-	d.Set("vpc_id", v.VpcId)
+	d.Set(names.AttrVPCID, v.VpcId)
 
 	return diags
 }
@@ -142,11 +142,11 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChanges("description", "subnet_ids") {
+	if d.HasChanges(names.AttrDescription, names.AttrSubnetIDs) {
 		input := &rds.ModifyDBSubnetGroupInput{
-			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
+			DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			DBSubnetGroupName:        aws.String(d.Id()),
-			SubnetIds:                flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+			SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBSubnetGroup(ctx, input)

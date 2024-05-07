@@ -34,7 +34,7 @@ func DataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateTableItem,
@@ -61,7 +61,7 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get("table_name").(string)
-	key, err := ExpandTableItemAttributes(d.Get("key").(string))
+	key, err := ExpandTableItemAttributes(d.Get(names.AttrKey).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

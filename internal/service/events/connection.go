@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_connection", name="Connection")
@@ -38,81 +39,59 @@ func resourceConnection() *schema.Resource {
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
-			connectionHttpParameters := func() *schema.Resource {
+			connectionHttpParameters := func(parent string) *schema.Resource {
+				element := func() *schema.Resource {
+					return &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"is_value_secret": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrValue: {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+						},
+					}
+				}
+				atLeastOneOf := []string{
+					fmt.Sprintf("%s.0.body", parent),
+					fmt.Sprintf("%s.0.header", parent),
+					fmt.Sprintf("%s.0.query_string", parent),
+				}
+
 				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"body": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_value_secret": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
+							Type:         schema.TypeList,
+							Optional:     true,
+							Elem:         element(),
+							AtLeastOneOf: atLeastOneOf,
 						},
 						"header": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_value_secret": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
+							Type:         schema.TypeList,
+							Optional:     true,
+							Elem:         element(),
+							AtLeastOneOf: atLeastOneOf,
 						},
 						"query_string": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"is_value_secret": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"value": {
-										Type:      schema.TypeString,
-										Optional:  true,
-										Sensitive: true,
-									},
-								},
-							},
+							Type:         schema.TypeList,
+							Optional:     true,
+							Elem:         element(),
+							AtLeastOneOf: atLeastOneOf,
 						},
 					},
 				}
 			}
 
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -133,14 +112,14 @@ func resourceConnection() *schema.Resource {
 								},
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"key": {
+										names.AttrKey: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 512),
 											),
 										},
-										"value": {
+										names.AttrValue: {
 											Type:      schema.TypeString,
 											Required:  true,
 											Sensitive: true,
@@ -184,7 +163,7 @@ func resourceConnection() *schema.Resource {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
-								Elem:     connectionHttpParameters(),
+								Elem:     connectionHttpParameters("auth_parameters.0.invocation_http_parameters"),
 							},
 							"oauth": {
 								Type:     schema.TypeList,
@@ -237,7 +216,7 @@ func resourceConnection() *schema.Resource {
 											Type:     schema.TypeList,
 											Required: true,
 											MaxItems: 1,
-											Elem:     connectionHttpParameters(),
+											Elem:     connectionHttpParameters("auth_parameters.0.oauth.0.oauth_http_parameters"),
 										},
 									},
 								},
@@ -250,12 +229,12 @@ func resourceConnection() *schema.Resource {
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[types.ConnectionAuthorizationType](),
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 512),
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -277,14 +256,14 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateConnectionInput{
 		AuthorizationType: types.ConnectionAuthorizationType(d.Get("authorization_type").(string)),
 		AuthParameters:    expandCreateConnectionAuthRequestParameters(d.Get("auth_parameters").([]interface{})),
 		Name:              aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -319,15 +298,15 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ConnectionArn)
+	d.Set(names.AttrARN, output.ConnectionArn)
 	if output.AuthParameters != nil {
 		if err := d.Set("auth_parameters", flattenConnectionAuthParameters(output.AuthParameters, d)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auth_parameters error: %s", err)
 		}
 	}
 	d.Set("authorization_type", output.AuthorizationType)
-	d.Set("description", output.Description)
-	d.Set("name", output.Name)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrName, output.Name)
 	d.Set("secret_arn", output.SecretArn)
 
 	return diags
@@ -349,7 +328,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.AuthParameters = expandUpdateConnectionAuthRequestParameters(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -525,10 +504,10 @@ func expandCreateConnectionAPIKeyAuthRequestParameters(config []interface{}) *ty
 	apiKeyAuthParameters := &types.CreateConnectionApiKeyAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["key"].(string); ok && val != "" {
+		if val, ok := param[names.AttrKey].(string); ok && val != "" {
 			apiKeyAuthParameters.ApiKeyName = aws.String(val)
 		}
-		if val, ok := param["value"].(string); ok && val != "" {
+		if val, ok := param[names.AttrValue].(string); ok && val != "" {
 			apiKeyAuthParameters.ApiKeyValue = aws.String(val)
 		}
 	}
@@ -618,10 +597,10 @@ func expandConnectionHTTPParametersBody(config []interface{}) []types.Connection
 		parameter := types.ConnectionBodyParameter{}
 
 		input := c.(map[string]interface{})
-		if val, ok := input["key"].(string); ok && val != "" {
+		if val, ok := input[names.AttrKey].(string); ok && val != "" {
 			parameter.Key = aws.String(val)
 		}
-		if val, ok := input["value"].(string); ok && val != "" {
+		if val, ok := input[names.AttrValue].(string); ok && val != "" {
 			parameter.Value = aws.String(val)
 		}
 		if val, ok := input["is_value_secret"].(bool); ok {
@@ -641,10 +620,10 @@ func expandConnectionHTTPParametersHeader(config []interface{}) []types.Connecti
 		parameter := types.ConnectionHeaderParameter{}
 
 		input := c.(map[string]interface{})
-		if val, ok := input["key"].(string); ok && val != "" {
+		if val, ok := input[names.AttrKey].(string); ok && val != "" {
 			parameter.Key = aws.String(val)
 		}
-		if val, ok := input["value"].(string); ok && val != "" {
+		if val, ok := input[names.AttrValue].(string); ok && val != "" {
 			parameter.Value = aws.String(val)
 		}
 		if val, ok := input["is_value_secret"].(bool); ok {
@@ -664,10 +643,10 @@ func expandConnectionHTTPParametersQueryString(config []interface{}) []types.Con
 		parameter := types.ConnectionQueryStringParameter{}
 
 		input := c.(map[string]interface{})
-		if val, ok := input["key"].(string); ok && val != "" {
+		if val, ok := input[names.AttrKey].(string); ok && val != "" {
 			parameter.Key = aws.String(val)
 		}
-		if val, ok := input["value"].(string); ok && val != "" {
+		if val, ok := input[names.AttrValue].(string); ok && val != "" {
 			parameter.Value = aws.String(val)
 		}
 		if val, ok := input["is_value_secret"].(bool); ok {
@@ -708,11 +687,11 @@ func flattenConnectionAPIKeyAuthParameters(apiKeyAuthParameters *types.Connectio
 
 	config := make(map[string]interface{})
 	if apiKeyAuthParameters.ApiKeyName != nil {
-		config["key"] = aws.ToString(apiKeyAuthParameters.ApiKeyName)
+		config[names.AttrKey] = aws.ToString(apiKeyAuthParameters.ApiKeyName)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.api_key.0.value"); ok {
-		config["value"] = v.(string)
+		config[names.AttrValue] = v.(string)
 	}
 
 	result := []map[string]interface{}{config}
@@ -781,12 +760,12 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 	for i, param := range httpParameters.BodyParameters {
 		config := make(map[string]interface{})
 		config["is_value_secret"] = param.IsValueSecret
-		config["key"] = aws.ToString(param.Key)
+		config[names.AttrKey] = aws.ToString(param.Key)
 
 		if param.Value != nil {
-			config["value"] = aws.ToString(param.Value)
+			config[names.AttrValue] = aws.ToString(param.Value)
 		} else if v, ok := d.GetOk(fmt.Sprintf("%s.0.body.%d.value", path, i)); ok {
-			config["value"] = v.(string)
+			config[names.AttrValue] = v.(string)
 		}
 		bodyParameters = append(bodyParameters, config)
 	}
@@ -795,12 +774,12 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 	for i, param := range httpParameters.HeaderParameters {
 		config := make(map[string]interface{})
 		config["is_value_secret"] = param.IsValueSecret
-		config["key"] = aws.ToString(param.Key)
+		config[names.AttrKey] = aws.ToString(param.Key)
 
 		if param.Value != nil {
-			config["value"] = aws.ToString(param.Value)
+			config[names.AttrValue] = aws.ToString(param.Value)
 		} else if v, ok := d.GetOk(fmt.Sprintf("%s.0.header.%d.value", path, i)); ok {
-			config["value"] = v.(string)
+			config[names.AttrValue] = v.(string)
 		}
 		headerParameters = append(headerParameters, config)
 	}
@@ -809,12 +788,12 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 	for i, param := range httpParameters.QueryStringParameters {
 		config := make(map[string]interface{})
 		config["is_value_secret"] = param.IsValueSecret
-		config["key"] = aws.ToString(param.Key)
+		config[names.AttrKey] = aws.ToString(param.Key)
 
 		if param.Value != nil {
-			config["value"] = aws.ToString(param.Value)
+			config[names.AttrValue] = aws.ToString(param.Value)
 		} else if v, ok := d.GetOk(fmt.Sprintf("%s.0.query_string.%d.value", path, i)); ok {
-			config["value"] = v.(string)
+			config[names.AttrValue] = v.(string)
 		}
 		queryStringParameters = append(queryStringParameters, config)
 	}
@@ -856,10 +835,10 @@ func expandUpdateConnectionAPIKeyAuthRequestParameters(config []interface{}) *ty
 	apiKeyAuthParameters := &types.UpdateConnectionApiKeyAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["key"].(string); ok && val != "" {
+		if val, ok := param[names.AttrKey].(string); ok && val != "" {
 			apiKeyAuthParameters.ApiKeyName = aws.String(val)
 		}
-		if val, ok := param["value"].(string); ok && val != "" {
+		if val, ok := param[names.AttrValue].(string); ok && val != "" {
 			apiKeyAuthParameters.ApiKeyValue = aws.String(val)
 		}
 	}

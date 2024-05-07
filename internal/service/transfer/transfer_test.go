@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccTransfer_serial(t *testing.T) {
@@ -20,14 +21,14 @@ func TestAccTransfer_serial(t *testing.T) {
 			"S3Policy":   testAccAccess_s3_policy,
 		},
 		"Agreement": {
-			"basic":      testAccAgreement_basic,
-			"disappears": testAccAgreement_disappears,
-			"tags":       testAccAgreement_tags,
+			"basic":        testAccAgreement_basic,
+			"disappears":   testAccAgreement_disappears,
+			names.AttrTags: testAccAgreement_tags,
 		},
 		"Server": {
 			"basic":                           testAccServer_basic,
 			"disappears":                      testAccServer_disappears,
-			"tags":                            testAccServer_tags,
+			names.AttrTags:                    testAccServer_tags,
 			"APIGateway":                      testAccServer_apiGateway,
 			"APIGatewayForceDestroy":          testAccServer_apiGateway_forceDestroy,
 			"AuthenticationLoginBanners":      testAccServer_authenticationLoginBanners,
@@ -72,7 +73,7 @@ func TestAccTransfer_serial(t *testing.T) {
 		"User": {
 			"basic":                 testAccUser_basic,
 			"disappears":            testAccUser_disappears,
-			"tags":                  testAccUser_tags,
+			names.AttrTags:          testAccUser_tags,
 			"HomeDirectoryMappings": testAccUser_homeDirectoryMappings,
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
 			"Posix":                 testAccUser_posix,

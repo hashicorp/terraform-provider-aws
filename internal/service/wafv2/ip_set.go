@@ -49,7 +49,7 @@ func ResourceIPSet() *schema.Resource {
 				name := idParts[1]
 				scope := idParts[2]
 				d.SetId(id)
-				d.Set("name", name)
+				d.Set(names.AttrName, name)
 				d.Set("scope", scope)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -86,11 +86,11 @@ func ResourceIPSet() *schema.Resource {
 						return false
 					},
 				},
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -105,7 +105,7 @@ func ResourceIPSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -129,7 +129,7 @@ func ResourceIPSet() *schema.Resource {
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &wafv2.CreateIPSetInput{
 		Addresses:        aws.StringSlice([]string{}),
 		IPAddressVersion: aws.String(d.Get("ip_address_version").(string)),
@@ -142,7 +142,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -160,7 +160,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	output, err := FindIPSetByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+	output, err := FindIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 IPSet (%s) not found, removing from state", d.Id())
@@ -175,11 +175,11 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	ipSet := output.IPSet
 	d.Set("addresses", aws.StringValueSlice(ipSet.Addresses))
 	arn := aws.StringValue(ipSet.ARN)
-	d.Set("arn", arn)
-	d.Set("description", ipSet.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ipSet.Description)
 	d.Set("ip_address_version", ipSet.IPAddressVersion)
 	d.Set("lock_token", output.LockToken)
-	d.Set("name", ipSet.Name)
+	d.Set(names.AttrName, ipSet.Name)
 
 	return nil
 }
@@ -187,12 +187,12 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &wafv2.UpdateIPSetInput{
 			Addresses: aws.StringSlice([]string{}),
 			Id:        aws.String(d.Id()),
 			LockToken: aws.String(d.Get("lock_token").(string)),
-			Name:      aws.String(d.Get("name").(string)),
+			Name:      aws.String(d.Get(names.AttrName).(string)),
 			Scope:     aws.String(d.Get("scope").(string)),
 		}
 
@@ -200,7 +200,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -221,7 +221,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &wafv2.DeleteIPSetInput{
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Scope:     aws.String(d.Get("scope").(string)),
 	}
 

@@ -7,23 +7,24 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ARNSeparator = "/"
-	ARNService   = "kms"
+	arnResourceSeparator = "/"
+	arnService           = "kms"
 )
 
-// AliasARNToKeyARN converts an alias ARN to a CMK ARN.
-func AliasARNToKeyARN(inputARN, keyID string) (string, error) {
+// aliasARNToKeyARN converts an alias ARN to a CMK ARN.
+func aliasARNToKeyARN(inputARN, keyID string) (string, error) {
 	parsedARN, err := arn.Parse(inputARN)
 
 	if err != nil {
 		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}
 
-	if actual, expected := parsedARN.Service, ARNService; actual != expected {
+	if actual, expected := parsedARN.Service, arnService; actual != expected {
 		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
@@ -32,14 +33,14 @@ func AliasARNToKeyARN(inputARN, keyID string) (string, error) {
 		Service:   parsedARN.Service,
 		Region:    parsedARN.Region,
 		AccountID: parsedARN.AccountID,
-		Resource:  strings.Join([]string{"key", keyID}, ARNSeparator),
+		Resource:  strings.Join([]string{names.AttrKey, keyID}, arnResourceSeparator),
 	}.String()
 
 	return outputARN, nil
 }
 
-// KeyARNOrIDEqual returns whether two CMK ARNs or IDs are equal.
-func KeyARNOrIDEqual(arnOrID1, arnOrID2 string) bool {
+// keyARNOrIDEqual returns whether two CMK ARNs or IDs are equal.
+func keyARNOrIDEqual(arnOrID1, arnOrID2 string) bool {
 	if arnOrID1 == arnOrID2 {
 		return true
 	}

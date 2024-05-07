@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_receipt_rule")
@@ -68,7 +69,7 @@ func ResourceReceiptRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +106,7 @@ func ResourceReceiptRule() *schema.Resource {
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -138,7 +139,7 @@ func ResourceReceiptRule() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -168,7 +169,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -276,7 +277,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
@@ -314,7 +315,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("enabled", rule.Enabled)
+	d.Set(names.AttrEnabled, rule.Enabled)
 	d.Set("recipients", flex.FlattenStringSet(rule.Recipients))
 	d.Set("scan_enabled", rule.ScanEnabled)
 	d.Set("tls_policy", rule.TlsPolicy)
@@ -380,7 +381,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.S3Action.KmsKeyArn != nil {
-				s3Action["kms_key_arn"] = aws.StringValue(element.S3Action.KmsKeyArn)
+				s3Action[names.AttrKMSKeyARN] = aws.StringValue(element.S3Action.KmsKeyArn)
 			}
 
 			if element.S3Action.ObjectKeyPrefix != nil {
@@ -473,7 +474,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", ruleSetName, d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
@@ -496,7 +497,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("after") {
 		input := &ses.SetReceiptRulePositionInput{
 			After:       aws.String(d.Get("after").(string)),
-			RuleName:    aws.String(d.Get("name").(string)),
+			RuleName:    aws.String(d.Get(names.AttrName).(string)),
 			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 		}
 
@@ -537,7 +538,7 @@ func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta i
 	ruleName := idParts[1]
 
 	d.Set("rule_set_name", ruleSetName)
-	d.Set("name", ruleName)
+	d.Set(names.AttrName, ruleName)
 	d.SetId(ruleName)
 
 	return []*schema.ResourceData{d}, nil
@@ -571,10 +572,10 @@ func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.SES, ruleName, r
 
 func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 	receiptRule := &ses.ReceiptRule{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("enabled"); ok {
+	if v, ok := d.GetOk(names.AttrEnabled); ok {
 		receiptRule.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -659,8 +660,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				BucketName: aws.String(elem["bucket_name"].(string)),
 			}
 
-			if elem["kms_key_arn"] != "" {
-				s3Action.KmsKeyArn = aws.String(elem["kms_key_arn"].(string))
+			if elem[names.AttrKMSKeyARN] != "" {
+				s3Action.KmsKeyArn = aws.String(elem[names.AttrKMSKeyARN].(string))
 			}
 
 			if elem["object_key_prefix"] != "" {

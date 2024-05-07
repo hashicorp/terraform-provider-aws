@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -119,15 +120,15 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_basic(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.container_name", containerName),
 					resource.TestCheckResourceAttr(resourceName, "container.0.image", helloWorldImage),
 					resource.TestCheckResourceAttr(resourceName, "container.0.command.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_name", "aws_lightsail_container_service.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_name", "aws_lightsail_container_service.test", names.AttrName),
 				),
 			},
 			{
@@ -160,8 +161,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_multiple(t *tes
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_multiple(rName, containerName1, helloWorldImage, containerName2, redisImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.container_name", containerName1),
 					resource.TestCheckResourceAttr(resourceName, "container.0.image", helloWorldImage),
@@ -198,8 +199,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_environment1(rName, containerName, "A", "a"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.A", "a"),
@@ -214,8 +215,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_environment1(rName, containerName, "B", "b"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.B", "b"),
@@ -225,8 +226,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_environment2(rName, containerName, "A", "a", "B", "b"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.A", "a"),
@@ -242,8 +243,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_environment(t *
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "4"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "0"),
 				),
@@ -277,8 +278,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_ports(t *testin
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports1(rName, containerName, "80", string(types.ContainerServiceProtocolHttp)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
@@ -293,8 +294,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_ports(t *testin
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports1(rName, containerName, "90", string(types.ContainerServiceProtocolTcp)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.90", string(types.ContainerServiceProtocolTcp)),
@@ -304,8 +305,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_ports(t *testin
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_ports2(rName, containerName, "80", string(types.ContainerServiceProtocolHttp), "90", string(types.ContainerServiceProtocolTcp)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
@@ -316,8 +317,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_ports(t *testin
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "4"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "0"),
 				),
@@ -353,8 +354,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpoint(rName, containerName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
@@ -379,8 +380,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpointCompleteHealthCheck(rName, containerName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName2),
@@ -398,8 +399,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpointMinimalHealthCheck(rName, containerName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName2),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_port", "80"),
@@ -416,8 +417,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_publicEndpoint(rName, containerName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "4"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName2),
@@ -435,8 +436,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName1, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "5"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.#", "0"),
 				),
 			},
@@ -468,8 +469,8 @@ func TestAccLightsailContainerServiceDeploymentVersion_Container_enableService(t
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_withDisabledService(rName, containerName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.container_name", containerName),
 				),
 			},

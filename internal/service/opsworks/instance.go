@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opsworks_instance")
@@ -256,7 +257,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -265,7 +266,7 @@ func ResourceInstance() *schema.Resource {
 				}, false),
 			},
 
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -535,7 +536,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ssh_host_rsa_key_fingerprint", instance.SshHostRsaKeyFingerprint)
 	d.Set("ssh_key_name", instance.SshKeyName)
 	d.Set("stack_id", instance.StackId)
-	d.Set("status", instance.Status)
+	d.Set(names.AttrStatus, instance.Status)
 	d.Set("subnet_id", instance.SubnetId)
 	d.Set("tenancy", instance.Tenancy)
 	d.Set("virtualization_type", instance.VirtualizationType)
@@ -722,7 +723,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	instanceId := aws.StringValue(resp.InstanceId)
 	d.SetId(instanceId)
 
-	if v, ok := d.GetOk("state"); ok && v.(string) == instanceStatusRunning {
+	if v, ok := d.GetOk(names.AttrState); ok && v.(string) == instanceStatusRunning {
 		err := startInstance(ctx, d, meta, true, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating OpsWorks Instance: %s", err)
@@ -786,13 +787,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var status string
 
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		status = v.(string)
 	} else {
 		status = "stopped"
 	}
 
-	if v, ok := d.GetOk("state"); ok {
+	if v, ok := d.GetOk(names.AttrState); ok {
 		state := v.(string)
 		if state == instanceStatusRunning {
 			if status == instanceStatusStopped || status == instanceStatusStopping || status == instanceStatusShuttingDown {
@@ -818,7 +819,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
-	if v, ok := d.GetOk("status"); ok && v.(string) != instanceStatusStopped {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != instanceStatusStopped {
 		err := stopInstance(ctx, d, meta, d.Timeout(schema.TimeoutDelete))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting OpsWorks instance (%s): %s", d.Id(), err)

@@ -79,7 +79,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -245,19 +245,19 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -297,13 +297,13 @@ func resourceCluster() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -319,13 +319,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &eks.CreateClusterInput{
 		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
 		ResourcesVpcConfig: expandVpcConfigRequest(d.Get("vpc_config").([]interface{})),
-		RoleArn:            aws.String(d.Get("role_arn").(string)),
+		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -341,7 +341,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.OutpostConfig = expandOutpostConfigRequest(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -417,7 +417,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
 	}
-	d.Set("arn", cluster.Arn)
+	d.Set(names.AttrARN, cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
 	}
@@ -439,14 +439,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
 	}
-	d.Set("name", cluster.Name)
+	d.Set(names.AttrName, cluster.Name)
 	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
-	d.Set("role_arn", cluster.RoleArn)
-	d.Set("status", cluster.Status)
-	d.Set("version", cluster.Version)
+	d.Set(names.AttrRoleARN, cluster.RoleArn)
+	d.Set(names.AttrStatus, cluster.Status)
+	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
@@ -462,10 +462,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	// Do any version update first.
-	if d.HasChange("version") {
+	if d.HasChange(names.AttrVersion) {
 		input := &eks.UpdateClusterVersionInput{
 			Name:    aws.String(d.Id()),
-			Version: aws.String(d.Get("version").(string)),
+			Version: aws.String(d.Get(names.AttrVersion).(string)),
 		}
 
 		output, err := conn.UpdateClusterVersion(ctx, input)
@@ -950,7 +950,7 @@ func expandVpcConfigRequest(tfList []interface{}) *types.VpcConfigRequest { // n
 		EndpointPrivateAccess: aws.Bool(tfMap["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(tfMap["endpoint_public_access"].(bool)),
 		SecurityGroupIds:      flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-		SubnetIds:             flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+		SubnetIds:             flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 	}
 
 	if v, ok := tfMap["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
@@ -1094,9 +1094,9 @@ func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]i
 		"endpoint_private_access":   vpcConfig.EndpointPrivateAccess,
 		"endpoint_public_access":    vpcConfig.EndpointPublicAccess,
 		"security_group_ids":        vpcConfig.SecurityGroupIds,
-		"subnet_ids":                vpcConfig.SubnetIds,
+		names.AttrSubnetIDs:         vpcConfig.SubnetIds,
 		"public_access_cidrs":       vpcConfig.PublicAccessCidrs,
-		"vpc_id":                    aws.ToString(vpcConfig.VpcId),
+		names.AttrVPCID:             aws.ToString(vpcConfig.VpcId),
 	}
 
 	return []map[string]interface{}{m}

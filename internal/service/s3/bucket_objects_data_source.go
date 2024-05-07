@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_s3_bucket_objects", name="Bucket Objects")
@@ -25,7 +26,7 @@ func dataSourceBucketObjects() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBucketObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Deprecated: "Use the aws_s3_objects data source instead",
 				Type:       schema.TypeString,
 				Required:   true,
@@ -80,7 +81,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}

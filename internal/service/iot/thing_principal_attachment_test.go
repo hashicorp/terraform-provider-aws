@@ -98,7 +98,7 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes["id"])
+			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes[names.AttrID])
 		}
 
 		return nil
@@ -145,7 +145,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 			if !ok {
 				return fmt.Errorf("Not found: %s", p)
 			}
-			principalARNs[pr.Primary.Attributes["arn"]] = p
+			principalARNs[pr.Primary.Attributes[names.AttrARN]] = p
 		}
 
 		_, err := conn.DescribeThing(ctx, &iot.DescribeThingInput{

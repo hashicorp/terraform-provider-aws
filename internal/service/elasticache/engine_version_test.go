@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidMemcachedVersionString(t *testing.T) {
@@ -59,7 +60,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			warnings, errors := validMemcachedVersionString(testcase.version, "key")
+			warnings, errors := validMemcachedVersionString(testcase.version, names.AttrKey)
 
 			if l := len(warnings); l != 0 {
 				t.Errorf("expected no warnings, got %d", l)
@@ -186,7 +187,7 @@ func TestValidRedisVersionString(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			warnings, errors := validRedisVersionString(testcase.version, "key")
+			warnings, errors := validRedisVersionString(testcase.version, names.AttrKey)
 
 			if l := len(warnings); l != 0 {
 				t.Errorf("expected no warnings, got %d", l)
@@ -775,8 +776,16 @@ func (d *mockChangesDiffer) Get(key string) any {
 	return d.values[key].Get()
 }
 
+func (d *mockChangesDiffer) GetOk(string) (any, bool) {
+	return nil, false
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
+}
+
+func (d *mockChangesDiffer) HasChanges(...string) bool {
+	return false
 }
 
 func (d *mockChangesDiffer) GetChange(key string) (any, any) {

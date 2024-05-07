@@ -50,7 +50,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -260,7 +260,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s): %s", clusterID, err)
 	}
 
-	d.Set("arn", db.DBInstanceArn)
+	d.Set(names.AttrARN, db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
@@ -275,14 +275,14 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	if db.Endpoint != nil {
 		d.Set("endpoint", db.Endpoint.Address)
-		d.Set("port", db.Endpoint.Port)
+		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 	d.Set("engine", db.Engine)
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	// The AWS API does not expose 'PerformanceInsightsKMSKeyId'  the line below should be uncommented
 	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
@@ -304,7 +304,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &docdb.ModifyDBInstanceInput{
 			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),

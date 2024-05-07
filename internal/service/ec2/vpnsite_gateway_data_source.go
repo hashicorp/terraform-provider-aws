@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpn_gateway", name="VPN Gateway")
@@ -35,7 +36,7 @@ func dataSourceVPNGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,17 +51,17 @@ func dataSourceVPNGateway() *schema.Resource {
 				Computed: true,
 			},
 			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -72,13 +73,13 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.DescribeVpnGatewaysInput{}
 
-	if id, ok := d.GetOk("id"); ok {
+	if id, ok := d.GetOk(names.AttrID); ok {
 		input.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
 	input.Filters = newAttributeFilterList(
 		map[string]string{
-			"state":             d.Get("state").(string),
+			names.AttrState:     d.Get(names.AttrState).(string),
 			"availability-zone": d.Get("availability_zone").(string),
 		},
 	)
@@ -98,7 +99,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		)...)
 	}
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
@@ -124,7 +125,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	for _, attachment := range vgw.VpcAttachments {
 		if aws.StringValue(attachment.State) == ec2.AttachmentStatusAttached {
 			d.Set("attached_vpc_id", attachment.VpcId)
@@ -132,9 +133,9 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 	d.Set("availability_zone", vgw.AvailabilityZone)
-	d.Set("state", vgw.State)
+	d.Set(names.AttrState, vgw.State)
 
-	if err := d.Set("tags", KeyValueTags(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

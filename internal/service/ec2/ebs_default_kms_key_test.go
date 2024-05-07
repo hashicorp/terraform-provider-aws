@@ -34,7 +34,7 @@ func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 				Config: testAccEBSDefaultKMSKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSDefaultKMSKey(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, names.AttrARN),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 
 // testAccEBSManagedDefaultKey returns' the account's AWS-managed default CMK.
 func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 	alias, err := tfkms.FindAliasByName(ctx, conn, "alias/aws/ebs")
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssm_patch_baseline")
@@ -61,7 +62,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -80,7 +81,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +90,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -105,7 +106,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +139,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -243,10 +244,10 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
 	d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules))
 	d.Set("default_baseline", baseline.DefaultBaseline)
-	d.Set("description", baseline.BaselineDescription)
+	d.Set(names.AttrDescription, baseline.BaselineDescription)
 	d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters))
 	d.Set("json", jsonString)
-	d.Set("name", baseline.BaselineName)
+	d.Set(names.AttrName, baseline.BaselineName)
 	d.Set("operating_system", baseline.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)

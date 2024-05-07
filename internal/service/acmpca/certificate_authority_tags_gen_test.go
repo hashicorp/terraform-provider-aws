@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,11 +21,17 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -32,6 +39,13 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -40,7 +54,14 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -49,6 +70,14 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -57,7 +86,13 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key2", "value2"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -65,6 +100,13 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -73,13 +115,20 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -100,17 +149,26 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tagsNull(rName, "key1"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tagsNull/"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tagsNull/"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -119,7 +177,10 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 				},
 			},
 			{
-				Config:             testAccCertificateAuthorityConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -136,18 +197,27 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -155,6 +225,13 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -175,11 +252,17 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", ""),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -187,6 +270,13 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -195,13 +285,20 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -222,11 +319,17 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -234,7 +337,14 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags2(rName, "key1", "value1", "key2", ""),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -243,6 +353,14 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -251,7 +369,13 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -259,6 +383,13 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -279,11 +410,17 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -291,7 +428,13 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", ""),
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -299,6 +442,13 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -317,16 +467,19 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -335,6 +488,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -343,10 +504,15 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("key1", "value1updated", "key2", "value2"),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -356,6 +522,15 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -364,10 +539,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key2", "value2"),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -376,6 +555,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -384,10 +571,11 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -395,6 +583,11 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -413,16 +606,22 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccCertificateAuthorityConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -433,6 +632,17 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -441,10 +651,18 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1updated"),
-					testAccCertificateAuthorityConfig_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1updated"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -457,6 +675,18 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1updated"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -465,10 +695,11 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -476,6 +707,11 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -494,16 +730,22 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccCertificateAuthorityConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -513,6 +755,17 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -521,10 +774,19 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccCertificateAuthorityConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+						"overlapkey2": config.StringVariable("providervalue2"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -536,6 +798,19 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+						"overlapkey2": config.StringVariable("providervalue2"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -544,10 +819,17 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccCertificateAuthorityConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -557,6 +839,17 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -575,13 +868,19 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -591,10 +890,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -603,6 +906,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -621,16 +932,19 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccCertificateAuthorityConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -639,7 +953,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -649,6 +970,14 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -667,16 +996,22 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccCertificateAuthorityConfig_tags1(rName, "key1", ""),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -686,6 +1021,17 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -704,16 +1050,20 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
-					testAccCertificateAuthorityConfig_tagsNull(rName, "key1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -722,6 +1072,15 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -740,16 +1099,20 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 	rName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccCertificateAuthorityConfig_tagsNull(rName, "resourcekey1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("resourcekey1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -758,6 +1121,15 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("resourcekey1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

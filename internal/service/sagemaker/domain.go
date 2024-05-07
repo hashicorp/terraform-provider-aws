@@ -51,7 +51,7 @@ func ResourceDomain() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.AppSecurityGroupManagement_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -234,7 +234,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -258,7 +258,7 @@ func ResourceDomain() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -272,7 +272,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -291,7 +291,7 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -310,7 +310,7 @@ func ResourceDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
@@ -945,7 +945,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -978,7 +978,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -991,7 +991,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -1009,9 +1009,9 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &sagemaker.CreateDomainInput{
 		DomainName:           aws.String(d.Get("domain_name").(string)),
 		AuthMode:             aws.String(d.Get("auth_mode").(string)),
-		VpcId:                aws.String(d.Get("vpc_id").(string)),
+		VpcId:                aws.String(d.Get(names.AttrVPCID).(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
-		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:            flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		DefaultUserSettings:  expandUserSettings(d.Get("default_user_settings").([]interface{})),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -1028,7 +1028,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -1070,18 +1070,18 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(domain.DomainArn)
 	d.Set("app_network_access_type", domain.AppNetworkAccessType)
 	d.Set("app_security_group_management", domain.AppSecurityGroupManagement)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("auth_mode", domain.AuthMode)
 	d.Set("domain_name", domain.DomainName)
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
-	d.Set("kms_key_id", domain.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, domain.KmsKeyId)
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
 	d.Set("url", domain.Url)
-	d.Set("vpc_id", domain.VpcId)
+	d.Set(names.AttrVPCID, domain.VpcId)
 
-	if err := d.Set("subnet_ids", flex.FlattenStringSet(domain.SubnetIds)); err != nil {
+	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(domain.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
@@ -1104,7 +1104,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateDomainInput{
 			DomainId: aws.String(d.Id()),
 		}
@@ -1626,7 +1626,7 @@ func expandKendraSettings(l []interface{}) *sagemaker.KendraSettings {
 
 	config := &sagemaker.KendraSettings{}
 
-	if v, ok := m["status"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -1642,7 +1642,7 @@ func expandDirectDeploySettings(l []interface{}) *sagemaker.DirectDeploySettings
 
 	config := &sagemaker.DirectDeploySettings{}
 
-	if v, ok := m["status"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -1665,7 +1665,7 @@ func expandIdentityProviderOAuthSettings(l []interface{}) []*sagemaker.IdentityP
 			provider.SecretArn = aws.String(v)
 		}
 
-		if v, ok := data["status"].(string); ok && v != "" {
+		if v, ok := data[names.AttrStatus].(string); ok && v != "" {
 			provider.Status = aws.String(v)
 		}
 
@@ -1688,7 +1688,7 @@ func expandModelRegisterSettings(l []interface{}) *sagemaker.ModelRegisterSettin
 		config.CrossAccountModelRegisterRoleArn = aws.String(v)
 	}
 
-	if v, ok := m["status"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -1708,7 +1708,7 @@ func expandTimeSeriesForecastingSettings(l []interface{}) *sagemaker.TimeSeriesF
 		config.AmazonForecastRoleArn = aws.String(v)
 	}
 
-	if v, ok := m["status"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -2091,7 +2091,7 @@ func flattenDirectDeploySettings(config *sagemaker.DirectDeploySettings) []map[s
 	}
 
 	m := map[string]interface{}{
-		"status": aws.StringValue(config.Status),
+		names.AttrStatus: aws.StringValue(config.Status),
 	}
 
 	return []map[string]interface{}{m}
@@ -2103,7 +2103,7 @@ func flattenKendraSettings(config *sagemaker.KendraSettings) []map[string]interf
 	}
 
 	m := map[string]interface{}{
-		"status": aws.StringValue(config.Status),
+		names.AttrStatus: aws.StringValue(config.Status),
 	}
 
 	return []map[string]interface{}{m}
@@ -2124,7 +2124,7 @@ func flattenIdentityProviderOAuthSettings(config []*sagemaker.IdentityProviderOA
 		}
 
 		if raw.Status != nil {
-			provider["status"] = aws.StringValue(raw.Status)
+			provider[names.AttrStatus] = aws.StringValue(raw.Status)
 		}
 
 		providers = append(providers, provider)
@@ -2140,7 +2140,7 @@ func flattenModelRegisterSettings(config *sagemaker.ModelRegisterSettings) []map
 
 	m := map[string]interface{}{
 		"cross_account_model_register_role_arn": aws.StringValue(config.CrossAccountModelRegisterRoleArn),
-		"status":                                aws.StringValue(config.Status),
+		names.AttrStatus:                        aws.StringValue(config.Status),
 	}
 
 	return []map[string]interface{}{m}
@@ -2153,7 +2153,7 @@ func flattenTimeSeriesForecastingSettings(config *sagemaker.TimeSeriesForecastin
 
 	m := map[string]interface{}{
 		"amazon_forecast_role_arn": aws.StringValue(config.AmazonForecastRoleArn),
-		"status":                   aws.StringValue(config.Status),
+		names.AttrStatus:           aws.StringValue(config.Status),
 	}
 
 	return []map[string]interface{}{m}

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
@@ -23,12 +24,12 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("first", "value"),
+					acctest.ConfigDefaultTags_Tags1("first", names.AttrValue),
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.first", "value"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.first", names.AttrValue),
 				),
 			},
 		},

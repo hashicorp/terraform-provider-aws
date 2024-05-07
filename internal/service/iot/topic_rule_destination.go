@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_topic_rule_destination")
@@ -43,11 +44,11 @@ func ResourceTopicRuleDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -59,7 +60,7 @@ func ResourceTopicRuleDestination() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -71,13 +72,13 @@ func ResourceTopicRuleDestination() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -118,7 +119,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "waiting for IoT Topic Rule Destination (%s) create: %s", d.Id(), err)
 	}
 
-	if _, ok := d.GetOk("enabled"); !ok {
+	if _, ok := d.GetOk(names.AttrEnabled); !ok {
 		_, err := conn.UpdateTopicRuleDestination(ctx, &iot.UpdateTopicRuleDestinationInput{
 			Arn:    aws.String(d.Id()),
 			Status: awstypes.TopicRuleDestinationStatusDisabled,
@@ -153,8 +154,8 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading IoT Topic Rule Destination (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("enabled", (output.Status == awstypes.TopicRuleDestinationStatusEnabled))
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrEnabled, (output.Status == awstypes.TopicRuleDestinationStatusEnabled))
 	if output.VpcProperties != nil {
 		if err := d.Set("vpc_configuration", []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
@@ -171,14 +172,14 @@ func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	if d.HasChange("enabled") {
+	if d.HasChange(names.AttrEnabled) {
 		input := &iot.UpdateTopicRuleDestinationInput{
 			Arn:    aws.String(d.Id()),
 			Status: awstypes.TopicRuleDestinationStatusEnabled,
 		}
 		waiter := waitTopicRuleDestinationEnabled
 
-		if _, ok := d.GetOk("enabled"); !ok {
+		if _, ok := d.GetOk(names.AttrEnabled); !ok {
 			input.Status = awstypes.TopicRuleDestinationStatusDisabled
 			waiter = waitTopicRuleDestinationDisabled
 		}
@@ -281,7 +282,7 @@ func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *awstypes.V
 
 	apiObject := &awstypes.VpcDestinationConfiguration{}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -289,11 +290,11 @@ func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *awstypes.V
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -308,7 +309,7 @@ func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationPropertie
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.ToString(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
@@ -316,11 +317,11 @@ func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationPropertie
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringSlice(v)
+		tfMap[names.AttrSubnetIDs] = aws.StringSlice(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.ToString(v)
+		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
 	return tfMap

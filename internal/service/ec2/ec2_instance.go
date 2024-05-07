@@ -71,7 +71,7 @@ func ResourceInstance() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{"ami", "launch_template"},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,7 +254,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -315,7 +315,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -495,7 +495,7 @@ func ResourceInstance() *schema.Resource {
 				AtLeastOneOf: []string{"ami", "instance_type", "launch_template"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -503,7 +503,7 @@ func ResourceInstance() *schema.Resource {
 							ExactlyOneOf: []string{"launch_template.0.name", "launch_template.0.id"},
 							ValidateFunc: verify.ValidLaunchTemplateID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -511,7 +511,7 @@ func ResourceInstance() *schema.Resource {
 							ExactlyOneOf: []string{"launch_template.0.name", "launch_template.0.id"},
 							ValidateFunc: verify.ValidLaunchTemplateName,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -714,7 +714,7 @@ func ResourceInstance() *schema.Resource {
 							Computed:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -1051,13 +1051,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// Initialize the connection info
 	if instance.PublicIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": aws.StringValue(instance.PublicIpAddress),
+			names.AttrType: "ssh",
+			"host":         aws.StringValue(instance.PublicIpAddress),
 		})
 	} else if instance.PrivateIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": aws.StringValue(instance.PrivateIpAddress),
+			names.AttrType: "ssh",
+			"host":         aws.StringValue(instance.PrivateIpAddress),
 		})
 	}
 
@@ -1068,7 +1068,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 
-			blockDeviceTags, ok := bd["tags"].(map[string]interface{})
+			blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{})
 			if !ok || len(blockDeviceTags) == 0 {
 				continue
 			}
@@ -1087,7 +1087,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 
-			blockDeviceTags, ok := bd["tags"].(map[string]interface{})
+			blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{})
 			if !ok || len(blockDeviceTags) == 0 {
 				continue
 			}
@@ -1361,7 +1361,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	// Instance attributes
 	{
@@ -2345,7 +2345,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["encrypted"] = aws.BoolValue(vol.Encrypted)
 		}
 		if vol.KmsKeyId != nil {
-			bd["kms_key_id"] = aws.StringValue(vol.KmsKeyId)
+			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
 		}
 		if vol.Throughput != nil {
 			bd["throughput"] = aws.Int64Value(vol.Throughput)
@@ -2563,7 +2563,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.Encrypted = aws.Bool(v)
 			}
 
-			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrKMSKeyID].(string); ok && v != "" {
 				ebs.KmsKeyId = aws.String(v)
 			}
 
@@ -2637,8 +2637,8 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.Encrypted = aws.Bool(v)
 			}
 
-			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
-				ebs.KmsKeyId = aws.String(bd["kms_key_id"].(string))
+			if v, ok := bd[names.AttrKMSKeyID].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(bd[names.AttrKMSKeyID].(string))
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
@@ -3469,7 +3469,7 @@ func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	m := l[0].(map[string]interface{})
 
 	opts := &ec2.EnclaveOptionsRequest{
-		Enabled: aws.Bool(m["enabled"].(bool)),
+		Enabled: aws.Bool(m[names.AttrEnabled].(bool)),
 	}
 
 	return opts
@@ -3532,7 +3532,7 @@ func flattenEnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(opts.Enabled),
+		names.AttrEnabled: aws.BoolValue(opts.Enabled),
 	}
 
 	return []interface{}{m}
@@ -3811,13 +3811,13 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.Launch
 
 	// DescribeLaunchTemplates returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
-	if v, ok := tfMap["id"]; ok && v != "" {
+	if v, ok := tfMap[names.AttrID]; ok && v != "" {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
-	} else if v, ok := tfMap["name"]; ok && v != "" {
+	} else if v, ok := tfMap[names.AttrName]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -3846,8 +3846,8 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.EC2, instanceI
 	}
 
 	tfMap := map[string]interface{}{
-		"id":   launchTemplateID,
-		"name": name,
+		names.AttrID:   launchTemplateID,
+		names.AttrName: name,
 	}
 
 	currentLaunchTemplateVersion, err := findInstanceLaunchTemplateVersion(ctx, conn, instanceID)
@@ -3869,18 +3869,18 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.EC2, instanceI
 	switch previousLaunchTemplateVersion {
 	case LaunchTemplateVersionDefault:
 		if currentLaunchTemplateVersion == defaultVersion {
-			tfMap["version"] = LaunchTemplateVersionDefault
+			tfMap[names.AttrVersion] = LaunchTemplateVersionDefault
 		} else {
-			tfMap["version"] = currentLaunchTemplateVersion
+			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 		}
 	case LaunchTemplateVersionLatest:
 		if currentLaunchTemplateVersion == latestVersion {
-			tfMap["version"] = LaunchTemplateVersionLatest
+			tfMap[names.AttrVersion] = LaunchTemplateVersionLatest
 		} else {
-			tfMap["version"] = currentLaunchTemplateVersion
+			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 		}
 	default:
-		tfMap["version"] = currentLaunchTemplateVersion
+		tfMap[names.AttrVersion] = currentLaunchTemplateVersion
 	}
 
 	return []interface{}{tfMap}, nil
@@ -3958,7 +3958,7 @@ func findInstanceTagValue(ctx context.Context, conn *ec2.EC2, instanceID, tagKey
 	input := &ec2.DescribeTagsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"resource-id": instanceID,
-			"key":         tagKey,
+			names.AttrKey: tagKey,
 		}),
 	}
 

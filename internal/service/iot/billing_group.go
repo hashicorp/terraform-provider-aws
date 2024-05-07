@@ -38,7 +38,7 @@ func ResourceBillingGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceBillingGroup() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +66,7 @@ func ResourceBillingGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -75,7 +75,7 @@ func ResourceBillingGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func resourceBillingGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateBillingGroupInput{
 		BillingGroupName: aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -126,8 +126,8 @@ func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading IoT Billing Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.BillingGroupArn)
-	d.Set("name", output.BillingGroupName)
+	d.Set(names.AttrARN, output.BillingGroupArn)
+	d.Set(names.AttrName, output.BillingGroupName)
 
 	if output.BillingGroupMetadata != nil {
 		if err := d.Set("metadata", []interface{}{flattenBillingGroupMetadata(output.BillingGroupMetadata)}); err != nil {
@@ -143,7 +143,7 @@ func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("properties", nil)
 	}
-	d.Set("version", output.Version)
+	d.Set(names.AttrVersion, output.Version)
 
 	return diags
 }
@@ -152,10 +152,10 @@ func resourceBillingGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iot.UpdateBillingGroupInput{
 			BillingGroupName: aws.String(d.Id()),
-			ExpectedVersion:  aws.Int64(int64(d.Get("version").(int))),
+			ExpectedVersion:  aws.Int64(int64(d.Get(names.AttrVersion).(int))),
 		}
 
 		if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -226,7 +226,7 @@ func expandBillingGroupProperties(tfMap map[string]interface{}) *awstypes.Billin
 
 	apiObject := &awstypes.BillingGroupProperties{}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.BillingGroupDescription = aws.String(v)
 	}
 
@@ -255,7 +255,7 @@ func flattenBillingGroupProperties(apiObject *awstypes.BillingGroupProperties) m
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BillingGroupDescription; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	return tfMap

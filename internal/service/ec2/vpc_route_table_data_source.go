@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route_table")
@@ -45,13 +46,13 @@ func DataSourceRouteTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			"filter":       customFiltersSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -169,12 +170,12 @@ func DataSourceRouteTable() *schema.Resource {
 				},
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,11 +189,11 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
-	vpcId, vpcIdOk := d.GetOk("vpc_id")
+	vpcId, vpcIdOk := d.GetOk(names.AttrVPCID)
 	subnetId, subnetIdOk := d.GetOk("subnet_id")
 	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
 	rtbId, rtbOk := d.GetOk("route_table_id")
-	tags, tagsOk := d.GetOk("tags")
+	tags, tagsOk := d.GetOk(names.AttrTags)
 	filter, filterOk := d.GetOk("filter")
 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
@@ -236,14 +237,14 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	d.Set("route_table_id", rt.RouteTableId)
-	d.Set("vpc_id", rt.VpcId)
+	d.Set(names.AttrVPCID, rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set("tags", KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

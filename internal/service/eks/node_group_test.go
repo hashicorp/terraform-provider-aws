@@ -44,15 +44,15 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2X8664)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "capacity_type", string(types.CapacityTypesOnDemand)),
 					resource.TestCheckResourceAttr(resourceName, "disk_size", "20"),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "node_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "node_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "release_version", regexache.MustCompile(`^\d+\.\d+\.\d+-\d{8}$`)),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
@@ -61,12 +61,12 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.NodegroupStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NodegroupStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "version", eksClusterResourceName, "version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVersion, eksClusterResourceName, names.AttrVersion),
 				),
 			},
 			{
@@ -267,7 +267,7 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -280,7 +280,7 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -413,7 +413,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName1, names.AttrID),
 				),
 			},
 			{
@@ -427,7 +427,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName2, names.AttrID),
 				),
 			},
 		},
@@ -453,7 +453,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName1, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName1, names.AttrName),
 				),
 			},
 			{
@@ -467,7 +467,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName2, names.AttrName),
 				),
 			},
 		},
@@ -530,7 +530,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.27"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, names.AttrValue),
 				),
 			},
 			{
@@ -543,7 +543,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, names.AttrValue),
 				),
 			},
 		},
@@ -862,9 +862,9 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
-						"key":    "key1",
-						"value":  "value1",
-						"effect": "NO_SCHEDULE",
+						names.AttrKey:   "key1",
+						names.AttrValue: "value1",
+						"effect":        "NO_SCHEDULE",
 					}),
 				),
 			},
@@ -881,14 +881,14 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
-						"key":    "key1",
-						"value":  "value1updated",
-						"effect": "NO_EXECUTE",
+						names.AttrKey:   "key1",
+						names.AttrValue: "value1updated",
+						"effect":        "NO_EXECUTE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
-						"key":    "key2",
-						"value":  "value2",
-						"effect": "NO_SCHEDULE",
+						names.AttrKey:   "key2",
+						names.AttrValue: "value2",
+						"effect":        "NO_SCHEDULE",
 					}),
 				),
 			},
@@ -898,9 +898,9 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
-						"key":    "key2",
-						"value":  "value2",
-						"effect": "NO_SCHEDULE",
+						names.AttrKey:   "key2",
+						names.AttrValue: "value2",
+						"effect":        "NO_SCHEDULE",
 					}),
 				),
 			},
@@ -963,7 +963,7 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -976,7 +976,7 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
 				),
 			},
 		},

@@ -111,7 +111,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,7 +172,7 @@ func ResourceListenerRule() *schema.Resource {
 														},
 													},
 												},
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -215,7 +215,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -252,7 +252,7 @@ const (
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	in := &vpclattice.CreateRuleInput{
 		Action:             expandRuleAction(d.Get("action").([]interface{})[0].(map[string]interface{})),
 		ClientToken:        aws.String(id.UniqueId()),
@@ -273,7 +273,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if out == nil || out.Arn == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.Set("rule_id", out.Id)
@@ -310,9 +310,9 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("priority", out.Priority)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("listener_identifier", listenerId)
 	d.Set("service_identifier", serviceId)
 	d.Set("rule_id", out.Id)
@@ -335,7 +335,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	listenerId := d.Get("listener_identifier").(string)
 	ruleId := d.Get("rule_id").(string)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateRuleInput{
 			RuleIdentifier:     aws.String(ruleId),
 			ListenerIdentifier: aws.String(listenerId),
@@ -552,7 +552,7 @@ func flattenHeaderMatch(apiObject *types.HeaderMatch) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Match; v != nil {
@@ -798,7 +798,7 @@ func expandHeaderMatch(tfMap map[string]interface{}) types.HeaderMatch {
 		apiObject.CaseSensitive = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 

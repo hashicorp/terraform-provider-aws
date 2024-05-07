@@ -5,7 +5,6 @@ package kms_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -14,34 +13,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKMSCustomKeyStoreDataSource_basic(t *testing.T) {
+func testAccCustomKeyStoreDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
-		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
 
-	if os.Getenv("TRUST_ANCHOR_CERTIFICATE") == "" {
-		t.Skip("TRUST_ANCHOR_CERTIFICATE environment variable not set")
-	}
-
-	resourceName := "aws_kms_custom_key_store.test"
-	dataSourceName := "data.aws_kms_custom_key_store.test"
+	clusterID := acctest.SkipIfEnvVarNotSet(t, "CLOUD_HSM_CLUSTER_ID")
+	trustAnchorCertificate := acctest.SkipIfEnvVarNotSet(t, "TRUST_ANCHOR_CERTIFICATE")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	clusterId := os.Getenv("CLOUD_HSM_CLUSTER_ID")
-	trustAnchorCertificate := os.Getenv("TRUST_ANCHOR_CERTIFICATE")
+	dataSourceName := "data.aws_kms_custom_key_store.test"
+	resourceName := "aws_kms_custom_key_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomKeyStoreDataSourceConfig_basic(rName, clusterId, trustAnchorCertificate),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_name", resourceName, "custom_key_store_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "trust_anchor_certificate", resourceName, "trust_anchor_certificate"),
+				Config: testAccCustomKeyStoreDataSourceConfig_basic(rName, clusterID, trustAnchorCertificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cloud_hsm_cluster_id", resourceName, "cloud_hsm_cluster_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_name", resourceName, "custom_key_store_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "trust_anchor_certificate", resourceName, "trust_anchor_certificate"),
 				),
 			},
 		},

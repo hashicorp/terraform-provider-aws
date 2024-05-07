@@ -37,17 +37,17 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// By destination CIDR.
 					resource.TestCheckResourceAttrPair(datasource1Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, names.AttrID),
 
 					// By instance ID.
 					resource.TestCheckResourceAttrPair(datasource2Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource2Name, "instance_id", instanceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasource2Name, "instance_id", instanceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, names.AttrID),
 
 					// By VPC peering connection ID.
 					resource.TestCheckResourceAttrPair(datasource3Name, "destination_cidr_block", pcxRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasource3Name, "vpc_peering_connection_id", pcxResourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasource3Name, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
 				),
 			},
 		},

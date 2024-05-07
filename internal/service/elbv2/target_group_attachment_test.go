@@ -169,7 +169,7 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			input.Targets[0].AvailabilityZone = aws.String(v)
 		}
 
-		if v := rs.Primary.Attributes["port"]; v != "" {
+		if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
 			input.Targets[0].Port = flex.StringValueToInt64(v)
 		}
 
@@ -199,7 +199,7 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 				input.Targets[0].AvailabilityZone = aws.String(v)
 			}
 
-			if v := rs.Primary.Attributes["port"]; v != "" {
+			if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
 				input.Targets[0].Port = flex.StringValueToInt64(v)
 			}
 

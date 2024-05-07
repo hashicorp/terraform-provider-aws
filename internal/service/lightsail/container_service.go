@@ -46,7 +46,7 @@ func ResourceContainerService() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceContainerService() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -155,7 +155,7 @@ func ResourceContainerService() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 20),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -174,7 +174,7 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	serviceName := d.Get("name").(string)
+	serviceName := d.Get(names.AttrName).(string)
 	input := &lightsail.CreateContainerServiceInput{
 		ServiceName: aws.String(serviceName),
 		Power:       types.ContainerServicePowerName(d.Get("power").(string)),
@@ -238,7 +238,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", cs.ContainerServiceName)
+	d.Set(names.AttrName, cs.ContainerServiceName)
 	d.Set("power", cs.Power)
 	d.Set("scale", cs.Scale)
 	d.Set("is_disabled", cs.IsDisabled)
@@ -249,14 +249,14 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("private_registry_access", []interface{}{flattenPrivateRegistryAccess(cs.PrivateRegistryAccess)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
-	d.Set("arn", cs.Arn)
+	d.Set(names.AttrARN, cs.Arn)
 	d.Set("availability_zone", cs.Location.AvailabilityZone)
 	d.Set("created_at", aws.ToTime(cs.CreatedAt).Format(time.RFC3339))
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)
 	d.Set("resource_type", cs.ResourceType)
-	d.Set("state", cs.State)
+	d.Set(names.AttrState, cs.State)
 	d.Set("url", cs.Url)
 
 	setTagsOut(ctx, cs.Tags)
@@ -269,7 +269,7 @@ func resourceContainerServiceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		publicDomainNames, _ := containerServicePublicDomainNamesChanged(d)
 
 		input := &lightsail.UpdateContainerServiceInput{

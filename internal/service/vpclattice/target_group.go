@@ -47,7 +47,7 @@ func ResourceTargetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceTargetGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  true,
@@ -92,7 +92,7 @@ func ResourceTargetGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Optional: true,
 													Default:  "200",
@@ -106,7 +106,7 @@ func ResourceTargetGroup() *schema.Resource {
 										Optional: true,
 										Default:  "/",
 									},
-									"port": {
+									names.AttrPort: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
@@ -151,7 +151,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.LambdaEventStructureVersion](),
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -184,17 +184,17 @@ func ResourceTargetGroup() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -215,12 +215,12 @@ const (
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	in := &vpclattice.CreateTargetGroupInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Type:        types.TargetGroupType(d.Get("type").(string)),
+		Type:        types.TargetGroupType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -257,7 +257,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameTargetGroup, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	if out.Config != nil {
 		if err := d.Set("config", []interface{}{flattenTargetGroupConfig(out.Config)}); err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
@@ -265,9 +265,9 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("config", nil)
 	}
-	d.Set("name", out.Name)
-	d.Set("status", out.Status)
-	d.Set("type", out.Type)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrType, out.Type)
 
 	return nil
 }
@@ -275,7 +275,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateTargetGroupInput{
 			TargetGroupIdentifier: aws.String(d.Id()),
 		}
@@ -440,7 +440,7 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VpcIdentifier; v != nil {
@@ -461,7 +461,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.HealthCheckIntervalSeconds; v != nil {
@@ -485,7 +485,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.UnhealthyThresholdCount; v != nil {
@@ -501,7 +501,7 @@ func flattenMatcherMemberHTTPCode(apiObject *types.MatcherMemberHttpCode) map[st
 	}
 
 	tfMap := map[string]interface{}{
-		"value": apiObject.Value,
+		names.AttrValue: apiObject.Value,
 	}
 
 	return tfMap
@@ -526,7 +526,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.LambdaEventStructureVersion = types.LambdaEventStructureVersion(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
@@ -548,7 +548,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckConfig {
 	apiObject := &types.HealthCheckConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -572,7 +572,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 		apiObject.Path = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
@@ -594,7 +594,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 func expandMatcherMemberHTTPCode(tfMap map[string]interface{}) types.Matcher {
 	apiObject := &types.MatcherMemberHttpCode{}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = v
 	}
 	return apiObject

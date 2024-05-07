@@ -44,7 +44,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -72,7 +72,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -110,7 +110,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -151,7 +151,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("creation_time", group.CreationTime)
 	d.Set("deletion_time", group.DeletionTime)
-	d.Set("description", group.Description)
+	d.Set(names.AttrDescription, group.Description)
 	d.Set("last_updated_time", group.LastUpdatedTime)
 	d.Set("owner", group.Owner)
 	if v := group.SseSpecification; v != nil {
@@ -182,18 +182,18 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("policy_document", "tags", "tags_all", "sse_configuration") {
+	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll, "sse_configuration") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
 			ClientToken:           aws.String(id.UniqueId()),
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("verified_access_instance_id") {
-			input.VerifiedAccessInstanceId = aws.String(d.Get("description").(string))
+			input.VerifiedAccessInstanceId = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroup(ctx, input)
@@ -264,7 +264,7 @@ func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]interface{}) *
 
 	apiObject := &types.VerifiedAccessSseSpecificationRequest{}
 
-	if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 		apiObject.KmsKeyArn = aws.String(v)
 	}
 
@@ -287,7 +287,7 @@ func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAcce
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
-		tfMap["kms_key_arn"] = aws.ToString(v)
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
