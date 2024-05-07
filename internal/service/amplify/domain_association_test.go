@@ -43,7 +43,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
@@ -116,7 +116,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
@@ -137,7 +137,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 				Config: testAccDomainAssociationConfig_updated(rName, domainName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "true"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
