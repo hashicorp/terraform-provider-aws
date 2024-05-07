@@ -42,7 +42,7 @@ func resourceDomainName() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,7 +250,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", domainNameARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainNameARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("certificate_arn", domainName.CertificateArn)
 	d.Set("certificate_name", domainName.CertificateName)
 	if domainName.CertificateUploadDate != nil {
@@ -283,7 +283,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var operations []types.PatchOperation
 
 		if d.HasChange("certificate_arn") {

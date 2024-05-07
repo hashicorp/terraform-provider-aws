@@ -37,7 +37,7 @@ func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
 				),
 			},
 			{
@@ -51,7 +51,7 @@ func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test description updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
 				),
 			},
 		},

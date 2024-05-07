@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_public_key", name="Public Key")
@@ -53,7 +54,7 @@ func resourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -66,7 +67,7 @@ func resourcePublicKey() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPublicKeyNamePrefix,
 			},
 		},
@@ -78,7 +79,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -131,7 +132,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("comment", publicKeyConfig.Comment)
 	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
-	d.Set("name", publicKeyConfig.Name)
+	d.Set(names.AttrName, publicKeyConfig.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
 
 	return diags
@@ -146,7 +147,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		IfMatch: aws.String(d.Get("etag").(string)),
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
-			Name:       aws.String(d.Get("name").(string)),
+			Name:       aws.String(d.Get(names.AttrName).(string)),
 		},
 	}
 

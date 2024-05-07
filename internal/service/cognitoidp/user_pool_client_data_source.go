@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cognito_user_pool_client", name="User Pool Client")
@@ -60,7 +61,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -121,7 +122,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,7 +197,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("user_pool_id", userPoolClient.UserPoolId)
-	d.Set("name", userPoolClient.ClientName)
+	d.Set(names.AttrName, userPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))
 	d.Set("write_attributes", flex.FlattenStringSet(userPoolClient.WriteAttributes))
@@ -240,7 +241,7 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.RoleArn != nil {
-		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
+		m[names.AttrRoleARN] = aws.StringValue(analyticsConfig.RoleArn)
 	}
 
 	if analyticsConfig.ApplicationId != nil {

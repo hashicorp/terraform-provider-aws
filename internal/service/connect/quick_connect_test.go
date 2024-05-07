@@ -38,9 +38,9 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
@@ -61,9 +61,9 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
@@ -84,9 +84,9 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
@@ -105,7 +105,6 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 	var v connect.DescribeQuickConnectOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "tags"
 	phone_number := "+12345678912"
 
 	resourceName := "aws_connect_quick_connect.test"
@@ -117,7 +116,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckQuickConnectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, description, phone_number),
+				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -130,7 +129,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQuickConnectConfig_tags(rName, rName2, description, phone_number),
+				Config: testAccQuickConnectConfig_tags(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -139,7 +138,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccQuickConnectConfig_tagsUpdated(rName, rName2, description, phone_number),
+				Config: testAccQuickConnectConfig_tagsUpdated(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),

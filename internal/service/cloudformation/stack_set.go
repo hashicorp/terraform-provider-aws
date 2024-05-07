@@ -56,7 +56,7 @@ func resourceStackSet() *schema.Resource {
 				ConflictsWith: []string{"auto_deployment"},
 				ValidateFunc:  verify.ValidARN,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +72,7 @@ func resourceStackSet() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -97,7 +97,7 @@ func resourceStackSet() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Capability](),
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -123,7 +123,7 @@ func resourceStackSet() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -180,7 +180,7 @@ func resourceStackSet() *schema.Resource {
 					},
 				},
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -221,7 +221,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.CreateStackSetInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		StackSetName:       aws.String(name),
@@ -244,7 +244,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Capabilities = flex.ExpandStringyValueSet[awstypes.Capability](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -256,7 +256,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ManagedExecution = expandManagedExecution(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
@@ -360,19 +360,19 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
-	d.Set("arn", stackSet.StackSetARN)
+	d.Set(names.AttrARN, stackSet.StackSetARN)
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)
 	}
 	d.Set("capabilities", stackSet.Capabilities)
-	d.Set("description", stackSet.Description)
+	d.Set(names.AttrDescription, stackSet.Description)
 	d.Set("execution_role_name", stackSet.ExecutionRoleName)
 	if err := d.Set("managed_execution", flattenStackSetManagedExecution(stackSet.ManagedExecution)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting managed_execution: %s", err)
 	}
-	d.Set("name", stackSet.StackSetName)
+	d.Set(names.AttrName, stackSet.StackSetName)
 	d.Set("permission_model", stackSet.PermissionModel)
-	if err := d.Set("parameters", flattenAllParameters(stackSet.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameters, flattenAllParameters(stackSet.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 	d.Set("stack_set_id", stackSet.StackSetId)
@@ -407,7 +407,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Capabilities = flex.ExpandStringyValueSet[awstypes.Capability](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -423,7 +423,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
@@ -698,7 +698,7 @@ func expandAutoDeployment(l []interface{}) *awstypes.AutoDeployment {
 
 	m := l[0].(map[string]interface{})
 
-	enabled := m["enabled"].(bool)
+	enabled := m[names.AttrEnabled].(bool)
 	autoDeployment := &awstypes.AutoDeployment{
 		Enabled: aws.Bool(enabled),
 	}
@@ -730,7 +730,7 @@ func flattenStackSetAutoDeploymentResponse(autoDeployment *awstypes.AutoDeployme
 	}
 
 	m := map[string]interface{}{
-		"enabled":                          aws.ToBool(autoDeployment.Enabled),
+		names.AttrEnabled:                  aws.ToBool(autoDeployment.Enabled),
 		"retain_stacks_on_account_removal": aws.ToBool(autoDeployment.RetainStacksOnAccountRemoval),
 	}
 

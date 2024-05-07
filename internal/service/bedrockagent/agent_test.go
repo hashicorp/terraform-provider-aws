@@ -37,7 +37,7 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func TestAccBedrockAgent_full(t *testing.T) {
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func TestAccBedrockAgent_update(t *testing.T) {
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-1"),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -106,7 +106,7 @@ func TestAccBedrockAgent_update(t *testing.T) {
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-2"),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -115,7 +115,7 @@ func TestAccBedrockAgent_update(t *testing.T) {
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-3"),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude again"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude again"),
 				),
 			},
 			{

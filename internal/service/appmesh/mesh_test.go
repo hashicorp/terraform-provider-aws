@@ -36,11 +36,11 @@ func testAccMesh_basic(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexache.MustCompile(`mesh/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 				),
@@ -109,7 +109,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 				Config: testAccMeshConfig_egressFilter(rName, "DROP_ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
 				),
 			},
@@ -146,7 +146,7 @@ func testAccMesh_serviceDiscovery(t *testing.T) {
 				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv4_PREFERRED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv4_PREFERRED"),
 				),
 			},
@@ -154,7 +154,7 @@ func testAccMesh_serviceDiscovery(t *testing.T) {
 				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv4_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv4_ONLY"),
 				),
 			},
@@ -162,7 +162,7 @@ func testAccMesh_serviceDiscovery(t *testing.T) {
 				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_ONLY"),
 				),
 			},

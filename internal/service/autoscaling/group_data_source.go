@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_autoscaling_group", name="Group")
@@ -19,7 +20,7 @@ func dataSourceGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,15 +83,15 @@ func dataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -171,7 +172,7 @@ func dataSourceGroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -416,7 +417,7 @@ func dataSourceGroup() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"version": {
+															names.AttrVersion: {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
@@ -436,7 +437,7 @@ func dataSourceGroup() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -456,7 +457,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -470,7 +471,7 @@ func dataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -478,7 +479,7 @@ func dataSourceGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -508,7 +509,7 @@ func dataSourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -564,7 +565,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	groupName := d.Get("name").(string)
+	groupName := d.Get(names.AttrName).(string)
 	group, err := findGroupByName(ctx, conn, groupName)
 
 	if err != nil {
@@ -572,7 +573,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(group.AutoScalingGroupName))
-	d.Set("arn", group.AutoScalingGroupARN)
+	d.Set(names.AttrARN, group.AutoScalingGroupARN)
 	d.Set("availability_zones", group.AvailabilityZones)
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
@@ -602,12 +603,12 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("mixed_instances_policy", nil)
 	}
-	d.Set("name", group.AutoScalingGroupName)
+	d.Set(names.AttrName, group.AutoScalingGroupName)
 	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
 	d.Set("placement_group", group.PlacementGroup)
 	d.Set("predicted_capacity", group.PredictedCapacity)
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
-	d.Set("status", group.Status)
+	d.Set(names.AttrStatus, group.Status)
 	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
 	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)

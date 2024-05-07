@@ -38,7 +38,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -75,7 +75,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 		ResourceIdentifier:  aws.String(d.Get("resource_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
@@ -111,9 +111,9 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("extension_arn", out.ExtensionArn)
-	d.Set("parameters", out.Parameters)
+	d.Set(names.AttrParameters, out.Parameters)
 	d.Set("resource_arn", out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
@@ -130,8 +130,8 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 		ExtensionAssociationId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("parameters") {
-		in.Parameters = flex.ExpandStringValueMap(d.Get("parameters").(map[string]interface{}))
+	if d.HasChange(names.AttrParameters) {
+		in.Parameters = flex.ExpandStringValueMap(d.Get(names.AttrParameters).(map[string]interface{}))
 		requestUpdate = true
 	}
 

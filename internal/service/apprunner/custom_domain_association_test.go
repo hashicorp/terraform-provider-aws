@@ -39,8 +39,8 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "pending_certificate_dns_validation"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "pending_certificate_dns_validation"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, names.AttrARN),
 				),
 			},
 			{

@@ -68,7 +68,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"failure_reasons": schema.ListAttribute{
@@ -77,10 +77,10 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -104,7 +104,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -137,7 +137,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -310,7 +310,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

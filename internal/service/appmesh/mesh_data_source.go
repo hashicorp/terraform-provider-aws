@@ -24,7 +24,7 @@ func dataSourceMesh() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -41,7 +41,7 @@ func dataSourceMesh() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -61,7 +61,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	meshName := d.Get("name").(string)
+	meshName := d.Get(names.AttrName).(string)
 	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
 
 	if err != nil {
@@ -70,7 +70,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(mesh.MeshName))
 	arn := aws.StringValue(mesh.Metadata.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
@@ -93,7 +93,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

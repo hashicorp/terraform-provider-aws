@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_backup_vault")
@@ -21,15 +22,15 @@ func DataSourceVault() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVaultRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +38,7 @@ func DataSourceVault() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -47,7 +48,7 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
@@ -58,16 +59,16 @@ func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.StringValue(resp.BackupVaultName))
-	d.Set("arn", resp.BackupVaultArn)
-	d.Set("kms_key_arn", resp.EncryptionKeyArn)
-	d.Set("name", resp.BackupVaultName)
+	d.Set(names.AttrARN, resp.BackupVaultArn)
+	d.Set(names.AttrKMSKeyARN, resp.EncryptionKeyArn)
+	d.Set(names.AttrName, resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
 	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Vault (%s): %s", name, err)
 	}
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
