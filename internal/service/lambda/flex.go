@@ -8,6 +8,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func flattenLayers(apiObjects []awstypes.Layer) []interface{} {
@@ -28,10 +29,10 @@ func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []interface
 	}
 
 	tfMap["ipv6_allowed_for_dual_stack"] = aws.ToBool(apiObject.Ipv6AllowedForDualStack)
-	tfMap["subnet_ids"] = apiObject.SubnetIds
+	tfMap[names.AttrSubnetIDs] = apiObject.SubnetIds
 	tfMap["security_group_ids"] = apiObject.SecurityGroupIds
 	if apiObject.VpcId != nil {
-		tfMap["vpc_id"] = aws.ToString(apiObject.VpcId)
+		tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
 	}
 
 	return []interface{}{tfMap}

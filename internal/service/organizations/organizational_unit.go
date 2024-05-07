@@ -43,7 +43,7 @@ func ResourceOrganizationalUnit() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -51,22 +51,22 @@ func ResourceOrganizationalUnit() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -89,7 +89,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(name),
 		ParentId: aws.String(d.Get("parent_id").(string)),
@@ -140,8 +140,8 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("accounts", flattenOrganizationalUnitAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set("arn", ou.Arn)
-	d.Set("name", ou.Name)
+	d.Set(names.AttrARN, ou.Arn)
+	d.Set(names.AttrName, ou.Name)
 	d.Set("parent_id", parentAccountID)
 
 	return diags
@@ -151,9 +151,9 @@ func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		input := &organizations.UpdateOrganizationalUnitInput{
-			Name:                 aws.String(d.Get("name").(string)),
+			Name:                 aws.String(d.Get(names.AttrName).(string)),
 			OrganizationalUnitId: aws.String(d.Id()),
 		}
 
@@ -225,10 +225,10 @@ func flattenOrganizationalUnitAccounts(accounts []*organizations.Account) []map[
 
 	for _, account := range accounts {
 		result = append(result, map[string]interface{}{
-			"arn":   aws.StringValue(account.Arn),
-			"email": aws.StringValue(account.Email),
-			"id":    aws.StringValue(account.Id),
-			"name":  aws.StringValue(account.Name),
+			names.AttrARN:  aws.StringValue(account.Arn),
+			"email":        aws.StringValue(account.Email),
+			names.AttrID:   aws.StringValue(account.Id),
+			names.AttrName: aws.StringValue(account.Name),
 		})
 	}
 

@@ -56,7 +56,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,7 +116,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -131,7 +131,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -268,7 +268,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	clusterID := aws.StringValue(db.DBClusterIdentifier)
-	d.Set("arn", db.DBInstanceArn)
+	d.Set(names.AttrARN, db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", clusterID)
@@ -278,7 +278,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("kms_key_arn", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyARN, db.KmsKeyId)
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
@@ -298,7 +298,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 		d.Set("address", address)
 		d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
-		d.Set("port", port)
+		d.Set(names.AttrPort, port)
 	}
 
 	m, err := findClusterMemberByInstanceByTwoPartKey(ctx, conn, clusterID, d.Id())
@@ -316,7 +316,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &neptune.ModifyDBInstanceInput{
 			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),

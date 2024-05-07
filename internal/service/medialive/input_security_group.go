@@ -45,7 +45,7 @@ func ResourceInputSecurityGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameInputSecurityGroup, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("inputs", out.Inputs)
 	d.Set("whitelist_rules", flattenInputWhitelistRules(out.WhitelistRules))
 
@@ -137,7 +137,7 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &medialive.UpdateInputSecurityGroupInput{
 			InputSecurityGroupId: aws.String(d.Id()),
 		}

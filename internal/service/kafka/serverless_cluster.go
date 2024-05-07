@@ -44,7 +44,7 @@ func resourceServerlessCluster() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceServerlessCluster() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 													ForceNew: true,
@@ -111,7 +111,7 @@ func resourceServerlessCluster() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -172,7 +172,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	clusterARN := aws.ToString(cluster.ClusterArn)
-	d.Set("arn", clusterARN)
+	d.Set(names.AttrARN, clusterARN)
 	if cluster.Serverless.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenServerlessClientAuthentication(cluster.Serverless.ClientAuthentication)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
@@ -249,7 +249,7 @@ func expandIam(tfMap map[string]interface{}) *types.Iam { // nosemgrep:ci.caps4-
 
 	apiObject := &types.Iam{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -292,7 +292,7 @@ func flattenIam(apiObject *types.Iam) map[string]interface{} { // nosemgrep:ci.c
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap
@@ -309,7 +309,7 @@ func expandVpcConfig(tfMap map[string]interface{}) *types.VpcConfig { // nosemgr
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -350,7 +350,7 @@ func flattenVpcConfig(apiObject types.VpcConfig) map[string]interface{} { // nos
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = v
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	return tfMap

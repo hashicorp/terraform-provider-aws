@@ -57,15 +57,15 @@ func ResourceDataSource() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get("type").(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if roleArn, dataSourcetype := diff.Get("role_arn").(string), diff.Get("type").(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if roleArn, dataSourcetype := diff.Get(names.AttrRoleARN).(string), diff.Get(names.AttrType).(string); roleArn != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get("type").(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("schedule must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -74,7 +74,7 @@ func ResourceDataSource() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -191,7 +191,7 @@ func ResourceDataSource() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 253),
 															},
-															"port": {
+															names.AttrPort: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(1, 65535),
@@ -242,7 +242,7 @@ func ResourceDataSource() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 253),
 												},
-												"port": {
+												names.AttrPort: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 65535),
@@ -394,7 +394,7 @@ func ResourceDataSource() *schema.Resource {
 							schema := hookConfigurationSchema()
 							return schema
 						}(),
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -410,7 +410,7 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -440,7 +440,7 @@ func ResourceDataSource() *schema.Resource {
 					),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -451,7 +451,7 @@ func ResourceDataSource() *schema.Resource {
 					),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -460,11 +460,11 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -596,13 +596,13 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateDataSourceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Type:        types.DataSourceType(d.Get("type").(string)),
+		Type:        types.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok {
@@ -613,7 +613,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -621,7 +621,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.LanguageCode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -696,18 +696,18 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("index/%s/data-source/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("data_source_id", resp.Id)
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("index_id", resp.IndexId)
 	d.Set("language_code", resp.LanguageCode)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
 	d.Set("schedule", resp.Schedule)
-	d.Set("status", resp.Status)
-	d.Set("type", resp.Type)
+	d.Set(names.AttrStatus, resp.Status)
+	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
@@ -726,7 +726,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
+	if d.HasChanges("configuration", "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -745,20 +745,20 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("language_code") {
 			input.LanguageCode = aws.String(d.Get("language_code").(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("schedule") {
@@ -1086,7 +1086,7 @@ func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthentication
 		basicAuthenticationConfigExpanded := types.BasicAuthenticationConfiguration{
 			Credentials: aws.String(data["credentials"].(string)),
 			Host:        aws.String(data["host"].(string)),
-			Port:        aws.Int32(int32(data["port"].(int))),
+			Port:        aws.Int32(int32(data[names.AttrPort].(int))),
 		}
 
 		result = append(result, basicAuthenticationConfigExpanded)
@@ -1107,7 +1107,7 @@ func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
 
 	result := &types.ProxyConfiguration{
 		Host: aws.String(tfMap["host"].(string)),
-		Port: aws.Int32(int32(tfMap["port"].(int))),
+		Port: aws.Int32(int32(tfMap[names.AttrPort].(int))),
 	}
 
 	if v, ok := tfMap["credentials"].(string); ok && v != "" {
@@ -1203,7 +1203,7 @@ func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.Cu
 		result.PreExtractionHookConfiguration = expandHookConfiguration(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		result.RoleArn = aws.String(v)
 	}
 
@@ -1481,9 +1481,9 @@ func flattenBasicAuthentication(basicAuthentications []types.BasicAuthentication
 
 	for _, basicAuthentication := range basicAuthentications {
 		m := map[string]interface{}{
-			"credentials": aws.ToString(basicAuthentication.Credentials),
-			"host":        aws.ToString(basicAuthentication.Host),
-			"port":        aws.ToInt32(basicAuthentication.Port),
+			"credentials":  aws.ToString(basicAuthentication.Credentials),
+			"host":         aws.ToString(basicAuthentication.Host),
+			names.AttrPort: aws.ToInt32(basicAuthentication.Port),
 		}
 
 		BasicAuthenticationList = append(BasicAuthenticationList, m)
@@ -1498,8 +1498,8 @@ func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{
 	}
 
 	m := map[string]interface{}{
-		"host": aws.ToString(apiObject.Host),
-		"port": aws.ToInt32(apiObject.Port),
+		"host":         aws.ToString(apiObject.Host),
+		names.AttrPort: aws.ToInt32(apiObject.Port),
 	}
 
 	if v := apiObject.Credentials; v != nil {
@@ -1573,7 +1573,7 @@ func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumen
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		m["role_arn"] = aws.ToString(v)
+		m[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

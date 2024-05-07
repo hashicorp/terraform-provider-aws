@@ -45,7 +45,7 @@ func ResourceDatabase() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -293,7 +293,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	rd := database.RelationalDatabase
 
-	d.Set("arn", rd.Arn)
+	d.Set(names.AttrARN, rd.Arn)
 	d.Set("availability_zone", rd.Location.AvailabilityZone)
 	d.Set("backup_retention_enabled", rd.BackupRetentionEnabled)
 	d.Set("blueprint_id", rd.RelationalDatabaseBlueprintId)
@@ -326,7 +326,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", "tags", "tags_all") {
+	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", names.AttrTags, names.AttrTagsAll) {
 		input := &lightsail.UpdateRelationalDatabaseInput{
 			ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
 			RelationalDatabaseName: aws.String(d.Id()),

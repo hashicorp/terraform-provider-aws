@@ -40,11 +40,11 @@ func ResourceFirewallPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -66,7 +66,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -188,7 +188,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -217,14 +217,14 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-		FirewallPolicyName: aws.String(d.Get("name").(string)),
+		FirewallPolicyName: aws.String(d.Get(names.AttrName).(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("encryption_configuration"); ok {
@@ -260,13 +260,13 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	response := output.FirewallPolicyResponse
-	d.Set("arn", response.FirewallPolicyArn)
-	d.Set("description", response.Description)
+	d.Set(names.AttrARN, response.FirewallPolicyArn)
+	d.Set(names.AttrDescription, response.Description)
 	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(output.FirewallPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting firewall_policy: %s", err)
 	}
-	d.Set("name", response.FirewallPolicyName)
+	d.Set(names.AttrName, response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
 	setTagsOut(ctx, response.Tags)
@@ -279,7 +279,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
+	if d.HasChanges(names.AttrDescription, "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
 			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
@@ -288,7 +288,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// Only pass non-empty description values, else API request returns an InternalServiceError
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 

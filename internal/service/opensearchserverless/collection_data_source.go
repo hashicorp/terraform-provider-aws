@@ -42,7 +42,7 @@ func (d *dataSourceCollection) Metadata(_ context.Context, _ datasource.Metadata
 func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
@@ -52,33 +52,33 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 			"dashboard_endpoint": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
-						path.MatchRelative().AtParent().AtName("name"),
+						path.MatchRelative().AtParent().AtName(names.AttrName),
 					),
 					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("name"),
+						path.MatchRelative().AtParent().AtName(names.AttrName),
 					),
 				},
 			},
-			"kms_key_arn": schema.StringAttribute{
+			names.AttrKMSKeyARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"last_modified_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
-						path.MatchRelative().AtParent().AtName("id"),
+						path.MatchRelative().AtParent().AtName(names.AttrID),
 					),
 				},
 			},
@@ -86,7 +86,7 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},

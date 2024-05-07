@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailKeyPair_basic(t *testing.T) {
@@ -40,9 +41,9 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "private_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
@@ -77,7 +78,7 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 				Config: testAccKeyPairConfig_imported(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
 					resource.TestCheckNoResourceAttr(resourceName, "encrypted_fingerprint"),
@@ -109,7 +110,7 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 				Config: testAccKeyPairConfig_encrypted(rName, testKeyPairPubKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_private_key"),
@@ -138,8 +139,8 @@ func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, "aws_lightsail_key_pair.lightsail_key_pair_test_omit"),
 					testAccCheckKeyPairExists(ctx, "aws_lightsail_key_pair.lightsail_key_pair_test_prefixed"),
-					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_omit", "name"),
-					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_prefixed", "name"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_omit", names.AttrName),
+					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_prefixed", names.AttrName),
 				),
 			},
 		},
@@ -233,7 +234,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheck
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		respKeyPair, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
-			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
+			KeyPairName: aws.String(rs.Primary.Attributes[names.AttrName]),
 		})
 
 		if err != nil {
@@ -241,7 +242,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheck
 		}
 
 		if respKeyPair == nil || respKeyPair.KeyPair == nil {
-			return fmt.Errorf("KeyPair (%s) not found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("KeyPair (%s) not found", rs.Primary.Attributes[names.AttrName])
 		}
 		return nil
 	}
@@ -257,7 +258,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			respKeyPair, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
-				KeyPairName: aws.String(rs.Primary.Attributes["name"]),
+				KeyPairName: aws.String(rs.Primary.Attributes[names.AttrName]),
 			})
 
 			if tflightsail.IsANotFoundError(err) {

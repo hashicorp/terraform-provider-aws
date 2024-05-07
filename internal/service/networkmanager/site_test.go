@@ -33,8 +33,8 @@ func TestAccNetworkManagerSite_basic(t *testing.T) {
 				Config: testAccSiteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -133,7 +133,7 @@ func TestAccNetworkManagerSite_description(t *testing.T) {
 				Config: testAccSiteConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -146,7 +146,7 @@ func TestAccNetworkManagerSite_description(t *testing.T) {
 				Config: testAccSiteConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -364,6 +364,6 @@ func testAccSiteImportStateIdFunc(resourceName string) resource.ImportStateIdFun
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["arn"], nil
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }

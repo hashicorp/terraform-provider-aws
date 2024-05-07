@@ -38,7 +38,7 @@ func ResourceKeyPair() *schema.Resource {
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -66,7 +66,7 @@ func ResourceKeyPair() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
@@ -95,7 +95,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	kName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	kName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	var pubKey string
 	var op *types.Operation
 	if pubKeyInterface, ok := d.GetOk("public_key"); ok {
@@ -187,9 +187,9 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.KeyPair.Arn)
+	d.Set(names.AttrARN, resp.KeyPair.Arn)
 	d.Set("fingerprint", resp.KeyPair.Fingerprint)
-	d.Set("name", resp.KeyPair.Name)
+	d.Set(names.AttrName, resp.KeyPair.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(resp.KeyPair.Name)))
 
 	setTagsOut(ctx, resp.KeyPair.Tags)

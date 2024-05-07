@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const mutexLayerKey = `aws_lambda_layer_version`
@@ -40,7 +41,7 @@ func resourceLayerVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +70,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -137,7 +138,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,7 +188,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &lambda.PublishLayerVersionInput{
 		Content:     layerContent,
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		LayerName:   aws.String(layerName),
 		LicenseInfo: aws.String(d.Get("license_info").(string)),
 	}
@@ -232,11 +233,11 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.LayerVersionArn)
+	d.Set(names.AttrARN, output.LayerVersionArn)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
 	d.Set("created_date", output.CreatedDate)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("layer_arn", output.LayerArn)
 	d.Set("layer_name", layerName)
 	d.Set("license_info", output.LicenseInfo)
@@ -244,7 +245,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
 	d.Set("source_code_hash", output.Content.CodeSha256)
 	d.Set("source_code_size", output.Content.CodeSize)
-	d.Set("version", strconv.FormatInt(versionNumber, 10))
+	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
 
 	return diags
 }

@@ -50,7 +50,7 @@ func ResourceDomainEntry() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,7 +60,7 @@ func ResourceDomainEntry() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -83,7 +83,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	req := &lightsail.CreateDomainEntryInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 
@@ -91,7 +91,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 			IsAlias: aws.Bool(d.Get("is_alias").(bool)),
 			Name:    aws.String(expandDomainEntryName(name, d.Get("domain_name").(string))),
 			Target:  aws.String(d.Get("target").(string)),
-			Type:    aws.String(d.Get("type").(string)),
+			Type:    aws.String(d.Get(names.AttrType).(string)),
 		},
 	}
 
@@ -111,7 +111,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	idParts := []string{
 		name,
 		d.Get("domain_name").(string),
-		d.Get("type").(string),
+		d.Get(names.AttrType).(string),
 		d.Get("target").(string),
 	}
 
@@ -170,9 +170,9 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		d.SetId(id)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("domain_name", domainName)
-	d.Set("type", entry.Type)
+	d.Set(names.AttrType, entry.Type)
 	d.Set("is_alias", entry.IsAlias)
 	d.Set("target", entry.Target)
 

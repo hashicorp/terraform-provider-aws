@@ -59,12 +59,12 @@ func TestAccKendraIndex_basic(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
 					resource.TestCheckResourceAttr(resourceName, "edition", string(types.IndexEditionEnterpriseEdition)),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", "1"),
@@ -73,9 +73,9 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.text_document_statistics.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_bytes"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.IndexStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.access_cw", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.IndexStatusActive)),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "user_context_policy", "ATTRIBUTE_FILTER"),
 					resource.TestCheckResourceAttr(resourceName, "user_group_resolution_configuration.#", "0"),
@@ -112,7 +112,7 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_configuration.0.kms_key_id", "data.aws_kms_key.this", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_configuration.0.kms_key_id", "data.aws_kms_key.this", names.AttrARN),
 				),
 			},
 			{
@@ -191,7 +191,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -203,7 +203,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -218,7 +218,6 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "description"
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -228,10 +227,10 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 				),
 			},
 			{
@@ -240,10 +239,10 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, rName4, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName4, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "name", rName4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName4),
 				),
 			},
 		},
@@ -315,7 +314,6 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "description"
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -325,7 +323,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -338,7 +336,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_tags(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_tags(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -347,7 +345,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIndexConfig_tagsUpdated(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_tagsUpdated(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -367,7 +365,6 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "description"
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -377,10 +374,10 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.access_cw", names.AttrARN),
 				),
 			},
 			{
@@ -389,10 +386,10 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_sm", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.access_sm", names.AttrARN),
 				),
 			},
 		},
@@ -467,8 +464,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_authors",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "_authors",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -478,8 +475,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_category",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_category",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -490,8 +487,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_created_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_created_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -504,8 +501,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_data_source_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_data_source_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -516,8 +513,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_document_title",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_document_title",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "2",
 						"relevance.0.values_importance_map.%": "0",
@@ -528,8 +525,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_excerpt_page_number",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_excerpt_page_number",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
@@ -540,8 +537,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_faq_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_faq_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -552,8 +549,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_file_type",
-						"type":                   string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:           "_file_type",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -563,8 +560,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_language_code",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_language_code",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -575,8 +572,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_last_updated_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_last_updated_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -589,8 +586,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_source_uri",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_source_uri",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -601,8 +598,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_tenant_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_tenant_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -613,8 +610,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_version",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_version",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -625,8 +622,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_view_count",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_view_count",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -649,8 +646,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_authors",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "_authors",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -660,8 +657,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_category",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_category",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -672,8 +669,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_created_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_created_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -686,8 +683,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_data_source_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_data_source_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -698,8 +695,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_document_title",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_document_title",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "2",
 						"relevance.0.values_importance_map.%": "0",
@@ -710,8 +707,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_excerpt_page_number",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_excerpt_page_number",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
@@ -722,8 +719,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_faq_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_faq_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -734,8 +731,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_file_type",
-						"type":                   string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:           "_file_type",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -745,8 +742,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_language_code",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_language_code",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -757,8 +754,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_last_updated_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_last_updated_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -771,8 +768,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_source_uri",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_source_uri",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -783,8 +780,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_tenant_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_tenant_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -795,8 +792,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_version",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_version",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -807,8 +804,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_view_count",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_view_count",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -819,8 +816,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "example-string-value",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "example-string-value",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              strconv.Itoa(stringValImportance),
 						"relevance.0.values_importance_map.%": "0",
@@ -831,8 +828,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-long-value",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "example-long-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -843,8 +840,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-string-list-value",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "example-string-list-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -854,8 +851,8 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-date-value",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "example-date-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -905,8 +902,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_authors",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "_authors",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -916,8 +913,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_category",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_category",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -928,8 +925,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_created_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_created_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -942,8 +939,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_data_source_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_data_source_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -954,8 +951,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_document_title",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_document_title",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "2",
 						"relevance.0.values_importance_map.%": "0",
@@ -966,8 +963,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_excerpt_page_number",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_excerpt_page_number",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
@@ -978,8 +975,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_faq_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_faq_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -990,8 +987,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_file_type",
-						"type":                   string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:           "_file_type",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -1001,8 +998,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_language_code",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_language_code",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1013,8 +1010,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_last_updated_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_last_updated_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -1027,8 +1024,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_source_uri",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_source_uri",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1039,8 +1036,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_tenant_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_tenant_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1051,8 +1048,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_version",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_version",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1063,8 +1060,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_view_count",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_view_count",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -1075,8 +1072,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "example-string-value",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "example-string-value",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              strconv.Itoa(originalStringValImportance),
 						"relevance.0.values_importance_map.%": "0",
@@ -1087,8 +1084,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-long-value",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "example-long-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -1099,8 +1096,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-string-list-value",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "example-string-list-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -1110,8 +1107,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-date-value",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "example-date-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -1136,8 +1133,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_authors",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "_authors",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -1147,8 +1144,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_category",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_category",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1159,8 +1156,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_created_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_created_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -1173,8 +1170,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_data_source_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_data_source_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1185,8 +1182,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_document_title",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_document_title",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "2",
 						"relevance.0.values_importance_map.%": "0",
@@ -1197,8 +1194,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_excerpt_page_number",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_excerpt_page_number",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "2",
 						"relevance.0.rank_order": "ASCENDING",
@@ -1209,8 +1206,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_faq_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_faq_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1221,8 +1218,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_file_type",
-						"type":                   string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:           "_file_type",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -1232,8 +1229,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_language_code",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_language_code",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1244,8 +1241,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_last_updated_at",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "_last_updated_at",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",
@@ -1258,8 +1255,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_source_uri",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_source_uri",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1270,8 +1267,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_tenant_id",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_tenant_id",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1282,8 +1279,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "_version",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "_version",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              "1",
 						"relevance.0.values_importance_map.%": "0",
@@ -1294,8 +1291,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "_view_count",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "_view_count",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -1306,8 +1303,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                                "example-string-value",
-						"type":                                string(types.DocumentAttributeValueTypeStringValue),
+						names.AttrName:                        "example-string-value",
+						names.AttrType:                        string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
 						"relevance.0.importance":              strconv.Itoa(updatedStringValImportance),
 						"relevance.0.values_importance_map.%": "0",
@@ -1318,8 +1315,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":                   "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-long-value",
-						"type":                   string(types.DocumentAttributeValueTypeLongValue),
+						names.AttrName:           "example-long-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeLongValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
@@ -1330,8 +1327,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-string-list-value",
-						"type":                   string(types.DocumentAttributeValueTypeStringListValue),
+						names.AttrName:           "example-string-list-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
 						"relevance.#":            "1",
 						"relevance.0.importance": "1",
 						"search.#":               "1",
@@ -1341,8 +1338,8 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
-						"name":                   "example-date-value",
-						"type":                   string(types.DocumentAttributeValueTypeDateValue),
+						names.AttrName:           "example-date-value",
+						names.AttrType:           string(types.DocumentAttributeValueTypeDateValue),
 						"relevance.#":            "1",
 						"relevance.0.freshness":  "false",
 						"relevance.0.importance": "1",

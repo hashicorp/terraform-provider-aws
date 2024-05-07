@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kendra_experience")
@@ -47,7 +48,7 @@ func ResourceExperience() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,7 +119,7 @@ func ResourceExperience() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -149,7 +150,7 @@ func ResourceExperience() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]*`), ""),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -157,19 +158,19 @@ func ResourceExperience() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("description", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta interface{}) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
@@ -185,11 +186,11 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	in := &kendra.CreateExperienceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
-		Name:        aws.String(d.Get("name").(string)),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
+		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
@@ -199,11 +200,11 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateExperience(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	id := aws.ToString(out.Id)
@@ -248,13 +249,13 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("index_id", out.IndexId)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("experience_id", out.Id)
-	d.Set("name", out.Name)
-	d.Set("role_arn", out.RoleArn)
-	d.Set("status", out.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrRoleARN, out.RoleArn)
+	d.Set(names.AttrStatus, out.Status)
 
 	if err := d.Set("endpoints", flattenEndpoints(out.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
@@ -286,16 +287,16 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		in.Configuration = expandConfiguration(d.Get("configuration").([]interface{}))
 	}
 
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("name") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		in.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("role_arn") {
-		in.RoleArn = aws.String(d.Get("role_arn").(string))
+	if d.HasChange(names.AttrRoleARN) {
+		in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 	}
 
 	log.Printf("[DEBUG] Updating Kendra Experience (%s): %#v", d.Id(), in)

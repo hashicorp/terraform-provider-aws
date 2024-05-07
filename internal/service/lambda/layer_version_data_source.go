@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lambda_layer_version", name="Layer Version")
@@ -23,7 +24,7 @@ func dataSourceLayerVersion() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLayerVersionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,7 +32,7 @@ func dataSourceLayerVersion() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
-				ConflictsWith:    []string{"version"},
+				ConflictsWith:    []string{names.AttrVersion},
 			},
 			"compatible_architectures": {
 				Type:     schema.TypeSet,
@@ -44,7 +45,7 @@ func dataSourceLayerVersion() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
-				ConflictsWith:    []string{"version"},
+				ConflictsWith:    []string{names.AttrVersion},
 			},
 			"compatible_runtimes": {
 				Type:     schema.TypeSet,
@@ -57,7 +58,7 @@ func dataSourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +90,7 @@ func dataSourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
@@ -105,7 +106,7 @@ func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, met
 
 	layerName := d.Get("layer_name").(string)
 	var versionNumber int64
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		versionNumber = int64(v.(int))
 	} else {
 		input := &lambda.ListLayerVersionsInput{
@@ -140,18 +141,18 @@ func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.ToString(output.LayerVersionArn))
-	d.Set("arn", output.LayerVersionArn)
+	d.Set(names.AttrARN, output.LayerVersionArn)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
 	d.Set("created_date", output.CreatedDate)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("layer_arn", output.LayerArn)
 	d.Set("license_info", output.LicenseInfo)
 	d.Set("signing_job_arn", output.Content.SigningJobArn)
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
 	d.Set("source_code_hash", output.Content.CodeSha256)
 	d.Set("source_code_size", output.Content.CodeSize)
-	d.Set("version", output.Version)
+	d.Set(names.AttrVersion, output.Version)
 
 	return diags
 }

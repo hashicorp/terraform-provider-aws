@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_connector")
@@ -40,7 +41,7 @@ func ResourceConnector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +139,7 @@ func ResourceConnector() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -251,7 +252,7 @@ func ResourceConnector() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 													ForceNew: true,
@@ -276,7 +277,7 @@ func ResourceConnector() *schema.Resource {
 													Optional: true,
 													ForceNew: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 													ForceNew: true,
@@ -291,12 +292,12 @@ func ResourceConnector() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket": {
+												names.AttrBucket: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ForceNew: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 													ForceNew: true,
@@ -315,7 +316,7 @@ func ResourceConnector() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -334,7 +335,7 @@ func ResourceConnector() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"arn": {
+									names.AttrARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -357,7 +358,7 @@ func ResourceConnector() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -368,7 +369,7 @@ func ResourceConnector() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -391,7 +392,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateConnectorInput{
 		Capacity:                         expandCapacity(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
 		ConnectorConfiguration:           flex.ExpandStringMap(d.Get("connector_configuration").(map[string]interface{})),
@@ -404,7 +405,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 		ServiceExecutionRoleArn:          aws.String(d.Get("service_execution_role_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ConnectorDescription = aws.String(v.(string))
 	}
 
@@ -451,7 +452,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", connector.ConnectorArn)
+	d.Set(names.AttrARN, connector.ConnectorArn)
 	if connector.Capacity != nil {
 		if err := d.Set("capacity", []interface{}{flattenCapacityDescription(connector.Capacity)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting capacity: %s", err)
@@ -460,7 +461,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("capacity", nil)
 	}
 	d.Set("connector_configuration", aws.StringValueMap(connector.ConnectorConfiguration))
-	d.Set("description", connector.ConnectorDescription)
+	d.Set(names.AttrDescription, connector.ConnectorDescription)
 	if connector.KafkaCluster != nil {
 		if err := d.Set("kafka_cluster", []interface{}{flattenClusterDescription(connector.KafkaCluster)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting kafka_cluster: %s", err)
@@ -490,12 +491,12 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("log_delivery", nil)
 	}
-	d.Set("name", connector.ConnectorName)
+	d.Set(names.AttrName, connector.ConnectorName)
 	if err := d.Set("plugin", flattenPluginDescriptions(connector.Plugins)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting plugin: %s", err)
 	}
 	d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
-	d.Set("version", connector.CurrentVersion)
+	d.Set(names.AttrVersion, connector.CurrentVersion)
 	if connector.WorkerConfiguration != nil {
 		if err := d.Set("worker_configuration", []interface{}{flattenWorkerConfigurationDescription(connector.WorkerConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting worker_configuration: %s", err)
@@ -515,7 +516,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &kafkaconnect.UpdateConnectorInput{
 		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
 		ConnectorArn:   aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get("version").(string)),
+		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 	}
 
 	log.Printf("[DEBUG] Updating MSK Connect Connector: %s", input)
@@ -874,7 +875,7 @@ func expandCustomPlugin(tfMap map[string]interface{}) *kafkaconnect.CustomPlugin
 
 	apiObject := &kafkaconnect.CustomPlugin{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.CustomPluginArn = aws.String(v)
 	}
 
@@ -928,7 +929,7 @@ func expandCloudWatchLogsLogDelivery(tfMap map[string]interface{}) *kafkaconnect
 
 	apiObject := &kafkaconnect.CloudWatchLogsLogDelivery{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -950,7 +951,7 @@ func expandFirehoseLogDelivery(tfMap map[string]interface{}) *kafkaconnect.Fireh
 		apiObject.DeliveryStream = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -964,11 +965,11 @@ func expandS3LogDelivery(tfMap map[string]interface{}) *kafkaconnect.S3LogDelive
 
 	apiObject := &kafkaconnect.S3LogDelivery{}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -990,7 +991,7 @@ func expandWorkerConfiguration(tfMap map[string]interface{}) *kafkaconnect.Worke
 		apiObject.Revision = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.WorkerConfigurationArn = aws.String(v)
 	}
 
@@ -1209,7 +1210,7 @@ func flattenCustomPluginDescription(apiObject *kafkaconnect.CustomPluginDescript
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CustomPluginArn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap[names.AttrARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Revision; v != nil {
@@ -1263,7 +1264,7 @@ func flattenCloudWatchLogsLogDeliveryDescription(apiObject *kafkaconnect.CloudWa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.LogGroup; v != nil {
@@ -1285,7 +1286,7 @@ func flattenFirehoseLogDeliveryDescription(apiObject *kafkaconnect.FirehoseLogDe
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	return tfMap
@@ -1299,11 +1300,11 @@ func flattenS3LogDeliveryDescription(apiObject *kafkaconnect.S3LogDeliveryDescri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.StringValue(v)
+		tfMap[names.AttrBucket] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
@@ -1325,7 +1326,7 @@ func flattenWorkerConfigurationDescription(apiObject *kafkaconnect.WorkerConfigu
 	}
 
 	if v := apiObject.WorkerConfigurationArn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap[names.AttrARN] = aws.StringValue(v)
 	}
 
 	return tfMap

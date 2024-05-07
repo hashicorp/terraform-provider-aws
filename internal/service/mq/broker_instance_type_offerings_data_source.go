@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mq_broker_instance_type_offerings", name="Broker Instance Type Offerings")
@@ -32,7 +33,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -166,7 +167,7 @@ func flattenAvailabilityZones(azs []types.AvailabilityZone) []interface{} {
 		tfMap := map[string]interface{}{}
 
 		if az.Name != nil {
-			tfMap["name"] = aws.ToString(az.Name)
+			tfMap[names.AttrName] = aws.ToString(az.Name)
 		}
 
 		tfList = append(tfList, tfMap)
