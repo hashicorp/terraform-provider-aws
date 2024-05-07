@@ -175,7 +175,7 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier st
 // it may also be a different identifier depending on the service.
 func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags tftags.KeyValueTags, optFns ...func(*kms.Options)) error {
 	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
-		"tags": tags,
+		names.AttrTags: tags,
 	})
 
 	checkFunc := func() (bool, error) {
