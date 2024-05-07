@@ -711,8 +711,6 @@ service/wisdom:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_wisdom_'
 service/workdocs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_workdocs_'
-service/worklink:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_worklink_'
 service/workmail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_workmail_'
 service/workmailmessageflow:

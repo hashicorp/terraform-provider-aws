@@ -2253,12 +2253,6 @@ service/workdocs:
           - any-glob-to-any-file:
               - 'internal/service/workdocs/**/*'
               - 'website/**/workdocs_*'
-service/worklink:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/worklink/**/*'
-              - 'website/**/worklink_*'
 service/workmail:
   - any:
       - changed-files:

@@ -75,8 +75,7 @@ func main() {
 			switch packageName {
 			case "imagebuilder",
 				"globalaccelerator",
-				"route53recoveryreadiness",
-				"worklink":
+				"route53recoveryreadiness":
 				td.V1NameResolverNeedsUnknownService = true
 			}
 			switch packageName {

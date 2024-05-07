@@ -4113,21 +4113,3 @@ rules:
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
     severity: WARNING
-  - id: configservice-in-func-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in func name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-      exclude:
-        - internal/service/configservice/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T) { ... }
-    severity: WARNING

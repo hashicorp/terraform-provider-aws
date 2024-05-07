@@ -37,7 +37,7 @@ The caps enforced are as follows:
 | Appmesh | AppMesh | caps0 |
 | Appsync | AppSync | caps0 |
 | Arn | ARN | caps1 |
-| Asg | ASG | caps2 |
+| Asg | ASG | caps1 |
 | Asn | ASN | caps2 |
 | Autoscaling | AutoScaling | caps0 |
 | Bgp | BGP | caps2 |
@@ -97,12 +97,12 @@ The caps enforced are as follows:
 | Iot | IoT | caps2 |
 | Ip | IP | caps3 |
 | Ipam | IPAM | caps1 |
-| Ipset | IPSet | caps1 |
+| Ipset | IPSet | caps0 |
 | Iscsi | iSCSI | caps1 |
 | Jdbc | JDBC | caps1 |
 | Json | JSON | caps1 |
 | Kms | KMS | caps2 |
-| Mfa | MFA | caps3 |
+| Mfa | MFA | caps2 |
 | Msk | MSK | caps3 |
 | Mwaa | MWAA | caps1 |
 | Mysql | MySQL | caps1 |
@@ -144,7 +144,6 @@ The caps enforced are as follows:
 | Vpn | VPN | caps3 |
 | Waf | WAF | caps3 |
 | Wafv2 | WAFV2 | caps1 |
-| Worklink | WorkLink | caps0 |
 | Workspaces | WorkSpaces | caps0 |
 | Xray | XRay | caps1 |
 | Xss | XSS | caps3 |

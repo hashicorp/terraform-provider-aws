@@ -300,7 +300,6 @@ provider "aws" {
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>
   <li><code>wellarchitected</code></li>
-  <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
   <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>

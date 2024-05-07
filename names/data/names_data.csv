@@ -386,7 +386,6 @@ waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFR
 budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,,2,,aws_budgets_,,budgets_,Web Services Budgets,Amazon,,,,,,,Budgets,DescribeBudgets,"AccountId: aws_sdkv2.String(""012345678901"")",
 wellarchitected,wellarchitected,wellarchitected,wellarchitected,,wellarchitected,,,WellArchitected,WellArchitected,,,2,,aws_wellarchitected_,,wellarchitected_,Well-Architected Tool,AWS,,,,,,,WellArchitected,ListProfiles,,
 workdocs,workdocs,workdocs,workdocs,,workdocs,,,WorkDocs,WorkDocs,,1,,,aws_workdocs_,,workdocs_,WorkDocs,Amazon,,x,,,,,WorkDocs,,,
-worklink,worklink,worklink,worklink,,worklink,,,WorkLink,WorkLink,,1,,,aws_worklink_,,worklink_,WorkLink,Amazon,,,,,,,WorkLink,ListFleets,,
 workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,1,,,aws_workmail_,,workmail_,WorkMail,Amazon,,x,,,,,WorkMail,,,
 workmailmessageflow,workmailmessageflow,workmailmessageflow,workmailmessageflow,,workmailmessageflow,,,WorkMailMessageFlow,WorkMailMessageFlow,,1,,,aws_workmailmessageflow_,,workmailmessageflow_,WorkMail Message Flow,Amazon,,x,,,,,WorkMailMessageFlow,,,
 workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,,2,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,,,WorkSpaces,DescribeWorkspaces,,
