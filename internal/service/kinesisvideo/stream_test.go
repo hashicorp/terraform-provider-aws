@@ -40,10 +40,10 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 				Config: testAccStreamConfig_basic(rInt1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt1)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt1))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt1)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt1))),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 			{
@@ -55,8 +55,8 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 				Config: testAccStreamConfig_basic(rInt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt2)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt2))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt2)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt2))),
 				),
 			},
 		},
@@ -83,13 +83,13 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 				Config: testAccStreamConfig_options(rInt, rName1, "video/h264"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt))),
 					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h264"),
 					resource.TestCheckResourceAttr(resourceName, "device_name", fmt.Sprintf("kinesis-video-device-name-%s", rName1)),
 					resource.TestCheckResourceAttrPair(
-						resourceName, "kms_key_id",
-						kmsResourceName, "id"),
+						resourceName, names.AttrKMSKeyID,
+						kmsResourceName, names.AttrID),
 				),
 			},
 			{
@@ -196,7 +196,7 @@ func testAccCheckStreamDisappears(ctx context.Context, resourceName string) reso
 
 		input := &kinesisvideo.DeleteStreamInput{
 			StreamARN:      aws.String(rs.Primary.ID),
-			CurrentVersion: aws.String(rs.Primary.Attributes["version"]),
+			CurrentVersion: aws.String(rs.Primary.Attributes[names.AttrVersion]),
 		}
 
 		if _, err := conn.DeleteStreamWithContext(ctx, input); err != nil {
