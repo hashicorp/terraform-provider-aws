@@ -166,7 +166,7 @@ func ResourceEnvironment() *schema.Resource {
 			"poll_interval": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:mnd
+				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:mnd // these are the limits set by AWS
 			},
 			"queues": {
 				Type:     schema.TypeList,
