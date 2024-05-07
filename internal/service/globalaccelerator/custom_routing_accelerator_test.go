@@ -41,7 +41,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", ""),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", dnsNameRegex),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2BJ6XQ5FK7U4H"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", "0"),
@@ -50,7 +50,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.1", ipRegex),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -100,7 +100,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_tags(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -147,7 +147,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_update(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_update(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
