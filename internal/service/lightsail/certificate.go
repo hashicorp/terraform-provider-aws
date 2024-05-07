@@ -40,7 +40,7 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func ResourceCertificate() *schema.Resource {
 				},
 				Set: domainValidationOptionsHash,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -139,7 +139,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	req := lightsail.CreateCertificateInput{
-		CertificateName: aws.String(d.Get("name").(string)),
+		CertificateName: aws.String(d.Get(names.AttrName).(string)),
 		DomainName:      aws.String(d.Get("domain_name").(string)),
 		Tags:            getTagsIn(ctx),
 	}
@@ -151,10 +151,10 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateCertificate(ctx, &req)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get(names.AttrName).(string), err)
 	}
 
-	id := d.Get("name").(string)
+	id := d.Get(names.AttrName).(string)
 	diag := expandOperations(ctx, conn, resp.Operations, types.OperationTypeCreateCertificate, ResCertificate, id)
 
 	if diag != nil {
@@ -183,11 +183,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
-	d.Set("arn", certificate.Arn)
+	d.Set(names.AttrARN, certificate.Arn)
 	d.Set("created_at", certificate.CreatedAt.Format(time.RFC3339))
 	d.Set("domain_name", certificate.DomainName)
 	d.Set("domain_validation_options", flattenDomainValidationRecords(certificate.DomainValidationRecords))
-	d.Set("name", certificate.Name)
+	d.Set(names.AttrName, certificate.Name)
 	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
 
 	setTagsOut(ctx, certificate.Tags)

@@ -41,7 +41,7 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
 			"default_cache_behavior":  testAccDistribution_defaultCacheBehavior,
 			"ip_address_type":         testAccDistribution_ipAddressType,
-			"tags":                    testAccDistribution_tags,
+			names.AttrTags:            testAccDistribution_tags,
 		},
 	}
 
@@ -69,9 +69,9 @@ func testAccDistribution_basic(t *testing.T) {
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`Distribution/*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`Distribution/*`)),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),
@@ -102,7 +102,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.resource_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin_public_dns"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 				),
 			},

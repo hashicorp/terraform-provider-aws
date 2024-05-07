@@ -230,13 +230,13 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"type": "AutoSnapshot",
+						names.AttrType: "AutoSnapshot",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"snapshot_time": snapshotTime1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"status": statusEnabled,
+						names.AttrStatus: statusEnabled,
 					}),
 				),
 			},
@@ -246,13 +246,13 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"type": "AutoSnapshot",
+						names.AttrType: "AutoSnapshot",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"snapshot_time": snapshotTime2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"status": statusEnabled,
+						names.AttrStatus: statusEnabled,
 					}),
 				),
 			},
@@ -262,13 +262,13 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"type": "AutoSnapshot",
+						names.AttrType: "AutoSnapshot",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"snapshot_time": snapshotTime2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
-						"status": statusDisabled,
+						names.AttrStatus: statusDisabled,
 					}),
 				),
 			},
@@ -346,7 +346,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string) resource.TestChec
 		}
 
 		if out == nil {
-			return fmt.Errorf("Instance (%s) not found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("Instance (%s) not found", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
