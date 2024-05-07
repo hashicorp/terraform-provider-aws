@@ -35,7 +35,7 @@ func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 				Config: testAccAggregateAuthorizationConfig_basic(accountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
 				),
