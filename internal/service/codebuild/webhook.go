@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_webhook", name="Webhook")
@@ -61,7 +62,7 @@ func resourceWebhook() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.WebhookFilterType](),
@@ -282,7 +283,7 @@ func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
 		apiObject.Pattern = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.WebhookFilterType(v)
 	}
 
@@ -322,7 +323,7 @@ func flattenWebhookFilters(apiObjects []types.WebhookFilter) []interface{} {
 
 func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"type": apiObject.Type,
+		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.ExcludeMatchedPattern; v != nil {
