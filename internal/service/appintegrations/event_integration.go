@@ -35,11 +35,11 @@ func ResourceEventIntegration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -66,7 +66,7 @@ func ResourceEventIntegration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -84,7 +84,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateEventIntegrationInput{
 		ClientToken:    aws.String(id.UniqueId()),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
@@ -93,7 +93,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -139,10 +139,10 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "getting AppIntegrations Event Integration (%s): empty response", d.Id())
 	}
 
-	d.Set("arn", resp.EventIntegrationArn)
-	d.Set("description", resp.Description)
+	d.Set(names.AttrARN, resp.EventIntegrationArn)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("eventbridge_bus", resp.EventBridgeBus)
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 
 	if err := d.Set("event_filter", flattenEventFilter(resp.EventFilter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting event_filter: %s", err)
@@ -160,10 +160,10 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Id()
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		_, err := conn.UpdateEventIntegration(ctx, &appintegrations.UpdateEventIntegrationInput{
 			Name:        aws.String(name),
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 		})
 
 		if err != nil {
