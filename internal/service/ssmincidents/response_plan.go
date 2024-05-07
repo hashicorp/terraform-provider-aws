@@ -51,7 +51,7 @@ func ResourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -91,7 +91,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -247,7 +247,7 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ssmincidents.UpdateResponsePlanInput{
 			Arn: aws.String(d.Id()),
 		}

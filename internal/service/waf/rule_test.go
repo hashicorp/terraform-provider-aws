@@ -39,7 +39,7 @@ func TestAccWAFRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`rule/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rule/.+`)),
 				),
 			},
 			{
@@ -133,8 +133,8 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated": "false",
-						"type":    "IPMatch",
+						"negated":      "false",
+						names.AttrType: "IPMatch",
 					}),
 				),
 			},
@@ -146,8 +146,8 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated": "true",
-						"type":    "ByteMatch",
+						"negated":      "true",
+						names.AttrType: "ByteMatch",
 					}),
 				),
 			},
@@ -177,8 +177,8 @@ func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated": "true",
-						"type":    "GeoMatch",
+						"negated":      "true",
+						names.AttrType: "GeoMatch",
 					}),
 				),
 			},

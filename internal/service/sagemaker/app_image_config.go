@@ -35,7 +35,7 @@ func ResourceAppImageConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -287,7 +287,7 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(image.AppImageConfigArn)
 	d.Set("app_image_config_name", image.AppImageConfigName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	if err := d.Set("code_editor_app_image_config", flattenCodeEditorAppImageConfig(image.CodeEditorAppImageConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting code_editor_app_image_config: %s", err)
@@ -308,7 +308,7 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateAppImageConfigInput{
 			AppImageConfigName: aws.String(d.Id()),
 		}

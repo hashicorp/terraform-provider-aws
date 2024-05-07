@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -38,7 +39,7 @@ func ResourceGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -50,7 +51,7 @@ func ResourceGroup() *schema.Resource {
 					ForceNew: true,
 				},
 
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
@@ -93,7 +94,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		GroupName:    aws.String(d.Get("group_name").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		createOpts.Description = aws.String(v.(string))
 	}
 
@@ -132,10 +133,10 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.Group.Arn)
+	d.Set(names.AttrARN, resp.Group.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("group_name", resp.Group.GroupName)
-	d.Set("description", resp.Group.Description)
+	d.Set(names.AttrDescription, resp.Group.Description)
 	d.Set("namespace", namespace)
 
 	return diags
@@ -156,7 +157,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		GroupName:    aws.String(groupName),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		updateOpts.Description = aws.String(v.(string))
 	}
 

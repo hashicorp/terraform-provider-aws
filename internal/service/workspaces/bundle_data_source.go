@@ -38,7 +38,7 @@ func DataSourceBundle() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(bundle.BundleId))
 	d.Set("bundle_id", bundle.BundleId)
-	d.Set("description", bundle.Description)
+	d.Set(names.AttrDescription, bundle.Description)
 	d.Set(names.AttrName, bundle.Name)
 	d.Set("owner", bundle.Owner)
 

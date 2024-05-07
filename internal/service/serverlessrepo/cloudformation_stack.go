@@ -79,7 +79,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
@@ -185,7 +185,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 
 	version := getApplicationOutput.Version
 
-	if err = d.Set("parameters", flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions)); err != nil {
+	if err = d.Set(names.AttrParameters, flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "to set parameters: %s", err)
 	}
 
@@ -309,7 +309,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 	if v, ok := d.GetOk("semantic_version"); ok {
 		changeSetRequest.SemanticVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		changeSetRequest.ParameterOverrides = expandCloudFormationChangeSetParameters(v.(map[string]interface{}))
 	}
 

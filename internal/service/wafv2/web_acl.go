@@ -61,7 +61,7 @@ func ResourceWebACL() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -88,7 +88,7 @@ func ResourceWebACL() *schema.Resource {
 						},
 					},
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -199,7 +199,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -239,7 +239,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	webACL := output.WebACL
 	d.Set("application_integration_url", output.ApplicationIntegrationURL)
-	d.Set("arn", webACL.ARN)
+	d.Set(names.AttrARN, webACL.ARN)
 	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
 		return diag.Errorf("setting association_config: %s", err)
@@ -256,7 +256,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("default_action", flattenDefaultAction(webACL.DefaultAction)); err != nil {
 		return diag.Errorf("setting default_action: %s", err)
 	}
-	d.Set("description", webACL.Description)
+	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
 	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get("rule").(*schema.Set).List()))
@@ -274,7 +274,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		aclID := d.Id()
 		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get("scope").(string)
@@ -307,7 +307,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 

@@ -50,7 +50,7 @@ func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]
 
 	tfMap := map[string]interface{}{}
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
 	}
 	if v := apiObject.SecretArn; v != nil {
 		tfMap["secret_arn"] = aws.StringValue(v)
@@ -142,7 +142,7 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 			OptionName: aws.String(data["option_name"].(string)),
 		}
 
-		if raw, ok := data["port"]; ok {
+		if raw, ok := data[names.AttrPort]; ok {
 			port := raw.(int)
 			if port != 0 {
 				o.Port = aws.Int64(int64(port))
@@ -167,7 +167,7 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 			o.OptionSettings = expandOptionSetting(raw.(*schema.Set).List())
 		}
 
-		if raw, ok := data["version"]; ok && raw.(string) != "" {
+		if raw, ok := data[names.AttrVersion]; ok && raw.(string) != "" {
 			o.OptionVersion = aws.String(raw.(string))
 		}
 
@@ -224,14 +224,14 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 			}
 
 			optionSetting := map[string]interface{}{
-				names.AttrName: aws.StringValue(apiOptionSetting.Name),
-				"value":        aws.StringValue(apiOptionSetting.Value),
+				names.AttrName:  aws.StringValue(apiOptionSetting.Name),
+				names.AttrValue: aws.StringValue(apiOptionSetting.Value),
 			}
 
 			// Some values, like passwords, are sent back from the API as ****.
 			// Set the response to match the configuration to prevent an unexpected difference
 			if configuredOptionSetting != nil && aws.StringValue(apiOptionSetting.Value) == "****" {
-				optionSetting["value"] = aws.StringValue(configuredOptionSetting.Value)
+				optionSetting[names.AttrValue] = aws.StringValue(configuredOptionSetting.Value)
 			}
 
 			optionSettings = append(optionSettings, optionSetting)
@@ -242,7 +242,7 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"value": {
+				names.AttrValue: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -264,11 +264,11 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 		}
 
 		if apiOption.OptionVersion != nil && configuredOption != nil && configuredOption.OptionVersion != nil {
-			r["version"] = aws.StringValue(apiOption.OptionVersion)
+			r[names.AttrVersion] = aws.StringValue(apiOption.OptionVersion)
 		}
 
 		if apiOption.Port != nil && configuredOption != nil && configuredOption.Port != nil {
-			r["port"] = aws.Int64Value(apiOption.Port)
+			r[names.AttrPort] = aws.Int64Value(apiOption.Port)
 		}
 
 		result = append(result, r)
@@ -285,7 +285,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 		o := &rds.OptionSetting{
 			Name:  aws.String(data[names.AttrName].(string)),
-			Value: aws.String(data["value"].(string)),
+			Value: aws.String(data[names.AttrValue].(string)),
 		}
 
 		options = append(options, o)
@@ -310,7 +310,7 @@ func expandParameters(configured []interface{}) []*rds.Parameter {
 
 		p := &rds.Parameter{
 			ParameterName:  aws.String(strings.ToLower(data[names.AttrName].(string))),
-			ParameterValue: aws.String(data["value"].(string)),
+			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
 
 		if data["apply_method"].(string) != "" {
@@ -336,9 +336,9 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 			r[names.AttrName] = strings.ToLower(aws.StringValue(i.ParameterName))
 
 			// Default empty string, guard against nil parameter values
-			r["value"] = ""
+			r[names.AttrValue] = ""
 			if i.ParameterValue != nil {
-				r["value"] = aws.StringValue(i.ParameterValue)
+				r[names.AttrValue] = aws.StringValue(i.ParameterValue)
 			}
 
 			result = append(result, r)

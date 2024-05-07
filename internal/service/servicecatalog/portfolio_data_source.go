@@ -35,7 +35,7 @@ func DataSourcePortfolio() *schema.Resource {
 				Default:      "en",
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +43,11 @@ func DataSourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -59,7 +59,7 @@ func DataSourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -69,7 +69,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DescribePortfolioInput{
-		Id: aws.String(d.Get("id").(string)),
+		Id: aws.String(d.Get(names.AttrID).(string)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -79,11 +79,11 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := conn.DescribePortfolioWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get("id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get(names.AttrID).(string), err)
 	}
 
 	if output == nil || output.PortfolioDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get("id").(string))
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get(names.AttrID).(string))
 	}
 
 	detail := output.PortfolioDetail
@@ -94,15 +94,15 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
 
-	d.Set("arn", detail.ARN)
-	d.Set("description", detail.Description)
+	d.Set(names.AttrARN, detail.ARN)
+	d.Set(names.AttrDescription, detail.Description)
 	d.Set(names.AttrName, detail.DisplayName)
 	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags := KeyValueTags(ctx, output.Tags)
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

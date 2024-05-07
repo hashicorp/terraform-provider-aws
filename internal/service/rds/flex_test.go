@@ -17,9 +17,9 @@ func TestExpandParameters(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			names.AttrName: "character_set_client",
-			"value":        "utf8",
-			"apply_method": "immediate",
+			names.AttrName:  "character_set_client",
+			names.AttrValue: "utf8",
+			"apply_method":  "immediate",
 		},
 	}
 	parameters := expandParameters(expanded)
@@ -54,8 +54,8 @@ func TestFlattenParameters(t *testing.T) {
 			},
 			Output: []map[string]interface{}{
 				{
-					names.AttrName: "character_set_client",
-					"value":        "utf8",
+					names.AttrName:  "character_set_client",
+					names.AttrValue: "utf8",
 				},
 			},
 		},
@@ -69,9 +69,9 @@ func TestFlattenParameters(t *testing.T) {
 			},
 			Output: []map[string]interface{}{
 				{
-					names.AttrName: "character_set_client",
-					"value":        "utf8",
-					"apply_method": "immediate",
+					names.AttrName:  "character_set_client",
+					names.AttrValue: "utf8",
+					"apply_method":  "immediate",
 				},
 			},
 		},

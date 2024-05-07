@@ -40,7 +40,7 @@ func ResourceIPSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func ResourceIPSet() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -57,7 +57,7 @@ func ResourceIPSet() *schema.Resource {
 								waf.IPSetDescriptorTypeIpv6,
 							}, false),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
@@ -120,8 +120,8 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	for _, descriptor := range resp.IPSet.IPSetDescriptors {
 		d := map[string]interface{}{
-			"type":  aws.StringValue(descriptor.Type),
-			"value": aws.StringValue(descriptor.Value),
+			names.AttrType:  aws.StringValue(descriptor.Type),
+			names.AttrValue: aws.StringValue(descriptor.Value),
 		}
 		descriptors = append(descriptors, d)
 	}
@@ -136,7 +136,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }
@@ -227,8 +227,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 		updates = append(updates, &waf.IPSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  aws.String(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}
@@ -244,8 +244,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 		updates = append(updates, &waf.IPSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  aws.String(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}

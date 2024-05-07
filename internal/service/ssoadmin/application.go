@@ -74,10 +74,10 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			"client_token": schema.StringAttribute{
 				Optional: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"instance_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -85,7 +85,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -373,7 +373,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceApplication) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

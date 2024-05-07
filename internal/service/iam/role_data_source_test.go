@@ -27,10 +27,10 @@ func TestAccIAMRoleDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRoleDataSourceConfig_basic(roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "assume_role_policy", testAccRoleDataSourceConfig_AssumeRolePolicy_ExpectedJSON),
 					resource.TestCheckResourceAttrPair(dataSourceName, "create_date", resourceName, "create_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "max_session_duration", resourceName, "max_session_duration"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
@@ -56,10 +56,10 @@ func TestAccIAMRoleDataSource_tags(t *testing.T) {
 			{
 				Config: testAccRoleDataSourceConfig_tags(roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "assume_role_policy", testAccRoleDataSourceConfig_AssumeRolePolicy_ExpectedJSON),
 					resource.TestCheckResourceAttrPair(dataSourceName, "create_date", resourceName, "create_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "max_session_duration", resourceName, "max_session_duration"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),

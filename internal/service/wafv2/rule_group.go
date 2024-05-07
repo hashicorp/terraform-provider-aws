@@ -62,7 +62,7 @@ func ResourceRuleGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -73,7 +73,7 @@ func ResourceRuleGroup() *schema.Resource {
 					ValidateFunc: validation.IntAtLeast(1),
 				},
 				"custom_response_body": customResponseBodySchema(),
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -172,7 +172,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -206,12 +206,12 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	ruleGroup := output.RuleGroup
-	d.Set("arn", ruleGroup.ARN)
+	d.Set(names.AttrARN, ruleGroup.ARN)
 	d.Set("capacity", ruleGroup.Capacity)
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(ruleGroup.CustomResponseBodies)); err != nil {
 		return diag.Errorf("setting custom_response_body: %s", err)
 	}
-	d.Set("description", ruleGroup.Description)
+	d.Set(names.AttrDescription, ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
@@ -229,7 +229,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &wafv2.UpdateRuleGroupInput{
 			Id:               aws.String(d.Id()),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
@@ -243,7 +243,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 

@@ -20,12 +20,12 @@ func DataSourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParameterGroupRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,9 +64,9 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.DBParameterGroups[0].DBParameterGroupName))
 	d.Set(names.AttrName, output.DBParameterGroups[0].DBParameterGroupName)
-	d.Set("arn", output.DBParameterGroups[0].DBParameterGroupArn)
+	d.Set(names.AttrARN, output.DBParameterGroups[0].DBParameterGroupArn)
 	d.Set("family", output.DBParameterGroups[0].DBParameterGroupFamily)
-	d.Set("description", output.DBParameterGroups[0].Description)
+	d.Set(names.AttrDescription, output.DBParameterGroups[0].Description)
 
 	return nil
 }

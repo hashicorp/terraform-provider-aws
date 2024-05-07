@@ -61,7 +61,7 @@ func resourceSQLInjectionMatchSet() *schema.Resource {
 											return strings.ToLower(value)
 										},
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -251,7 +251,7 @@ func resourceSQLInjectionMatchSetTupleHash(v interface{}) int {
 		if v, ok := ftm["data"]; ok {
 			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
 		}
-		buf.WriteString(fmt.Sprintf("%s-", ftm["type"].(string)))
+		buf.WriteString(fmt.Sprintf("%s-", ftm[names.AttrType].(string)))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
 

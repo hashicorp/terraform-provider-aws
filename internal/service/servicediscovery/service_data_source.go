@@ -20,11 +20,11 @@ func DataSourceService() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +42,7 @@ func DataSourceService() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -73,7 +73,7 @@ func DataSourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -100,8 +100,8 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchema(),
-			"tags_all": {
+			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTagsAll: {
 				Type:       schema.TypeMap,
 				Optional:   true,
 				Computed:   true,
@@ -133,8 +133,8 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(serviceID)
 	arn := aws.StringValue(service.Arn)
-	d.Set("arn", arn)
-	d.Set("description", service.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
 		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
 			return diag.Errorf("setting dns_config: %s", err)
@@ -165,7 +165,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("listing tags for Service Discovery Service (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

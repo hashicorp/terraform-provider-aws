@@ -27,18 +27,18 @@ func DataSourcePermissionSet() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePermissionSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"arn", names.AttrName},
+				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
 			},
 			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func DataSourcePermissionSet() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
 				),
-				ExactlyOneOf: []string{names.AttrName, "arn"},
+				ExactlyOneOf: []string{names.AttrName, names.AttrARN},
 			},
 			"relay_state": {
 				Type:     schema.TypeString,
@@ -65,7 +65,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -79,7 +79,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 
 	var permissionSet *awstypes.PermissionSet
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		arn := v.(string)
 
 		input := &ssoadmin.DescribePermissionSetInput{
@@ -143,9 +143,9 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	arn := aws.ToString(permissionSet.PermissionSetArn)
 
 	d.SetId(arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
-	d.Set("description", permissionSet.Description)
+	d.Set(names.AttrDescription, permissionSet.Description)
 	d.Set("instance_arn", instanceArn)
 	d.Set(names.AttrName, permissionSet.Name)
 	d.Set("session_duration", permissionSet.SessionDuration)
@@ -156,7 +156,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

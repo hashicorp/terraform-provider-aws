@@ -24,11 +24,11 @@ func DataSourceWebACL() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -85,8 +85,8 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(foundWebACL.Id))
-	d.Set("arn", foundWebACL.ARN)
-	d.Set("description", foundWebACL.Description)
+	d.Set(names.AttrARN, foundWebACL.ARN)
+	d.Set(names.AttrDescription, foundWebACL.Description)
 
 	return diags
 }

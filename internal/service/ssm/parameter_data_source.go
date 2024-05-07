@@ -21,7 +21,7 @@ func DataSourceParameter() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataParameterRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,11 +33,11 @@ func DataSourceParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -47,7 +47,7 @@ func DataSourceParameter() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -76,15 +76,15 @@ func dataParameterRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	param := resp.Parameter
 
 	d.SetId(aws.StringValue(param.Name))
-	d.Set("arn", param.ARN)
-	d.Set("value", param.Value)
+	d.Set(names.AttrARN, param.ARN)
+	d.Set(names.AttrValue, param.Value)
 	d.Set("insecure_value", nil)
 	if aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
 	}
 	d.Set(names.AttrName, param.Name)
-	d.Set("type", param.Type)
-	d.Set("version", param.Version)
+	d.Set(names.AttrType, param.Type)
+	d.Set(names.AttrVersion, param.Version)
 
 	return diags
 }

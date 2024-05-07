@@ -36,7 +36,7 @@ func resourceProtection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func resourceProtectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Shield Protection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", protection.ProtectionArn)
+	d.Set(names.AttrARN, protection.ProtectionArn)
 	d.Set(names.AttrName, protection.Name)
 	d.Set("resource_arn", protection.ResourceArn)
 

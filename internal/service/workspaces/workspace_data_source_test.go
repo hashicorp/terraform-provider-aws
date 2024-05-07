@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
@@ -32,7 +33,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_volume_encryption_enabled", resourceName, "root_volume_encryption_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_encryption_key", resourceName, "volume_encryption_key"),
@@ -67,7 +68,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, "root_volume_encryption_enabled", resourceName, "root_volume_encryption_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_encryption_key", resourceName, "volume_encryption_key"),

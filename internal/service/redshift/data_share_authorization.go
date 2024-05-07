@@ -68,7 +68,7 @@ func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"managed_by": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -217,7 +217,7 @@ func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resourc
 }
 
 func (r *resourceDataShareAuthorization) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.DataShare, error) {

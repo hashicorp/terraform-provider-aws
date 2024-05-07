@@ -24,11 +24,11 @@ func DataSourceRuleGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -85,8 +85,8 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.ToString(foundRuleGroup.Id))
-	d.Set("arn", foundRuleGroup.ARN)
-	d.Set("description", foundRuleGroup.Description)
+	d.Set(names.AttrARN, foundRuleGroup.ARN)
+	d.Set(names.AttrDescription, foundRuleGroup.Description)
 
 	return diags
 }

@@ -162,7 +162,7 @@ func testAccAccess_s3_policy(t *testing.T) {
 				Config: testAccAccessConfig_s3ScopeDownPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},

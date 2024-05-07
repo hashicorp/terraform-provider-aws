@@ -47,7 +47,7 @@ func ResourceTemplate() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -67,7 +67,7 @@ func ResourceTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -99,7 +99,7 @@ func ResourceTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -144,7 +144,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &quicksight.CreateTemplateInput{
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -166,7 +166,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	_, err := conn.CreateTemplateWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get("name").(string), err)
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitTemplateCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -196,12 +196,12 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTemplate, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("status", out.Version.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)
 	d.Set("template_id", out.TemplateId)
 	d.Set("version_description", out.Version.Description)
@@ -245,11 +245,11 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateTemplateInput{
 			AwsAccountId:       aws.String(awsAccountId),
 			TemplateId:         aws.String(templateId),
-			Name:               aws.String(d.Get("name").(string)),
+			Name:               aws.String(d.Get(names.AttrName).(string)),
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
 

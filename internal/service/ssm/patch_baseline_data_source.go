@@ -62,7 +62,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -81,7 +81,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -244,7 +244,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
 	d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules))
 	d.Set("default_baseline", baseline.DefaultBaseline)
-	d.Set("description", baseline.BaselineDescription)
+	d.Set(names.AttrDescription, baseline.BaselineDescription)
 	d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters))
 	d.Set("json", jsonString)
 	d.Set(names.AttrName, baseline.BaselineName)

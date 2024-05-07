@@ -48,7 +48,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_%s", strings.Replace(acctest.Region(), "-", "_", -1), strings.Replace(rName, "-", "_", -1))),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", fmt.Sprintf("%s-test", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_classes"),

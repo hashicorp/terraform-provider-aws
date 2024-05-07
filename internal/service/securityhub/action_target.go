@@ -36,11 +36,11 @@ func resourceActionTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -70,7 +70,7 @@ func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, met
 
 	id := d.Get("identifier").(string)
 	input := &securityhub.CreateActionTargetInput{
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Id:          aws.String(id),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
 	}
@@ -107,8 +107,8 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Action Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ActionTargetArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.ActionTargetArn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("identifier", actionTargetIdentifier)
 	d.Set(names.AttrName, output.Name)
 
@@ -121,7 +121,7 @@ func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
-		Description:     aws.String(d.Get("description").(string)),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 

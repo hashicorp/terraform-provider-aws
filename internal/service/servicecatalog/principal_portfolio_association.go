@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_principal_portfolio_association")
@@ -284,9 +285,9 @@ func principalPortfolioAssociationUpgradeV0(_ context.Context, rawState map[stri
 	}
 
 	// Is resource ID in the correct format?
-	if _, _, _, _, err := PrincipalPortfolioAssociationParseResourceID(rawState["id"].(string)); err != nil {
+	if _, _, _, _, err := PrincipalPortfolioAssociationParseResourceID(rawState[names.AttrID].(string)); err != nil {
 		acceptLanguage, principalARN, portfolioID, principalType := rawState["accept_language"].(string), rawState["principal_arn"].(string), rawState["portfolio_id"].(string), rawState["principal_type"].(string)
-		rawState["id"] = PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
+		rawState[names.AttrID] = PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
 	}
 
 	return rawState, nil

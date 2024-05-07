@@ -36,7 +36,7 @@ func TestAccSSOAdminApplicationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arn", applicationResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, applicationResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "portal_options.#", applicationResourceName, "portal_options.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "status", applicationResourceName, "status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, applicationResourceName, names.AttrStatus),
 				),
 			},
 		},

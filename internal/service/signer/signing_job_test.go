@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningJob_basic(t *testing.T) {
@@ -42,7 +43,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 					testAccCheckSigningJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Succeeded"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
 				),
 			},
 		},

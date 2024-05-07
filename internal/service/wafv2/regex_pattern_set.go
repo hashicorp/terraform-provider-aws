@@ -57,11 +57,11 @@ func ResourceRegexPatternSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -119,7 +119,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -155,8 +155,8 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 
 	regexPatternSet := output.RegexPatternSet
 	arn := aws.ToString(regexPatternSet.ARN)
-	d.Set("arn", arn)
-	d.Set("description", regexPatternSet.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, regexPatternSet.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, regexPatternSet.Name)
 	if err := d.Set("regular_expression", flattenRegexPatternSet(regexPatternSet.RegularExpressionList)); err != nil {
@@ -169,7 +169,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &wafv2.UpdateRegexPatternSetInput{
 			Id:                    aws.String(d.Id()),
 			LockToken:             aws.String(d.Get("lock_token").(string)),
@@ -178,7 +178,7 @@ func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, 
 			Scope:                 awstypes.Scope(d.Get("scope").(string)),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 

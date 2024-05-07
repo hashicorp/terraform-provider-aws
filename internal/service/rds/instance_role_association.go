@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Constants not currently provided by the AWS Go SDK
@@ -55,7 +56,7 @@ func ResourceInstanceRoleAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -70,7 +71,7 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
-	roleArn := d.Get("role_arn").(string)
+	roleArn := d.Get(names.AttrRoleARN).(string)
 
 	input := &rds.AddRoleToDBInstanceInput{
 		DBInstanceIdentifier: aws.String(dbInstanceIdentifier),
@@ -128,7 +129,7 @@ func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.Resource
 
 	d.Set("db_instance_identifier", dbInstanceIdentifier)
 	d.Set("feature_name", dbInstanceRole.FeatureName)
-	d.Set("role_arn", dbInstanceRole.RoleArn)
+	d.Set(names.AttrRoleARN, dbInstanceRole.RoleArn)
 
 	return diags
 }

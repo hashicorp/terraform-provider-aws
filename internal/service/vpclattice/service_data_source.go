@@ -69,11 +69,11 @@ func dataSourceService() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -113,7 +113,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(out.Id))
 	serviceARN := aws.ToString(out.Arn)
-	d.Set("arn", serviceARN)
+	d.Set(names.AttrARN, serviceARN)
 	d.Set("auth_type", out.AuthType)
 	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
@@ -126,7 +126,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set(names.AttrName, out.Name)
 	d.Set("service_identifier", out.Id)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 
 	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
 	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.

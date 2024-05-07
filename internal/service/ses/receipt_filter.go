@@ -31,7 +31,7 @@ func ResourceReceiptFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,7 +57,7 @@ func ResourceReceiptFilter() *schema.Resource {
 				),
 			},
 
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 			Name: aws.String(name),
 			IpFilter: &ses.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
-				Policy: aws.String(d.Get("policy").(string)),
+				Policy: aws.String(d.Get(names.AttrPolicy).(string)),
 			},
 		},
 	}
@@ -123,7 +123,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("cidr", filter.IpFilter.Cidr)
-	d.Set("policy", filter.IpFilter.Policy)
+	d.Set(names.AttrPolicy, filter.IpFilter.Policy)
 	d.Set(names.AttrName, filter.Name)
 
 	arn := arn.ARN{
@@ -133,7 +133,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

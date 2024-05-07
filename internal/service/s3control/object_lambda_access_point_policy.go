@@ -51,7 +51,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -68,7 +68,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -121,14 +121,14 @@ func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrName, name)
 
 	if policy != "" {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	} else {
-		d.Set("policy", "")
+		d.Set(names.AttrPolicy, "")
 	}
 
 	return nil
@@ -142,7 +142,7 @@ func resourceObjectLambdaAccessPointPolicyUpdate(ctx context.Context, d *schema.
 		return diag.FromErr(err)
 	}
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
