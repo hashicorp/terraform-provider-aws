@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -61,7 +62,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -387,7 +388,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 		return diags
 	}
 
-	d.Set("arn", globalReplicationGroup.ARN)
+	d.Set(names.AttrARN, globalReplicationGroup.ARN)
 	d.Set("at_rest_encryption_enabled", globalReplicationGroup.AtRestEncryptionEnabled)
 	d.Set("auth_token_enabled", globalReplicationGroup.AuthTokenEnabled)
 	d.Set("cache_node_type", globalReplicationGroup.CacheNodeType)
@@ -449,7 +450,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.HasChange("global_replication_group_description") {
-		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string)), "description", d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string)), names.AttrDescription, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
