@@ -38,7 +38,7 @@ func TestAccAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/200/"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
@@ -98,7 +98,7 @@ func TestAccAPIGatewayV2IntegrationResponse_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
@@ -110,7 +110,7 @@ func TestAccAPIGatewayV2IntegrationResponse_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
-					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/404/"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "#set($number=42)"),
