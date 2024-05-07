@@ -40,7 +40,7 @@ func resourceAPIKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,12 +52,12 @@ func resourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -66,13 +66,13 @@ func resourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"value": {
+			names.AttrValue: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -90,13 +90,13 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateApiKeyInput{
-		Description: aws.String(d.Get("description").(string)),
-		Enabled:     d.Get("enabled").(bool),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Enabled:     d.Get(names.AttrEnabled).(bool),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Value:       aws.String(d.Get("value").(string)),
+		Value:       aws.String(d.Get(names.AttrValue).(string)),
 	}
 
 	if v, ok := d.GetOk("customer_id"); ok {
@@ -138,14 +138,14 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
-	d.Set("description", apiKey.Description)
-	d.Set("enabled", apiKey.Enabled)
+	d.Set(names.AttrDescription, apiKey.Description)
+	d.Set(names.AttrEnabled, apiKey.Enabled)
 	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", apiKey.Name)
-	d.Set("value", apiKey.Value)
+	d.Set(names.AttrName, apiKey.Name)
+	d.Set(names.AttrValue, apiKey.Value)
 
 	return diags
 }
@@ -153,9 +153,9 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []types.PatchOperation {
 	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("enabled") {
+	if d.HasChange(names.AttrEnabled) {
 		isEnabled := "false"
-		if d.Get("enabled").(bool) {
+		if d.Get(names.AttrEnabled).(bool) {
 			isEnabled = "true"
 		}
 		operations = append(operations, types.PatchOperation{
@@ -165,19 +165,19 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []types.PatchOperati
 		})
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
-			Value: aws.String(d.Get("description").(string)),
+			Value: aws.String(d.Get(names.AttrDescription).(string)),
 		})
 	}
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
-			Value: aws.String(d.Get("name").(string)),
+			Value: aws.String(d.Get(names.AttrName).(string)),
 		})
 	}
 
@@ -196,7 +196,7 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		_, err := conn.UpdateApiKey(ctx, &apigateway.UpdateApiKeyInput{
 			ApiKey:          aws.String(d.Id()),
 			PatchOperations: resourceAPIKeyUpdateOperations(d),

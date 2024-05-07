@@ -29,7 +29,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDomainNameDataSourceConfig_regionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_name", dataSourceName, "certificate_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_upload_date", dataSourceName, "certificate_upload_date"),

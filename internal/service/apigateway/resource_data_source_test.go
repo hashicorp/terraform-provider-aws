@@ -29,10 +29,10 @@ func TestAccAPIGatewayResourceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccResourceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName1, names.AttrID, dataSourceName1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName1, "parent_id", dataSourceName1, "parent_id"),
 					resource.TestCheckResourceAttrPair(resourceName1, "path_part", dataSourceName1, "path_part"),
-					resource.TestCheckResourceAttrPair(resourceName2, "id", dataSourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName2, names.AttrID, dataSourceName2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName2, "parent_id", dataSourceName2, "parent_id"),
 					resource.TestCheckResourceAttrPair(resourceName2, "path_part", dataSourceName2, "path_part"),
 				),
