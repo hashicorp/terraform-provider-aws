@@ -28,8 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceTable,
+			Factory:  dataSourceTable,
 			TypeName: "aws_dynamodb_table",
+			Name:     "Table",
 		},
 		{
 			Factory:  DataSourceTableItem,

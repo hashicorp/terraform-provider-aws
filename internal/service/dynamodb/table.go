@@ -847,6 +847,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
+
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), fmt.Errorf("continuous backups: %w", err))
