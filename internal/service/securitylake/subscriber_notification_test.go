@@ -578,7 +578,7 @@ resource "aws_securitylake_subscriber_notification" "test" {
     https_notification_configuration {
       endpoint                   = aws_apigatewayv2_api.test.api_endpoint
       target_role_arn            = aws_iam_role.event_bridge.arn
-	  authorization_api_key_name = %[2]q
+      authorization_api_key_name = %[2]q
     }
   }
 }
@@ -599,8 +599,8 @@ resource "aws_securitylake_subscriber_notification" "test" {
     https_notification_configuration {
       endpoint                    = aws_apigatewayv2_api.test.api_endpoint
       target_role_arn             = aws_iam_role.event_bridge.arn
-	  authorization_api_key_name  = %[2]q
-	  authorization_api_key_value = %[3]q
+      authorization_api_key_name  = %[2]q
+      authorization_api_key_value = %[3]q
     }
   }
 }
