@@ -7,17 +7,19 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudformation_type")
-func DataSourceType() *schema.Resource {
+// @SDKDataSource("aws_cloudformation_type", name="Type")
+func dataSourceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTypeRead,
 
@@ -80,10 +82,10 @@ func DataSourceType() *schema.Resource {
 				Computed: true,
 			},
 			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(cloudformation.RegistryType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
 			},
 			"type_arn": {
 				Type:     schema.TypeString,
@@ -112,8 +114,7 @@ func DataSourceType() *schema.Resource {
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
 
@@ -122,7 +123,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("type"); ok {
-		input.Type = aws.String(v.(string))
+		input.Type = awstypes.RegistryType(v.(string))
 	}
 
 	if v, ok := d.GetOk("type_name"); ok {
@@ -133,18 +134,13 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeTypeWithContext(ctx, input)
+	output, err := findType(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: empty response")
-	}
-
-	d.SetId(aws.StringValue(output.Arn))
-
+	d.SetId(aws.ToString(output.Arn))
 	d.Set("arn", output.Arn)
 	d.Set("default_version_id", output.DefaultVersionId)
 	d.Set("deprecated_status", output.DeprecatedStatus)
