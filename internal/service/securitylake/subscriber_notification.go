@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -77,19 +76,12 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"https_notification_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[httpsNotificationConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.UseStateForUnknown(),
-								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -118,10 +110,6 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 							CustomType: fwtypes.NewListNestedObjectTypeOf[sqsNotificationConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.UseStateForUnknown(),
-								listplanmodifier.RequiresReplace(),
 							},
 						},
 					},
@@ -212,12 +200,12 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 func (r *subscriberNotificationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new subscriberNotificationResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &old)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(request.State.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -242,7 +230,7 @@ func (r *subscriberNotificationResource) Update(ctx context.Context, request res
 			Configuration: configuration,
 		}
 
-		_, err := conn.UpdateSubscriberNotification(ctx, in)
+		output, err := conn.UpdateSubscriberNotification(ctx, in)
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameSubscriberNotification, new.ID.String(), err),
@@ -250,6 +238,10 @@ func (r *subscriberNotificationResource) Update(ctx context.Context, request res
 			)
 			return
 		}
+
+		new.EndpointID = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
+		new.SubscriberEndpoint = fwflex.StringToFramework(ctx, output.SubscriberEndpoint)
+		new.setID()
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
