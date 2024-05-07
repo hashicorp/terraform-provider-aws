@@ -72,7 +72,7 @@ func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, string(awstypes.OnFailureDoNothing)),
-				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`(?s)stack status \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -90,7 +90,7 @@ func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, string(awstypes.OnFailureDelete)),
-				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`(?s)stack status \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -108,7 +108,7 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, string(awstypes.OnFailureRollback)),
-				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`(?s)stack status \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -137,7 +137,7 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 			},
 			{
 				Config:      testAccStackConfig_params(rName, vpcCidrInvalid),
-				ExpectError: regexache.MustCompile(`failed to update CloudFormation stack \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`stack status \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
 			},
 		},
 	})
