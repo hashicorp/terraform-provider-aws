@@ -10,6 +10,7 @@ var (
 	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
 	ResourceTable                       = resourceTable
 	ResourceTableExport                 = resourceTableExport
+	ResourceTableReplica                = resourceTableReplica
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
 
@@ -23,6 +24,8 @@ var (
 	FindTableExportByARN                         = findTableExportByARN
 	ListTags                                     = listTags
 	RegionFromARN                                = regionFromARN
+	ReplicaForRegion                             = replicaForRegion
 	TableNameFromARN                             = tableNameFromARN
+	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
 )

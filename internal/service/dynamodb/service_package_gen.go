@@ -74,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dynamodb_table_item",
 		},
 		{
-			Factory:  ResourceTableReplica,
+			Factory:  resourceTableReplica,
 			TypeName: "aws_dynamodb_table_replica",
 			Name:     "Table Replica",
 			Tags:     &types.ServicePackageResourceTags{},

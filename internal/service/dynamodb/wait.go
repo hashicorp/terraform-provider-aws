@@ -77,11 +77,11 @@ func waitImportComplete(ctx context.Context, conn *dynamodb.Client, importARN st
 	return nil, err
 }
 
-func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration) (*awstypes.TableDescription, error) {
+func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
 		Target:  enum.Slice(awstypes.ReplicaStatusActive),
-		Refresh: statusReplicaUpdate(ctx, conn, tableName, region),
+		Refresh: statusReplicaUpdate(ctx, conn, tableName, region, optFns...),
 		Timeout: max(replicaUpdateTimeout, timeout),
 	}
 
@@ -94,7 +94,7 @@ func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, re
 	return nil, err
 }
 
-func waitReplicaDeleted(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration) (*awstypes.TableDescription, error) {
+func waitReplicaDeleted(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ReplicaStatusCreating,
@@ -103,7 +103,7 @@ func waitReplicaDeleted(ctx context.Context, conn *dynamodb.Client, tableName, r
 			awstypes.ReplicaStatusActive,
 		),
 		Target:  []string{},
-		Refresh: statusReplicaDelete(ctx, conn, tableName, region),
+		Refresh: statusReplicaDelete(ctx, conn, tableName, region, optFns...),
 		Timeout: max(replicaUpdateTimeout, timeout),
 	}
 

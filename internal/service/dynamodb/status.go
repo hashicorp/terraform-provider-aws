@@ -49,9 +49,9 @@ func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) 
 	}
 }
 
-func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string) retry.StateRefreshFunc {
+func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findTableByName(ctx, conn, tableName)
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -71,9 +71,9 @@ func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, 
 	}
 }
 
-func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string) retry.StateRefreshFunc {
+func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findTableByName(ctx, conn, tableName)
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
