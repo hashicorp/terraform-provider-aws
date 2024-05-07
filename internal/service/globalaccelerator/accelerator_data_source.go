@@ -59,7 +59,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 			"dual_stack_dns_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
 			"hosted_zone_id": schema.StringAttribute{
@@ -81,11 +81,11 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 					},
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }

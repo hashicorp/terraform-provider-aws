@@ -80,7 +80,7 @@ func resourceAccelerator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -118,7 +118,7 @@ func resourceAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -140,9 +140,9 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -204,13 +204,13 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("dns_name", accelerator.DnsName)
 	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
-	d.Set("enabled", accelerator.Enabled)
+	d.Set(names.AttrEnabled, accelerator.Enabled)
 	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
-	d.Set("name", accelerator.Name)
+	d.Set(names.AttrName, accelerator.Name)
 
 	acceleratorAttributes, err := findAcceleratorAttributesByARN(ctx, conn, d.Id())
 
@@ -229,11 +229,11 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	if d.HasChanges("name", "ip_address_type", "enabled") {
+	if d.HasChanges(names.AttrName, "ip_address_type", names.AttrEnabled) {
 		input := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
-			Enabled:        aws.Bool(d.Get("enabled").(bool)),
-			Name:           aws.String(d.Get("name").(string)),
+			Enabled:        aws.Bool(d.Get(names.AttrEnabled).(bool)),
+			Name:           aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("ip_address_type"); ok {

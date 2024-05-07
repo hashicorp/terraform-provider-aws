@@ -48,7 +48,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -102,7 +102,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				ConflictsWith: []string{"public_key"},
 				MaxItems:      5,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -156,11 +156,11 @@ func ResourceDevEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -176,10 +176,10 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -295,7 +295,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("devEndpoint/%s", d.Id()),
 	}.String()
 
-	if err := d.Set("arn", endpointARN); err != nil {
+	if err := d.Set(names.AttrARN, endpointARN); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arn for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -323,7 +323,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting glue_version for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("name", endpoint.EndpointName); err != nil {
+	if err := d.Set(names.AttrName, endpoint.EndpointName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting name for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -351,7 +351,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting public_keys for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("role_arn", endpoint.RoleArn); err != nil {
+	if err := d.Set(names.AttrRoleARN, endpoint.RoleArn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting role_arn for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -363,7 +363,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting security_group_ids for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("status", endpoint.Status); err != nil {
+	if err := d.Set(names.AttrStatus, endpoint.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting status for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -371,7 +371,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting subnet_id for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("vpc_id", endpoint.VpcId); err != nil {
+	if err := d.Set(names.AttrVPCID, endpoint.VpcId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_id for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -395,7 +395,7 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateDevEndpointInput{
-		EndpointName: aws.String(d.Get("name").(string)),
+		EndpointName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	hasChanged := false
