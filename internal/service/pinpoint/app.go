@@ -40,7 +40,7 @@ func ResourceApp() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,7 +102,7 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -114,7 +114,7 @@ func ResourceApp() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"quiet_time": {
 				Type:             schema.TypeList,
@@ -146,7 +146,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
@@ -188,14 +188,14 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set("application_id", app.Id)
-	d.Set("arn", app.Arn)
+	d.Set(names.AttrARN, app.Arn)
 	if err := d.Set("campaign_hook", flattenCampaignHook(settings.CampaignHook)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
 	}
 	if err := d.Set("limits", flattenCampaignLimits(settings.Limits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
 	}
-	d.Set("name", app.Name)
+	d.Set(names.AttrName, app.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(app.Name)))
 	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
@@ -208,7 +208,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
 		if d.HasChange("campaign_hook") {
