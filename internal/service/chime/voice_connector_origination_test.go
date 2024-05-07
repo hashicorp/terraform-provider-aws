@@ -106,9 +106,9 @@ func testAccVoiceConnectorOrigination_update(t *testing.T) {
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"protocol": "TCP",
-						"port":     "5060",
-						"priority": "1",
+						"protocol":     "TCP",
+						names.AttrPort: "5060",
+						"priority":     "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"protocol": "UDP",
