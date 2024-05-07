@@ -14,8 +14,6 @@ import (
 const (
 	arnSeparator = "/"
 	arnService   = "cloudformation"
-
-	arnResourcePrefixType = names.AttrType
 )
 
 // typeVersionARNToTypeARNAndVersionID converts Type Version Amazon Resource Name (ARN) to Type ARN and Version ID.
