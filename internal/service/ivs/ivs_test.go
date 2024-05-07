@@ -16,7 +16,7 @@ func TestAccIVS_serial(t *testing.T) {
 		"PlaybackKeyPair": {
 			"basic":      testAccPlaybackKeyPair_basic,
 			"update":     testAccPlaybackKeyPair_update,
-			"tags":       testAccPlaybackKeyPair_tags,
+			names.AttrTags:       testAccPlaybackKeyPair_tags,
 			"disappears": testAccPlaybackKeyPair_disappears,
 		},
 	}
