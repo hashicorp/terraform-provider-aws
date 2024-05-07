@@ -67,7 +67,7 @@ func resourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,7 +196,7 @@ func resourceCertificate() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -216,7 +216,7 @@ func resourceCertificate() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -425,7 +425,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
 
-	d.Set("arn", certificate.CertificateArn)
+	d.Set(names.AttrARN, certificate.CertificateArn)
 	d.Set("certificate_authority_arn", certificate.CertificateAuthorityArn)
 	d.Set("domain_name", certificate.DomainName)
 	d.Set("early_renewal_duration", d.Get("early_renewal_duration"))
@@ -468,9 +468,9 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("renewal_summary", nil)
 	}
-	d.Set("status", certificate.Status)
+	d.Set(names.AttrStatus, certificate.Status)
 	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
-	d.Set("type", certificate.Type)
+	d.Set(names.AttrType, certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
 
@@ -490,7 +490,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
 			input := &acm.ImportCertificateInput{
 				Certificate:    []byte(d.Get("certificate_body").(string)),
-				CertificateArn: aws.String(d.Get("arn").(string)),
+				CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 				PrivateKey:     []byte(d.Get("private_key").(string)),
 			}
 
@@ -506,14 +506,14 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	} else if d.Get("pending_renewal").(bool) {
 		_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
-			CertificateArn: aws.String(d.Get("arn").(string)),
+			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "renewing ACM Certificate (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitCertificateRenewed(ctx, conn, d.Get("arn").(string), CertificateRenewalTimeout); err != nil {
+		if _, err := waitCertificateRenewed(ctx, conn, d.Get(names.AttrARN).(string), CertificateRenewalTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) renewal: %s", d.Id(), err)
 		}
 	}
@@ -521,7 +521,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("options") {
 		_, n := d.GetChange("options")
 		input := &acm.UpdateCertificateOptionsInput{
-			CertificateArn: aws.String(d.Get("arn").(string)),
+			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 			Options:        expandCertificateOptions(n.([]interface{})[0].(map[string]interface{})),
 		}
 
