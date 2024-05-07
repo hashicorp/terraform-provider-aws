@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_managed_prefix_list")
@@ -31,7 +32,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +45,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -52,7 +53,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 				},
 			},
 			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -61,17 +62,17 @@ func DataSourceManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -87,11 +88,11 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 
 	input := &ec2.DescribeManagedPrefixListsInput{
 		Filters: newAttributeFilterList(map[string]string{
-			"prefix-list-name": d.Get("name").(string),
+			"prefix-list-name": d.Get(names.AttrName).(string),
 		}),
 	}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.PrefixListIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -119,16 +120,16 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("address_family", pl.AddressFamily)
-	d.Set("arn", pl.PrefixListArn)
+	d.Set(names.AttrARN, pl.PrefixListArn)
 	if err := d.Set("entries", flattenPrefixListEntries(prefixListEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting entries: %s", err)
 	}
 	d.Set("max_entries", pl.MaxEntries)
-	d.Set("name", pl.PrefixListName)
-	d.Set("owner_id", pl.OwnerId)
-	d.Set("version", pl.Version)
+	d.Set(names.AttrName, pl.PrefixListName)
+	d.Set(names.AttrOwnerID, pl.OwnerId)
+	d.Set(names.AttrVersion, pl.Version)
 
-	if err := d.Set("tags", KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

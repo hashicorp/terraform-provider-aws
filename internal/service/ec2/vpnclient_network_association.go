@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_client_vpn_network_association", name="Client VPN Network Association")
@@ -51,7 +52,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +106,7 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 	d.Set("association_id", network.AssociationId)
 	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
 	d.Set("subnet_id", network.TargetNetworkId)
-	d.Set("vpc_id", network.VpcId)
+	d.Set(names.AttrVPCID, network.VpcId)
 
 	return diags
 }

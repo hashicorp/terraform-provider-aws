@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ami")
@@ -39,7 +40,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +82,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +134,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +143,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -204,7 +205,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,7 +214,7 @@ func DataSourceAMI() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"tpm_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -304,14 +305,14 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Service:   ec2.ServiceName,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 	}.String()
-	d.Set("arn", imageArn)
+	d.Set(names.AttrARN, imageArn)
 	if err := d.Set("block_device_mappings", flattenAMIBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
 	d.Set("boot_mode", image.BootMode)
 	d.Set("creation_date", image.CreationDate)
 	d.Set("deprecation_time", image.DeprecationTime)
-	d.Set("description", image.Description)
+	d.Set(names.AttrDescription, image.Description)
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
 	d.Set("image_id", image.ImageId)
@@ -320,8 +321,8 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
-	d.Set("name", image.Name)
-	d.Set("owner_id", image.OwnerId)
+	d.Set(names.AttrName, image.Name)
+	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform", image.Platform)
 	d.Set("platform_details", image.PlatformDetails)
 	if err := d.Set("product_codes", flattenAMIProductCodes(image.ProductCodes)); err != nil {
@@ -333,7 +334,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("root_device_type", image.RootDeviceType)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
-	d.Set("state", image.State)
+	d.Set(names.AttrState, image.State)
 	if err := d.Set("state_reason", flattenAMIStateReason(image.StateReason)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting state_reason: %s", err)
 	}
@@ -341,7 +342,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

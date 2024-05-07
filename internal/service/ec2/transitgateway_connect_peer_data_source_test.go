@@ -33,7 +33,7 @@ func testAccTransitGatewayConnectPeerDataSource_Filter(t *testing.T, semaphore t
 			{
 				Config: testAccTransitGatewayConnectPeerDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_asn", resourceName, "bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_peer_address", resourceName, "bgp_peer_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_transit_gateway_addresses.#", resourceName, "bgp_transit_gateway_addresses.#"),
@@ -42,7 +42,7 @@ func testAccTransitGatewayConnectPeerDataSource_Filter(t *testing.T, semaphore t
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_address", resourceName, "transit_gateway_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_attachment_id", resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_peer_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_peer_id", resourceName, names.AttrID),
 				),
 			},
 		},
@@ -68,7 +68,7 @@ func testAccTransitGatewayConnectPeerDataSource_ID(t *testing.T, semaphore tfsyn
 			{
 				Config: testAccTransitGatewayConnectPeerDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_asn", resourceName, "bgp_asn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_peer_address", resourceName, "bgp_peer_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_transit_gateway_addresses.#", resourceName, "bgp_transit_gateway_addresses.#"),
@@ -77,7 +77,7 @@ func testAccTransitGatewayConnectPeerDataSource_ID(t *testing.T, semaphore tfsyn
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_address", resourceName, "transit_gateway_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_attachment_id", resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_peer_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_peer_id", resourceName, names.AttrID),
 				),
 			},
 		},

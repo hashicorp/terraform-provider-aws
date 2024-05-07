@@ -27,10 +27,10 @@ func TestAccVPCSecurityGroupRuleDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cidr_ipv4", resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cidr_ipv6", resourceName, "cidr_ipv6"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "from_port", resourceName, "from_port"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_protocol", resourceName, "ip_protocol"),
 					resource.TestCheckResourceAttr(dataSourceName, "is_egress", "false"),
@@ -60,10 +60,10 @@ func TestAccVPCSecurityGroupRuleDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cidr_ipv4", resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cidr_ipv6", resourceName, "cidr_ipv6"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "from_port", resourceName, "from_port"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_protocol", resourceName, "ip_protocol"),
 					resource.TestCheckResourceAttr(dataSourceName, "is_egress", "true"),

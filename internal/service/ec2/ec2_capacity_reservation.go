@@ -38,7 +38,7 @@ func ResourceCapacityReservation() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func ResourceCapacityReservation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -194,7 +194,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Capacity Reservation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", reservation.CapacityReservationArn)
+	d.Set(names.AttrARN, reservation.CapacityReservationArn)
 	d.Set("availability_zone", reservation.AvailabilityZone)
 	d.Set("ebs_optimized", reservation.EbsOptimized)
 	if reservation.EndDate != nil {
@@ -209,7 +209,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set("instance_type", reservation.InstanceType)
 	d.Set("outpost_arn", reservation.OutpostArn)
-	d.Set("owner_id", reservation.OwnerId)
+	d.Set(names.AttrOwnerID, reservation.OwnerId)
 	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
@@ -222,7 +222,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyCapacityReservationInput{
 			CapacityReservationId: aws.String(d.Id()),
 			EndDateType:           aws.String(d.Get("end_date_type").(string)),

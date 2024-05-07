@@ -37,7 +37,7 @@ func TestAccEC2EBSFastSnapshotRestore_basic(t *testing.T) {
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, names.AttrID),
 				),
 			},
 			{

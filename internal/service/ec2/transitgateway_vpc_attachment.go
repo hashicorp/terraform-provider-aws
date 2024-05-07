@@ -56,7 +56,7 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 				Default:      ec2.Ipv6SupportValueDisable,
 				ValidateFunc: validation.StringInSlice(ec2.Ipv6SupportValue_Values(), false),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -80,7 +80,7 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -105,10 +105,10 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 			DnsSupport:           aws.String(d.Get("dns_support").(string)),
 			Ipv6Support:          aws.String(d.Get("ipv6_support").(string)),
 		},
-		SubnetIds:         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:         flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway VPC Attachment: %s", input)
@@ -211,11 +211,11 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
-	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
 	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
-	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
+	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
 	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
@@ -227,7 +227,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", "subnet_ids") {
+	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", names.AttrSubnetIDs) {
 		input := &ec2.ModifyTransitGatewayVpcAttachmentInput{
 			Options: &ec2.ModifyTransitGatewayVpcAttachmentRequestOptions{
 				ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
@@ -237,7 +237,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 			TransitGatewayAttachmentId: aws.String(d.Id()),
 		}
 
-		o, n := d.GetChange("subnet_ids")
+		o, n := d.GetChange(names.AttrSubnetIDs)
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 

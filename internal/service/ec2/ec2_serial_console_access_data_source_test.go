@@ -53,7 +53,7 @@ func testAccCheckSerialConsoleAccessDataSource(ctx context.Context, n string) re
 			return fmt.Errorf("Error reading serial console access toggle: %q", err)
 		}
 
-		attr, _ := strconv.ParseBool(rs.Primary.Attributes["enabled"])
+		attr, _ := strconv.ParseBool(rs.Primary.Attributes[names.AttrEnabled])
 
 		if attr != aws.BoolValue(actual.SerialConsoleAccessEnabled) {
 			return fmt.Errorf("Serial console access is not in expected state (%t)", aws.BoolValue(actual.SerialConsoleAccessEnabled))
