@@ -696,8 +696,10 @@ func resourceFlow() *schema.Resource {
 				},
 			},
 			"flow_status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{string(types.FlowStatusDraft), string(types.FlowStatusActive), string(types.FlowStatusSuspended)}, false),
 			},
 			"kms_arn": {
 				Type:         schema.TypeString,
