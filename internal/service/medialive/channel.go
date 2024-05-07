@@ -50,7 +50,7 @@ func ResourceChannel() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -84,7 +84,7 @@ func ResourceChannel() *schema.Resource {
 					MinItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"id": {
+							names.AttrID: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -258,7 +258,7 @@ func ResourceChannel() *schema.Resource {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -278,7 +278,7 @@ func ResourceChannel() *schema.Resource {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
-																			"name": {
+																			names.AttrName: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -362,7 +362,7 @@ func ResourceChannel() *schema.Resource {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -674,11 +674,11 @@ func ResourceChannel() *schema.Resource {
 						},
 					},
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"role_arn": {
+				names.AttrRoleARN: {
 					Type:             schema.TypeString,
 					Optional:         true,
 					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
@@ -717,7 +717,7 @@ func ResourceChannel() *schema.Resource {
 								MaxItems: 5,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"subnet_ids": {
+							names.AttrSubnetIDs: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -744,7 +744,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateChannelInput{
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		RequestId: aws.String(id.UniqueId()),
 		Tags:      getTagsIn(ctx),
 	}
@@ -770,7 +770,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
@@ -779,11 +779,11 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Channel.Id))
@@ -794,7 +794,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
 		}
 	}
 
@@ -818,12 +818,12 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	d.Set("channel_class", out.ChannelClass)
 	d.Set("channel_id", out.Id)
 	d.Set("log_level", out.LogLevel)
-	d.Set("role_arn", out.RoleArn)
+	d.Set(names.AttrRoleARN, out.RoleArn)
 
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
@@ -855,13 +855,13 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_channel") {
 		in := &medialive.UpdateChannelInput{
 			ChannelId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			in.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			in.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("cdi_input_specification") {
@@ -892,8 +892,8 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.Maintenance = expandChannelMaintenanceUpdate(d.Get("maintenance").([]interface{}))
 		}
 
-		if d.HasChange("role_arn") {
-			in.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		channel, err := FindChannelByID(ctx, conn, d.Id())
@@ -920,7 +920,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get(names.AttrName).(string), err)
 		}
 	}
 
@@ -1239,7 +1239,7 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 		}
 
 		var a types.AudioSelector
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			a.Name = aws.String(v)
 		}
 		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
@@ -1287,7 +1287,7 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRen
 	if v, ok := m["group_id"].(string); ok && len(v) > 0 {
 		out.GroupId = aws.String(v)
 	}
-	if v, ok := m["name"].(string); ok && len(v) > 0 {
+	if v, ok := m[names.AttrName].(string); ok && len(v) > 0 {
 		out.Name = aws.String(v)
 	}
 
@@ -1396,7 +1396,7 @@ func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []
 		}
 
 		var o types.CaptionSelector
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			o.Name = aws.String(v)
 		}
 		if v, ok := m["language_code"].(string); ok && v != "" {
@@ -1792,7 +1792,7 @@ func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSele
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			"name":              aws.ToString(v.Name),
+			names.AttrName:      aws.ToString(v.Name),
 			"selector_settings": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
@@ -1823,8 +1823,8 @@ func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsR
 	}
 
 	m := map[string]interface{}{
-		"group_id": aws.ToString(in.GroupId),
-		"name":     aws.ToString(in.Name),
+		"group_id":     aws.ToString(in.GroupId),
+		names.AttrName: aws.ToString(in.Name),
 	}
 
 	return []interface{}{m}
@@ -1907,7 +1907,7 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			"name":              aws.ToString(v.Name),
+			names.AttrName:      aws.ToString(v.Name),
 			"language_code":     aws.ToString(v.LanguageCode),
 			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
@@ -2181,7 +2181,7 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 		}
 
 		var d types.OutputDestination
-		if v, ok := m["id"].(string); ok {
+		if v, ok := m[names.AttrID].(string); ok {
 			d.Id = aws.String(v)
 		}
 		if v, ok := m["media_package_settings"].(*schema.Set); ok && v.Len() > 0 {
@@ -2280,7 +2280,7 @@ func flattenChannelDestinations(apiObject []types.OutputDestination) []interface
 	var tfList []interface{}
 	for _, v := range apiObject {
 		m := map[string]interface{}{
-			"id":                     aws.ToString(v.Id),
+			names.AttrID:             aws.ToString(v.Id),
 			"media_package_settings": flattenChannelDestinationsMediaPackageSettings(v.MediaPackageSettings),
 			"multiplex_settings":     flattenChannelDestinationsMultiplexSettings(v.MultiplexSettings),
 			"settings":               flattenChannelDestinationsSettings(v.Settings),
@@ -2438,7 +2438,7 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		settings.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 	if v, ok := m["public_address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
@@ -2457,7 +2457,7 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
 		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
 		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		"subnet_ids":            flex.FlattenStringValueSet(apiObject.SubnetIds),
+		names.AttrSubnetIDs:     flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 
