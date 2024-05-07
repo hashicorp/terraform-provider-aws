@@ -947,7 +947,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			"read_capacity":  d.Get("read_capacity"),
 		}
 
-		input.BillingMode = awstypes.BillingMode(newBillingMode)
+		input.BillingMode = newBillingMode
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, newBillingMode, oldBillingMode)
 	}
 
