@@ -37,7 +37,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -54,7 +54,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -107,7 +107,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateDataQualityRulesetInput{
 		Name:    aws.String(name),
@@ -115,7 +115,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -158,10 +158,10 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 		Resource:  fmt.Sprintf("dataQualityRuleset/%s", aws.StringValue(dataQualityRuleset.Name)),
 	}.String()
 
-	d.Set("arn", dataQualityRulesetArn)
+	d.Set(names.AttrARN, dataQualityRulesetArn)
 	d.Set("created_on", dataQualityRuleset.CreatedOn.Format(time.RFC3339))
-	d.Set("name", dataQualityRuleset.Name)
-	d.Set("description", dataQualityRuleset.Description)
+	d.Set(names.AttrName, dataQualityRuleset.Name)
+	d.Set(names.AttrDescription, dataQualityRuleset.Description)
 	d.Set("last_modified_on", dataQualityRuleset.CreatedOn.Format(time.RFC3339))
 	d.Set("recommendation_run_id", dataQualityRuleset.RecommendationRunId)
 	d.Set("ruleset", dataQualityRuleset.Ruleset)
@@ -177,14 +177,14 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges("description", "ruleset") {
+	if d.HasChanges(names.AttrDescription, "ruleset") {
 		name := d.Id()
 
 		input := &glue.UpdateDataQualityRulesetInput{
 			Name: aws.String(name),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -206,7 +206,7 @@ func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] Glue Data Quality Ruleset: %s", d.Id())
 	_, err := conn.DeleteDataQualityRulesetWithContext(ctx, &glue.DeleteDataQualityRulesetInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Data Quality Ruleset (%s): %s", d.Id(), err)

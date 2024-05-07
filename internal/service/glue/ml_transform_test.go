@@ -40,13 +40,13 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_record_tables.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.database_name", tableResourceName, "database_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.table_name", tableResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.table_name", tableResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
@@ -150,14 +150,14 @@ func TestAccGlueMlTransform_description(t *testing.T) {
 				Config: testAccMLTransformConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{
