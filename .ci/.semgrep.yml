@@ -642,6 +642,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -662,6 +663,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -682,6 +684,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -702,6 +705,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -722,6 +726,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -742,6 +747,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -762,6 +768,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -782,6 +789,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -802,6 +810,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -822,6 +831,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -842,6 +852,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -862,6 +873,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -882,6 +894,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -902,6 +915,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -922,6 +936,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -942,6 +957,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -962,6 +978,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -982,6 +999,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -1002,6 +1020,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -1022,6 +1041,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -1042,6 +1062,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -1062,6 +1083,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -1082,6 +1104,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
@@ -1102,6 +1125,7 @@ rules:
       include:
         - "internal/service/iam/*.go"
         - "internal/service/meta/*.go"
+        - "internal/service/q*/*.go"
         - "internal/service/r*/*.go"
         - "internal/service/s*/*.go"
         - "internal/service/t*/*.go"
