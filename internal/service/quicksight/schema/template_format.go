@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func numericFormatConfigurationSchema() *schema.Schema {
@@ -246,7 +247,7 @@ func fontConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(false, validation.StringInSlice(quicksight.FontWeightName_Values(), false)),
+							names.AttrName: stringSchema(false, validation.StringInSlice(quicksight.FontWeightName_Values(), false)),
 						},
 					},
 				},
@@ -615,7 +616,7 @@ func expandFontWeight(tfList []interface{}) *quicksight.FontWeight {
 
 	config := &quicksight.FontWeight{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		config.Name = aws.String(v)
 	}
 
