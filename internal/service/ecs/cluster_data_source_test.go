@@ -27,12 +27,12 @@ func TestAccECSClusterDataSource_ecsCluster(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "service_connect_defaults.#", resourceName, "service_connect_defaults.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -54,11 +54,11 @@ func TestAccECSClusterDataSource_ecsClusterContainerInsights(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig_containerInsights(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "setting.#", resourceName, "setting.#"),
 				),
 			},
@@ -80,12 +80,12 @@ func TestAccECSClusterDataSource_tags(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "service_connect_defaults.#", resourceName, "service_connect_defaults.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecs_service")
@@ -26,7 +27,7 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +51,7 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -87,14 +88,14 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(service.ServiceArn))
 
 	d.Set("service_name", service.ServiceName)
-	d.Set("arn", service.ServiceArn)
+	d.Set(names.AttrARN, service.ServiceArn)
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
 
-	if err := d.Set("tags", KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

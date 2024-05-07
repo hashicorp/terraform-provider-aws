@@ -36,8 +36,8 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTaskExecutionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "client_token", "some_token"),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
@@ -71,8 +71,8 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 			{
 				Config: testAccTaskExecutionDataSourceConfig_overrides(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", "1"),
@@ -110,8 +110,8 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 			{
 				Config: testAccTaskExecutionDataSourceConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", "1"),
