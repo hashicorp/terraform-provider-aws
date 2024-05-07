@@ -50,7 +50,7 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func ResourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -146,7 +146,7 @@ func ResourceCluster() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -163,7 +163,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -180,7 +180,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -188,7 +188,7 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -227,7 +227,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// optionals can be defaulted by AWS
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -331,16 +331,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	c := res.Clusters[0]
-	d.Set("arn", c.ClusterArn)
+	d.Set(names.AttrARN, c.ClusterArn)
 	d.Set("cluster_name", c.ClusterName)
 	d.Set("cluster_endpoint_encryption_type", c.ClusterEndpointEncryptionType)
-	d.Set("description", c.Description)
+	d.Set(names.AttrDescription, c.Description)
 	d.Set("iam_role_arn", c.IamRoleArn)
 	d.Set("node_type", c.NodeType)
 	d.Set("replication_factor", c.TotalNodes)
 
 	if c.ClusterDiscoveryEndpoint != nil {
-		d.Set("port", c.ClusterDiscoveryEndpoint.Port)
+		d.Set(names.AttrPort, c.ClusterDiscoveryEndpoint.Port)
 		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", aws.ToString(c.ClusterDiscoveryEndpoint.Address), c.ClusterDiscoveryEndpoint.Port))
 		d.Set("cluster_address", c.ClusterDiscoveryEndpoint.Address)
 	}
@@ -381,8 +381,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	requestUpdate := false
 	awaitUpdate := false
-	if d.HasChange("description") {
-		req.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		req.Description = aws.String(d.Get(names.AttrDescription).(string))
 		requestUpdate = true
 	}
 
@@ -480,9 +480,9 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 
 	for _, node := range sortedNodes {
 		nodeData = append(nodeData, map[string]interface{}{
-			"id":                aws.ToString(node.NodeId),
+			names.AttrID:        aws.ToString(node.NodeId),
 			"address":           aws.ToString(node.Endpoint.Address),
-			"port":              node.Endpoint.Port,
+			names.AttrPort:      node.Endpoint.Port,
 			"availability_zone": aws.ToString(node.AvailabilityZone),
 		})
 	}
