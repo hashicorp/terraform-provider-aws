@@ -41,7 +41,7 @@ func ResourceResourceSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func ResourceResourceSet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"arn": {
+															names.AttrARN: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -196,7 +196,7 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Resource Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.ResourceSetArn)
+	d.Set(names.AttrARN, resp.ResourceSetArn)
 	d.Set("resource_set_name", resp.ResourceSetName)
 	d.Set("resource_set_type", resp.ResourceSetType)
 	if err := d.Set("resources", flattenResourceSetResources(resp.Resources)); err != nil {
@@ -210,7 +210,7 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateResourceSetInput{
 			ResourceSetName: aws.String(d.Id()),
 			ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
@@ -385,7 +385,7 @@ func expandResourceSetNLBResource(nlbrs []interface{}) *route53recoveryreadiness
 	nlbresource := &route53recoveryreadiness.NLBResource{}
 	for _, nlbr := range nlbrs {
 		nlbr := nlbr.(map[string]interface{})
-		if v, ok := nlbr["arn"]; ok && v.(string) != "" {
+		if v, ok := nlbr[names.AttrARN]; ok && v.(string) != "" {
 			nlbresource.Arn = aws.String(v.(string))
 		}
 	}
@@ -398,7 +398,7 @@ func flattenResourceSetNLBResource(nlbresource *route53recoveryreadiness.NLBReso
 	}
 
 	nlbr := make(map[string]interface{})
-	nlbr["arn"] = nlbresource.Arn
+	nlbr[names.AttrARN] = nlbresource.Arn
 	result := []map[string]interface{}{nlbr}
 	return result
 }

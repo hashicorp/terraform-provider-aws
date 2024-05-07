@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_zone_association")
@@ -37,7 +38,7 @@ func ResourceZoneAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +64,7 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	vpcRegion := meta.(*conns.AWSClient).Region
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 	zoneID := d.Get("zone_id").(string)
 
 	if v, ok := d.GetOk("vpc_region"); ok {
@@ -146,7 +147,7 @@ func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, me
 		return diags
 	}
 
-	d.Set("vpc_id", vpcID)
+	d.Set(names.AttrVPCID, vpcID)
 	d.Set("vpc_region", vpcRegion)
 	d.Set("zone_id", zoneID)
 	d.Set("owning_account", hostedZoneSummary.Owner.OwningAccount)

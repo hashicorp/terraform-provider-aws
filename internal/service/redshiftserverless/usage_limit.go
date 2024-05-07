@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshiftserverless_usage_limit", name="Usage Limit")
@@ -32,7 +33,7 @@ func resourceUsageLimit() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +113,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.UsageLimitArn)
+	d.Set(names.AttrARN, out.UsageLimitArn)
 	d.Set("breach_action", out.BreachAction)
 	d.Set("period", out.Period)
 	d.Set("usage_type", out.UsageType)
