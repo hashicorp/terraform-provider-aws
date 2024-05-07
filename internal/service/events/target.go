@@ -30,6 +30,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_target", name="Target")
@@ -67,7 +68,7 @@ func resourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -105,7 +106,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -196,7 +197,7 @@ func resourceTarget() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
@@ -214,7 +215,7 @@ func resourceTarget() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
@@ -232,7 +233,7 @@ func resourceTarget() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
 						},
-						"tags": tftags.TagsSchema(),
+						names.AttrTags: tftags.TagsSchema(),
 						"task_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -407,7 +408,7 @@ func resourceTarget() *schema.Resource {
 					},
 				},
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -424,7 +425,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
@@ -454,11 +455,11 @@ func resourceTarget() *schema.Resource {
 							MaxItems: 200,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -544,12 +545,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", target.Arn)
+	d.Set(names.AttrARN, target.Arn)
 	d.Set("event_bus_name", eventBusName)
 	d.Set("force_destroy", d.Get("force_destroy").(bool))
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
-	d.Set("role_arn", target.RoleArn)
+	d.Set(names.AttrRoleARN, target.RoleArn)
 	d.Set("target_id", target.Id)
 
 	if target.RunCommandParameters != nil {
@@ -810,7 +811,7 @@ func removeTargetsError(apiObjects []types.RemoveTargetsResultEntry) error {
 
 func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbridge.PutTargetsInput {
 	target := types.Target{
-		Arn: aws.String(d.Get("arn").(string)),
+		Arn: aws.String(d.Get(names.AttrARN).(string)),
 		Id:  aws.String(d.Get("target_id").(string)),
 	}
 
@@ -822,7 +823,7 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 		target.InputPath = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		target.RoleArn = aws.String(v.(string))
 	}
 
@@ -887,7 +888,7 @@ func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		command := types.RunCommandTarget{
-			Key:    aws.String(param["key"].(string)),
+			Key:    aws.String(param[names.AttrKey].(string)),
 			Values: flex.ExpandStringValueList(param["values"].([]interface{})),
 		}
 		commands = append(commands, command)
@@ -932,7 +933,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 	ecsParameters := &types.EcsParameters{}
 	for _, c := range tfList {
 		tfMap := c.(map[string]interface{})
-		tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
+		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
 
 		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
@@ -1003,7 +1004,7 @@ func expandDeadLetterParametersConfig(dlp []interface{}) *types.DeadLetterConfig
 	for _, v := range dlp {
 		params := v.(map[string]interface{})
 
-		if val, ok := params["arn"].(string); ok && val != "" {
+		if val, ok := params[names.AttrARN].(string); ok && val != "" {
 			deadLetterConfig.Arn = aws.String(val)
 		}
 	}
@@ -1092,11 +1093,11 @@ func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []types.Sa
 
 		apiObject := types.SageMakerPipelineParameter{}
 
-		if v, ok := tfMap["name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 			apiObject.Name = aws.String(v)
 		}
 
-		if v, ok := tfMap["value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 			apiObject.Value = aws.String(v)
 		}
 
@@ -1165,7 +1166,7 @@ func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[st
 	for _, x := range runCommand.RunCommandTargets {
 		config := make(map[string]interface{})
 
-		config["key"] = aws.ToString(x.Key)
+		config[names.AttrKey] = aws.ToString(x.Key)
 		config["values"] = x.Values
 
 		result = append(result, config)
@@ -1201,7 +1202,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config["tags"] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
+	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = ecsParameters.EnableExecuteCommand
 	config["enable_ecs_managed_tags"] = ecsParameters.EnableECSManagedTags
 	config["task_count"] = aws.ToInt32(ecsParameters.TaskCount)
@@ -1276,8 +1277,8 @@ func flattenTargetSageMakerPipelineParameter(pcs []types.SageMakerPipelineParame
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["name"] = aws.ToString(pc.Name)
-		c["value"] = aws.ToString(pc.Value)
+		c[names.AttrName] = aws.ToString(pc.Name)
+		c[names.AttrValue] = aws.ToString(pc.Value)
 
 		results = append(results, c)
 	}
@@ -1335,7 +1336,7 @@ func flattenTargetRetryPolicy(rp *types.RetryPolicy) []map[string]interface{} {
 func flattenTargetDeadLetterConfig(dlc *types.DeadLetterConfig) []map[string]interface{} {
 	config := make(map[string]interface{})
 
-	config["arn"] = aws.ToString(dlc.Arn)
+	config[names.AttrARN] = aws.ToString(dlc.Arn)
 
 	result := []map[string]interface{}{config}
 	return result
@@ -1361,7 +1362,7 @@ func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementCon
 			apiObject.Expression = aws.String(v)
 		}
 
-		if v, ok := tfMap["type"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 			apiObject.Type = types.PlacementConstraintType(v)
 		}
 
@@ -1391,7 +1392,7 @@ func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStra
 			apiObject.Field = aws.String(v)
 		}
 
-		if v, ok := tfMap["type"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 			apiObject.Type = types.PlacementStrategyType(v)
 		}
 
@@ -1442,7 +1443,7 @@ func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[st
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["type"] = pc.Type
+		c[names.AttrType] = pc.Type
 		if pc.Expression != nil {
 			c["expression"] = aws.ToString(pc.Expression)
 		}
@@ -1459,7 +1460,7 @@ func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[strin
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["type"] = pc.Type
+		c[names.AttrType] = pc.Type
 		if pc.Field != nil {
 			c["field"] = aws.ToString(pc.Field)
 		}
