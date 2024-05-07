@@ -37,7 +37,7 @@ func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),

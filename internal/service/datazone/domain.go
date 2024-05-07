@@ -65,20 +65,20 @@ func (r *resourceDomain) Metadata(_ context.Context, req resource.MetadataReques
 func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"domain_execution_role": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"kms_key_identifier": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -103,7 +103,7 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Optional: true,
 							Computed: true,
 							Validators: []validator.String{
@@ -126,7 +126,7 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -351,7 +351,7 @@ func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r *resourceDomain) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceDomain) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -438,7 +438,7 @@ func flattenSingleSignOn(ctx context.Context, apiObject *awstypes.SingleSignOn) 
 	}
 
 	obj := map[string]attr.Value{
-		"type":            flex.StringValueToFramework(ctx, apiObject.Type),
+		names.AttrType:    flex.StringValueToFramework(ctx, apiObject.Type),
 		"user_assignment": flex.StringValueToFramework(ctx, apiObject.UserAssignment),
 	}
 	objVal, d := types.ObjectValue(singleSignOnAttrTypes, obj)
@@ -489,6 +489,6 @@ type singleSignOnModel struct {
 }
 
 var singleSignOnAttrTypes = map[string]attr.Type{
-	"type":            types.StringType,
+	names.AttrType:    types.StringType,
 	"user_assignment": types.StringType,
 }

@@ -40,11 +40,11 @@ func ResourceClusterParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -68,7 +68,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"parameter": {
@@ -82,11 +82,11 @@ func ResourceClusterParameterGroup() *schema.Resource {
 							Default:      docdb.ApplyMethodPendingReboot,
 							ValidateFunc: validation.StringInSlice(docdb.ApplyMethod_Values(), false),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -105,11 +105,11 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(name),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
-		Description:                 aws.String(d.Get("description").(string)),
+		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                        getTagsIn(ctx),
 	}
 
@@ -148,10 +148,10 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", dbClusterParameterGroup.DBClusterParameterGroupArn)
-	d.Set("description", dbClusterParameterGroup.Description)
+	d.Set(names.AttrARN, dbClusterParameterGroup.DBClusterParameterGroupArn)
+	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
 	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
-	d.Set("name", dbClusterParameterGroup.DBClusterParameterGroupName)
+	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	input := &docdb.DescribeDBClusterParametersInput{

@@ -63,7 +63,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -175,7 +175,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -193,7 +193,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
@@ -324,11 +324,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EngineVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -409,11 +409,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.GlobalClusterIdentifier = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -495,7 +495,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	}
 
-	d.Set("arn", dbc.DBClusterArn)
+	d.Set(names.AttrARN, dbc.DBClusterArn)
 	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
@@ -514,9 +514,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
-	d.Set("kms_key_id", dbc.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
-	d.Set("port", dbc.Port)
+	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
@@ -535,7 +535,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "skip_final_snapshot") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "skip_final_snapshot") {
 		input := &docdb.ModifyDBClusterInput{
 			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
@@ -631,7 +631,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters")
 		}
 
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -658,7 +658,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("global_cluster_identifier"); ok {
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}

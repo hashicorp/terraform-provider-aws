@@ -5,6 +5,8 @@ package dms
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestTaskSettingsEqual(t *testing.T) {
@@ -75,8 +77,8 @@ func TestTaskSettingsEqual(t *testing.T) {
 		},
 		"string": {
 			"equal": {
-				a:        "value",
-				b:        "value",
+				a:        names.AttrValue,
+				b:        names.AttrValue,
 				expected: true,
 			},
 			"not equal": {
@@ -90,13 +92,13 @@ func TestTaskSettingsEqual(t *testing.T) {
 				expected: true,
 			},
 			"proposed null": {
-				a:        "value",
+				a:        names.AttrValue,
 				b:        nil,
 				expected: true,
 			},
 			"null proposed value": {
 				a:        nil,
-				b:        "value",
+				b:        names.AttrValue,
 				expected: false,
 			},
 		},

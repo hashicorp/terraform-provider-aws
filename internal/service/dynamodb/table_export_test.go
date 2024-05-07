@@ -45,7 +45,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
 					resource.TestCheckResourceAttr(resourceName, "item_count", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "AES256"),
@@ -54,7 +54,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -98,16 +98,16 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
 					resource.TestCheckResourceAttr(resourceName, "item_count", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_sse_kms_key_id", kmsKeyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_sse_kms_key_id", kmsKeyResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -151,7 +151,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
 					resource.TestCheckResourceAttr(resourceName, "item_count", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", "test"),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "AES256"),
@@ -160,7 +160,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),

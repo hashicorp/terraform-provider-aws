@@ -55,7 +55,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:         schema.TypeString,
 													Default:      awstypes.NfsVersionNfs3,
 													Optional:     true,
@@ -123,7 +123,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
 													Default:  awstypes.SmbVersionAutomatic,
 													Optional: true,
@@ -241,7 +241,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
 	// SMB Password is not returned from the API.
