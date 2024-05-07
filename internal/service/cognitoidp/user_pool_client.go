@@ -169,7 +169,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -191,7 +191,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required:   true,
 				Validators: userPoolClientNameValidator,
 			},
@@ -265,7 +265,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 								),
 								stringvalidator.ConflictsWith(
 									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
@@ -274,14 +274,14 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
 									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
 						"external_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
@@ -541,7 +541,7 @@ func (r *userPoolClientResource) Delete(ctx context.Context, request resource.De
 	params := state.deleteInput(ctx)
 
 	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
-		"id":           state.ID.ValueString(),
+		names.AttrID:   state.ID.ValueString(),
 		"user_pool_id": state.UserPoolID.ValueString(),
 	})
 
@@ -569,7 +569,7 @@ func (r *userPoolClientResource) ImportState(ctx context.Context, request resour
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
@@ -738,7 +738,7 @@ func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovi
 	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn)
 	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
 	attrs["external_id"] = flex.StringToFramework(ctx, ac.ExternalId)
-	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
+	attrs[names.AttrRoleARN] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
 	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)
 
 	val := types.ObjectValueMust(attributeTypes, attrs)
