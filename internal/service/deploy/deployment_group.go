@@ -872,10 +872,10 @@ func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguratio
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
-		names := flex.ExpandStringSet(config["alarms"].(*schema.Set))
-		alarms := make([]types.Alarm, 0, len(names))
+		n := flex.ExpandStringSet(config["alarms"].(*schema.Set))
+		alarms := make([]types.Alarm, 0, len(n))
 
-		for _, name := range names {
+		for _, name := range n {
 			alarm := types.Alarm{
 				Name: name,
 			}
@@ -1181,13 +1181,13 @@ func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]in
 	// only create configurations that are enabled or temporarily disabled (retaining alarms)
 	// otherwise empty configurations will be created
 	if config != nil && (config.Enabled || len(config.Alarms) > 0) {
-		names := make([]*string, 0, len(config.Alarms))
+		n := make([]*string, 0, len(config.Alarms))
 		for _, alarm := range config.Alarms {
-			names = append(names, alarm.Name)
+			n = append(n, alarm.Name)
 		}
 
 		item := make(map[string]interface{})
-		item["alarms"] = flex.FlattenStringSet(names)
+		item["alarms"] = flex.FlattenStringSet(n)
 		item[names.AttrEnabled] = config.Enabled
 		item["ignore_poll_alarm_failure"] = config.IgnorePollAlarmFailure
 
