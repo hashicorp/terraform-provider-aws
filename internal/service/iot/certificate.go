@@ -31,7 +31,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,7 +160,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	certificateDescription := output.CertificateDescription
 	d.Set("active", aws.StringValue(certificateDescription.Status) == iot.CertificateStatusActive)
-	d.Set("arn", certificateDescription.CertificateArn)
+	d.Set(names.AttrARN, certificateDescription.CertificateArn)
 	d.Set("ca_certificate_id", certificateDescription.CaCertificateId)
 	d.Set("certificate_pem", certificateDescription.CertificatePem)
 

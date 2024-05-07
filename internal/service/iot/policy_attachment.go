@@ -29,7 +29,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +47,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	policyName := d.Get("policy").(string)
+	policyName := d.Get(names.AttrPolicy).(string)
 	target := d.Get("target").(string)
 	id := policyAttachmentCreateResourceID(policyName, target)
 	input := &iot.AttachPolicyInput{
