@@ -64,7 +64,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	td, err := getPackageData(sd, importalias)
+	td, err := getPackageData(sd)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,18 +105,18 @@ func getServiceData(service string) (data.ServiceRecord, error) {
 }
 
 // getPackageData parses AWS SDK V1 package data, collecting inputs for the patch template
-func getPackageData(sd data.ServiceRecord, importAlias string) (TemplateData, error) {
+func getPackageData(sd data.ServiceRecord) (TemplateData, error) {
 	goV1Package := sd.GoV1Package()
 	providerPackage := sd.ProviderPackage()
 	td := TemplateData{
 		GoV1Package:        goV1Package,
 		GoV1ClientTypeName: sd.GoV1ClientTypeName(),
 		GoV2Package:        sd.GoV2Package(),
-		ImportAlias:        importAlias,
+		ImportAlias:        importalias,
 		ProviderPackage:    providerPackage,
 	}
 
-	if importAlias == "" {
+	if importalias == "" {
 		td.ImportAlias = td.GoV2Package
 	}
 
