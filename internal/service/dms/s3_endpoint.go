@@ -75,7 +75,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -88,7 +88,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -340,7 +340,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CertificateArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -421,10 +421,10 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("engine_display_name", endpoint.EngineDisplayName)
 	d.Set("external_id", endpoint.ExternalId)
 	// d.Set("external_table_definition", endpoint.ExternalTableDefinition) // set from s3 settings
-	d.Set("kms_key_arn", endpoint.KmsKeyId)
+	d.Set(names.AttrKMSKeyARN, endpoint.KmsKeyId)
 	// d.Set("service_access_role_arn", endpoint.ServiceAccessRoleArn) // set from s3 settings
 	d.Set("ssl_mode", endpoint.SslMode)
-	d.Set("status", endpoint.Status)
+	d.Set(names.AttrStatus, endpoint.Status)
 
 	setDetachTargetOnLobLookupFailureParquet(d, aws.StringValue(endpoint.ExtraConnectionAttributes))
 
@@ -487,7 +487,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &dms.ModifyEndpointInput{
 			EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
 		}

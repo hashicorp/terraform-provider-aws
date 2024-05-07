@@ -32,7 +32,7 @@ func TestAccDMSEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_id", resourceName, "endpoint_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_type", resourceName, "endpoint_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_name", resourceName, "engine_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_name", resourceName, "server_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ssl_mode", resourceName, "ssl_mode"),
 				),
