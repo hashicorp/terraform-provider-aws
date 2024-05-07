@@ -163,7 +163,6 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 	var v connect.DescribeHoursOfOperationOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrTags
 
 	resourceName := "aws_connect_hours_of_operation.test"
 

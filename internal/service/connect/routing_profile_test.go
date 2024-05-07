@@ -342,7 +342,6 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrTags
 
 	resourceName := "aws_connect_routing_profile.test"
 

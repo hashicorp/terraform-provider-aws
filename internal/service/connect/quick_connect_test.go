@@ -105,7 +105,6 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 	var v connect.DescribeQuickConnectOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrTags
 	phone_number := "+12345678912"
 
 	resourceName := "aws_connect_quick_connect.test"

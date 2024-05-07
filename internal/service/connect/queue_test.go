@@ -449,7 +449,6 @@ func testAccQueue_updateTags(t *testing.T) {
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrTags
 
 	resourceName := "aws_connect_queue.test"
 
