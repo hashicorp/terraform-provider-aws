@@ -21,6 +21,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_detective_member")
@@ -74,7 +75,7 @@ func ResourceMember() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +160,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("email_address", member.EmailAddress)
 	d.Set("graph_arn", member.GraphArn)
 	d.Set("invited_time", aws.TimeValue(member.InvitedTime).Format(time.RFC3339))
-	d.Set("status", member.Status)
+	d.Set(names.AttrStatus, member.Status)
 	d.Set("updated_time", aws.TimeValue(member.UpdatedTime).Format(time.RFC3339))
 	d.Set("volume_usage_in_bytes", member.VolumeUsageInBytes)
 
