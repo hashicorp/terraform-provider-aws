@@ -72,7 +72,7 @@ func resourceFunction() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func resourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -150,7 +150,7 @@ func resourceFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						// EFS access point arn
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -212,7 +212,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -401,7 +401,7 @@ func resourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -421,12 +421,12 @@ func resourceFunction() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -470,7 +470,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	packageType := awstypes.PackageType(d.Get("package_type").(string))
 	input := &lambda.CreateFunctionInput{
 		Code:         &awstypes.FunctionCode{},
-		Description:  aws.String(d.Get("description").(string)),
+		Description:  aws.String(d.Get(names.AttrDescription).(string)),
 		FunctionName: aws.String(functionName),
 		MemorySize:   aws.Int32(int32(d.Get("memory_size").(int))),
 		PackageType:  packageType,
@@ -552,7 +552,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.LoggingConfig = expandLoggingConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KMSKeyArn = aws.String(v.(string))
 	}
 
@@ -575,7 +575,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.VpcConfig = &awstypes.VpcConfig{
 			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
 			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-			SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+			SubnetIds:               flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 		}
 	}
 
@@ -644,7 +644,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	function := output.Configuration
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
-	d.Set("arn", functionARN)
+	d.Set(names.AttrARN, functionARN)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
@@ -656,7 +656,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("dead_letter_config", []interface{}{})
 	}
-	d.Set("description", function.Description)
+	d.Set(names.AttrDescription, function.Description)
 	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
@@ -674,7 +674,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("image_uri", output.Code.ImageUri)
 	}
 	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
-	d.Set("kms_key_arn", function.KMSKeyArn)
+	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
@@ -719,7 +719,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if hasQualifier {
 		d.Set("qualified_arn", functionARN)
 		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
-		d.Set("version", function.Version)
+		d.Set(names.AttrVersion, function.Version)
 	} else {
 		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
 
@@ -730,7 +730,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		qualifiedARN := aws.ToString(latest.FunctionArn)
 		d.Set("qualified_arn", qualifiedARN)
 		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
-		d.Set("version", latest.Version)
+		d.Set(names.AttrVersion, latest.Version)
 
 		setTagsOut(ctx, output.Tags)
 	}
@@ -813,11 +813,11 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChanges("environment", "kms_key_arn") {
+		if d.HasChanges("environment", names.AttrKMSKeyARN) {
 			input.Environment = &awstypes.Environment{
 				Variables: map[string]string{},
 			}
@@ -859,8 +859,8 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("kms_key_arn") {
-			input.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
+		if d.HasChange(names.AttrKMSKeyARN) {
+			input.KMSKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 
 		if d.HasChange("layers") {
@@ -905,7 +905,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.VpcConfig = &awstypes.VpcConfig{
 					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
 					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-					SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+					SubnetIds:               flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 				}
 			} else {
 				input.VpcConfig = &awstypes.VpcConfig{
@@ -1273,7 +1273,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 	publish := d.Get("publish").(bool)
 	publishChanged := d.HasChange("publish")
 	if publish && (configChanged || codeChanged || publishChanged) {
-		d.SetNewComputed("version")
+		d.SetNewComputed(names.AttrVersion)
 		d.SetNewComputed("qualified_arn")
 		d.SetNewComputed("qualified_invoke_arn")
 	}
@@ -1291,7 +1291,7 @@ func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 }
 
 func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
-	return d.HasChange("description") ||
+	return d.HasChange(names.AttrDescription) ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
 		d.HasChange("image_config") ||
@@ -1299,7 +1299,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("memory_size") ||
 		d.HasChange("role") ||
 		d.HasChange("timeout") ||
-		d.HasChange("kms_key_arn") ||
+		d.HasChange(names.AttrKMSKeyARN) ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("snap_start") ||
@@ -1387,7 +1387,7 @@ func flattenFileSystemConfigs(apiObjects []awstypes.FileSystemConfig) []interfac
 
 	for _, apiObject := range apiObjects {
 		tfMap := make(map[string]interface{})
-		tfMap["arn"] = aws.ToString(apiObject.Arn)
+		tfMap[names.AttrARN] = aws.ToString(apiObject.Arn)
 		tfMap["local_mount_path"] = aws.ToString(apiObject.LocalMountPath)
 
 		tfList = append(tfList, tfMap)
@@ -1402,7 +1402,7 @@ func expandFileSystemConfigs(tfList []interface{}) []awstypes.FileSystemConfig {
 	for _, tfMapRaw := range tfList {
 		tfMap := tfMapRaw.(map[string]interface{})
 		apiObjects = append(apiObjects, awstypes.FileSystemConfig{
-			Arn:            aws.String(tfMap["arn"].(string)),
+			Arn:            aws.String(tfMap[names.AttrARN].(string)),
 			LocalMountPath: aws.String(tfMap["local_mount_path"].(string)),
 		})
 	}
