@@ -47,7 +47,7 @@ func TestAccIVSChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "playback_url"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexache.MustCompile(`channel/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`channel/.+`)),
 				),
 			},
 			{
@@ -147,8 +147,8 @@ func TestAccIVSChannel_update(t *testing.T) {
 					testAccCheckChannelNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "authorized", authorized),
 					resource.TestCheckResourceAttr(resourceName, "latency_mode", latencyMode),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", channelType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, channelType),
 				),
 			},
 		},
@@ -204,7 +204,7 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 				Config: testAccChannelConfig_recordingConfiguration(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "recording_configuration_arn", recordingConfigurationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "recording_configuration_arn", recordingConfigurationResourceName, names.AttrID),
 				),
 			},
 			{

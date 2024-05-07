@@ -32,7 +32,7 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
 					resource.TestCheckResourceAttrSet(resourceName, "csr"),
 					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
@@ -58,7 +58,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_key"),
@@ -86,7 +86,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
 					resource.TestCheckNoResourceAttr(resourceName, "private_key"),

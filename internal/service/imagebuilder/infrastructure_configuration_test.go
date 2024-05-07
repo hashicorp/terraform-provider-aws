@@ -36,16 +36,16 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_updated", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
@@ -101,7 +101,7 @@ func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccImageBuilderInfrastructureConfiguration_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -167,7 +167,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceProfileName(t *testi
 				Config: testAccInfrastructureConfigurationConfig_instanceProfileName1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, names.AttrName),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceProfileName(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName2, names.AttrName),
 				),
 			},
 		},
@@ -287,7 +287,7 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName, names.AttrBucket),
 				),
 			},
 			{
@@ -302,7 +302,7 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName2, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName2, names.AttrBucket),
 				),
 			},
 		},
@@ -403,7 +403,7 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName, names.AttrID),
 				),
 			},
 			{
@@ -417,7 +417,7 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, names.AttrID),
 				),
 			},
 		},
@@ -441,7 +441,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_snsTopicARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -454,7 +454,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName2, names.AttrARN),
 				),
 			},
 		},
@@ -478,7 +478,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_subnetID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -491,7 +491,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName2, names.AttrID),
 				),
 			},
 		},
