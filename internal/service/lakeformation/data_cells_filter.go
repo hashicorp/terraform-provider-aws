@@ -60,7 +60,7 @@ func (r *resourceDataCellsFilter) Metadata(_ context.Context, _ resource.Metadat
 func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"table_data": schema.ListNestedBlock{
@@ -85,7 +85,7 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -153,7 +153,7 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 			}),
 		},

@@ -69,7 +69,7 @@ func ResourceResourceLFTags() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -89,13 +89,13 @@ func ResourceResourceLFTags() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -130,7 +130,7 @@ func ResourceResourceLFTags() *schema.Resource {
 							ForceNew: true,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 							ForceNew: true,
@@ -202,7 +202,7 @@ func ResourceResourceLFTags() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -463,8 +463,8 @@ func lfTagsHash(v interface{}) int {
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(m["key"].(string))
-	buf.WriteString(m["value"].(string))
+	buf.WriteString(m[names.AttrKey].(string))
+	buf.WriteString(m[names.AttrValue].(string))
 	buf.WriteString(m["catalog_id"].(string))
 
 	return create.StringHashcode(buf.String())
@@ -481,11 +481,11 @@ func expandLFTagPair(tfMap map[string]interface{}) awstypes.LFTagPair {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.TagValues = []string{v}
 	}
 
@@ -530,11 +530,11 @@ func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]interface{} {
 	}
 
 	if v := apiObject.TagKey; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagValues; len(v) > 0 {
-		tfMap["value"] = apiObject.TagValues[0]
+		tfMap[names.AttrValue] = apiObject.TagValues[0]
 	}
 
 	return tfMap
