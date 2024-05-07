@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffis "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFISExperimentTemplate_basic(t *testing.T) {
@@ -37,8 +38,8 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "An experiment template for testing"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
@@ -111,8 +112,8 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "An experiment template for testing"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
@@ -140,7 +141,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_basic(rName, "Artic Lake", "test-action-2", "Lane 8", "aws:ec2:stop-instances", "Instances", "to-stop-1", "aws:ec2:instance", "ALL", "env2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "Artic Lake"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Artic Lake"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.name", "test-action-2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.description", "Lane 8"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:ec2:stop-instances"),
@@ -181,8 +182,8 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_actionParameter(rName, "Send Spot Instance Interruptions", "Send-Spot-Instance-Interruptions", "Send Spot Instance Interruptions", "aws:ec2:send-spot-instance-interruptions", "SpotInstances", "send-spot-instance-interruptions-target", "durationBeforeInterruption", "PT2M", "aws:ec2:spot-instance", "PERCENT(25)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "Send Spot Instance Interruptions"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Send Spot Instance Interruptions"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
@@ -231,8 +232,8 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_eks(rName, "kubernetes custom resource creation", "k8s-pod-delete", "k8s pod delete", "aws:eks:inject-kubernetes-custom-resource", "Cluster", "kubernetes-custom-resource-creation-target", "kubernetesApiVersion", "litmuschaos.io/v1alpha1", "kubernetesKind", "ChaosEngine", "kubernetesNamespace", "observability", "kubernetesSpec", "{\"engineState\":\"active\",\"appinfo\":{\"appns\":\"observability\",\"applabel\":\"app=nginx\",\"appkind\":\"deployment\"},\"chaosServiceAccount\":\"pod-delete-sa\",\"experiments\":[{\"name\":\"pod-delete\",\"spec\":{\"components\":{\"env\":[{\"name\":\"TOTAL_CHAOS_DURATION\",\"value\":\"60\"},{\"name\":\"CHAOS_INTERVAL\",\"value\":\"60\"},{\"name\":\"PODS_AFFECTED_PERC\",\"value\":\"30\"}]},\"probe\":[]}}],\"annotationCheck\":\"false\"}", "maxDuration", "PT2M", "aws:eks:cluster", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "kubernetes custom resource creation"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_fis", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "kubernetes custom resource creation"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
@@ -259,7 +260,7 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:eks:cluster"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_eks_cluster.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_eks_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 				),
@@ -287,8 +288,8 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_ebsVolume(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", "duration", "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "EBS Volume Pause I/O Experiment"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_fis", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
@@ -307,7 +308,7 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:ec2:ebs-volume"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_ebs_volume.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_ebs_volume.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 				),
@@ -335,8 +336,8 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", "duration", "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "EBS Volume Pause I/O Experiment"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_fis", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_fis", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
 					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
