@@ -52,7 +52,7 @@ func (d *foundationModelsDataSource) Schema(ctx context.Context, request datasou
 			"by_provider": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9-]{1,63}$`), ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9- ]{1,63}$`), ""),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),

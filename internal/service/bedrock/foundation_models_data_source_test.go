@@ -93,6 +93,27 @@ func TestAccBedrockFoundationModelsDataSource_byOutputModality(t *testing.T) {
 	})
 }
 
+func TestAccBedrockFoundationModelsDataSource_byProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_bedrock_foundation_models.test"
+	provider := "Mistral AI"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFoundationModelsDataSourceConfig_byProvider(provider),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
+				),
+			},
+		},
+	})
+}
+
 func testAccFoundationModelsDataSourceConfig_basic() string {
 	return `
 data "aws_bedrock_foundation_models" "test" {}
@@ -121,4 +142,12 @@ data "aws_bedrock_foundation_models" "test" {
   by_output_modality = %[1]q
 }
 `, outputModality)
+}
+
+func testAccFoundationModelsDataSourceConfig_byProvider(provider string) string {
+	return fmt.Sprintf(`
+data "aws_bedrock_foundation_models" "test" {
+  by_provider = %[1]q
+}
+`, provider)
 }
