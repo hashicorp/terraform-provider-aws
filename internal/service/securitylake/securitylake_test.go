@@ -7,9 +7,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -94,7 +94,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("getting current identity: %s", err)
 	}
 
-	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
+	if aws.ToString(organization.MasterAccountId) == aws.ToString(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
 	}
 
