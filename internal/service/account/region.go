@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_account_region", name="Region")
@@ -42,7 +43,7 @@ func resourceRegion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -87,7 +88,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		timeout = d.Timeout(schema.TimeoutUpdate)
 	}
 
-	if v := d.Get("enabled").(bool); v {
+	if v := d.Get(names.AttrEnabled).(bool); v {
 		input := &account.EnableRegionInput{
 			RegionName: aws.String(region),
 		}
@@ -154,7 +155,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("account_id", accountID)
-	d.Set("enabled", output.RegionOptStatus == types.RegionOptStatusEnabled || output.RegionOptStatus == types.RegionOptStatusEnabledByDefault)
+	d.Set(names.AttrEnabled, output.RegionOptStatus == types.RegionOptStatusEnabled || output.RegionOptStatus == types.RegionOptStatusEnabledByDefault)
 	d.Set("opt_status", string(output.RegionOptStatus))
 	d.Set("region_name", output.RegionName)
 
