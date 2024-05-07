@@ -23,13 +23,13 @@ func ResourceResourceGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceResourceGroupDelete,
 
 		Schema: map[string]*schema.Schema{
-			"tags": {
+			names.AttrTags: {
 				ForceNew: true,
 				Required: true,
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +42,7 @@ func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	req := &inspector.CreateResourceGroupInput{
-		ResourceGroupTags: expandResourceGroupTags(d.Get("tags").(map[string]interface{})),
+		ResourceGroupTags: expandResourceGroupTags(d.Get(names.AttrTags).(map[string]interface{})),
 	}
 	log.Printf("[DEBUG] Creating Inspector Classic Resource Group: %#v", req)
 	resp, err := conn.CreateResourceGroupWithContext(ctx, req)
@@ -84,10 +84,10 @@ func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	resourceGroup := resp.ResourceGroups[0]
-	d.Set("arn", resourceGroup.Arn)
+	d.Set(names.AttrARN, resourceGroup.Arn)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", flattenResourceGroupTags(resourceGroup.Tags)); err != nil {
+	if err := d.Set(names.AttrTags, flattenResourceGroupTags(resourceGroup.Tags)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
