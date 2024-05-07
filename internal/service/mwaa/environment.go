@@ -64,7 +64,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,7 +128,7 @@ func ResourceEnvironment() *schema.Resource {
 								},
 							},
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -192,7 +192,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -209,7 +209,7 @@ func ResourceEnvironment() *schema.Resource {
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -260,7 +260,7 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -314,7 +314,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &mwaa.CreateEnvironmentInput{
 		DagS3Path:            aws.String(d.Get("dag_s3_path").(string)),
 		ExecutionRoleArn:     aws.String(d.Get("execution_role_arn").(string)),
@@ -435,7 +435,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("airflow_configuration_options", environment.AirflowConfigurationOptions)
 	d.Set("airflow_version", environment.AirflowVersion)
-	d.Set("arn", environment.Arn)
+	d.Set(names.AttrARN, environment.Arn)
 	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
 	d.Set("database_vpc_endpoint_service", environment.DatabaseVpcEndpointService)
@@ -451,7 +451,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
-	d.Set("name", environment.Name)
+	d.Set(names.AttrName, environment.Name)
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
@@ -464,7 +464,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("startup_script_s3_object_version", environment.StartupScriptS3ObjectVersion)
 	d.Set("startup_script_s3_path", environment.StartupScriptS3Path)
-	d.Set("status", environment.Status)
+	d.Set(names.AttrStatus, environment.Status)
 	d.Set("webserver_access_mode", environment.WebserverAccessMode)
 	d.Set("webserver_url", environment.WebserverUrl)
 	d.Set("webserver_vpc_endpoint_service", environment.WebserverVpcEndpointService)
@@ -480,9 +480,9 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &mwaa.UpdateEnvironmentInput{
-			Name: aws.String(d.Get("name").(string)),
+			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if d.HasChange("airflow_configuration_options") {
@@ -616,7 +616,7 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -775,7 +775,7 @@ func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *awstypes.Modu
 	input := &awstypes.ModuleLoggingConfigurationInput{}
 	m := l[0].(map[string]interface{})
 
-	input.Enabled = aws.Bool(m["enabled"].(bool))
+	input.Enabled = aws.Bool(m[names.AttrEnabled].(bool))
 	input.LogLevel = awstypes.LoggingLevel(m["log_level"].(string))
 
 	return input
@@ -786,7 +786,7 @@ func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.Netw
 
 	return &awstypes.NetworkConfiguration{
 		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 	}
 }
 
@@ -814,7 +814,7 @@ func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 	}
 
 	if lastUpdate.Status != "" {
-		m["status"] = lastUpdate.Status
+		m[names.AttrStatus] = lastUpdate.Status
 	}
 
 	return []interface{}{m}
@@ -875,7 +875,7 @@ func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *awstypes.Modu
 
 	m := map[string]interface{}{
 		"cloud_watch_log_group_arn": aws.ToString(moduleLoggingConfiguration.CloudWatchLogGroupArn),
-		"enabled":                   aws.ToBool(moduleLoggingConfiguration.Enabled),
+		names.AttrEnabled:           aws.ToBool(moduleLoggingConfiguration.Enabled),
 		"log_level":                 string(moduleLoggingConfiguration.LogLevel),
 	}
 
@@ -889,7 +889,7 @@ func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfigura
 
 	m := map[string]interface{}{
 		"security_group_ids": flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
-		"subnet_ids":         flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
+		names.AttrSubnetIDs:  flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
 	}
 
 	return []interface{}{m}

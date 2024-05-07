@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_server_certificate", name="Server Certificate")
@@ -27,7 +28,7 @@ func dataSourceServerCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServerCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -38,7 +39,7 @@ func dataSourceServerCertificate() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
 
@@ -53,7 +54,7 @@ func dataSourceServerCertificate() *schema.Resource {
 				Default:  false,
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +108,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	var matcher = func(cert awstypes.ServerCertificateMetadata) bool {
 		return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), d.Get("name_prefix").(string))
 	}
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		matcher = func(cert awstypes.ServerCertificateMetadata) bool {
 			return aws.ToString(cert.ServerCertificateName) == v.(string)
 		}
@@ -145,9 +146,9 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 
 	metadata := metadatas[0]
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
-	d.Set("arn", metadata.Arn)
+	d.Set(names.AttrARN, metadata.Arn)
 	d.Set("path", metadata.Path)
-	d.Set("name", metadata.ServerCertificateName)
+	d.Set(names.AttrName, metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format(time.RFC3339))
 	}

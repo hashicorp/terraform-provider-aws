@@ -41,7 +41,7 @@ func ResourceVocabularyFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -148,7 +148,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 		Resource:  fmt.Sprintf("vocabulary-filter/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("vocabulary_filter_name", out.VocabularyFilterName)
 	d.Set("language_code", out.LanguageCode)
 
@@ -165,7 +165,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateVocabularyFilterInput{
 			VocabularyFilterName: aws.String(d.Id()),
 		}

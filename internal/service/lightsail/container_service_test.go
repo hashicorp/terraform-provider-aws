@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailContainerService_basic(t *testing.T) {
@@ -41,17 +42,17 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "power_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", "ContainerService"),
-					resource.TestCheckResourceAttr(resourceName, "state", "READY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "READY"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
 			},
@@ -118,14 +119,14 @@ func TestAccLightsailContainerService_name(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

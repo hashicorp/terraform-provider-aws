@@ -58,7 +58,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,7 +101,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -233,7 +233,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -273,7 +273,7 @@ func resourceCluster() *schema.Resource {
 					"notification_topic_arn",
 					"num_cache_nodes",
 					"parameter_group_name",
-					"port",
+					names.AttrPort,
 					"security_group_ids",
 					"snapshot_arns",
 					"snapshot_name",
@@ -392,7 +392,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Port = aws.Int64(int64(v.(int)))
 	}
 
@@ -525,11 +525,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("num_cache_nodes", c.NumCacheNodes)
 
 	if c.ConfigurationEndpoint != nil {
-		d.Set("port", c.ConfigurationEndpoint.Port)
+		d.Set(names.AttrPort, c.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", aws.StringValue(c.ConfigurationEndpoint.Address), aws.Int64Value(c.ConfigurationEndpoint.Port))))
 		d.Set("cluster_address", c.ConfigurationEndpoint.Address)
 	} else if len(c.CacheNodes) > 0 {
-		d.Set("port", c.CacheNodes[0].Endpoint.Port)
+		d.Set(names.AttrPort, c.CacheNodes[0].Endpoint.Port)
 	}
 
 	d.Set("replication_group_id", c.ReplicationGroupId)
@@ -550,7 +550,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", c.ARN)
+	d.Set(names.AttrARN, c.ARN)
 
 	d.Set("ip_discovery", c.IpDiscovery)
 	d.Set("network_type", c.NetworkType)
@@ -564,7 +564,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyCacheClusterInput{
 			CacheClusterId:   aws.String(d.Id()),
 			ApplyImmediately: aws.Bool(d.Get("apply_immediately").(bool)),
@@ -948,9 +948,9 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			"id":                aws.StringValue(node.CacheNodeId),
+			names.AttrID:        aws.StringValue(node.CacheNodeId),
 			"address":           aws.StringValue(node.Endpoint.Address),
-			"port":              aws.Int64Value(node.Endpoint.Port),
+			names.AttrPort:      aws.Int64Value(node.Endpoint.Port),
 			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
 			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
 		})

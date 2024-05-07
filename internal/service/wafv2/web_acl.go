@@ -51,7 +51,7 @@ func ResourceWebACL() *schema.Resource {
 				name := idParts[1]
 				scope := idParts[2]
 				d.SetId(id)
-				d.Set("name", name)
+				d.Set(names.AttrName, name)
 				d.Set("scope", scope)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -59,7 +59,7 @@ func ResourceWebACL() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -86,7 +86,7 @@ func ResourceWebACL() *schema.Resource {
 						},
 					},
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -95,7 +95,7 @@ func ResourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -124,7 +124,7 @@ func ResourceWebACL() *schema.Resource {
 								},
 							},
 							"captcha_config": outerCaptchaConfigSchema(),
-							"name": {
+							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 128),
@@ -180,7 +180,7 @@ func ResourceWebACL() *schema.Resource {
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &wafv2.CreateWebACLInput{
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
@@ -197,7 +197,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -223,7 +223,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
@@ -237,7 +237,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	webACL := output.WebACL
 	d.Set("application_integration_url", output.ApplicationIntegrationURL)
-	d.Set("arn", webACL.ARN)
+	d.Set(names.AttrARN, webACL.ARN)
 	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
 		return diag.Errorf("setting association_config: %s", err)
@@ -254,9 +254,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("default_action", flattenDefaultAction(webACL.DefaultAction)); err != nil {
 		return diag.Errorf("setting default_action: %s", err)
 	}
-	d.Set("description", webACL.Description)
+	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
-	d.Set("name", webACL.Name)
+	d.Set(names.AttrName, webACL.Name)
 	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get("rule").(*schema.Set).List()))
 	if err := d.Set("rule", flattenWebACLRules(rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
@@ -272,9 +272,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		aclID := d.Id()
-		aclName := d.Get("name").(string)
+		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get("scope").(string)
 		aclLockToken := d.Get("lock_token").(string)
 		// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
@@ -305,7 +305,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -352,7 +352,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	aclId := d.Id()
-	aclName := d.Get("name").(string)
+	aclName := d.Get(names.AttrName).(string)
 	aclScope := d.Get("scope").(string)
 	aclLockToken := d.Get("lock_token").(string)
 

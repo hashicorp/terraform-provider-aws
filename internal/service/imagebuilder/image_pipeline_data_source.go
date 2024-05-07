@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_image_pipeline")
@@ -22,7 +23,7 @@ func DataSourceImagePipeline() *schema.Resource {
 		ReadWithoutTimeout: dataSourceImagePipelineRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -47,7 +48,7 @@ func DataSourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,7 +115,7 @@ func DataSourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,11 +139,11 @@ func DataSourceImagePipeline() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -153,7 +154,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 
 	input := &imagebuilder.GetImagePipelineInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.ImagePipelineArn = aws.String(v.(string))
 	}
 
@@ -170,13 +171,13 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	imagePipeline := output.ImagePipeline
 
 	d.SetId(aws.StringValue(imagePipeline.Arn))
-	d.Set("arn", imagePipeline.Arn)
+	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
 	d.Set("date_updated", imagePipeline.DateUpdated)
-	d.Set("description", imagePipeline.Description)
+	d.Set(names.AttrDescription, imagePipeline.Description)
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
@@ -191,7 +192,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("image_tests_configuration", nil)
 	}
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
-	d.Set("name", imagePipeline.Name)
+	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
 		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
@@ -199,8 +200,8 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("schedule", nil)
 	}
 
-	d.Set("status", imagePipeline.Status)
-	d.Set("tags", KeyValueTags(ctx, imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set(names.AttrStatus, imagePipeline.Status)
+	d.Set(names.AttrTags, KeyValueTags(ctx, imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return diags
 }

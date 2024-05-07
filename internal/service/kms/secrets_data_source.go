@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kms_secrets", name="Secrets)
@@ -48,7 +49,7 @@ func dataSourceSecrets() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -78,7 +79,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	for _, tfMapRaw := range tfList {
 		tfMap := tfMapRaw.(map[string]interface{})
-		name := tfMap["name"].(string)
+		name := tfMap[names.AttrName].(string)
 
 		// base64 decode the payload
 		payload, err := itypes.Base64Decode(tfMap["payload"].(string))

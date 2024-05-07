@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_traffic_policy_document")
@@ -25,11 +26,11 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(TrafficPolicyDocEndpointType_values(), false),
@@ -38,7 +39,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -58,11 +59,11 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -251,7 +252,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2015-10-01",
@@ -281,7 +282,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("start_rule"); ok {
 		trafficDoc.StartRule = v.(string)
 	}
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		trafficDoc.AWSPolicyFormatVersion = v.(string)
 	}
 
@@ -305,13 +306,13 @@ func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *TrafficPo
 
 	apiObject := &TrafficPolicyEndpoint{}
 
-	if v, ok := tfMap["type"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
 		apiObject.Type = v.(string)
 	}
 	if v, ok := tfMap["region"]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
-	if v, ok := tfMap["value"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrValue]; ok && v.(string) != "" {
 		apiObject.Value = v.(string)
 	}
 
@@ -332,7 +333,7 @@ func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*Traff
 			continue
 		}
 
-		id := tfMap["id"].(string)
+		id := tfMap[names.AttrID].(string)
 
 		apiObject := expandDataTrafficPolicyEndpointDoc(tfMap)
 
@@ -349,7 +350,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 
 	apiObject := &TrafficPolicyRule{}
 
-	if v, ok := tfMap["type"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
 		apiObject.RuleType = v.(string)
 	}
 	if v, ok := tfMap["primary"]; ok && len(v.([]interface{})) > 0 {
@@ -388,7 +389,7 @@ func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*TrafficPo
 			continue
 		}
 
-		id := tfMap["id"].(string)
+		id := tfMap[names.AttrID].(string)
 
 		apiObject := expandDataTrafficPolicyRuleDoc(tfMap)
 

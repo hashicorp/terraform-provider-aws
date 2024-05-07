@@ -65,7 +65,7 @@ func ResourceImageBuilder() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func ResourceImageBuilder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -139,12 +139,12 @@ func ResourceImageBuilder() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,7 +164,7 @@ func ResourceImageBuilder() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -184,7 +184,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appstream.CreateImageBuilderInput{
 		InstanceType: aws.String(d.Get("instance_type").(string)),
 		Name:         aws.String(name),
@@ -199,7 +199,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.AppstreamAgentVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -270,9 +270,9 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("appstream_agent_version", imageBuilder.AppstreamAgentVersion)
 	arn := aws.StringValue(imageBuilder.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_time", aws.TimeValue(imageBuilder.CreatedTime).Format(time.RFC3339))
-	d.Set("description", imageBuilder.Description)
+	d.Set(names.AttrDescription, imageBuilder.Description)
 	d.Set("display_name", imageBuilder.DisplayName)
 	if imageBuilder.DomainJoinInfo != nil {
 		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
@@ -285,8 +285,8 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("iam_role_arn", imageBuilder.IamRoleArn)
 	d.Set("image_arn", imageBuilder.ImageArn)
 	d.Set("instance_type", imageBuilder.InstanceType)
-	d.Set("name", imageBuilder.Name)
-	d.Set("state", imageBuilder.State)
+	d.Set(names.AttrName, imageBuilder.Name)
+	d.Set(names.AttrState, imageBuilder.State)
 	if imageBuilder.VpcConfig != nil {
 		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
@@ -344,7 +344,7 @@ func expandImageBuilderVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 

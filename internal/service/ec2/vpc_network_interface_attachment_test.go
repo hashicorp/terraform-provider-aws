@@ -34,7 +34,7 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
 			},
 			{

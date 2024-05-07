@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -42,7 +43,7 @@ func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 			if aws.ToString(v.GroupName) == "Default" {
 				tflog.Debug(ctx, "Skipping resource", map[string]any{
 					"skip_reason": `Cannot delete "Default"`,
-					"arn":         aws.ToString(v.GroupARN),
+					names.AttrARN: aws.ToString(v.GroupARN),
 				})
 				continue
 			}

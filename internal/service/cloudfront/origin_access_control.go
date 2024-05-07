@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_origin_access_control", name="Origin Access Control")
@@ -34,7 +35,7 @@ func resourceOriginAccessControl() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "Managed by Terraform",
@@ -44,7 +45,7 @@ func resourceOriginAccessControl() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -72,10 +73,10 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudfront.CreateOriginAccessControlInput{
 		OriginAccessControlConfig: &awstypes.OriginAccessControlConfig{
-			Description:                   aws.String(d.Get("description").(string)),
+			Description:                   aws.String(d.Get(names.AttrDescription).(string)),
 			Name:                          aws.String(name),
 			OriginAccessControlOriginType: awstypes.OriginAccessControlOriginTypes(d.Get("origin_access_control_origin_type").(string)),
 			SigningBehavior:               awstypes.OriginAccessControlSigningBehaviors(d.Get("signing_behavior").(string)),
@@ -111,9 +112,9 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	config := output.OriginAccessControl.OriginAccessControlConfig
-	d.Set("description", config.Description)
+	d.Set(names.AttrDescription, config.Description)
 	d.Set("etag", output.ETag)
-	d.Set("name", config.Name)
+	d.Set(names.AttrName, config.Name)
 	d.Set("origin_access_control_origin_type", config.OriginAccessControlOriginType)
 	d.Set("signing_behavior", config.SigningBehavior)
 	d.Set("signing_protocol", config.SigningProtocol)
@@ -129,8 +130,8 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 		OriginAccessControlConfig: &awstypes.OriginAccessControlConfig{
-			Description:                   aws.String(d.Get("description").(string)),
-			Name:                          aws.String(d.Get("name").(string)),
+			Description:                   aws.String(d.Get(names.AttrDescription).(string)),
+			Name:                          aws.String(d.Get(names.AttrName).(string)),
 			OriginAccessControlOriginType: awstypes.OriginAccessControlOriginTypes(d.Get("origin_access_control_origin_type").(string)),
 			SigningBehavior:               awstypes.OriginAccessControlSigningBehaviors(d.Get("signing_behavior").(string)),
 			SigningProtocol:               awstypes.OriginAccessControlSigningProtocols(d.Get("signing_protocol").(string)),

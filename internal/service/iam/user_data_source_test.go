@@ -31,9 +31,9 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "unique_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "permissions_boundary", ""),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},
 		},
@@ -55,7 +55,7 @@ func TestAccIAMUserDataSource_tags(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig_tags(userName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},
 		},

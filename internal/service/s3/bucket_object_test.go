@@ -73,8 +73,8 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, ""),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", fmt.Sprintf("%s/test-key", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", fmt.Sprintf("%s/test-key", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "content"),
@@ -85,8 +85,8 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "key", "test-key"),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "test-key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -517,7 +517,7 @@ func TestAccS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &originalObj),
 					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", accessPointResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
 			},
@@ -1489,7 +1489,7 @@ func testAccCheckBucketObjectDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"])
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1516,8 +1516,8 @@ func testAccCheckBucketObjectExists(ctx context.Context, n string, v *s3.GetObje
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		input := &s3.GetObjectInput{
-			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
+			Bucket:  aws.String(rs.Primary.Attributes[names.AttrBucket]),
+			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey])),
 			IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 		}
 

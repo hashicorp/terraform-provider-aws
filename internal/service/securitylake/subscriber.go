@@ -75,9 +75,9 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"arn":                framework.ARNAttributeComputedOnly(),
+			names.AttrARN:        framework.ARNAttributeComputedOnly(),
 			"resource_share_arn": framework.ARNAttributeComputedOnly(),
-			"role_arn":           framework.ARNAttributeComputedOnly(),
+			names.AttrRoleARN:    framework.ARNAttributeComputedOnly(),
 			"s3_bucket_arn":      framework.ARNAttributeComputedOnly(),
 			"subscriber_description": schema.StringAttribute{
 				Optional: true,
@@ -150,8 +150,8 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 										CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberCustomLogSourceProviderModel](ctx),
 										ElementType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"location": types.StringType,
-												"role_arn": types.StringType,
+												"location":        types.StringType,
+												names.AttrRoleARN: types.StringType,
 											},
 										},
 										PlanModifiers: []planmodifier.List{
@@ -189,7 +189,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -408,7 +408,7 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 }
 
 func (r *subscriberResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, resp)
 }
 
 func (r *subscriberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -687,8 +687,8 @@ func flattenSubscriberCustomLogSourceProviderModel(ctx context.Context, apiObjec
 	}
 
 	obj := map[string]attr.Value{
-		"location": fwflex.StringToFramework(ctx, apiObject.Location),
-		"role_arn": fwflex.StringToFramework(ctx, apiObject.RoleArn),
+		"location":        fwflex.StringToFramework(ctx, apiObject.Location),
+		names.AttrRoleARN: fwflex.StringToFramework(ctx, apiObject.RoleArn),
 	}
 
 	objVal, d := types.ObjectValue(subscriberCustomLogSourceProviderModelAttrTypes, obj)
@@ -708,8 +708,8 @@ var (
 	}
 
 	subscriberCustomLogSourceProviderModelAttrTypes = map[string]attr.Type{
-		"location": types.StringType,
-		"role_arn": types.StringType,
+		"location":        types.StringType,
+		names.AttrRoleARN: types.StringType,
 	}
 
 	subscriberCustomLogSourceResourceModelAttrTypes = map[string]attr.Type{

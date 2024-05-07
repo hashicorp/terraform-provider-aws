@@ -53,7 +53,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -396,7 +396,7 @@ func flattenIde(apiObject *types.Ide) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Runtime; v != nil {
@@ -478,7 +478,7 @@ func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
 func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration {
 	apiObject := types.IdeConfiguration{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {

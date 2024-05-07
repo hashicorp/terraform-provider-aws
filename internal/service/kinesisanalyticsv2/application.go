@@ -414,7 +414,7 @@ func ResourceApplication() *schema.Resource {
 																			Optional: true,
 																		},
 
-																		"name": {
+																		names.AttrName: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
@@ -633,7 +633,7 @@ func ResourceApplication() *schema.Resource {
 													},
 												},
 
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -678,7 +678,7 @@ func ResourceApplication() *schema.Resource {
 																			Optional: true,
 																		},
 
-																		"name": {
+																		names.AttrName: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
@@ -818,7 +818,7 @@ func ResourceApplication() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 
-									"subnet_ids": {
+									names.AttrSubnetIDs: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -831,7 +831,7 @@ func ResourceApplication() *schema.Resource {
 										Computed: true,
 									},
 
-									"vpc_id": {
+									names.AttrVPCID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -843,7 +843,7 @@ func ResourceApplication() *schema.Resource {
 				},
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -873,7 +873,7 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -890,7 +890,7 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -918,7 +918,7 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 			},
 
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -938,10 +938,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
-	applicationName := d.Get("name").(string)
+	applicationName := d.Get(names.AttrName).(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
 		ApplicationConfiguration: expandApplicationConfiguration(d.Get("application_configuration").([]interface{})),
-		ApplicationDescription:   aws.String(d.Get("description").(string)),
+		ApplicationDescription:   aws.String(d.Get(names.AttrDescription).(string)),
 		ApplicationName:          aws.String(applicationName),
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
@@ -976,7 +976,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
-	application, err := FindApplicationDetailByName(ctx, conn, d.Get("name").(string))
+	application, err := FindApplicationDetailByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
@@ -989,14 +989,14 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := aws.StringValue(application.ApplicationARN)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
-	d.Set("description", application.ApplicationDescription)
+	d.Set(names.AttrDescription, application.ApplicationDescription)
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
-	d.Set("name", application.ApplicationName)
+	d.Set(names.AttrName, application.ApplicationName)
 	d.Set("runtime_environment", application.RuntimeEnvironment)
 	d.Set("service_execution_role", application.ServiceExecutionRole)
-	d.Set("status", application.ApplicationStatus)
+	d.Set(names.AttrStatus, application.ApplicationStatus)
 	d.Set("version_id", application.ApplicationVersionId)
 
 	if err := d.Set("application_configuration", flattenApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
@@ -1013,7 +1013,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
-	applicationName := d.Get("name").(string)
+	applicationName := d.Get(names.AttrName).(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
 		currentApplicationVersionId := int64(d.Get("version_id").(int))
@@ -1511,7 +1511,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s): parsing create_timestamp: %s", d.Id(), err)
 	}
 
-	applicationName := d.Get("name").(string)
+	applicationName := d.Get(names.AttrName).(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s)", d.Id())
 	_, err = conn.DeleteApplicationWithContext(ctx, &kinesisanalyticsv2.DeleteApplicationInput{
@@ -1548,7 +1548,7 @@ func resourceApplicationImport(ctx context.Context, d *schema.ResourceData, meta
 		return []*schema.ResourceData{}, fmt.Errorf("unexpected ARN format: %q", d.Id())
 	}
 
-	d.Set("name", parts[1])
+	d.Set(names.AttrName, parts[1])
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -2213,7 +2213,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 		output.LambdaOutput = lambdaOutput
 	}
 
-	if vName, ok := mOutput["name"].(string); ok && vName != "" {
+	if vName, ok := mOutput[names.AttrName].(string); ok && vName != "" {
 		output.Name = aws.String(vName)
 	}
 
@@ -2274,7 +2274,7 @@ func expandRecordColumns(vRecordColumns []interface{}) []*kinesisanalyticsv2.Rec
 		if vMapping, ok := mRecordColumn["mapping"].(string); ok && vMapping != "" {
 			recordColumn.Mapping = aws.String(vMapping)
 		}
-		if vName, ok := mRecordColumn["name"].(string); ok && vName != "" {
+		if vName, ok := mRecordColumn[names.AttrName].(string); ok && vName != "" {
 			recordColumn.Name = aws.String(vName)
 		}
 		if vSqlType, ok := mRecordColumn["sql_type"].(string); ok && vSqlType != "" {
@@ -2449,7 +2449,7 @@ func expandVPCConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2
 		vpcConfiguration.SecurityGroupIds = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
-	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+	if vSubnetIds, ok := mVpcConfiguration[names.AttrSubnetIDs].(*schema.Set); ok && vSubnetIds.Len() > 0 {
 		vpcConfiguration.SubnetIds = flex.ExpandStringSet(vSubnetIds)
 	}
 
@@ -2469,7 +2469,7 @@ func expandVPCConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanaly
 		vpcConfigurationUpdate.SecurityGroupIdUpdates = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
-	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+	if vSubnetIds, ok := mVpcConfiguration[names.AttrSubnetIDs].(*schema.Set); ok && vSubnetIds.Len() > 0 {
 		vpcConfigurationUpdate.SubnetIdUpdates = flex.ExpandStringSet(vSubnetIds)
 	}
 
@@ -2714,8 +2714,8 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			for _, outputDescription := range outputDescriptions {
 				if outputDescription != nil {
 					mOutput := map[string]interface{}{
-						"name":      aws.StringValue(outputDescription.Name),
-						"output_id": aws.StringValue(outputDescription.OutputId),
+						names.AttrName: aws.StringValue(outputDescription.Name),
+						"output_id":    aws.StringValue(outputDescription.OutputId),
 					}
 
 					if destinationSchema := outputDescription.DestinationSchema; destinationSchema != nil {
@@ -2789,9 +2789,9 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 		mVpcConfiguration := map[string]interface{}{
 			"security_group_ids":   flex.FlattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
-			"subnet_ids":           flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
+			names.AttrSubnetIDs:    flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
 			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
-			"vpc_id":               aws.StringValue(vpcConfigurationDescription.VpcId),
+			names.AttrVPCID:        aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
 
 		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
@@ -2830,9 +2830,9 @@ func flattenSourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interf
 		for _, recordColumn := range sourceSchema.RecordColumns {
 			if recordColumn != nil {
 				mRecordColumn := map[string]interface{}{
-					"mapping":  aws.StringValue(recordColumn.Mapping),
-					"name":     aws.StringValue(recordColumn.Name),
-					"sql_type": aws.StringValue(recordColumn.SqlType),
+					"mapping":      aws.StringValue(recordColumn.Mapping),
+					names.AttrName: aws.StringValue(recordColumn.Name),
+					"sql_type":     aws.StringValue(recordColumn.SqlType),
 				}
 
 				vRecordColumns = append(vRecordColumns, mRecordColumn)
@@ -2878,7 +2878,7 @@ func flattenSourceSchema(sourceSchema *kinesisanalyticsv2.SourceSchema) []interf
 
 func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StartApplicationInput {
 	apiObject := &kinesisanalyticsv2.StartApplicationInput{
-		ApplicationName:  aws.String(d.Get("name").(string)),
+		ApplicationName:  aws.String(d.Get(names.AttrName).(string)),
 		RunConfiguration: &kinesisanalyticsv2.RunConfiguration{},
 	}
 
@@ -2939,7 +2939,7 @@ func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Sta
 
 func expandStopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StopApplicationInput {
 	apiObject := &kinesisanalyticsv2.StopApplicationInput{
-		ApplicationName: aws.String(d.Get("name").(string)),
+		ApplicationName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("force_stop"); ok {

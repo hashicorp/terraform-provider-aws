@@ -47,7 +47,7 @@ func ResourceRegexPatternSet() *schema.Resource {
 				name := idParts[1]
 				scope := idParts[2]
 				d.SetId(id)
-				d.Set("name", name)
+				d.Set(names.AttrName, name)
 				d.Set("scope", scope)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -55,11 +55,11 @@ func ResourceRegexPatternSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
@@ -68,7 +68,7 @@ func ResourceRegexPatternSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -109,7 +109,7 @@ func ResourceRegexPatternSet() *schema.Resource {
 func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &wafv2.CreateRegexPatternSetInput{
 		Name:                  aws.String(name),
 		RegularExpressionList: []*wafv2.Regex{},
@@ -117,7 +117,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -139,7 +139,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	output, err := FindRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+	output, err := FindRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
@@ -153,10 +153,10 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 
 	regexPatternSet := output.RegexPatternSet
 	arn := aws.StringValue(regexPatternSet.ARN)
-	d.Set("arn", arn)
-	d.Set("description", regexPatternSet.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, regexPatternSet.Description)
 	d.Set("lock_token", output.LockToken)
-	d.Set("name", regexPatternSet.Name)
+	d.Set(names.AttrName, regexPatternSet.Name)
 	if err := d.Set("regular_expression", flattenRegexPatternSet(regexPatternSet.RegularExpressionList)); err != nil {
 		return diag.Errorf("setting regular_expression: %s", err)
 	}
@@ -167,16 +167,16 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &wafv2.UpdateRegexPatternSetInput{
 			Id:                    aws.String(d.Id()),
 			LockToken:             aws.String(d.Get("lock_token").(string)),
-			Name:                  aws.String(d.Get("name").(string)),
+			Name:                  aws.String(d.Get(names.AttrName).(string)),
 			RegularExpressionList: []*wafv2.Regex{},
 			Scope:                 aws.String(d.Get("scope").(string)),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -201,7 +201,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 	input := &wafv2.DeleteRegexPatternSetInput{
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Scope:     aws.String(d.Get("scope").(string)),
 	}
 

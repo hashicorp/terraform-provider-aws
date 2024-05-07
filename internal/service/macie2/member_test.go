@@ -54,7 +54,7 @@ func testAccMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -161,7 +161,7 @@ func testAccMember_invite(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ func testAccMember_invite(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -216,7 +216,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -230,7 +230,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -271,7 +271,7 @@ func testAccMember_status(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -285,7 +285,7 @@ func testAccMember_status(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusPaused),
 				),
 			},
 			{
@@ -321,9 +321,9 @@ func testAccMember_withTags(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),

@@ -184,7 +184,7 @@ func testAccBusPolicyDocument(ctx context.Context, n string) resource.TestCheckF
 			return err
 		}
 
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(rs.Primary.Attributes["policy"], aws.ToString(policy)); err != nil || !equivalent {
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(rs.Primary.Attributes[names.AttrPolicy], aws.ToString(policy)); err != nil || !equivalent {
 			return errors.New(`EventBridge Event Bus Policies not equivalent`)
 		}
 

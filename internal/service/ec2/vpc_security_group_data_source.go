@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_security_group")
@@ -29,27 +30,27 @@ func DataSourceSecurityGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -67,18 +68,18 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": d.Get("name").(string),
-				"vpc-id":     d.Get("vpc_id").(string),
+				"group-name": d.Get(names.AttrName).(string),
+				"vpc-id":     d.Get(names.AttrVPCID).(string),
 			},
 		),
 	}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.GroupIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -105,12 +106,12 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: *sg.OwnerId,
 		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", sg.Description)
-	d.Set("name", sg.GroupName)
-	d.Set("vpc_id", sg.VpcId)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, sg.Description)
+	d.Set(names.AttrName, sg.GroupName)
+	d.Set(names.AttrVPCID, sg.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

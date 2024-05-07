@@ -46,8 +46,8 @@ func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -114,14 +114,14 @@ func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccKxEnvironmentConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -151,14 +151,14 @@ func TestAccFinSpaceKxEnvironment_description(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 				),
 			},
 			{
 				Config: testAccKxEnvironmentConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 				),
 			},
 		},

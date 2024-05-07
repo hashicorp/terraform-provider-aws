@@ -41,7 +41,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -97,7 +97,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -124,7 +124,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1400),
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -147,14 +147,14 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -210,7 +210,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:      ec2.TransportProtocolUdp,
 				ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -258,7 +258,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -278,7 +278,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.SessionTimeoutHours = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.VpcId = aws.String(v.(string))
 	}
 
@@ -316,7 +316,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
@@ -342,7 +342,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("connection_log_options", nil)
 	}
-	d.Set("description", ep.Description)
+	d.Set(names.AttrDescription, ep.Description)
 	d.Set("dns_name", ep.DnsName)
 	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
@@ -356,7 +356,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("transport_protocol", ep.TransportProtocol)
-	d.Set("vpc_id", ep.VpcId)
+	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
 	setTagsOut(ctx, ep.Tags)
@@ -368,7 +368,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var waitForClientConnectResponseOptionsUpdate bool
 		input := &ec2.ModifyClientVpnEndpointInput{
 			ClientVpnEndpointId: aws.String(d.Id()),
@@ -394,8 +394,8 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 			}
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("dns_servers") {
@@ -413,7 +413,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("security_group_ids") {
 			input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
 			// "InvalidParameterValue: Security Groups cannot be modified without specifying Vpc Id"
-			input.VpcId = aws.String(d.Get("vpc_id").(string))
+			input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
 		}
 
 		if d.HasChange("self_service_portal") {
@@ -436,8 +436,8 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 			input.VpnPort = aws.Int64(int64(d.Get("vpn_port").(int)))
 		}
 
-		if d.HasChange("vpc_id") {
-			input.VpcId = aws.String(d.Get("vpc_id").(string))
+		if d.HasChange(names.AttrVPCID) {
+			input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
 		}
 
 		if _, err := conn.ModifyClientVpnEndpointWithContext(ctx, input); err != nil {
@@ -486,7 +486,7 @@ func expandClientVPNAuthenticationRequest(tfMap map[string]interface{}) *ec2.Cli
 	apiObject := &ec2.ClientVpnAuthenticationRequest{}
 
 	var authnType string
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		authnType = v
 		apiObject.Type = aws.String(v)
 	}
@@ -555,7 +555,7 @@ func flattenClientVPNAuthentication(apiObject *ec2.ClientVpnAuthentication) map[
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	if apiObject.MutualAuthentication != nil {
@@ -605,7 +605,7 @@ func expandClientConnectOptions(tfMap map[string]interface{}) *ec2.ClientConnect
 	apiObject := &ec2.ClientConnectOptions{}
 
 	var enabled bool
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		enabled = v
 	}
 
@@ -628,7 +628,7 @@ func flattenClientConnectResponseOptions(apiObject *ec2.ClientConnectResponseOpt
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.LambdaFunctionArn; v != nil {
@@ -646,7 +646,7 @@ func expandClientLoginBannerOptions(tfMap map[string]interface{}) *ec2.ClientLog
 	apiObject := &ec2.ClientLoginBannerOptions{}
 
 	var enabled bool
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		enabled = v
 	}
 
@@ -673,7 +673,7 @@ func flattenClientLoginBannerResponseOptions(apiObject *ec2.ClientLoginBannerRes
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	return tfMap
@@ -687,7 +687,7 @@ func expandConnectionLogOptions(tfMap map[string]interface{}) *ec2.ConnectionLog
 	apiObject := &ec2.ConnectionLogOptions{}
 
 	var enabled bool
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		enabled = v
 	}
 
@@ -722,7 +722,7 @@ func flattenConnectionLogResponseOptions(apiObject *ec2.ConnectionLogResponseOpt
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	return tfMap

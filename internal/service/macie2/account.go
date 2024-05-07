@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_account")
@@ -39,7 +40,7 @@ func ResourceAccount() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(macie2.FindingPublishingFrequency_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -73,7 +74,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
 		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input.Status = aws.String(v.(string))
 	}
 
@@ -123,7 +124,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Macie Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("status", resp.Status)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency)
 	d.Set("service_role", resp.ServiceRole)
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
@@ -143,8 +144,8 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FindingPublishingFrequency = aws.String(d.Get("finding_publishing_frequency").(string))
 	}
 
-	if d.HasChange("status") {
-		input.Status = aws.String(d.Get("status").(string))
+	if d.HasChange(names.AttrStatus) {
+		input.Status = aws.String(d.Get(names.AttrStatus).(string))
 	}
 
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)

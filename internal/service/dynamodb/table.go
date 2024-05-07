@@ -352,7 +352,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -585,7 +585,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateGSIProvisionedThroughput(gsi, billingMode); err != nil {
-					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Get("name").(string), err)
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Get(names.AttrName).(string), err)
 				}
 
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
@@ -2264,7 +2264,7 @@ func expandS3BucketSource(data map[string]interface{}) *awstypes.S3BucketSource 
 
 	a := &awstypes.S3BucketSource{}
 
-	if s, ok := data["bucket"].(string); ok && s != "" {
+	if s, ok := data[names.AttrBucket].(string); ok && s != "" {
 		a.S3Bucket = aws.String(s)
 	}
 

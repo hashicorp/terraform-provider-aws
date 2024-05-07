@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dynamodb_table_item", name="Table Item")
@@ -33,7 +34,7 @@ func dataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateTableItem,
@@ -55,7 +56,7 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName := d.Get("table_name").(string)
-	key, err := expandTableItemAttributes(d.Get("key").(string))
+	key, err := expandTableItemAttributes(d.Get(names.AttrKey).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

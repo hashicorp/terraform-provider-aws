@@ -26,15 +26,15 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			"basic":      testAccFileCache_basic,
-			"disappears": testAccFileCache_disappears,
-			"kms_key_id": testAccFileCache_kmsKeyID,
+			"basic":            testAccFileCache_basic,
+			"disappears":       testAccFileCache_disappears,
+			names.AttrKMSKeyID: testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
 			"data_repository_association_nfs":           testAccFileCache_dataRepositoryAssociation_nfs,
 			"data_repository_association_s3":            testAccFileCache_dataRepositoryAssociation_s3,
 			"security_group_id":                         testAccFileCache_securityGroupID,
-			"tags":                                      testAccFileCache_tags,
+			names.AttrTags:                              testAccFileCache_tags,
 		},
 	}
 
@@ -64,11 +64,11 @@ func testAccFileCache_basic(t *testing.T) {
 				Config: testAccFileCacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-cache/fc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-cache/fc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type", "LUSTRE"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type_version", "2.12"),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`fc-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key\/.+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`fc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key\/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.deployment_type", "CACHE_1"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.storage_capacity", "2400"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
@@ -281,7 +281,7 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 				Config: testAccFileCacheConfig_kmsKeyID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName1, names.AttrARN),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache2),
 					testAccCheckFileCacheRecreated(&filecache1, &filecache2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName2, names.AttrARN),
 				),
 			},
 			{

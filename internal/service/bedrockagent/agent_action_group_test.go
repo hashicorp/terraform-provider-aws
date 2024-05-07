@@ -107,7 +107,7 @@ func TestAccBedrockAgentActionGroup_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Basic Agent Action"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Basic Agent Action"),
 				),
 			},
 			{

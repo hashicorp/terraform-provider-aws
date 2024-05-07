@@ -44,8 +44,8 @@ func TestAccVPCLatticeAuthPolicy_basic(t *testing.T) {
 				Config: testAccAuthPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthPolicyExists(ctx, resourceName, &authpolicy),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"Action":"*"`)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", "aws_vpclattice_service.test", "arn"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":"*"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", "aws_vpclattice_service.test", names.AttrARN),
 				),
 			},
 			{

@@ -49,7 +49,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,11 +110,11 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -156,11 +156,11 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -175,7 +175,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Default:      ec2.VpcEndpointTypeGateway,
 				ValidateFunc: validation.StringInSlice(ec2.VpcEndpointType_Values(), false),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -203,7 +203,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		ServiceName:       aws.String(serviceName),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   aws.String(d.Get("vpc_endpoint_type").(string)),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -220,7 +220,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddressType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v)
 
 		if err != nil {
@@ -238,7 +238,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -308,7 +308,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()
 	serviceName := aws.StringValue(vpce.ServiceName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
@@ -321,21 +321,21 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("ip_address_type", vpce.IpAddressType)
 	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
-	d.Set("owner_id", vpce.OwnerId)
+	d.Set(names.AttrOwnerID, vpce.OwnerId)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
 	d.Set("security_group_ids", flattenSecurityGroupIdentifiers(vpce.Groups))
 	d.Set("service_name", serviceName)
-	d.Set("state", vpce.State)
-	d.Set("subnet_ids", aws.StringValueSlice(vpce.SubnetIds))
+	d.Set(names.AttrState, vpce.State)
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(vpce.SubnetIds))
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
 	if v := aws.StringValue(vpce.VpcEndpointType); v == "" {
 		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
 	} else {
 		d.Set("vpc_endpoint_type", v)
 	}
-	d.Set("vpc_id", vpce.VpcId)
+	d.Set(names.AttrVPCID, vpce.VpcId)
 
 	if pl, err := FindPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
@@ -348,7 +348,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("prefix_list_id", pl.PrefixListId)
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(vpce.PolicyDocument))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -360,7 +360,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	setTagsOut(ctx, vpce.Tags)
 
@@ -371,13 +371,13 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == vpcEndpointStatePendingAcceptance {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get(names.AttrState).(string) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChanges("dns_options", "ip_address_type", "policy", "private_dns_enabled", "security_group_ids", "route_table_ids", "subnet_ids") {
+	if d.HasChanges("dns_options", "ip_address_type", names.AttrPolicy, "private_dns_enabled", "security_group_ids", "route_table_ids", names.AttrSubnetIDs) {
 		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
@@ -406,13 +406,13 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringLists(d, "route_table_ids")
 		input.AddSecurityGroupIds, input.RemoveSecurityGroupIds = flattenAddAndRemoveStringLists(d, "security_group_ids")
-		input.AddSubnetIds, input.RemoveSubnetIds = flattenAddAndRemoveStringLists(d, "subnet_ids")
+		input.AddSubnetIds, input.RemoveSubnetIds = flattenAddAndRemoveStringLists(d, names.AttrSubnetIDs)
 
-		if d.HasChange("policy") {
-			o, n := d.GetChange("policy")
+		if d.HasChange(names.AttrPolicy) {
+			o, n := d.GetChange(names.AttrPolicy)
 
 			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
-				policy, err := structure.NormalizeJsonString(d.Get("policy"))
+				policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy))
 
 				if err != nil {
 					return sdkdiag.AppendFromErr(diags, err)

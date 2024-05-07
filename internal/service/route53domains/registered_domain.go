@@ -127,7 +127,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(0, 30),
 							},
-							"state": {
+							names.AttrState: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -198,7 +198,7 @@ func resourceRegisteredDomain() *schema.Resource {
 									ValidateFunc: validation.IsIPAddress,
 								},
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
@@ -679,7 +679,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.ToString(v)
+		tfMap[names.AttrState] = aws.ToString(v)
 	}
 
 	if v := apiObject.ZipCode; v != nil {
@@ -758,7 +758,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.PhoneNumber = aws.String(v)
 	}
 
-	if v, ok := tfMap["state"].(string); ok {
+	if v, ok := tfMap[names.AttrState].(string); ok {
 		apiObject.State = aws.String(v)
 	}
 
@@ -804,7 +804,7 @@ func flattenNameserver(apiObject *types.Nameserver) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -821,7 +821,7 @@ func expandNameserver(tfMap map[string]interface{}) *types.Nameserver {
 		apiObject.GlueIps = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 

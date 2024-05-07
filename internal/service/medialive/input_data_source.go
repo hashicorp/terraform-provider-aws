@@ -38,7 +38,7 @@ func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataReque
 func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"attached_channels": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
@@ -47,7 +47,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsDestination](ctx),
 				Computed:   true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
 			"input_class": schema.StringAttribute{
@@ -70,10 +70,10 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsMediaConnectFlow](ctx),
 				Computed:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"security_groups": schema.ListAttribute{
@@ -84,12 +84,12 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputSource](ctx),
 				Computed:   true,
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
 			},
 			names.AttrTags: tags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputType](),
 				Computed:   true,
 			},

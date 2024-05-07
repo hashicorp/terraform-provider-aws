@@ -24,7 +24,7 @@ func dataSourceVirtualService() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -45,7 +45,7 @@ func dataSourceVirtualService() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -65,7 +65,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	virtualServiceName := d.Get("name").(string)
+	virtualServiceName := d.Get(names.AttrName).(string)
 	vs, err := findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualServiceName)
 
 	if err != nil {
@@ -74,13 +74,13 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(vs.VirtualServiceName))
 	arn := aws.StringValue(vs.Metadata.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
 	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", vs.VirtualServiceName)
+	d.Set(names.AttrName, vs.VirtualServiceName)
 	d.Set("resource_owner", vs.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -99,7 +99,7 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

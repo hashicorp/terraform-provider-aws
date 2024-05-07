@@ -51,7 +51,7 @@ func ResourceEBSVolume() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +76,7 @@ func ResourceEBSVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -115,7 +115,7 @@ func ResourceEBSVolume() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(125, 1000),
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -142,7 +142,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Iops = aws.Int64(int64(value.(int)))
 	}
 
-	if value, ok := d.GetOk("kms_key_id"); ok {
+	if value, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(value.(string))
 	}
 
@@ -166,7 +166,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Throughput = aws.Int64(int64(value.(int)))
 	}
 
-	if value, ok := d.GetOk("type"); ok {
+	if value, ok := d.GetOk(names.AttrType); ok {
 		input.VolumeType = aws.String(value.(string))
 	}
 
@@ -208,17 +208,17 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("availability_zone", volume.AvailabilityZone)
 	d.Set("encrypted", volume.Encrypted)
 	d.Set("iops", volume.Iops)
-	d.Set("kms_key_id", volume.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set("size", volume.Size)
 	d.Set("snapshot_id", volume.SnapshotId)
 	d.Set("throughput", volume.Throughput)
-	d.Set("type", volume.VolumeType)
+	d.Set(names.AttrType, volume.VolumeType)
 
 	setTagsOut(ctx, volume.Tags)
 
@@ -229,7 +229,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyVolumeInput{
 			VolumeId: aws.String(d.Id()),
 		}
@@ -245,12 +245,12 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
 		// Throughput is valid only for gp3 volumes.
-		if v := d.Get("throughput").(int); v > 0 && d.Get("type").(string) == ec2.VolumeTypeGp3 {
+		if v := d.Get("throughput").(int); v > 0 && d.Get(names.AttrType).(string) == ec2.VolumeTypeGp3 {
 			input.Throughput = aws.Int64(int64(v))
 		}
 
-		if d.HasChange("type") {
-			volumeType := d.Get("type").(string)
+		if d.HasChange(names.AttrType) {
+			volumeType := d.Get(names.AttrType).(string)
 			input.VolumeType = aws.String(volumeType)
 
 			// Get Iops value because in the ec2.ModifyVolumeInput API,
@@ -281,7 +281,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{
-			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get(names.AttrTagsAll).(map[string]interface{}), ec2.ResourceTypeSnapshot),
 			VolumeId:          aws.String(d.Id()),
 		}
 
@@ -339,7 +339,7 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 	iops := diff.Get("iops").(int)
 	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
 	throughput := diff.Get("throughput").(int)
-	volumeType := diff.Get("type").(string)
+	volumeType := diff.Get(names.AttrType).(string)
 
 	if diff.Id() == "" {
 		// Create.

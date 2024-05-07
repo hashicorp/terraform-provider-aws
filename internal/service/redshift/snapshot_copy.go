@@ -58,7 +58,7 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"manual_snapshot_retention_period": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -213,7 +213,7 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *resourceSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
 }
 

@@ -51,7 +51,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -86,7 +86,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AutomationRulesActionType](),
 							Optional:   true,
 						},
@@ -141,7 +141,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 										CustomType: fwtypes.NewSetNestedObjectTypeOf[relatedFindingModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"id": schema.StringAttribute{
+												names.AttrID: schema.StringAttribute{
 													Required: true,
 												},
 												"product_arn": schema.StringAttribute{
@@ -176,7 +176,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"status": schema.StringAttribute{
+												names.AttrStatus: schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.WorkflowStatus](),
 													Optional:   true,
 												},
@@ -207,10 +207,10 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"confidence":                         numberFilterSchemaFramework(ctx),
 						"created_at":                         dateFilterSchemaFramework(ctx),
 						"criticality":                        numberFilterSchemaFramework(ctx),
-						"description":                        stringFilterSchemaFramework(ctx),
+						names.AttrDescription:                stringFilterSchemaFramework(ctx),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx),
 						"generator_id":                       stringFilterSchemaFramework(ctx),
-						"id":                                 stringFilterSchemaFramework(ctx),
+						names.AttrID:                         stringFilterSchemaFramework(ctx),
 						"last_observed_at":                   dateFilterSchemaFramework(ctx),
 						"note_text":                          stringFilterSchemaFramework(ctx),
 						"note_updated_at":                    dateFilterSchemaFramework(ctx),
@@ -231,7 +231,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"severity_label":                     stringFilterSchemaFramework(ctx),
 						"source_url":                         stringFilterSchemaFramework(ctx),
 						"title":                              stringFilterSchemaFramework(ctx),
-						"type":                               stringFilterSchemaFramework(ctx),
+						names.AttrType:                       stringFilterSchemaFramework(ctx),
 						"updated_at":                         dateFilterSchemaFramework(ctx),
 						"user_defined_fields":                mapFilterSchemaFramework(ctx),
 						"verification_state":                 stringFilterSchemaFramework(ctx),
@@ -272,7 +272,7 @@ func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 								CustomType: fwtypes.StringEnumType[awstypes.DateRangeUnit](),
 								Required:   true,
 							},
-							"value": schema.Int64Attribute{
+							names.AttrValue: schema.Int64Attribute{
 								Required: true,
 							},
 						},
@@ -295,10 +295,10 @@ func mapFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 					CustomType: fwtypes.StringEnumType[awstypes.MapFilterComparison](),
 					Required:   true,
 				},
-				"key": schema.StringAttribute{
+				names.AttrKey: schema.StringAttribute{
 					Required: true,
 				},
-				"value": schema.StringAttribute{
+				names.AttrValue: schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -346,7 +346,7 @@ func stringFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 					CustomType: fwtypes.StringEnumType[awstypes.StringFilterComparison](),
 					Required:   true,
 				},
-				"value": schema.StringAttribute{
+				names.AttrValue: schema.StringAttribute{
 					Required: true,
 				},
 			},

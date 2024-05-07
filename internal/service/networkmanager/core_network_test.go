@@ -33,11 +33,11 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 				Config: testAccCoreNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`core-network/core-network-.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`core-network/core-network-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`core-network-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`core-network-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -134,7 +134,7 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 				Config: testAccCoreNetworkConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 				Config: testAccCoreNetworkConfig_description(updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -178,7 +178,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "1",
 						"edge_locations.0":  acctest.Region(),
-						"name":              "segment",
+						names.AttrName:      "segment",
 						"shared_segments.#": "0",
 					}),
 				),
@@ -217,7 +217,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *test
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "1",
 						"edge_locations.0":  acctest.AlternateRegion(),
-						"name":              "segment",
+						names.AttrName:      "segment",
 						"shared_segments.#": "0",
 					}),
 				),
@@ -262,7 +262,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithMultiRegion(t 
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "2",
-						"name":              "segment",
+						names.AttrName:      "segment",
 						"shared_segments.#": "0",
 					}),
 				),
@@ -306,7 +306,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithPolicyDocument
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "2",
-						"name":              "segment",
+						names.AttrName:      "segment",
 						"shared_segments.#": "0",
 					}),
 				),
@@ -357,7 +357,7 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "1",
 						"edge_locations.0":  acctest.Region(),
-						"name":              "segment",
+						names.AttrName:      "segment",
 						"shared_segments.#": "0",
 					}),
 				),

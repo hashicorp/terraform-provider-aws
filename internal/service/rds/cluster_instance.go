@@ -53,7 +53,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +146,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func ResourceClusterInstance() *schema.Resource {
 					),
 				),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -391,10 +391,10 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	if db.Endpoint != nil {
 		d.Set("endpoint", db.Endpoint.Address)
-		d.Set("port", db.Endpoint.Port)
+		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 
-	d.Set("arn", db.DBInstanceArn)
+	d.Set(names.AttrARN, db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
@@ -412,7 +412,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	d.Set("monitoring_interval", db.MonitoringInterval)
 	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("network_type", db.NetworkType)
@@ -435,7 +435,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBInstanceInput{
 			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),

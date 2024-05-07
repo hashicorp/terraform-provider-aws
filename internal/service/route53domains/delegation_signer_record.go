@@ -96,7 +96,7 @@ func (r *delegationSignerRecordResource) Schema(ctx context.Context, request res
 					listvalidator.SizeAtMost(1),
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_redshiftserverless_workgroup", name="Workgroup")
@@ -18,7 +19,7 @@ func dataSourceWorkgroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceWorkgroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,7 +32,7 @@ func dataSourceWorkgroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -68,7 +69,7 @@ func dataSourceWorkgroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"vpc_id": {
+									names.AttrVPCID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -97,7 +98,7 @@ func dataSourceWorkgroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -129,7 +130,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(workgroupName)
-	d.Set("arn", resource.WorkgroupArn)
+	d.Set(names.AttrARN, resource.WorkgroupArn)
 	if err := d.Set("endpoint", []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
@@ -137,7 +138,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("namespace_name", resource.NamespaceName)
 	d.Set("publicly_accessible", resource.PubliclyAccessible)
 	d.Set("security_group_ids", resource.SecurityGroupIds)
-	d.Set("subnet_ids", resource.SubnetIds)
+	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
 	d.Set("workgroup_id", resource.WorkgroupId)
 
 	return diags

@@ -39,7 +39,7 @@ func ResourceIPSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceIPSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -81,7 +81,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	detectorID := d.Get("detector_id").(string)
 	input := &guardduty.CreateIPSetInput{
 		DetectorId: aws.String(detectorID),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		Format:     aws.String(d.Get("format").(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
@@ -90,7 +90,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	resp, err := conn.CreateIPSetWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	stateConf := &retry.StateChangeConf{
@@ -103,7 +103,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): waiting for completion: %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): waiting for completion: %s", d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
@@ -141,12 +141,12 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s/ipset/%s", detectorId, ipSetId),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	d.Set("detector_id", detectorId)
 	d.Set("format", resp.Format)
 	d.Set("location", resp.Location)
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)
 
 	setTagsOut(ctx, resp.Tags)
@@ -163,14 +163,14 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChanges("activate", "location", "name") {
+	if d.HasChanges("activate", "location", names.AttrName) {
 		input := &guardduty.UpdateIPSetInput{
 			DetectorId: aws.String(detectorId),
 			IpSetId:    aws.String(ipSetId),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 		if d.HasChange("location") {
 			input.Location = aws.String(d.Get("location").(string))

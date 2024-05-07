@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_domain_name")
@@ -43,7 +44,7 @@ func ResourceDomainName() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -66,7 +67,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	params := &appsync.CreateDomainNameInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
-		Description:    aws.String(d.Get("description").(string)),
+		Description:    aws.String(d.Get(names.AttrDescription).(string)),
 		DomainName:     aws.String(d.Get("domain_name").(string)),
 	}
 
@@ -96,7 +97,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("domain_name", domainName.DomainName)
-	d.Set("description", domainName.Description)
+	d.Set(names.AttrDescription, domainName.Description)
 	d.Set("certificate_arn", domainName.CertificateArn)
 	d.Set("hosted_zone_id", domainName.HostedZoneId)
 	d.Set("appsync_domain_name", domainName.AppsyncDomainName)
@@ -112,8 +113,8 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		DomainName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		params.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	_, err := conn.UpdateDomainNameWithContext(ctx, params)

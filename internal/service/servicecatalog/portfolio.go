@@ -46,7 +46,7 @@ func ResourcePortfolio() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,13 +54,13 @@ func ResourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -81,7 +81,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(name),
@@ -89,7 +89,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -125,10 +125,10 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	portfolioDetail := output.PortfolioDetail
-	d.Set("arn", portfolioDetail.ARN)
+	d.Set(names.AttrARN, portfolioDetail.ARN)
 	d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339))
-	d.Set("description", portfolioDetail.Description)
-	d.Set("name", portfolioDetail.DisplayName)
+	d.Set(names.AttrDescription, portfolioDetail.Description)
+	d.Set(names.AttrName, portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)
 
 	setTagsOut(ctx, output.Tags)
@@ -149,20 +149,20 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("name") {
-		input.DisplayName = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		input.DisplayName = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("provider_name") {
 		input.ProviderName = aws.String(d.Get("provider_name").(string))
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 
 		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
 		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())

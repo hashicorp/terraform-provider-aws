@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_container_service_deployment_version")
@@ -160,11 +161,11 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -234,8 +235,8 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 
 	d.Set("created_at", aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
 	d.Set("service_name", serviceName)
-	d.Set("state", deployment.State)
-	d.Set("version", deployment.Version)
+	d.Set(names.AttrState, deployment.State)
+	d.Set(names.AttrVersion, deployment.Version)
 
 	if err := d.Set("container", flattenContainerServiceDeploymentContainers(deployment.Containers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)

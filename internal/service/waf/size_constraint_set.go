@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_waf_size_constraint_set")
@@ -40,7 +41,7 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &waf.CreateSizeConstraintSetInput{
 		Name: aws.String(name),
 	}
@@ -83,8 +84,8 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("sizeconstraintset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
-	d.Set("name", sizeConstraintSet.Name)
+	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrName, sizeConstraintSet.Name)
 	if err := d.Set("size_constraints", FlattenSizeConstraints(sizeConstraintSet.SizeConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting size_constraints: %s", err)
 	}

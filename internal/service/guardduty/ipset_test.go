@@ -43,8 +43,8 @@ func testAccIPSet_basic(t *testing.T) {
 				Config: testAccIPSetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/.+/ipset/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/ipset/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -59,7 +59,7 @@ func testAccIPSet_basic(t *testing.T) {
 				Config: testAccIPSetConfig_basic(bucketName, keyName2, ipsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),

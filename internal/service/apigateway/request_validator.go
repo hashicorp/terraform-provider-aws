@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_request_validator", name="Request Validator")
@@ -44,7 +45,7 @@ func resourceRequestValidator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -71,7 +72,7 @@ func resourceRequestValidatorCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateRequestValidatorInput{
 		Name:                      aws.String(name),
 		RestApiId:                 aws.String(d.Get("rest_api_id").(string)),
@@ -106,7 +107,7 @@ func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("validate_request_body", output.ValidateRequestBody)
 	d.Set("validate_request_parameters", output.ValidateRequestParameters)
 
@@ -119,11 +120,11 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 
 	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
-			Value: aws.String(d.Get("name").(string)),
+			Value: aws.String(d.Get(names.AttrName).(string)),
 		})
 	}
 

@@ -57,7 +57,7 @@ func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context,
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},

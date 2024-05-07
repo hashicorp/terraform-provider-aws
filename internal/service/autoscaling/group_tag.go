@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_group_tag", name="Group Tag")
@@ -39,12 +40,12 @@ func resourceGroupTag() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -65,7 +66,7 @@ func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	identifier := d.Get("autoscaling_group_name").(string)
 	tags := d.Get("tag").([]interface{})
-	key := tags[0].(map[string]interface{})["key"].(string)
+	key := tags[0].(map[string]interface{})[names.AttrKey].(string)
 
 	if err := updateTags(ctx, conn, identifier, TagResourceTypeGroup, nil, tags); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
@@ -100,8 +101,8 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("autoscaling_group_name", identifier)
 
 	if err := d.Set("tag", []map[string]interface{}{{
-		"key":                 key,
-		"value":               value.Value,
+		names.AttrKey:         key,
+		names.AttrValue:       value.Value,
 		"propagate_at_launch": value.AdditionalBoolFields["PropagateAtLaunch"],
 	}}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)

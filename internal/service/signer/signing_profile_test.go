@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningProfile_basic(t *testing.T) {
@@ -39,17 +40,17 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "platform_display_name"),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "signing_material"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "version_arn"),
 				),
 			},
@@ -108,7 +109,7 @@ func TestAccSignerSigningProfile_nameGenerated(t *testing.T) {
 				Config: testAccSigningProfileConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "terraform_"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "terraform_"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform_"),
 				),
 			},
@@ -139,7 +140,7 @@ func TestAccSignerSigningProfile_namePrefix(t *testing.T) {
 				Config: testAccSigningProfileConfig_namePrefix("tf_acc_test_prefix_"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf_acc_test_prefix_"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf_acc_test_prefix_"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf_acc_test_prefix_"),
 				),
 			},

@@ -44,7 +44,7 @@ func resourceVPNGateway() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidAmazonSideASN,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceVPNGateway() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -92,7 +92,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		if err := attachVPNGatewayToVPC(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -129,14 +129,14 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if aws.StringValue(vpnGateway.AvailabilityZone) != "" {
 		d.Set("availability_zone", vpnGateway.AvailabilityZone)
 	}
-	d.Set("vpc_id", nil)
+	d.Set(names.AttrVPCID, nil)
 	for _, vpcAttachment := range vpnGateway.VpcAttachments {
 		if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusAttached {
-			d.Set("vpc_id", vpcAttachment.VpcId)
+			d.Set(names.AttrVPCID, vpcAttachment.VpcId)
 		}
 	}
 
@@ -149,8 +149,8 @@ func resourceVPNGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange("vpc_id") {
-		o, n := d.GetChange("vpc_id")
+	if d.HasChange(names.AttrVPCID) {
+		o, n := d.GetChange(names.AttrVPCID)
 
 		if vpcID, ok := o.(string); ok && vpcID != "" {
 			if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), vpcID); err != nil {
@@ -172,7 +172,7 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

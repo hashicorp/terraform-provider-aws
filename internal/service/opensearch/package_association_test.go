@@ -36,7 +36,7 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, names.AttrID),
 				),
 			},
 		},

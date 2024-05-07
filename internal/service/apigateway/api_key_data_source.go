@@ -31,15 +31,15 @@ func dataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -47,12 +47,12 @@ func dataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"value": {
+			names.AttrValue: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -65,7 +65,7 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	apiKey, err := findAPIKeyByID(ctx, conn, id)
 
 	if err != nil {
@@ -75,11 +75,11 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.ToString(apiKey.Id))
 	d.Set("created_date", aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
-	d.Set("description", apiKey.Description)
-	d.Set("enabled", apiKey.Enabled)
+	d.Set(names.AttrDescription, apiKey.Description)
+	d.Set(names.AttrEnabled, apiKey.Enabled)
 	d.Set("last_updated_date", aws.ToTime(apiKey.LastUpdatedDate).Format(time.RFC3339))
-	d.Set("name", apiKey.Name)
-	d.Set("value", apiKey.Value)
+	d.Set(names.AttrName, apiKey.Name)
+	d.Set(names.AttrValue, apiKey.Value)
 
 	setTagsOut(ctx, apiKey.Tags)
 

@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
@@ -147,7 +148,7 @@ func resourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -310,7 +311,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				MaxItems: 22,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.SourceAccessType](),
@@ -334,7 +335,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -370,7 +371,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 	functionName := d.Get("function_name").(string)
 	input := &lambda.CreateEventSourceMappingInput{
-		Enabled:      aws.Bool(d.Get("enabled").(bool)),
+		Enabled:      aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		FunctionName: aws.String(functionName),
 	}
 
@@ -581,20 +582,20 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("starting_position_timestamp", nil)
 	}
-	d.Set("state", output.State)
+	d.Set(names.AttrState, output.State)
 	d.Set("state_transition_reason", output.StateTransitionReason)
 	d.Set("topics", output.Topics)
 	d.Set("tumbling_window_in_seconds", output.TumblingWindowInSeconds)
 	d.Set("uuid", output.UUID)
 
-	switch state := d.Get("state").(string); state {
+	switch state := d.Get(names.AttrState).(string); state {
 	case eventSourceMappingStateEnabled, eventSourceMappingStateEnabling:
-		d.Set("enabled", true)
+		d.Set(names.AttrEnabled, true)
 	case eventSourceMappingStateDisabled, eventSourceMappingStateDisabling:
-		d.Set("enabled", false)
+		d.Set(names.AttrEnabled, false)
 	default:
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) is neither enabled nor disabled, but %s", d.Id(), state)
-		d.Set("enabled", nil)
+		d.Set(names.AttrEnabled, nil)
 	}
 
 	return diags
@@ -628,8 +629,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if d.HasChange("enabled") {
-		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+	if d.HasChange(names.AttrEnabled) {
+		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	}
 
 	if d.HasChange("filter_criteria") {
@@ -1073,7 +1074,7 @@ func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.Sou
 
 	apiObject := &awstypes.SourceAccessConfiguration{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.SourceAccessType(v)
 	}
 
@@ -1116,7 +1117,7 @@ func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfigurat
 	}
 
 	tfMap := map[string]interface{}{
-		"type": apiObject.Type,
+		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.URI; v != nil {

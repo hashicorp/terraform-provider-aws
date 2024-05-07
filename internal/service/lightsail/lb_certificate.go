@@ -37,7 +37,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -147,7 +147,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	certName := d.Get("name").(string)
+	certName := d.Get(names.AttrName).(string)
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
 		CertificateDomainName: aws.String(d.Get("domain_name").(string)),
 		CertificateName:       aws.String(certName),
@@ -198,12 +198,12 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificate, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 	d.Set("domain_name", out.DomainName)
 	d.Set("domain_validation_records", flattenLoadBalancerDomainValidationRecords(out.DomainValidationRecords))
 	d.Set("lb_name", out.LoadBalancerName)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("subject_alternative_names", out.SubjectAlternativeNames)
 	d.Set("support_code", out.SupportCode)
 

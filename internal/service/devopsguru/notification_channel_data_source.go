@@ -36,7 +36,7 @@ func (d *dataSourceNotificationChannel) Metadata(_ context.Context, req datasour
 func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
 		},

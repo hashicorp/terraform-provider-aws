@@ -132,7 +132,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_customLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},
@@ -145,7 +145,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_customLocationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},

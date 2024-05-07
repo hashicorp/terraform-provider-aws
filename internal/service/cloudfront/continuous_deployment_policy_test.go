@@ -54,19 +54,19 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "staging_distribution_dns_names.0.items.0", stagingDistributionResourceName, "domain_name"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleWeight",
+						names.AttrType:                  "SingleWeight",
 						"single_weight_config.#":        "1",
 						"single_weight_config.0.weight": "0.01",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttrPair(productionDistributionResourceName, "continuous_deployment_policy_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(productionDistributionResourceName, "continuous_deployment_policy_id", resourceName, names.AttrID),
 				),
 			},
 			{
@@ -140,11 +140,11 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(false, "0.01", 300, 600, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleWeight",
-						"single_weight_config.#":        "1",
-						"single_weight_config.0.weight": "0.01",
+						names.AttrType:                                                   "SingleWeight",
+						"single_weight_config.#":                                         "1",
+						"single_weight_config.0.weight":                                  "0.01",
 						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
@@ -160,11 +160,11 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.02", 600, 1200, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleWeight",
-						"single_weight_config.#":        "1",
-						"single_weight_config.0.weight": "0.02",
+						names.AttrType:                                                   "SingleWeight",
+						"single_weight_config.#":                                         "1",
+						"single_weight_config.0.weight":                                  "0.02",
 						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "600",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "1200",
@@ -175,9 +175,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(false, "aws-cf-cd-test", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleHeader",
+						names.AttrType:                  "SingleHeader",
 						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test",
 						"single_header_config.0.value":  "test",
@@ -193,9 +193,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(true, "aws-cf-cd-test2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleHeader",
+						names.AttrType:                  "SingleHeader",
 						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test2",
 						"single_header_config.0.value":  "test2",
@@ -239,11 +239,11 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleWeight",
-						"single_weight_config.#":        "1",
-						"single_weight_config.0.weight": "0.01",
+						names.AttrType:                                                   "SingleWeight",
+						"single_weight_config.#":                                         "1",
+						"single_weight_config.0.weight":                                  "0.01",
 						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
@@ -260,11 +260,11 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						"type":                          "SingleWeight",
-						"single_weight_config.#":        "1",
-						"single_weight_config.0.weight": "0.01",
+						names.AttrType:                                                   "SingleWeight",
+						"single_weight_config.#":                                         "1",
+						"single_weight_config.0.weight":                                  "0.01",
 						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",

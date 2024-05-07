@@ -44,7 +44,7 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -62,7 +62,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -75,7 +75,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
 			"sns_topic_arn": {
@@ -105,12 +105,12 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &neptune.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -159,11 +159,11 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.EventSubscriptionArn)
+	d.Set(names.AttrARN, output.EventSubscriptionArn)
 	d.Set("customer_aws_id", output.CustomerAwsId)
-	d.Set("enabled", output.Enabled)
+	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("event_categories", aws.StringValueSlice(output.EventCategoriesList))
-	d.Set("name", output.CustSubscriptionId)
+	d.Set(names.AttrName, output.CustSubscriptionId)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.CustSubscriptionId)))
 	d.Set("sns_topic_arn", output.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(output.SourceIdsList))
@@ -176,13 +176,13 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
 		input := &neptune.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		if d.HasChange("enabled") {
-			input.Enabled = aws.Bool(d.Get("enabled").(bool))
+		if d.HasChange(names.AttrEnabled) {
+			input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 		}
 
 		if d.HasChange("event_categories") {

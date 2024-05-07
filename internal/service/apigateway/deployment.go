@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_deployment", name="Deployment")
@@ -41,7 +42,7 @@ func resourceDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -89,7 +90,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := &apigateway.CreateDeploymentInput{
-		Description:      aws.String(d.Get("description").(string)),
+		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		RestApiId:        aws.String(d.Get("rest_api_id").(string)),
 		StageDescription: aws.String(d.Get("stage_description").(string)),
 		StageName:        aws.String(d.Get("stage_name").(string)),
@@ -126,7 +127,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	stageName := d.Get("stage_name").(string)
 	d.Set("created_date", deployment.CreatedDate.Format(time.RFC3339))
-	d.Set("description", deployment.Description)
+	d.Set(names.AttrDescription, deployment.Description)
 	executionARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "execute-api",
@@ -146,11 +147,11 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
-			Value: aws.String(d.Get("description").(string)),
+			Value: aws.String(d.Get(names.AttrDescription).(string)),
 		})
 	}
 

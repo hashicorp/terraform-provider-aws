@@ -39,7 +39,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -272,7 +272,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -371,7 +371,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -424,7 +424,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 					},
 				},
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -460,14 +460,14 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
 	}
 
 	var roleArn string
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		roleArn = v.(string)
 	}
 
@@ -520,9 +520,9 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", jobDefinition.JobDefinitionArn)
-	d.Set("name", jobDefinition.JobDefinitionName)
-	d.Set("role_arn", jobDefinition.RoleArn)
+	d.Set(names.AttrARN, jobDefinition.JobDefinitionArn)
+	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
+	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
 
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
@@ -808,7 +808,7 @@ func flattenMonitoringOutputConfig(config *sagemaker.MonitoringOutputConfig) []m
 	m := map[string]interface{}{}
 
 	if config.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
 	}
 
 	if config.MonitoringOutputs != nil {
@@ -1173,7 +1173,7 @@ func expandMonitoringOutputConfig(configured []interface{}) *sagemaker.Monitorin
 
 	c := &sagemaker.MonitoringOutputConfig{}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
 	}
 

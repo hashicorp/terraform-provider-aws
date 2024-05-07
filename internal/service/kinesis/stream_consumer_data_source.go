@@ -17,6 +17,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer)
@@ -25,7 +26,7 @@ func dataSourceStreamConsumer() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStreamConsumerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -35,12 +36,12 @@ func dataSourceStreamConsumer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,11 +64,11 @@ func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	consumer, err := findStreamConsumer(ctx, conn, input, func(c *types.Consumer) bool {
-		if v, ok := d.GetOk("name"); ok && v.(string) != aws.ToString(c.ConsumerName) {
+		if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.ToString(c.ConsumerName) {
 			return false
 		}
 
-		if v, ok := d.GetOk("arn"); ok && v.(string) != aws.ToString(c.ConsumerARN) {
+		if v, ok := d.GetOk(names.AttrARN); ok && v.(string) != aws.ToString(c.ConsumerARN) {
 			return false
 		}
 
@@ -79,10 +80,10 @@ func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(consumer.ConsumerARN))
-	d.Set("arn", consumer.ConsumerARN)
+	d.Set(names.AttrARN, consumer.ConsumerARN)
 	d.Set("creation_timestamp", aws.ToTime(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
-	d.Set("name", consumer.ConsumerName)
-	d.Set("status", consumer.ConsumerStatus)
+	d.Set(names.AttrName, consumer.ConsumerName)
+	d.Set(names.AttrStatus, consumer.ConsumerStatus)
 	d.Set("stream_arn", streamARN)
 
 	return diags

@@ -67,7 +67,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"catalog_id": catalogIDSchemaOptional(),
-			"id":         framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"database": schema.ListNestedBlock{
@@ -81,7 +81,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"catalog_id": catalogIDSchemaOptional(),
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -102,7 +102,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"catalog_id": catalogIDSchemaOptionalComputed(),
-						"key": schema.StringAttribute{
+						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 128),
@@ -111,7 +111,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 255),
@@ -141,11 +141,11 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
+									path.MatchRelative().AtParent().AtName(names.AttrName),
 									path.MatchRelative().AtParent().AtName("wildcard"),
 								),
 							},
@@ -157,7 +157,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 							Optional: true,
 							Validators: []validator.Bool{
 								boolvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
+									path.MatchRelative().AtParent().AtName(names.AttrName),
 									path.MatchRelative().AtParent().AtName("wildcard"),
 								),
 							},
@@ -198,7 +198,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -234,7 +234,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_api_gateway_export", name="Export")
@@ -44,7 +45,7 @@ func dataSourceExport() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"oas30", "swagger"}, false),
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -77,7 +78,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Accepts = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 

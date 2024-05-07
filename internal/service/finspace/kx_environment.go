@@ -47,7 +47,7 @@ func ResourceKxEnvironment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,12 +80,12 @@ func ResourceKxEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -102,12 +102,12 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,7 +136,7 @@ func ResourceKxEnvironment() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:     schema.TypeInt,
 													Required: true,
 												},
@@ -211,25 +211,25 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxEnvironmentInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		ClientToken: aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		in.KmsKeyId = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateKxEnvironment(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.EnvironmentId == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId))
@@ -267,12 +267,12 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)
 	}
 
-	d.Set("id", out.EnvironmentId)
-	d.Set("arn", out.EnvironmentArn)
-	d.Set("name", out.Name)
-	d.Set("description", out.Description)
-	d.Set("kms_key_id", out.KmsKeyId)
-	d.Set("status", out.Status)
+	d.Set(names.AttrID, out.EnvironmentId)
+	d.Set(names.AttrARN, out.EnvironmentArn)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("availability_zones", out.AvailabilityZoneIds)
 	d.Set("infrastructure_account_id", out.DedicatedServiceAccountId)
 	d.Set("created_timestamp", out.CreationTimestamp.String())
@@ -297,14 +297,14 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &finspace.UpdateKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-		Name:          aws.String(d.Get("name").(string)),
+		Name:          aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChanges("name") || d.HasChanges("description") {
+	if d.HasChanges(names.AttrName) || d.HasChanges(names.AttrDescription) {
 		update = true
 		log.Printf("[DEBUG] Updating FinSpace KxEnvironment (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxEnvironment(ctx, in)
@@ -639,7 +639,7 @@ func expandIcmpTypeCode(tfList []interface{}) *types.IcmpTypeCode {
 
 	return &types.IcmpTypeCode{
 		Code: int32(tfMap["code"].(int)),
-		Type: int32(tfMap["type"].(int)),
+		Type: int32(tfMap[names.AttrType].(int)),
 	}
 }
 
@@ -764,8 +764,8 @@ func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"type": apiObject.Type,
-		"code": apiObject.Code,
+		names.AttrType: apiObject.Type,
+		"code":         apiObject.Code,
 	}
 
 	return []interface{}{m}

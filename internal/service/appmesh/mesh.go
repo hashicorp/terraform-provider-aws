@@ -38,7 +38,7 @@ func resourceMesh() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -54,7 +54,7 @@ func resourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -90,7 +90,7 @@ func resourceMeshSpecSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"type": {
+							names.AttrType: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Default:      appmesh.EgressFilterTypeDropAll,
@@ -123,7 +123,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(name),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
@@ -161,11 +161,11 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	mesh := outputRaw.(*appmesh.MeshData)
 	arn := aws.StringValue(mesh.Metadata.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
-	d.Set("name", mesh.MeshName)
+	d.Set(names.AttrName, mesh.MeshName)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)

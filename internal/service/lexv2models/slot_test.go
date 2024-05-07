@@ -44,7 +44,7 @@ func TestAccLexV2ModelsSlot_basic(t *testing.T) {
 				Config: testAccSlotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -82,7 +82,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 				Config: testAccSlotConfig_updateMultipleValuesSetting(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -95,7 +95,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 				Config: testAccSlotConfig_updateMultipleValuesSetting(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -130,7 +130,7 @@ func TestAccLexV2ModelsSlot_ObfuscationSetting(t *testing.T) {
 				Config: testAccSlotConfig_updateObfuscationSetting(rName, "DefaultObfuscation"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),

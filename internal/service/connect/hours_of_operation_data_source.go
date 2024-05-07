@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_hours_of_operation")
@@ -23,7 +24,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHoursOfOperationRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +80,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,19 +88,19 @@ func DataSourceHoursOfOperation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"hours_of_operation_id", "name"},
+				ExactlyOneOf: []string{"hours_of_operation_id", names.AttrName},
 			},
 			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "hours_of_operation_id"},
+				ExactlyOneOf: []string{names.AttrName, "hours_of_operation_id"},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -122,7 +123,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("hours_of_operation_id"); ok {
 		input.HoursOfOperationId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		hoursOfOperationSummary, err := dataSourceGetHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
 
@@ -149,18 +150,18 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	hoursOfOperation := resp.HoursOfOperation
 
-	d.Set("arn", hoursOfOperation.HoursOfOperationArn)
+	d.Set(names.AttrARN, hoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
-	d.Set("description", hoursOfOperation.Description)
-	d.Set("name", hoursOfOperation.Name)
+	d.Set(names.AttrDescription, hoursOfOperation.Description)
+	d.Set(names.AttrName, hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)
 
 	if err := d.Set("config", flattenConfigs(hoursOfOperation.Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

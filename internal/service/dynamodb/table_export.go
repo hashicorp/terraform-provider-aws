@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dynamodb_table_export", name="Table Export")
@@ -40,7 +41,7 @@ func resourceTableExport() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -191,7 +192,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Export (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", desc.ExportArn)
+	d.Set(names.AttrARN, desc.ExportArn)
 	d.Set("billed_size_in_bytes", desc.BilledSizeBytes)
 	if desc.EndTime != nil {
 		d.Set("end_time", aws.ToTime(desc.EndTime).Format(time.RFC3339))

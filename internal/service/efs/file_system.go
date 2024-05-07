@@ -42,7 +42,7 @@ func ResourceFileSystem() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func ResourceFileSystem() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -105,7 +105,7 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,7 @@ func ResourceFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func ResourceFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -210,7 +210,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	encrypted, hasEncrypted := d.GetOk("encrypted")
-	kmsKeyId, hasKmsKeyId := d.GetOk("kms_key_id")
+	kmsKeyId, hasKmsKeyId := d.GetOk(names.AttrKMSKeyID)
 
 	if hasEncrypted {
 		input.Encrypted = aws.Bool(encrypted.(bool))
@@ -279,16 +279,16 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading EFS file system (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", fs.FileSystemArn)
+	d.Set(names.AttrARN, fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
 	d.Set("encrypted", fs.Encrypted)
-	d.Set("kms_key_id", fs.KmsKeyId)
-	d.Set("name", fs.Name)
+	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
+	d.Set(names.AttrName, fs.Name)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
-	d.Set("owner_id", fs.OwnerId)
+	d.Set(names.AttrOwnerID, fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
 	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
@@ -579,7 +579,7 @@ func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{}
 	}
 
 	m := map[string]interface{}{
-		"value": aws.Int64Value(sizeInBytes.Value),
+		names.AttrValue: aws.Int64Value(sizeInBytes.Value),
 	}
 
 	if sizeInBytes.ValueInIA != nil {

@@ -38,16 +38,16 @@ func ResourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -60,10 +60,10 @@ func ResourceSubnetGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -81,11 +81,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &docdb.CreateDBSubnetGroupInput{
-		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
+		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		DBSubnetGroupName:        aws.String(name),
-		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -116,15 +116,15 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", subnetGroup.DBSubnetGroupArn)
-	d.Set("description", subnetGroup.DBSubnetGroupDescription)
-	d.Set("name", subnetGroup.DBSubnetGroupName)
+	d.Set(names.AttrARN, subnetGroup.DBSubnetGroupArn)
+	d.Set(names.AttrDescription, subnetGroup.DBSubnetGroupDescription)
+	d.Set(names.AttrName, subnetGroup.DBSubnetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(subnetGroup.DBSubnetGroupName)))
 	var subnetIDs []string
 	for _, v := range subnetGroup.Subnets {
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
 	}
-	d.Set("subnet_ids", subnetIDs)
+	d.Set(names.AttrSubnetIDs, subnetIDs)
 
 	return diags
 }
@@ -133,11 +133,11 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChanges("description", "subnet_ids") {
+	if d.HasChanges(names.AttrDescription, names.AttrSubnetIDs) {
 		input := &docdb.ModifyDBSubnetGroupInput{
 			DBSubnetGroupName:        aws.String(d.Id()),
-			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+			DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
+			SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)

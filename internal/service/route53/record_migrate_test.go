@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestRecordMigrateState(t *testing.T) {
@@ -24,7 +25,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www",
+				names.AttrName: "www",
 			},
 			Expected: "www",
 		},
@@ -32,7 +33,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www.example.com.",
+				names.AttrName: "www.example.com.",
 			},
 			Expected: "www.example.com",
 		},
@@ -40,7 +41,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"name": "www.example.com",
+				names.AttrName: "www.example.com",
 			},
 			Expected: "www.example.com",
 		},
@@ -58,8 +59,8 @@ func TestRecordMigrateState(t *testing.T) {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}
 
-		if is.Attributes["name"] != tc.Expected {
-			t.Fatalf("bad Route 53 Migrate: %s\n\n expected: %s", is.Attributes["name"], tc.Expected)
+		if is.Attributes[names.AttrName] != tc.Expected {
+			t.Fatalf("bad Route 53 Migrate: %s\n\n expected: %s", is.Attributes[names.AttrName], tc.Expected)
 		}
 	}
 }

@@ -27,7 +27,7 @@ func DataSourceListener() *schema.Resource {
 		ReadWithoutTimeout: dataSourceListenerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,11 +91,11 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -137,12 +137,12 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Set simple arguments
 	d.SetId(aws.ToString(out.Id))
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("listener_id", out.Id)
-	d.Set("name", out.Name)
-	d.Set("port", out.Port)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrPort, out.Port)
 	d.Set("protocol", out.Protocol)
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_id", out.ServiceId)
@@ -161,7 +161,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 

@@ -36,7 +36,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -153,7 +153,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway File System Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", filesystem.FileSystemAssociationARN)
+	d.Set(names.AttrARN, filesystem.FileSystemAssociationARN)
 	d.Set("audit_destination_arn", filesystem.AuditDestinationARN)
 	d.Set("gateway_arn", filesystem.GatewayARN)
 	d.Set("location_arn", filesystem.LocationARN)
@@ -171,7 +171,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	if d.HasChangesExcept("tags_all") {
+	if d.HasChangesExcept(names.AttrTagsAll) {
 		input := &storagegateway.UpdateFileSystemAssociationInput{
 			AuditDestinationARN:      aws.String(d.Get("audit_destination_arn").(string)),
 			Password:                 aws.String(d.Get("password").(string)),

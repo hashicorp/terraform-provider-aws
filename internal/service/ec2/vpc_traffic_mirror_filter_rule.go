@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_traffic_mirror_filter_rule", name="Traffic Mirror Filter Rule")
@@ -36,11 +37,11 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -133,7 +134,7 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,8 +184,8 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("traffic-mirror-filter-rule/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", rule.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, rule.Description)
 	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
 	if rule.DestinationPortRange != nil {
 		if err := d.Set("destination_port_range", []interface{}{flattenTrafficMirrorPortRange(rule.DestinationPortRange)}); err != nil {
@@ -220,8 +221,8 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 
 	var removeFields []string
 
-	if d.HasChange("description") {
-		if v := d.Get("description").(string); v != "" {
+	if d.HasChange(names.AttrDescription) {
+		if v := d.Get(names.AttrDescription).(string); v != "" {
 			input.Description = aws.String(v)
 		} else {
 			removeFields = append(removeFields, ec2.TrafficMirrorFilterRuleFieldDescription)

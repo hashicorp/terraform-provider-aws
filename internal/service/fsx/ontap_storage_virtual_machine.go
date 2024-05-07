@@ -117,7 +117,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -203,7 +203,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -241,7 +241,7 @@ func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &fsx.CreateStorageVirtualMachineInput{
 		FileSystemId: aws.String(d.Get("file_system_id").(string)),
 		Name:         aws.String(name),
@@ -294,12 +294,12 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
-	d.Set("arn", storageVirtualMachine.ResourceARN)
+	d.Set(names.AttrARN, storageVirtualMachine.ResourceARN)
 	if err := d.Set("endpoints", flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
-	d.Set("name", storageVirtualMachine.Name)
+	d.Set(names.AttrName, storageVirtualMachine.Name)
 	// RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
 	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
 	d.Set("subtype", storageVirtualMachine.Subtype)
@@ -315,7 +315,7 @@ func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateStorageVirtualMachineInput{
 			ClientRequestToken:      aws.String(id.UniqueId()),
 			StorageVirtualMachineId: aws.String(d.Id()),

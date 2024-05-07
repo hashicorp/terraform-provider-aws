@@ -51,7 +51,7 @@ func ResourceWorkspace() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.AccountAccessType_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +84,7 @@ func ResourceWorkspace() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(managedgrafana.DataSourceType_Values(), false),
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -97,7 +97,7 @@ func ResourceWorkspace() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -145,7 +145,7 @@ func ResourceWorkspace() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.PermissionType_Values(), false),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -172,7 +172,7 @@ func ResourceWorkspace() *schema.Resource {
 							MaxItems: 100,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 2,
@@ -208,7 +208,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.WorkspaceDataSources = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.WorkspaceDescription = aws.String(v.(string))
 	}
 
@@ -216,7 +216,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.GrafanaVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.WorkspaceName = aws.String(v.(string))
 	}
 
@@ -236,7 +236,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.WorkspaceRoleArn = aws.String(v.(string))
 	}
 
@@ -288,13 +288,13 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
 	}.String()
-	d.Set("arn", workspaceARN)
+	d.Set(names.AttrARN, workspaceARN)
 	d.Set("authentication_providers", workspace.Authentication.Providers)
 	d.Set("data_sources", workspace.DataSources)
-	d.Set("description", workspace.Description)
+	d.Set(names.AttrDescription, workspace.Description)
 	d.Set("endpoint", workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
-	d.Set("name", workspace.Name)
+	d.Set(names.AttrName, workspace.Name)
 	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
@@ -302,7 +302,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("organization_role_name", workspace.OrganizationRoleName)
 	d.Set("organizational_units", workspace.OrganizationalUnits)
 	d.Set("permission_type", workspace.PermissionType)
-	d.Set("role_arn", workspace.WorkspaceRoleArn)
+	d.Set(names.AttrRoleARN, workspace.WorkspaceRoleArn)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
 	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
@@ -330,7 +330,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	if d.HasChangesExcept("configuration", "grafana_version", "tags", "tags_all") {
+	if d.HasChangesExcept("configuration", "grafana_version", names.AttrTags, names.AttrTagsAll) {
 		input := &managedgrafana.UpdateWorkspaceInput{
 			WorkspaceId: aws.String(d.Id()),
 		}
@@ -343,12 +343,12 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.WorkspaceDataSources = flex.ExpandStringList(d.Get("data_sources").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.WorkspaceDescription = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.WorkspaceDescription = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			input.WorkspaceName = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.WorkspaceName = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("network_access_control") {
@@ -377,8 +377,8 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.PermissionType = aws.String(d.Get("permission_type").(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.WorkspaceRoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.WorkspaceRoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("stack_set_name") {
@@ -467,7 +467,7 @@ func expandVPCConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration 
 		out.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := conf[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		out.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -484,7 +484,7 @@ func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} 
 		m["security_group_ids"] = flex.FlattenStringSet(rs.SecurityGroupIds)
 	}
 	if rs.SubnetIds != nil {
-		m["subnet_ids"] = flex.FlattenStringSet(rs.SubnetIds)
+		m[names.AttrSubnetIDs] = flex.FlattenStringSet(rs.SubnetIds)
 	}
 
 	return []interface{}{m}

@@ -36,9 +36,9 @@ func TestAccOpenSearchServerlessLifecyclePolicyDataSource_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyDataSourceConfig_basic(rName, "retention"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, dataSourceName, &lifecyclepolicy),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy_version", resourceName, "policy_version"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_date"),

@@ -36,7 +36,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -211,7 +211,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 					return strings.HasPrefix(old, "global-datastore-")
 				},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -316,7 +316,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Set:           schema.HashString,
 				ConflictsWith: []string{"auth_token"},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,

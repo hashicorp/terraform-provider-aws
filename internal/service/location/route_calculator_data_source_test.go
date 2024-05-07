@@ -33,7 +33,7 @@ func TestAccLocationRouteCalculatorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "calculator_name", resourceName, "calculator_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source", resourceName, "data_source"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "update_time", resourceName, "update_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),

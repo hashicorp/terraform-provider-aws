@@ -41,11 +41,11 @@ func ResourceSigningProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -58,7 +58,7 @@ func ResourceSigningProfile() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
 			},
 			"platform_display_name": {
@@ -99,13 +99,13 @@ func ResourceSigningProfile() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.ValidityType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Required: true,
 							ForceNew: true,
@@ -129,13 +129,13 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,7 +154,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("terraform_"),
 	).Generate()
@@ -167,8 +167,8 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, exists := d.GetOk("signature_validity_period"); exists {
 		signatureValidityPeriod := v.([]interface{})[0].(map[string]interface{})
 		input.SignatureValidityPeriod = &types.SignatureValidityPeriod{
-			Value: int32(signatureValidityPeriod["value"].(int)),
-			Type:  types.ValidityType(signatureValidityPeriod["type"].(string)),
+			Value: int32(signatureValidityPeriod[names.AttrValue].(int)),
+			Type:  types.ValidityType(signatureValidityPeriod[names.AttrType].(string)),
 		}
 	}
 
@@ -203,8 +203,8 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("name", output.ProfileName)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrName, output.ProfileName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.ProfileName)))
 	d.Set("platform_display_name", output.PlatformDisplayName)
 	d.Set("platform_id", output.PlatformId)
@@ -214,8 +214,8 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if v := output.SignatureValidityPeriod; v != nil {
 		if err := d.Set("signature_validity_period", []interface{}{
 			map[string]interface{}{
-				"value": v.Value,
-				"type":  v.Type,
+				names.AttrValue: v.Value,
+				names.AttrType:  v.Type,
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
@@ -226,8 +226,8 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
 		}
 	}
-	d.Set("status", output.Status)
-	d.Set("version", output.ProfileVersion)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrVersion, output.ProfileVersion)
 	d.Set("version_arn", output.ProfileVersionArn)
 
 	setTagsOut(ctx, output.Tags)

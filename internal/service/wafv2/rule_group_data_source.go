@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_wafv2_rule_group")
@@ -22,15 +23,15 @@ func DataSourceRuleGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -47,7 +48,7 @@ func DataSourceRuleGroup() *schema.Resource {
 func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	var foundRuleGroup *wafv2.RuleGroupSummary
 	input := &wafv2.ListRuleGroupsInput{
@@ -83,8 +84,8 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.StringValue(foundRuleGroup.Id))
-	d.Set("arn", foundRuleGroup.ARN)
-	d.Set("description", foundRuleGroup.Description)
+	d.Set(names.AttrARN, foundRuleGroup.ARN)
+	d.Set(names.AttrDescription, foundRuleGroup.Description)
 
 	return diags
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_user_defined_function")
@@ -33,7 +34,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +48,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -100,7 +101,7 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
-	funcName := d.Get("name").(string)
+	funcName := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateUserDefinedFunctionInput{
 		CatalogId:     aws.String(catalogID),
@@ -177,8 +178,8 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 		Resource:  fmt.Sprintf("userDefinedFunction/%s/%s", dbName, aws.StringValue(udf.FunctionName)),
 	}.String()
 
-	d.Set("arn", udfArn)
-	d.Set("name", udf.FunctionName)
+	d.Set(names.AttrARN, udfArn)
+	d.Set(names.AttrName, udf.FunctionName)
 	d.Set("catalog_id", catalogID)
 	d.Set("database_name", dbName)
 	d.Set("owner_type", udf.OwnerType)
@@ -225,7 +226,7 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
 	udf := &glue.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
-		FunctionName: aws.String(d.Get("name").(string)),
+		FunctionName: aws.String(d.Get(names.AttrName).(string)),
 		OwnerName:    aws.String(d.Get("owner_name").(string)),
 		OwnerType:    aws.String(d.Get("owner_type").(string)),
 	}

@@ -41,7 +41,7 @@ func resourceService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -283,7 +283,7 @@ func resourceService() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 51200),
 															},
-															"port": {
+															names.AttrPort: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																Default:      "8080",
@@ -337,12 +337,12 @@ func resourceService() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.SourceCodeVersionType](),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(0, 51200),
@@ -372,7 +372,7 @@ func resourceService() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"port": {
+												names.AttrPort: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Default:      "8080",
@@ -419,7 +419,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -518,7 +518,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.Set("arn", service.ServiceArn)
+	d.Set(names.AttrARN, service.ServiceArn)
 	if service.AutoScalingConfigurationSummary != nil {
 		d.Set("auto_scaling_configuration_arn", service.AutoScalingConfigurationSummary.AutoScalingConfigurationArn)
 	} else {
@@ -545,7 +545,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source_configuration: %s", err)
 	}
-	d.Set("status", service.Status)
+	d.Set(names.AttrStatus, service.Status)
 
 	return diags
 }
@@ -555,7 +555,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &apprunner.UpdateServiceInput{
 			ServiceArn: aws.String(d.Id()),
 		}
@@ -984,7 +984,7 @@ func expandServiceImageConfiguration(l []interface{}) *types.ImageConfiguration 
 
 	result := &types.ImageConfiguration{}
 
-	if v, ok := tfMap["port"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPort].(string); ok && v != "" {
 		result.Port = aws.String(v)
 	}
 
@@ -1104,7 +1104,7 @@ func expandServiceCodeConfigurationValues(l []interface{}) *types.CodeConfigurat
 		result.BuildCommand = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPort].(string); ok && v != "" {
 		result.Port = aws.String(v)
 	}
 
@@ -1140,11 +1140,11 @@ func expandServiceSourceCodeVersion(l []interface{}) *types.SourceCodeVersion {
 
 	result := &types.SourceCodeVersion{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		result.Type = types.SourceCodeVersionType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		result.Value = aws.String(v)
 	}
 
@@ -1281,7 +1281,7 @@ func flattenServiceCodeConfigurationValues(values *types.CodeConfigurationValues
 
 	m := map[string]interface{}{
 		"build_command":                 aws.ToString(values.BuildCommand),
-		"port":                          aws.ToString(values.Port),
+		names.AttrPort:                  aws.ToString(values.Port),
 		"runtime":                       string(values.Runtime),
 		"runtime_environment_secrets":   values.RuntimeEnvironmentSecrets,
 		"runtime_environment_variables": values.RuntimeEnvironmentVariables,
@@ -1297,8 +1297,8 @@ func flattenServiceSourceCodeVersion(v *types.SourceCodeVersion) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"type":  string(v.Type),
-		"value": aws.ToString(v.Value),
+		names.AttrType:  string(v.Type),
+		names.AttrValue: aws.ToString(v.Value),
 	}
 
 	return []interface{}{m}
@@ -1338,7 +1338,7 @@ func flattenServiceImageConfiguration(config *types.ImageConfiguration) []interf
 	}
 
 	m := map[string]interface{}{
-		"port":                          aws.ToString(config.Port),
+		names.AttrPort:                  aws.ToString(config.Port),
 		"runtime_environment_secrets":   config.RuntimeEnvironmentSecrets,
 		"runtime_environment_variables": config.RuntimeEnvironmentVariables,
 		"start_command":                 aws.ToString(config.StartCommand),

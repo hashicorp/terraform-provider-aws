@@ -59,7 +59,7 @@ func ResourceListenerRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +81,7 @@ func ResourceListenerRule() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
@@ -115,7 +115,7 @@ func ResourceListenerRule() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"arn": {
+												names.AttrARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -136,7 +136,7 @@ func ResourceListenerRule() *schema.Resource {
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 													Default:  false,
@@ -174,7 +174,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
-									"port": {
+									names.AttrPort: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{port}",
@@ -445,11 +445,11 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -498,7 +498,7 @@ func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppres
 			}
 			return false
 		})
-		at := k[:i+1] + "type"
+		at := k[:i+1] + names.AttrType
 		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
@@ -596,7 +596,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	rule := resp.Rules[0]
 
-	d.Set("arn", rule.RuleArn)
+	d.Set(names.AttrARN, rule.RuleArn)
 
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", ListenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
@@ -657,8 +657,8 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			values := make([]interface{}, len(condition.QueryStringConfig.Values))
 			for k, value := range condition.QueryStringConfig.Values {
 				values[k] = map[string]interface{}{
-					"key":   aws.ToString(value.Key),
-					"value": aws.ToString(value.Value),
+					names.AttrKey:   aws.ToString(value.Key),
+					names.AttrValue: aws.ToString(value.Value),
 				}
 			}
 			conditionMap["query_string"] = values
@@ -684,7 +684,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		if d.HasChange("priority") {
 			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
 				RulePriorities: []awstypes.RulePriorityPair{
@@ -922,10 +922,10 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 			for j, p := range values {
 				valuePair := p.(map[string]interface{})
 				elbValuePair := awstypes.QueryStringKeyValuePair{
-					Value: aws.String(valuePair["value"].(string)),
+					Value: aws.String(valuePair[names.AttrValue].(string)),
 				}
-				if valuePair["key"].(string) != "" {
-					elbValuePair.Key = aws.String(valuePair["key"].(string))
+				if valuePair[names.AttrKey].(string) != "" {
+					elbValuePair.Key = aws.String(valuePair[names.AttrKey].(string))
 				}
 				elbConditions[i].QueryStringConfig.Values[j] = elbValuePair
 			}

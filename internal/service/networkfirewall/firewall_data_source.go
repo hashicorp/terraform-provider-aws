@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkfirewall_firewall")
@@ -25,18 +26,18 @@ func DataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallResourceRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				AtLeastOneOf: []string{"arn", "name"},
+				AtLeastOneOf: []string{names.AttrARN, names.AttrName},
 			},
 			"delete_protection": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +50,7 @@ func DataSourceFirewall() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -109,7 +110,7 @@ func DataSourceFirewall() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -131,7 +132,7 @@ func DataSourceFirewall() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -148,11 +149,11 @@ func DataSourceFirewall() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{"arn", "name"},
+				AtLeastOneOf: []string{names.AttrARN, names.AttrName},
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
 			"subnet_change_protection": {
@@ -171,12 +172,12 @@ func DataSourceFirewall() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 			"update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,11 +193,11 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 
 	input := &networkfirewall.DescribeFirewallInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.FirewallArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.FirewallName = aws.String(v.(string))
 	}
 
@@ -221,23 +222,23 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 
 	firewall := output.Firewall
 
-	d.Set("arn", firewall.FirewallArn)
+	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
-	d.Set("description", firewall.Description)
-	d.Set("name", firewall.FirewallName)
+	d.Set(names.AttrDescription, firewall.Description)
+	d.Set(names.AttrName, firewall.FirewallName)
 	d.Set("encryption_configuration", flattenDataSourceEncryptionConfiguration(firewall.EncryptionConfiguration))
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
 	d.Set("firewall_status", flattenDataSourceFirewallStatus(output.FirewallStatus))
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	d.Set("update_token", output.UpdateToken)
-	d.Set("vpc_id", firewall.VpcId)
+	d.Set(names.AttrVPCID, firewall.VpcId)
 
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mappings: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -258,7 +259,7 @@ func flattenDataSourceFirewallStatus(status *networkfirewall.FirewallStatus) []i
 		m["configuration_sync_state_summary"] = aws.StringValue(status.ConfigurationSyncStateSummary)
 	}
 	if status.Status != nil {
-		m["status"] = aws.StringValue(status.Status)
+		m[names.AttrStatus] = aws.StringValue(status.Status)
 	}
 	if status.SyncStates != nil {
 		m["sync_states"] = flattenDataSourceSyncStates(status.SyncStates)
@@ -332,9 +333,9 @@ func flattenDataSourceSyncStateAttachment(attach *networkfirewall.Attachment) []
 	}
 
 	m := map[string]interface{}{
-		"endpoint_id": aws.StringValue(attach.EndpointId),
-		"status":      aws.StringValue(attach.Status),
-		"subnet_id":   aws.StringValue(attach.SubnetId),
+		"endpoint_id":    aws.StringValue(attach.EndpointId),
+		names.AttrStatus: aws.StringValue(attach.Status),
+		"subnet_id":      aws.StringValue(attach.SubnetId),
 	}
 
 	return []interface{}{m}
@@ -358,8 +359,8 @@ func flattenDataSourceEncryptionConfiguration(encrypt *networkfirewall.Encryptio
 	}
 
 	m := map[string]interface{}{
-		"key_id": aws.StringValue(encrypt.KeyId),
-		"type":   aws.StringValue(encrypt.Type),
+		"key_id":       aws.StringValue(encrypt.KeyId),
+		names.AttrType: aws.StringValue(encrypt.Type),
 	}
 
 	return []interface{}{m}

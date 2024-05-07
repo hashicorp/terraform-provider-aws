@@ -70,7 +70,7 @@ func TestAccIAMRole_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -83,7 +83,7 @@ func TestAccIAMRole_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccIAMRole_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -113,7 +113,7 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 				Config: testAccRoleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -141,7 +141,7 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, acctest.ResourcePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
 				),
 			},
@@ -608,7 +608,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
@@ -656,7 +656,7 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
@@ -718,7 +718,7 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyManaged(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
 			},

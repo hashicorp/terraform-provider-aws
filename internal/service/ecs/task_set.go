@@ -40,7 +40,7 @@ func ResourceTaskSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,7 +177,7 @@ func ResourceTaskSet() *schema.Resource {
 							Default:      ecs.ScaleUnitPercent,
 							ValidateFunc: validation.StringInSlice(ecs.ScaleUnit_Values(), false),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeFloat,
 							Optional:     true,
 							ValidateFunc: validation.FloatBetween(0.0, 100.0),
@@ -208,7 +208,7 @@ func ResourceTaskSet() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
@@ -227,7 +227,7 @@ func ResourceTaskSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -406,13 +406,13 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	taskSet := out.TaskSets[0]
 
-	d.Set("arn", taskSet.TaskSetArn)
+	d.Set(names.AttrARN, taskSet.TaskSetArn)
 	d.Set("cluster", cluster)
 	d.Set("launch_type", taskSet.LaunchType)
 	d.Set("platform_version", taskSet.PlatformVersion)
 	d.Set("external_id", taskSet.ExternalId)
 	d.Set("service", service)
-	d.Set("status", taskSet.Status)
+	d.Set(names.AttrStatus, taskSet.Status)
 	d.Set("stability_status", taskSet.StabilityStatus)
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
@@ -446,7 +446,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
 		if err != nil {

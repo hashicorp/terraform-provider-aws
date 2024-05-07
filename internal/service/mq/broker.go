@@ -63,7 +63,7 @@ func resourceBroker() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,7 +91,7 @@ func resourceBroker() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -141,7 +141,7 @@ func resourceBroker() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -313,7 +313,7 @@ func resourceBroker() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -330,7 +330,7 @@ func resourceBroker() *schema.Resource {
 					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
 					// User list is not returned back after creation.
 					// Updates to users can only be in the RabbitMQ UI.
-					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get("arn").(string) != "" {
+					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get(names.AttrARN).(string) != "" {
 						return true
 					}
 
@@ -442,7 +442,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
 	}
-	if v, ok := d.GetOk("subnet_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -453,7 +453,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(output.BrokerId))
-	d.Set("arn", output.BrokerArn)
+	d.Set(names.AttrARN, output.BrokerArn)
 
 	if _, err := waitBrokerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
@@ -479,7 +479,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.BrokerArn)
+	d.Set(names.AttrARN, output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
 	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
 	d.Set("broker_name", output.BrokerName)
@@ -493,7 +493,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("publicly_accessible", output.PubliclyAccessible)
 	d.Set("security_groups", output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
-	d.Set("subnet_ids", output.SubnetIds)
+	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
@@ -927,7 +927,7 @@ func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {
 		UseAwsOwnedKey: aws.Bool(m["use_aws_owned_key"].(bool)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		encryptionOptions.KmsKeyId = aws.String(v)
 	}
 
@@ -940,7 +940,7 @@ func flattenEncryptionOptions(encryptionOptions *types.EncryptionOptions) []inte
 	}
 
 	m := map[string]interface{}{
-		"kms_key_id":        aws.ToString(encryptionOptions.KmsKeyId),
+		names.AttrKMSKeyID:  aws.ToString(encryptionOptions.KmsKeyId),
 		"use_aws_owned_key": aws.ToBool(encryptionOptions.UseAwsOwnedKey),
 	}
 
@@ -1092,7 +1092,7 @@ func expandConfigurationId(cfg []interface{}) *types.ConfigurationId {
 
 	m := cfg[0].(map[string]interface{})
 	out := types.ConfigurationId{
-		Id: aws.String(m["id"].(string)),
+		Id: aws.String(m[names.AttrID].(string)),
 	}
 	if v, ok := m["revision"].(int); ok && v > 0 {
 		out.Revision = aws.Int32(int32(v))
@@ -1107,8 +1107,8 @@ func flattenConfiguration(config *types.Configurations) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"id":       aws.ToString(config.Current.Id),
-		"revision": aws.ToInt32(config.Current.Revision),
+		names.AttrID: aws.ToString(config.Current.Id),
+		"revision":   aws.ToInt32(config.Current.Revision),
 	}
 
 	return []interface{}{m}

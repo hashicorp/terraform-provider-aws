@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elastictranscoder_preset")
@@ -30,7 +31,7 @@ func ResourcePreset() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -176,13 +177,13 @@ func ResourcePreset() *schema.Resource {
 				}, false),
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -264,7 +265,7 @@ func ResourcePreset() *schema.Resource {
 				},
 			},
 
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -436,7 +437,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -512,16 +513,16 @@ func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
 		Container:   aws.String(d.Get("container").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Thumbnails:  expandETThumbnails(d),
 		Video:       expandETVideoParams(d),
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if name, ok := d.GetOk(names.AttrName); ok {
 		req.Name = aws.String(name.(string))
 	} else {
 		name := id.PrefixedUniqueId("tf-et-preset-")
-		d.Set("name", name)
+		d.Set(names.AttrName, name)
 		req.Name = aws.String(name)
 	}
 
@@ -737,7 +738,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 		watermark := &elastictranscoder.PresetWatermark{
 			HorizontalAlign:  aws.String(p["horizontal_align"].(string)),
 			HorizontalOffset: aws.String(p["horizontal_offset"].(string)),
-			Id:               aws.String(p["id"].(string)),
+			Id:               aws.String(p[names.AttrID].(string)),
 			MaxHeight:        aws.String(p["max_height"].(string)),
 			MaxWidth:         aws.String(p["max_width"].(string)),
 			Opacity:          aws.String(p["opacity"].(string)),
@@ -770,7 +771,7 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	preset := resp.Preset
-	d.Set("arn", preset.Arn)
+	d.Set(names.AttrARN, preset.Arn)
 
 	if preset.Audio != nil {
 		if err := d.Set("audio", flattenETAudioParameters(preset.Audio)); err != nil {
@@ -785,8 +786,8 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("container", preset.Container)
-	d.Set("name", preset.Name)
-	d.Set("description", preset.Description)
+	d.Set(names.AttrName, preset.Name)
+	d.Set(names.AttrDescription, preset.Description)
 
 	if preset.Thumbnails != nil {
 		err := d.Set("thumbnails", flattenETThumbnails(preset.Thumbnails))
@@ -795,7 +796,7 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	d.Set("type", preset.Type)
+	d.Set(names.AttrType, preset.Type)
 
 	if preset.Video != nil {
 		err := d.Set("video", flattenETVideoParams(preset.Video))
@@ -903,7 +904,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 		watermark := map[string]interface{}{
 			"horizontal_align":  aws.StringValue(w.HorizontalAlign),
 			"horizontal_offset": aws.StringValue(w.HorizontalOffset),
-			"id":                aws.StringValue(w.Id),
+			names.AttrID:        aws.StringValue(w.Id),
 			"max_height":        aws.StringValue(w.MaxHeight),
 			"max_width":         aws.StringValue(w.MaxWidth),
 			"opacity":           aws.StringValue(w.Opacity),

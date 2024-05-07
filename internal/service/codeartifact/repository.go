@@ -43,11 +43,11 @@ func resourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -77,7 +77,7 @@ func resourceRepository() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -120,7 +120,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:       getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,8 +183,8 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("administrator_account", repository.AdministratorAccount)
-	d.Set("arn", repository.Arn)
-	d.Set("description", repository.Description)
+	d.Set(names.AttrARN, repository.Arn)
+	d.Set(names.AttrDescription, repository.Description)
 	d.Set("domain", repository.DomainName)
 	d.Set("domain_owner", repository.DomainOwner)
 	if err := d.Set("external_connections", flattenRepositoryExternalConnectionInfos(repository.ExternalConnections)); err != nil {
@@ -207,15 +207,15 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("description", "upstream") {
+	if d.HasChanges(names.AttrDescription, "upstream") {
 		input := &codeartifact.UpdateRepositoryInput{
 			Domain:      aws.String(domainName),
 			DomainOwner: aws.String(owner),
 			Repository:  aws.String(repositoryName),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("upstream") {
@@ -393,7 +393,7 @@ func flattenRepositoryExternalConnectionInfos(apiObjects []types.RepositoryExter
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
 			"package_format": apiObject.PackageFormat,
-			"status":         apiObject.Status,
+			names.AttrStatus: apiObject.Status,
 		}
 
 		if v := apiObject.ExternalConnectionName; v != nil {

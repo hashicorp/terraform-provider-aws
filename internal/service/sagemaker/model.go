@@ -38,7 +38,7 @@ func ResourceModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -181,7 +181,7 @@ func ResourceModel() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -336,7 +336,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -416,8 +416,8 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.StringValue(model.ModelArn)
-	d.Set("arn", arn)
-	d.Set("name", model.ModelName)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, model.ModelName)
 	d.Set("execution_role_arn", model.ExecutionRoleArn)
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
 
