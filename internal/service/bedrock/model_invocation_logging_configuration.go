@@ -67,7 +67,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 								// Required: true,
 								Optional: true,
 							},
-							"role_arn": schema.StringAttribute{
+							names.AttrRoleARN: schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
 								Optional:   true,
 							},
