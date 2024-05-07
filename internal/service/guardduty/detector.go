@@ -41,7 +41,7 @@ func ResourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,7 +196,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	if gdo.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
@@ -217,7 +217,7 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &guardduty.UpdateDetectorInput{
 			DetectorId:                 aws.String(d.Id()),
 			Enable:                     aws.Bool(d.Get("enable").(bool)),

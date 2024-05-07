@@ -43,8 +43,8 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -59,7 +59,7 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName2, threatintelsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),
