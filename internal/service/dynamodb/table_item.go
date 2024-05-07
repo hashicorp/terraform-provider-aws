@@ -101,8 +101,6 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
-
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
@@ -240,33 +238,6 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func findTableItemByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName string, key map[string]awstypes.AttributeValue) (map[string]awstypes.AttributeValue, error) {
-	input := &dynamodb.GetItemInput{
-		ConsistentRead: aws.Bool(true),
-		Key:            key,
-		TableName:      aws.String(tableName),
-	}
-
-	output, err := conn.GetItem(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Item == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Item, nil
-}
-
 func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string, attrs map[string]awstypes.AttributeValue) string {
 	id := []string{tableName, hashKey}
 
@@ -293,6 +264,37 @@ func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string
 	}
 
 	return strings.Join(id, "|")
+}
+
+func findTableItemByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName string, key map[string]awstypes.AttributeValue) (map[string]awstypes.AttributeValue, error) {
+	input := &dynamodb.GetItemInput{
+		ConsistentRead: aws.Bool(true),
+		Key:            key,
+		TableName:      aws.String(tableName),
+	}
+
+	return findTableItem(ctx, conn, input)
+}
+
+func findTableItem(ctx context.Context, conn *dynamodb.Client, input *dynamodb.GetItemInput) (map[string]awstypes.AttributeValue, error) {
+	output, err := conn.GetItem(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Item == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Item, nil
 }
 
 func expandTableItemQueryKey(attrs map[string]awstypes.AttributeValue, hashKey, rangeKey string) map[string]awstypes.AttributeValue {
