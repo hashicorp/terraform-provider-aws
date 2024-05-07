@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing type
@@ -75,7 +76,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,7 +255,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("owner_account_id", a.OwnerAccountId)
 	d.Set("resource_arn", a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
-	d.Set("state", a.State)
+	d.Set(names.AttrState, a.State)
 
 	return diags
 }

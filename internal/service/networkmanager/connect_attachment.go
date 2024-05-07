@@ -47,7 +47,7 @@ func ResourceConnectAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -217,7 +217,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("attachment/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
 	d.Set("attachment_id", a.AttachmentId)
 	d.Set("attachment_type", a.AttachmentType)
@@ -234,7 +234,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_account_id", a.OwnerAccountId)
 	d.Set("resource_arn", a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
-	d.Set("state", a.State)
+	d.Set(names.AttrState, a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
 	setTagsOut(ctx, a.Tags)
