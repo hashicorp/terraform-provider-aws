@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.22.0
+go 1.22.2
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.52.1 // indirect
+	github.com/aws/aws-sdk-go v1.52.2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
@@ -49,7 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.9.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5 // indirect
@@ -78,13 +78,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.16.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4 // indirect
@@ -113,7 +113,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.25.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.6 // indirect
@@ -125,6 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kms v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.4 // indirect
@@ -171,7 +172,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.28.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.25.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signer v1.22.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4 // indirect
@@ -188,7 +189,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.0 // indirect
@@ -271,7 +272,7 @@ require (
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.18.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
