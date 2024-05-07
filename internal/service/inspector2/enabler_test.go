@@ -585,7 +585,7 @@ func testAccCheckEnablerIDProvider(resourceName string, types []types.ResourceSc
 			return acctest.ProviderAccountID(f())
 		})
 		id := tfinspector2.EnablerID(accountIDs, types)
-		return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrID, id)(s)
 	}
 }
 
