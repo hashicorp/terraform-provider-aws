@@ -214,7 +214,7 @@ func testAccTypeZipGenerator(t *testing.T, typeName string) string {
 	tempDir := t.TempDir()
 	_, currentFilePath, _, _ := runtime.Caller(0)
 
-	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "testdata", "examplecompany-exampleservice-exampleresource")
+	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "test-fixtures", "examplecompany-exampleservice-exampleresource")
 	targetDirectoryPath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource")
 	targetZipFilePath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource.zip")
 
