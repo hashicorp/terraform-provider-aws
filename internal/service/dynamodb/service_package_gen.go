@@ -70,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Table Export",
 		},
 		{
-			Factory:  ResourceTableItem,
+			Factory:  resourceTableItem,
 			TypeName: "aws_dynamodb_table_item",
+			Name:     "Table Item",
 		},
 		{
 			Factory:  resourceTableReplica,

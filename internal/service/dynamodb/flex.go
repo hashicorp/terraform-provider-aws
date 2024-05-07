@@ -6,81 +6,72 @@ package dynamodb
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/maps"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func ExpandTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
-	var attributes map[string]*dynamodb.AttributeValue
+func expandTableItemAttributes(tfString string) (map[string]awstypes.AttributeValue, error) {
+	var apiObject map[string]awstypes.AttributeValue
 
-	dec := json.NewDecoder(strings.NewReader(input))
-	err := dec.Decode(&attributes)
+	err := json.NewDecoder(strings.NewReader(tfString)).Decode(&apiObject)
 	if err != nil {
-		return nil, fmt.Errorf("Decoding failed: %s", err)
+		return nil, err
 	}
 
-	return attributes, nil
+	return apiObject, nil
 }
 
-func flattenTableItemAttributes(attrs map[string]*dynamodb.AttributeValue) (string, error) {
+func flattenTableItemAttributes(apiObject map[string]awstypes.AttributeValue) (string, error) {
 	buf := bytes.NewBufferString("")
 	encoder := json.NewEncoder(buf)
 
-	a := make(map[string]attributeValue, len(attrs))
-	for k, v := range attrs {
-		a[k] = attributeValue(*v)
-	}
-	err := encoder.Encode(a)
+	err := encoder.Encode(tfmaps.ApplyToAllValues(apiObject, func(v awstypes.AttributeValue) attributeValue {
+		return attributeValue{v}
+	}))
+
 	if err != nil {
-		return "", fmt.Errorf("Encoding failed: %s", err)
+		return "", err
 	}
 
 	return buf.String(), nil
 }
 
-type attributeValue dynamodb.AttributeValue
+type attributeValue struct {
+	awstypes.AttributeValue
+}
 
-func (f attributeValue) MarshalJSON() ([]byte, error) {
-	thing := map[string]any{}
+func (v attributeValue) MarshalJSON() ([]byte, error) {
+	m := map[string]any{}
 
-	if f.B != nil {
-		thing["B"] = f.B
-	}
-	if f.BOOL != nil {
-		thing["BOOL"] = f.BOOL
-	}
-	if f.BS != nil {
-		thing["BS"] = f.BS
-	}
-	if f.L != nil {
-		thing["L"] = slices.ApplyToAll(f.L, func(t *dynamodb.AttributeValue) attributeValue {
-			return attributeValue(*t)
+	switch v := v.AttributeValue.(type) {
+	case *awstypes.AttributeValueMemberB:
+		m["B"] = v.Value
+	case *awstypes.AttributeValueMemberBOOL:
+		m["BOOL"] = v.Value
+	case *awstypes.AttributeValueMemberBS:
+		m["BS"] = v.Value
+	case *awstypes.AttributeValueMemberL:
+		m["L"] = tfslices.ApplyToAll(v.Value, func(v awstypes.AttributeValue) attributeValue {
+			return attributeValue{v}
 		})
-	}
-	if f.M != nil {
-		thing["M"] = maps.ApplyToAllValues(f.M, func(t *dynamodb.AttributeValue) attributeValue {
-			return attributeValue(*t)
+	case *awstypes.AttributeValueMemberM:
+		m["M"] = tfmaps.ApplyToAllValues(v.Value, func(v awstypes.AttributeValue) attributeValue {
+			return attributeValue{v}
 		})
-	}
-	if f.N != nil {
-		thing["N"] = f.N
-	}
-	if f.NS != nil {
-		thing["NS"] = f.NS
-	}
-	if f.NULL != nil {
-		thing["NULL"] = f.NULL
-	}
-	if f.S != nil {
-		thing["S"] = f.S
-	}
-	if f.SS != nil {
-		thing["SS"] = f.SS
+	case *awstypes.AttributeValueMemberN:
+		m["N"] = v.Value
+	case *awstypes.AttributeValueMemberNS:
+		m["NS"] = v.Value
+	case *awstypes.AttributeValueMemberNULL:
+		m["NULL"] = v.Value
+	case *awstypes.AttributeValueMemberS:
+		m["S"] = v.Value
+	case *awstypes.AttributeValueMemberSS:
+		m["SS"] = v.Value
 	}
 
-	return json.Marshal(thing)
+	return json.Marshal(m)
 }

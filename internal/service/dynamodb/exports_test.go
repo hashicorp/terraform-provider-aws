@@ -10,18 +10,22 @@ var (
 	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
 	ResourceTable                       = resourceTable
 	ResourceTableExport                 = resourceTableExport
+	ResourceTableItem                   = resourceTableItem
 	ResourceTableReplica                = resourceTableReplica
 	ResourceTag                         = resourceTag
 	ResourceResourcePolicy              = newResourcePolicyResource
 
 	ARNForNewRegion                              = arnForNewRegion
 	ContributorInsightsParseResourceID           = contributorInsightsParseResourceID
+	ExpandTableItemAttributes                    = expandTableItemAttributes
+	ExpandTableItemQueryKey                      = expandTableItemQueryKey
 	FindContributorInsightsByTwoPartKey          = findContributorInsightsByTwoPartKey
 	FindGlobalTableByName                        = findGlobalTableByName
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindTableByName                              = findTableByName
 	FindTableExportByARN                         = findTableExportByARN
+	FindTableItemByTwoPartKey                    = findTableItemByTwoPartKey
 	ListTags                                     = listTags
 	RegionFromARN                                = regionFromARN
 	ReplicaForRegion                             = replicaForRegion
