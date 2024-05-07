@@ -32,7 +32,7 @@ func findTag(ctx context.Context, conn *autoscaling.Client, identifier, resource
 				Values: []string{identifier},
 			},
 			{
-				Name:   aws.String("key"),
+				Name:   aws.String(names.AttrKey),
 				Values: []string{key},
 			},
 		},
