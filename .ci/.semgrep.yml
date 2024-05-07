@@ -640,8 +640,9 @@ rules:
     message: Use the constant `names.AttrARN` for the string literal `arn`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -667,8 +668,9 @@ rules:
     message: Use the constant `names.AttrBucket` for the string literal `bucket`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -694,8 +696,9 @@ rules:
     message: Use the constant `names.AttrDescription` for the string literal `description`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -721,8 +724,9 @@ rules:
     message: Use the constant `names.AttrEnabled` for the string literal `enabled`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -748,8 +752,9 @@ rules:
     message: Use the constant `names.AttrID` for the string literal `id`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -775,8 +780,9 @@ rules:
     message: Use the constant `names.AttrKMSKeyARN` for the string literal `kms_key_arn`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -802,8 +808,9 @@ rules:
     message: Use the constant `names.AttrKMSKeyID` for the string literal `kms_key_id`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -829,8 +836,9 @@ rules:
     message: Use the constant `names.AttrKey` for the string literal `key`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -856,8 +864,9 @@ rules:
     message: Use the constant `names.AttrName` for the string literal `name`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -883,8 +892,9 @@ rules:
     message: Use the constant `names.AttrOwnerID` for the string literal `owner_id`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -910,8 +920,9 @@ rules:
     message: Use the constant `names.AttrParameters` for the string literal `parameters`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -937,8 +948,9 @@ rules:
     message: Use the constant `names.AttrPolicy` for the string literal `policy`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -964,8 +976,9 @@ rules:
     message: Use the constant `names.AttrPort` for the string literal `port`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -991,8 +1004,9 @@ rules:
     message: Use the constant `names.AttrRoleARN` for the string literal `role_arn`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1018,8 +1032,9 @@ rules:
     message: Use the constant `names.AttrState` for the string literal `state`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1045,8 +1060,9 @@ rules:
     message: Use the constant `names.AttrStatus` for the string literal `status`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1072,8 +1088,9 @@ rules:
     message: Use the constant `names.AttrSubnetIDs` for the string literal `subnet_ids`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1099,8 +1116,9 @@ rules:
     message: Use the constant `names.AttrTags` for the string literal `tags`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1126,8 +1144,9 @@ rules:
     message: Use the constant `names.AttrTagsAll` for the string literal `tags_all`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1153,8 +1172,9 @@ rules:
     message: Use the constant `names.AttrTimeouts` for the string literal `timeouts`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1180,8 +1200,9 @@ rules:
     message: Use the constant `names.AttrType` for the string literal `type`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1207,8 +1228,9 @@ rules:
     message: Use the constant `names.AttrVPCID` for the string literal `vpc_id`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1234,8 +1256,9 @@ rules:
     message: Use the constant `names.AttrValue` for the string literal `value`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
@@ -1261,8 +1284,9 @@ rules:
     message: Use the constant `names.AttrVersion` for the string literal `version`
     paths:
       include:
-        - "internal/service/iam/*.go"
-        - "internal/service/meta/*.go"
+        - "internal/service/h*/*.go"
+        - "internal/service/i*/*.go"
+        - "internal/service/j*/*.go"
         - "internal/service/k*/*.go"
         - "internal/service/l*/*.go"
         - "internal/service/m*/*.go"
