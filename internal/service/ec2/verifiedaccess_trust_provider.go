@@ -45,7 +45,7 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -152,7 +152,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -199,7 +199,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Trust Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	if v := output.DeviceOptions; v != nil {
 		if err := d.Set("device_options", flattenDeviceOptions(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting device_options: %s", err)
@@ -228,14 +228,14 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyVerifiedAccessTrustProviderInput{
 			ClientToken:                   aws.String(id.UniqueId()),
 			VerifiedAccessTrustProviderId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("oidc_options") {

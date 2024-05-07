@@ -77,7 +77,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 				Config: testAccVerifiedAccessInstanceConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},

@@ -37,7 +37,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", nip.NetworkInsightsPathArn)
+	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
 	d.Set("destination", nip.Destination)
 	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)

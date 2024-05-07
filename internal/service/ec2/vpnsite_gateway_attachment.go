@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpn_gateway_attachment", name="VPN Gateway Attachment")
@@ -25,7 +26,7 @@ func resourceVPNGatewayAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPNGatewayAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -43,7 +44,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 	input := &ec2.AttachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
@@ -72,7 +73,7 @@ func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
 	_, err := FindVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID)
@@ -94,7 +95,7 @@ func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway (%s) Attachment (%s)", vpnGatewayID, vpcID)

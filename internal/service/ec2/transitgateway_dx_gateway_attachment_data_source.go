@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_dx_gateway_attachment")
@@ -31,8 +32,8 @@ func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter": customFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			"filter":       customFiltersSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -56,7 +57,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
@@ -85,7 +86,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

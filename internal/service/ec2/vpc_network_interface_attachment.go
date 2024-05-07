@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_interface_attachment")
@@ -44,7 +45,7 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -94,7 +95,7 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set("attachment_id", network_interface.Attachment.AttachmentId)
 	d.Set("device_index", network_interface.Attachment.DeviceIndex)
 	d.Set("instance_id", network_interface.Attachment.InstanceId)
-	d.Set("status", network_interface.Attachment.Status)
+	d.Set(names.AttrStatus, network_interface.Attachment.Status)
 
 	return diags
 }

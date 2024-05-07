@@ -54,7 +54,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,7 +102,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -154,7 +154,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -244,7 +244,7 @@ func resourceReplicationGroup() *schema.Resource {
 					return strings.HasPrefix(old, "global-datastore-")
 				},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -424,7 +424,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
@@ -449,7 +449,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.IpDiscovery = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -493,7 +493,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.CacheParameterGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Port = aws.Int64(int64(v.(int)))
 	}
 
@@ -642,8 +642,8 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	d.Set("kms_key_id", rgp.KmsKeyId)
-	d.Set("description", rgp.Description)
+	d.Set(names.AttrKMSKeyID, rgp.KmsKeyId)
+	d.Set(names.AttrDescription, rgp.Description)
 	d.Set("num_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringSet(rgp.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
@@ -654,7 +654,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
-	d.Set("arn", rgp.ARN)
+	d.Set(names.AttrARN, rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
 	d.Set("ip_discovery", rgp.IpDiscovery)
@@ -665,14 +665,14 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
 	if rgp.ConfigurationEndpoint != nil {
-		d.Set("port", rgp.ConfigurationEndpoint.Port)
+		d.Set(names.AttrPort, rgp.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
 	} else {
 		log.Printf("[DEBUG] ElastiCache Replication Group (%s) Configuration Endpoint is nil", d.Id())
 
 		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
 			log.Printf("[DEBUG] ElastiCache Replication Group (%s) Primary Endpoint is not nil", d.Id())
-			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+			d.Set(names.AttrPort, rgp.NodeGroups[0].PrimaryEndpoint.Port)
 			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
 		}
 
@@ -734,7 +734,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		o, n := d.GetChange("num_cache_clusters")
 		oldCacheClusterCount, newCacheClusterCount := o.(int), n.(int)
 
@@ -770,8 +770,8 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if d.HasChange("description") {
-			input.ReplicationGroupDescription = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.ReplicationGroupDescription = aws.String(d.Get(names.AttrDescription).(string))
 			requestUpdate = true
 		}
 

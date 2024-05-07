@@ -173,7 +173,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -337,7 +337,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "false",
+						names.AttrEnabled: "false",
 					})),
 			},
 			{
@@ -351,7 +351,7 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "true",
+						names.AttrEnabled: "true",
 					})),
 			},
 		},

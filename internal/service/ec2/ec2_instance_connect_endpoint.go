@@ -56,7 +56,7 @@ func (r *instanceConnectEndpointResource) Metadata(_ context.Context, request re
 func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -88,7 +88,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -118,7 +118,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

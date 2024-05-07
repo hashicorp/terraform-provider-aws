@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_emr_instance_fleet", name="Instance Fleet")
@@ -104,7 +105,7 @@ func resourceInstanceFleet() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -194,7 +195,7 @@ func resourceInstanceFleet() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -226,7 +227,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	taskFleet := map[string]interface{}{
-		"name":                      d.Get("name"),
+		names.AttrName:              d.Get(names.AttrName),
 		"target_on_demand_capacity": d.Get("target_on_demand_capacity"),
 		"target_spot_capacity":      d.Get("target_spot_capacity"),
 		"instance_type_configs":     d.Get("instance_type_configs"),
@@ -270,7 +271,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("launch_specifications", flattenLaunchSpecifications(fleet.LaunchSpecifications)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_specifications: %s", err)
 	}
-	d.Set("name", fleet.Name)
+	d.Set(names.AttrName, fleet.Name)
 	d.Set("provisioned_on_demand_capacity", fleet.ProvisionedOnDemandCapacity)
 	d.Set("provisioned_spot_capacity", fleet.ProvisionedSpotCapacity)
 	d.Set("target_on_demand_capacity", fleet.TargetOnDemandCapacity)

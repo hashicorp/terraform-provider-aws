@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_replication_configuration", name="Replication Configuration")
@@ -61,7 +62,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -74,7 +75,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -155,7 +156,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 		}
 		// Assume 1 destination.
 		copy(0, "availability_zone_name")
-		copy(0, "kms_key_id")
+		copy(0, names.AttrKMSKeyID)
 	}
 
 	d.Set("creation_time", aws.TimeValue(replication.CreationTime).String())
@@ -332,7 +333,7 @@ func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToC
 		apiObject.AvailabilityZoneName = aws.String(v)
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -389,7 +390,7 @@ func flattenDestination(apiObject *efs.Destination) map[string]interface{} {
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+		tfMap[names.AttrStatus] = aws.StringValue(v)
 	}
 
 	return tfMap

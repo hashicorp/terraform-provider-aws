@@ -38,7 +38,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 				Config: testAccCapacityReservationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`capacity-reservation/cr-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
@@ -49,7 +49,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidName(t *testing.T) {
@@ -17,7 +18,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range validNames {
-		_, errors := validName(s, "name")
+		_, errors := validName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name: %v", s, errors)
 		}
@@ -32,7 +33,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := validName(s, "name")
+		_, errors := validName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name: %v", s, errors)
 		}
