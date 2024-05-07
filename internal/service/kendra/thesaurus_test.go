@@ -42,15 +42,15 @@ func TestAccKendraThesaurus_basic(t *testing.T) {
 				Config: testAccThesaurusConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", "key"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", names.AttrKey),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "thesaurus_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/thesaurus/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/thesaurus/.+$`)),
 				),
 			},
 			{
@@ -169,14 +169,14 @@ func TestAccKendraThesaurus_description(t *testing.T) {
 				Config: testAccThesaurusConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccThesaurusConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
@@ -188,7 +188,7 @@ func TestAccKendraThesaurus_description(t *testing.T) {
 				Config: testAccThesaurusConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -219,14 +219,14 @@ func TestAccKendraThesaurus_name(t *testing.T) {
 				Config: testAccThesaurusConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
 				Config: testAccThesaurusConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 			{
@@ -261,14 +261,14 @@ func TestAccKendraThesaurus_roleARN(t *testing.T) {
 				Config: testAccThesaurusConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
 				Config: testAccThesaurusConfig_roleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},
 			{
@@ -304,16 +304,16 @@ func TestAccKendraThesaurus_sourceS3Path(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", "key")),
+					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", names.AttrKey)),
 			},
 			{
 				Config: testAccThesaurusConfig_sourceS3Path(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThesaurusExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test2", "key")),
+					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test2", names.AttrKey)),
 			},
 			{
 				ResourceName:      resourceName,
