@@ -41,7 +41,7 @@ func resourceVirtualGateway() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -66,7 +66,7 @@ func resourceVirtualGateway() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -384,7 +384,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											Computed:     true,
@@ -415,7 +415,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
@@ -613,12 +613,12 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	Optional: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"key": {
+																			names.AttrKey: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 100),
 																			},
-																			"value": {
+																			names.AttrValue: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -657,7 +657,7 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
@@ -685,7 +685,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -701,12 +701,12 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	virtualGateway := outputRaw.(*appmesh.VirtualGatewayData)
 
 	arn := aws.StringValue(virtualGateway.Metadata.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
-	d.Set("name", virtualGateway.VirtualGatewayName)
+	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -723,7 +723,7 @@ func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 		input := &appmesh.UpdateVirtualGatewayInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
 			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
-			VirtualGatewayName: aws.String(d.Get("name").(string)),
+			VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -747,7 +747,7 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
 	input := &appmesh.DeleteVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualGatewayName: aws.String(d.Get("name").(string)),
+		VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -786,7 +786,7 @@ func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(virtualGateway.Metadata.Uid))
 	d.Set("mesh_name", virtualGateway.MeshName)
-	d.Set("name", virtualGateway.VirtualGatewayName)
+	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -880,7 +880,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
 					healthCheck.Path = aws.String(vPath)
 				}
-				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
+				if vPort, ok := mHealthCheck[names.AttrPort].(int); ok && vPort > 0 {
 					healthCheck.Port = aws.Int64(int64(vPort))
 				}
 				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
@@ -948,7 +948,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 				mPortMapping := vPortMapping[0].(map[string]interface{})
 
-				if vPort, ok := mPortMapping["port"].(int); ok && vPort > 0 {
+				if vPort, ok := mPortMapping[names.AttrPort].(int); ok && vPort > 0 {
 					portMapping.Port = aws.Int64(int64(vPort))
 				}
 				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
@@ -1107,8 +1107,8 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 						jsonFormatRefs := []*appmesh.JsonFormatRef{}
 						for _, vJsonFormatRef := range vJsonFormatRefs {
 							mJsonFormatRef := &appmesh.JsonFormatRef{
-								Key:   aws.String(vJsonFormatRef.(map[string]interface{})["key"].(string)),
-								Value: aws.String(vJsonFormatRef.(map[string]interface{})["value"].(string)),
+								Key:   aws.String(vJsonFormatRef.(map[string]interface{})[names.AttrKey].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]interface{})[names.AttrValue].(string)),
 							}
 							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
 						}
@@ -1326,7 +1326,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 					"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
 					"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
 					"path":                aws.StringValue(healthCheck.Path),
-					"port":                int(aws.Int64Value(healthCheck.Port)),
+					names.AttrPort:        int(aws.Int64Value(healthCheck.Port)),
 					"protocol":            aws.StringValue(healthCheck.Protocol),
 					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
 					"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
@@ -1336,8 +1336,8 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 			if portMapping := listener.PortMapping; portMapping != nil {
 				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(portMapping.Port)),
-					"protocol": aws.StringValue(portMapping.Protocol),
+					names.AttrPort: int(aws.Int64Value(portMapping.Port)),
+					"protocol":     aws.StringValue(portMapping.Protocol),
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}
@@ -1444,8 +1444,8 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 						for _, j := range format.Json {
 							mJson := map[string]interface{}{
-								"key":   aws.StringValue(j.Key),
-								"value": aws.StringValue(j.Value),
+								names.AttrKey:   aws.StringValue(j.Key),
+								names.AttrValue: aws.StringValue(j.Value),
 							}
 
 							vJsons = append(vJsons, mJson)

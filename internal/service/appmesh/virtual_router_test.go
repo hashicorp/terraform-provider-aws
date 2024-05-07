@@ -36,7 +36,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
@@ -47,7 +47,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -55,7 +55,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 				Config: testAccVirtualRouterConfig_updated(meshName, vrName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
@@ -93,7 +93,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 				Config: testAccVirtualRouterConfig_multiListener(meshName, vrName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
@@ -107,7 +107,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -115,7 +115,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 				Config: testAccVirtualRouterConfig_multiListenerUpdated(meshName, vrName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
@@ -224,7 +224,7 @@ func testAccCheckVirtualRouterDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			_, err := tfappmesh.FindVirtualRouterByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["name"])
+			_, err := tfappmesh.FindVirtualRouterByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -253,7 +253,7 @@ func testAccCheckVirtualRouterExists(ctx context.Context, n string, v *appmesh.V
 			return fmt.Errorf("No App Mesh Virtual Router ID is set")
 		}
 
-		output, err := tfappmesh.FindVirtualRouterByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["name"])
+		output, err := tfappmesh.FindVirtualRouterByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
