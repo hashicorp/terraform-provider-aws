@@ -48,7 +48,7 @@ func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"key": schema.StringAttribute{
+			names.AttrKey: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The key to put.",
 				PlanModifiers: []planmodifier.String{
@@ -67,7 +67,7 @@ func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest
 				Computed:            true,
 				MarkdownDescription: "Total size of the Key Value Store in bytes.",
 			},
-			"value": schema.StringAttribute{
+			names.AttrValue: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The value to put.",
 			},
