@@ -212,6 +212,149 @@ func testAccSubscriberNotification_update(t *testing.T) {
 	})
 }
 
+func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_securitylake_subscriber_notification.test"
+	rName := randomCustomLogSourceName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, "example-key"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_value"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.authorization_api_key_name",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
+			},
+			{
+				Config: testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, "example-key-updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key-updated"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_value"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.authorization_api_key_name",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
+			},
+		},
+	})
+}
+
+func testAccSubscriberNotification_https_apiKey(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_securitylake_subscriber_notification.test"
+	rName := randomCustomLogSourceName()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key", "example-value"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_value", "example-value"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.authorization_api_key_name",
+					"configuration.0.https_notification_configuration.0.authorization_api_key_value",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
+			},
+			{
+				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key", "example-value-updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_value", "example-value-updated"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.authorization_api_key_name",
+					"configuration.0.https_notification_configuration.0.authorization_api_key_value",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
+			},
+			{
+				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key-updated", "example-value-three"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_name", "example-key-updated"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.authorization_api_key_value", "example-value-three"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration.0.https_notification_configuration.0.authorization_api_key_name",
+					"configuration.0.https_notification_configuration.0.authorization_api_key_value",
+					"configuration.0.https_notification_configuration.0.target_role_arn",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckSubscriberNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
@@ -424,4 +567,47 @@ resource "aws_apigatewayv2_api" "test" {
   protocol_type = "HTTP"
 }
 `, rName))
+}
+
+func testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, keyName string) string {
+	return acctest.ConfigCompose(
+		testAccSubscriberNotification_config(rName), fmt.Sprintf(`
+resource "aws_securitylake_subscriber_notification" "test" {
+  subscriber_id = aws_securitylake_subscriber.test.id
+  configuration {
+    https_notification_configuration {
+      endpoint                   = aws_apigatewayv2_api.test.api_endpoint
+      target_role_arn            = aws_iam_role.event_bridge.arn
+	  authorization_api_key_name = %[2]q
+    }
+  }
+}
+
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+`, rName, keyName))
+}
+
+func testAccSubscriberNotificationConfig_https_apiKey(rName, keyName, keyValue string) string {
+	return acctest.ConfigCompose(
+		testAccSubscriberNotification_config(rName), fmt.Sprintf(`
+resource "aws_securitylake_subscriber_notification" "test" {
+  subscriber_id = aws_securitylake_subscriber.test.id
+  configuration {
+    https_notification_configuration {
+      endpoint                    = aws_apigatewayv2_api.test.api_endpoint
+      target_role_arn             = aws_iam_role.event_bridge.arn
+	  authorization_api_key_name  = %[2]q
+	  authorization_api_key_value = %[3]q
+    }
+  }
+}
+
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+`, rName, keyName, keyValue))
 }

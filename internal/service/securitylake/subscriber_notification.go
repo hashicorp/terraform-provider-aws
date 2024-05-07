@@ -97,7 +97,8 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 										Optional: true,
 									},
 									"authorization_api_key_value": schema.StringAttribute{
-										Optional: true,
+										Optional:  true,
+										Sensitive: true,
 									},
 									"endpoint": schema.StringAttribute{
 										Required: true,
@@ -199,6 +200,12 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// For HTTPS Configurations, only the `endpoint` value can be read back from the Security Lake API.
+	// `authorization_api_key_name` is configured on the EventBridge API Destination created by Security Lake
+	// `authorization_api_key_value` is configured in the Secrets Manager Secret used by the EventBridge API Destination
+	// Setting `http_method` does not seem to work, and it is not a parameter when using the Console, nor does it affect the EventBridge API Destination
+	// `target_role_arn` is used in an unknown location
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
