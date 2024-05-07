@@ -237,7 +237,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 
-	if err != nil {
+	if replica == nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), err)
 	}
 

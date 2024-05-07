@@ -893,8 +893,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("computing GSI difference: %w", err))
 		}
-
-		log.Printf("[DEBUG] Computed DynamoDB Table (%s) Global Secondary Index updates: %s", d.Id(), gsiUpdates)
 	}
 
 	// Phase 1 of Global Secondary Index Operations: Delete Only
@@ -999,7 +997,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if hasTableUpdate {
-		log.Printf("[DEBUG] Updating DynamoDB Table: %s", input)
 		_, err := conn.UpdateTable(ctx, input)
 
 		if err != nil {
@@ -1379,7 +1376,6 @@ func updateTimeToLive(ctx context.Context, conn *dynamodb.Client, tableName stri
 		},
 	}
 
-	log.Printf("[DEBUG] Updating DynamoDB Table (%s) Time To Live: %s", tableName, input)
 	if _, err := conn.UpdateTimeToLive(ctx, input); err != nil {
 		return fmt.Errorf("updating Time To Live: %w", err)
 	}
