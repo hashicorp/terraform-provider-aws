@@ -70,7 +70,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -160,7 +160,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											setplanmodifier.UseStateForUnknown(),
 										},
 									},
-									"subnet_ids": schema.SetAttribute{
+									names.AttrSubnetIDs: schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Required:    true,
@@ -177,7 +177,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

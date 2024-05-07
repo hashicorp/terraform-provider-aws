@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_prometheus_workspace", name="Workspace")
@@ -24,7 +25,7 @@ func dataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,7 +33,7 @@ func dataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,11 +41,11 @@ func dataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -67,13 +68,13 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(workspaceID)
 	d.Set("alias", workspace.Alias)
-	d.Set("arn", workspace.Arn)
+	d.Set(names.AttrARN, workspace.Arn)
 	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
-	d.Set("kms_key_arn", workspace.KmsKeyArn)
+	d.Set(names.AttrKMSKeyARN, workspace.KmsKeyArn)
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
-	d.Set("status", workspace.Status.StatusCode)
+	d.Set(names.AttrStatus, workspace.Status.StatusCode)
 
-	if err := d.Set("tags", KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
