@@ -218,7 +218,6 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrDescription
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -315,7 +314,6 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrDescription
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -367,7 +365,6 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := names.AttrDescription
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
