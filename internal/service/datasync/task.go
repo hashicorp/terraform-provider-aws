@@ -43,7 +43,7 @@ func resourceTask() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceTask() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -87,14 +87,14 @@ func resourceTask() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -329,7 +329,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Includes = expandFilterRules(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -372,7 +372,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Task (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.TaskArn)
+	d.Set(names.AttrARN, output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
@@ -381,7 +381,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting includes: %s", err)
 	}
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 	}
@@ -400,7 +400,7 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateTaskInput{
 			TaskArn: aws.String(d.Id()),
 		}
@@ -417,8 +417,8 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Includes = expandFilterRules(d.Get("includes").([]interface{}))
 		}
 
-		if d.HasChanges("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChanges(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChanges("options") {
@@ -748,7 +748,7 @@ func expandFilterRules(l []interface{}) []awstypes.FilterRule {
 		m := mRaw.(map[string]interface{})
 		filterRule := awstypes.FilterRule{
 			FilterType: awstypes.FilterType(m["filter_type"].(string)),
-			Value:      aws.String(m["value"].(string)),
+			Value:      aws.String(m[names.AttrValue].(string)),
 		}
 		filterRules = append(filterRules, filterRule)
 	}
@@ -761,8 +761,8 @@ func flattenFilterRules(filterRules []awstypes.FilterRule) []interface{} {
 
 	for _, filterRule := range filterRules {
 		m := map[string]interface{}{
-			"filter_type": string(filterRule.FilterType),
-			"value":       aws.ToString(filterRule.Value),
+			"filter_type":   string(filterRule.FilterType),
+			names.AttrValue: aws.ToString(filterRule.Value),
 		}
 		l = append(l, m)
 	}
