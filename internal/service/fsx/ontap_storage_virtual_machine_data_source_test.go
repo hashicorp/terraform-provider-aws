@@ -31,12 +31,12 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
 			{
 				Config: testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),
@@ -64,12 +64,12 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),

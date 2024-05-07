@@ -19,7 +19,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 0,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,7 +178,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
