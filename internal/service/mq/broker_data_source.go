@@ -17,6 +17,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mq_broker", name="Broker")
@@ -25,7 +26,7 @@ func dataSourceBroker() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBrokerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +55,7 @@ func dataSourceBroker() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -74,7 +75,7 @@ func dataSourceBroker() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -220,12 +221,12 @@ func dataSourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -286,7 +287,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(brokerID)
-	d.Set("arn", output.BrokerArn)
+	d.Set(names.AttrARN, output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
 	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
 	d.Set("broker_id", brokerID)
@@ -299,7 +300,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("publicly_accessible", output.PubliclyAccessible)
 	d.Set("security_groups", output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
-	d.Set("subnet_ids", output.SubnetIds)
+	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
@@ -336,7 +337,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
