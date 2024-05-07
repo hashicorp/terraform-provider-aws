@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findTableByName(ctx context.Context, conn *dynamodb.Client, name string) (*awstypes.TableDescription, error) {
+func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
 	}
 
-	output, err := conn.DescribeTable(ctx, input)
+	output, err := conn.DescribeTable(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.ReplicaNotFoundException](err) {
 		return nil, &retry.NotFoundError{

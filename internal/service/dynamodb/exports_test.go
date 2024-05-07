@@ -24,4 +24,5 @@ var (
 	ListTags                                     = listTags
 	RegionFromARN                                = regionFromARN
 	TableNameFromARN                             = tableNameFromARN
+	UpdateDiffGSI                                = updateDiffGSI
 )

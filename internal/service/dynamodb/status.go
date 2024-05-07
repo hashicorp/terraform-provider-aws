@@ -25,10 +25,6 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) r
 			return nil, "", err
 		}
 
-		if output == nil {
-			return nil, "", nil
-		}
-
 		return output, string(output.TableStatus), nil
 	}
 }
@@ -55,51 +51,45 @@ func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) 
 
 func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
-			TableName: aws.String(tableName),
-		})
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
 			return nil, "", err
 		}
 
-		var targetReplica *dynamodb.ReplicaDescription
-		for _, replica := range result.Table.Replicas {
-			if aws.StringValue(replica.RegionName) == region {
-				targetReplica = replica
-				break
+		for _, v := range output.Replicas {
+			if aws.ToString(v.RegionName) == region {
+				return output, string(v.ReplicaStatus), nil
 			}
 		}
 
-		if targetReplica == nil {
-			return result, dynamodb.ReplicaStatusCreating, nil
-		}
-
-		return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+		return output, string(awstypes.ReplicaStatusCreating), nil
 	}
 }
 
-func statusReplicaDelete(ctx context.Context, conn *dynamodb.DynamoDB, tableName, region string) retry.StateRefreshFunc {
+func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
-			TableName: aws.String(tableName),
-		})
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
 			return nil, "", err
 		}
 
-		var targetReplica *dynamodb.ReplicaDescription
-		for _, replica := range result.Table.Replicas {
-			if aws.StringValue(replica.RegionName) == region {
-				targetReplica = replica
-				break
+		for _, v := range output.Replicas {
+			if aws.ToString(v.RegionName) == region {
+				return output, string(v.ReplicaStatus), nil
 			}
 		}
 
-		if targetReplica == nil {
-			return result, "", nil
-		}
-
-		return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+		return nil, "", nil
 	}
 }
 
@@ -163,9 +153,9 @@ func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) ret
 	}
 }
 
-func statusTableSES(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusSSE(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findTableByName(ctx, conn, tableName)
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -175,11 +165,7 @@ func statusTableSES(ctx context.Context, conn *dynamodb.Client, tableName string
 			return nil, "", err
 		}
 
-		if output == nil {
-			return nil, "", nil
-		}
-
-		// Disabling SSE returns null SSEDescription
+		// Disabling SSE returns null SSEDescription.
 		if output.SSEDescription == nil {
 			return output, string(awstypes.SSEStatusDisabled), nil
 		}
