@@ -59,10 +59,10 @@ var x identifier
 
 # Step 2: Convert AWS SDK v1 (service) to v2
 @@
-var i, x identifier
+var {{ .ImportAlias }}, x identifier
 @@
--import i "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-+import i "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+-import {{ .ImportAlias }} "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
++import {{ .ImportAlias }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 {{ .ImportAlias }}.x
 
 # 2a: Most types are in the service's types package so do a simple mass-substitution
@@ -70,11 +70,7 @@ var i, x identifier
 @@
 var x identifier
 @@
-{{- if eq .ImportAlias "" }}
--{{ .GoV1Package }}.x
-{{- else }}
 -{{ .ImportAlias }}.x
-{{- end }}
 +awstypes.x
 
 @@
