@@ -46,7 +46,7 @@ func TestAccFinSpaceKxUser_basic(t *testing.T) {
 				Config: testAccKxUserConfig_basic(rName, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
-					resource.TestCheckResourceAttr(resourceName, "name", userName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, userName),
 				),
 			},
 			{
@@ -185,7 +185,7 @@ func testAccCheckKxUserDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			input := &finspace.GetKxUserInput{
-				UserName:      aws.String(rs.Primary.Attributes["name"]),
+				UserName:      aws.String(rs.Primary.Attributes[names.AttrName]),
 				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
 			}
 			_, err := conn.GetKxUser(ctx, input)
@@ -217,7 +217,7 @@ func testAccCheckKxUserExists(ctx context.Context, name string, kxuser *finspace
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxUser(ctx, &finspace.GetKxUserInput{
-			UserName:      aws.String(rs.Primary.Attributes["name"]),
+			UserName:      aws.String(rs.Primary.Attributes[names.AttrName]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
 		})
 
