@@ -36,7 +36,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -65,12 +65,12 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ami_tags": tftags.TagsSchema(),
-									"description": {
+									names.AttrDescription: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -116,7 +116,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -149,7 +149,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 1024),
 										},
 									},
-									"description": {
+									names.AttrDescription: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -187,7 +187,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidAccountID,
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -278,7 +278,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -301,7 +301,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -309,7 +309,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 		input.Distributions = expandDistributions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -354,12 +354,12 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 
 	distributionConfiguration := output.DistributionConfiguration
 
-	d.Set("arn", distributionConfiguration.Arn)
+	d.Set(names.AttrARN, distributionConfiguration.Arn)
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
-	d.Set("description", distributionConfiguration.Description)
+	d.Set(names.AttrDescription, distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
-	d.Set("name", distributionConfiguration.Name)
+	d.Set(names.AttrName, distributionConfiguration.Name)
 
 	setTagsOut(ctx, distributionConfiguration.Tags)
 
@@ -370,12 +370,12 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
-	if d.HasChanges("description", "distribution") {
+	if d.HasChanges(names.AttrDescription, "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
 			DistributionConfigurationArn: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -426,11 +426,11 @@ func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuil
 		apiObject.AmiTags = flex.ExpandStringMap(v)
 	}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -438,7 +438,7 @@ func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuil
 		apiObject.LaunchPermission = expandLaunchPermissionConfiguration(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -460,7 +460,7 @@ func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *ima
 		apiObject.ContainerTags = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
@@ -645,7 +645,7 @@ func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.F
 		apiObject.AccountId = aws.String(v)
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -734,11 +734,11 @@ func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistribution
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LaunchPermission; v != nil {
@@ -746,7 +746,7 @@ func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistribution
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
@@ -768,7 +768,7 @@ func flattenContainerDistributionConfiguration(apiObject *imagebuilder.Container
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TargetRepository; v != nil {
@@ -944,7 +944,7 @@ func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfigurat
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {

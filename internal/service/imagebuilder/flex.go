@@ -17,13 +17,13 @@ func flattenWorkflowParameter(apiObject *imagebuilder.WorkflowParameter) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Value; v != nil {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		tfMap["value"] = aws.StringValueSlice(v)[0]
+		tfMap[names.AttrValue] = aws.StringValueSlice(v)[0]
 	}
 
 	return tfMap
@@ -98,11 +98,11 @@ func expandWorkflowParameter(tfMap map[string]interface{}) *imagebuilder.Workflo
 
 	apiObject := &imagebuilder.WorkflowParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
 		apiObject.Value = aws.StringSlice([]string{v})

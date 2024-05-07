@@ -28,7 +28,7 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 			{
 				Config: testAccImageDataSourceConfig_arn(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexache.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
+					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, names.AttrARN, "imagebuilder", "aws", regexache.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexache.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
@@ -37,12 +37,12 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "infrastructure_configuration_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", "Amazon Linux 2 x86"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Amazon Linux 2 x86"),
 					resource.TestCheckResourceAttr(dataSourceName, "os_version", "Amazon Linux 2"),
 					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "platform", imagebuilder.PlatformLinux),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`\d+\.\d+\.\d+/\d+`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`\d+\.\d+\.\d+/\d+`)),
 				),
 			},
 		},
@@ -65,8 +65,8 @@ func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
 			{
 				Config: testAccImageDataSourceConfig_arnSelf(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "build_version_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "build_version_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution_configuration_arn", resourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enhanced_image_metadata_enabled", resourceName, "enhanced_image_metadata_enabled"),
@@ -74,12 +74,12 @@ func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_tests_configuration.#", resourceName, "image_tests_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "infrastructure_configuration_arn", resourceName, "infrastructure_configuration_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "os_version", resourceName, "os_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.#", resourceName, "output_resources.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform", resourceName, "platform"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, resourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -101,7 +101,7 @@ func TestAccImageBuilderImageDataSource_ARN_containerRecipe(t *testing.T) {
 			{
 				Config: testAccImageDataSourceConfig_arnContainerRecipe(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.#", resourceName, "output_resources.#"),
