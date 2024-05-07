@@ -232,7 +232,7 @@ func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange(names.AttrStatus) {
-			input.DomainConfigurationStatus = awstypes.DomainConfigurationStatus(d.Get("status").(string))
+			input.DomainConfigurationStatus = awstypes.DomainConfigurationStatus(d.Get(names.AttrStatus).(string))
 		}
 
 		if d.HasChange("tls_config") {
