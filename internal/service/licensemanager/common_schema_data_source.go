@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func BuildFiltersDataSource(set *schema.Set) []*licensemanager.Filter {
@@ -18,7 +19,7 @@ func BuildFiltersDataSource(set *schema.Set) []*licensemanager.Filter {
 			filterValues = append(filterValues, aws.String(e.(string)))
 		}
 		filters = append(filters, &licensemanager.Filter{
-			Name:   aws.String(m["name"].(string)),
+			Name:   aws.String(m[names.AttrName].(string)),
 			Values: filterValues,
 		})
 	}
@@ -31,7 +32,7 @@ func DataSourceFiltersSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
