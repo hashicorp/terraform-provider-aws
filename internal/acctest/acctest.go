@@ -1861,7 +1861,7 @@ func (d domainName) Subdomain(name string) domainName {
 }
 
 func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8)) //nolint:gomnd
+	return d.Subdomain(sdkacctest.RandString(8)) //nolint:mnd
 }
 
 func (d domainName) FQDN() domainName {

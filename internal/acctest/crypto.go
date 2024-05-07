@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
+	tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:mnd
 )
 
 // TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries removes RSA private key
@@ -209,7 +209,7 @@ func TLSRSAX509LocallySignedCertificatePEM(t *testing.T, caKeyPem, caCertificate
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:mnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{
@@ -265,7 +265,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		IsCA:                  true,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:mnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{
@@ -324,7 +324,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		IsCA:                  true,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
-		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:mnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		SignatureAlgorithm:    x509.SHA256WithRSA,
@@ -373,7 +373,7 @@ func TLSRSAX509SelfSignedCertificatePEM(t *testing.T, keyPem, commonName string)
 		BasicConstraintsValid: true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
-		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:gomnd
+		NotAfter:              time.Now().Add(24 * time.Hour), //nolint:mnd
 		NotBefore:             time.Now(),
 		SerialNumber:          serialNumber,
 		Subject: pkix.Name{
