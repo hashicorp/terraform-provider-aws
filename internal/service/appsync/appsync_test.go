@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppSync_serial(t *testing.T) {
@@ -15,17 +16,17 @@ func TestAccAppSync_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"APIKey": {
-			"basic":       testAccAPIKey_basic,
-			"description": testAccAPIKey_description,
-			"expires":     testAccAPIKey_expires,
+			"basic":               testAccAPIKey_basic,
+			names.AttrDescription: testAccAPIKey_description,
+			"expires":             testAccAPIKey_expires,
 		},
 		"DataSource": {
 			"basic":                         testAccDataSource_basic,
-			"description":                   testAccDataSource_description,
+			names.AttrDescription:           testAccDataSource_description,
 			"DynamoDB_region":               testAccDataSource_DynamoDB_region,
 			"DynamoDB_useCallerCredentials": testAccDataSource_DynamoDB_useCallerCredentials,
 			"HTTP_endpoint":                 testAccDataSource_HTTP_endpoint,
-			"type":                          testAccDataSource_type,
+			names.AttrType:                  testAccDataSource_type,
 			"Type_dynamoDB":                 testAccDataSource_Type_dynamoDB,
 			"Type_http":                     testAccDataSource_Type_http,
 			"Type_http_auth":                testAccDataSource_Type_httpAuth,
@@ -38,25 +39,25 @@ func TestAccAppSync_serial(t *testing.T) {
 		"GraphQLAPI": {
 			"basic":                     testAccGraphQLAPI_basic,
 			"disappears":                testAccGraphQLAPI_disappears,
-			"tags":                      testAccGraphQLAPI_tags,
+			names.AttrTags:              testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
 			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
-			"AuthenticationType_amazonCognitoUserPools": testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
-			"AuthenticationType_openIDConnect":          testAccGraphQLAPI_AuthenticationType_openIDConnect,
-			"AuthenticationType_awsLambda":              testAccGraphQLAPI_AuthenticationType_lambda,
-			"log":                                       testAccGraphQLAPI_log,
-			"Log_fieldLogLevel":                         testAccGraphQLAPI_Log_fieldLogLevel,
-			"Log_excludeVerboseContent":                 testAccGraphQLAPI_Log_excludeVerboseContent,
-			"OpenIDConnect_authTTL":                     testAccGraphQLAPI_OpenIDConnect_authTTL,
-			"OpenIDConnect_clientID":                    testAccGraphQLAPI_OpenIDConnect_clientID,
-			"OpenIDConnect_iatTTL":                      testAccGraphQLAPI_OpenIDConnect_iatTTL,
-			"OpenIDConnect_issuer":                      testAccGraphQLAPI_OpenIDConnect_issuer,
-			"name":                                      testAccGraphQLAPI_name,
-			"UserPool_awsRegion":                        testAccGraphQLAPI_UserPool_region,
-			"UserPool_defaultAction":                    testAccGraphQLAPI_UserPool_defaultAction,
-			"LambdaAuthorizerConfig_authorizerUri":      testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI,
+			"AuthenticationType_amazonCognitoUserPools":           testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
+			"AuthenticationType_openIDConnect":                    testAccGraphQLAPI_AuthenticationType_openIDConnect,
+			"AuthenticationType_awsLambda":                        testAccGraphQLAPI_AuthenticationType_lambda,
+			"log":                                                 testAccGraphQLAPI_log,
+			"Log_fieldLogLevel":                                   testAccGraphQLAPI_Log_fieldLogLevel,
+			"Log_excludeVerboseContent":                           testAccGraphQLAPI_Log_excludeVerboseContent,
+			"OpenIDConnect_authTTL":                               testAccGraphQLAPI_OpenIDConnect_authTTL,
+			"OpenIDConnect_clientID":                              testAccGraphQLAPI_OpenIDConnect_clientID,
+			"OpenIDConnect_iatTTL":                                testAccGraphQLAPI_OpenIDConnect_iatTTL,
+			"OpenIDConnect_issuer":                                testAccGraphQLAPI_OpenIDConnect_issuer,
+			names.AttrName:                                        testAccGraphQLAPI_name,
+			"UserPool_awsRegion":                                  testAccGraphQLAPI_UserPool_region,
+			"UserPool_defaultAction":                              testAccGraphQLAPI_UserPool_defaultAction,
+			"LambdaAuthorizerConfig_authorizerUri":                testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI,
 			"LambdaAuthorizerConfig_identityValidationExpression": testAccGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression,
 			"LambdaAuthorizerConfig_authorizerResultTtlInSeconds": testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds,
 			"AdditionalAuthentication_apiKey":                     testAccGraphQLAPI_AdditionalAuthentication_apiKey,
@@ -75,7 +76,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"basic":                   testAccFunction_basic,
 			"code":                    testAccFunction_code,
 			"disappears":              testAccFunction_disappears,
-			"description":             testAccFunction_description,
+			names.AttrDescription:     testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,
 			"sync":                    testAccFunction_syncConfig,
 		},
@@ -101,9 +102,9 @@ func TestAccAppSync_serial(t *testing.T) {
 			"disappears": testAccType_disappears,
 		},
 		"DomainName": {
-			"basic":       testAccDomainName_basic,
-			"disappears":  testAccDomainName_disappears,
-			"description": testAccDomainName_description,
+			"basic":               testAccDomainName_basic,
+			"disappears":          testAccDomainName_disappears,
+			names.AttrDescription: testAccDomainName_description,
 		},
 		"DomainNameAssociation": {
 			"basic":      testAccDomainNameAPIAssociation_basic,
