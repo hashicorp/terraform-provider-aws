@@ -47,7 +47,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

@@ -556,7 +556,7 @@ func resourceGroupV0() *schema.Resource {
 														},
 													},
 												},
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},

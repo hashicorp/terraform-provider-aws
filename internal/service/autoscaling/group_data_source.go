@@ -400,7 +400,7 @@ func dataSourceGroup() *schema.Resource {
 														},
 													},
 												},
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},

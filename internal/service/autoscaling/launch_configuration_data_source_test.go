@@ -35,7 +35,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ephemeral_block_device.#", resourceName, "ephemeral_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "iam_instance_profile", resourceName, "iam_instance_profile"),
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "image_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.#", resourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_tenancy", resourceName, "placement_tenancy"),
