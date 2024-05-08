@@ -180,7 +180,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

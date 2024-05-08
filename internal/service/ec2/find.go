@@ -6233,7 +6233,6 @@ func FindImportSnapshotTasks(ctx context.Context, conn *ec2_sdkv2.Client, input 
 		}
 
 		output = append(output, page.ImportSnapshotTasks...)
-
 	}
 
 	return output, nil
@@ -6327,7 +6326,7 @@ func FindSnapshotByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*
 func FindSnapshotAttribute(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeSnapshotAttributeInput) (*ec2_sdkv2.DescribeSnapshotAttributeOutput, error) {
 	output, err := conn.DescribeSnapshotAttribute(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
