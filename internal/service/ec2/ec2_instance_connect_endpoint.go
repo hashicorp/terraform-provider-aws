@@ -102,7 +102,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
