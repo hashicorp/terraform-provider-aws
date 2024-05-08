@@ -36,7 +36,8 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 				),
 			},
@@ -176,49 +177,55 @@ func testAccCheckRetrieverExists(ctx context.Context, n string, v *qbusiness.Get
 
 func testAccRetrieverConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_qbusiness_retriever" "test" {
-  application_id = aws_qbusiness_app.test.application_id
+  application_id = "3f8d08f8-5729-4096-94e8-142378ae83c0"
   display_name   = %[1]q
+  type           = "NATIVE_INDEX"
 
   native_index_configuration {
-    index_id = aws_qbusiness_index.test.index_id
+    index_id = "61934168-bdba-4b28-9869-5564ee794e89"
   }
 }
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
+`, rName)
 }
 
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
-}
-EOF
-}
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.application_id
+func testAccRetrieverConfig_boostOverrides(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_qbusiness_retriever" "test" {
+  application_id = "3f8d08f8-5729-4096-94e8-142378ae83c0"
   display_name   = %[1]q
-  capacity_configuration {
-    units = 1
+  type           = "NATIVE_INDEX"
+
+  native_index_configuration {
+    index_id = "61934168-bdba-4b28-9869-5564ee794e89"
+
+    string_boost_override {
+      boost_key      = "_category"
+      boosting_level = "HIGH"
+
+      attribute_value_boosting = {
+        "key1" = "VERY_HIGH"
+        "key2" = "VERY_HIGH"
+      }
+    }
+
+    string_list_boost_override {
+      boost_key      = "string_list"
+      boosting_level = "HIGH"
+    }
+
+    date_boost_override {
+      boost_key         = "date"
+      boosting_level    = "HIGH"
+      boosting_duration = 100
+    }
+
+    number_boost_override {
+      boost_key      = "view_count"
+      boosting_level = "HIGH"
+      boosting_type  = "PRIORITIZE_LARGER_VALUES"
+    }
   }
-  description = %[1]q
 }
 `, rName)
 }

@@ -5,6 +5,7 @@ package qbusiness
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -13,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -90,15 +91,18 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"iam_service_role_arn": schema.StringAttribute{
-				CustomType:  fwtypes.ARNType,
 				Description: "ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.",
 				Optional:    true,
 			},
 			"type": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.RetrieverType](),
 				Required:    true,
 				Description: "Type of retriever you are using.",
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.RetrieverType](),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -117,7 +121,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Attributes: map[string]schema.Attribute{
 					"index_id": schema.StringAttribute{
-						Required:    true,
+						Optional:    true,
 						Description: "Identifier of the Amazon Kendra index.",
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
@@ -137,7 +141,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Attributes: map[string]schema.Attribute{
 					"index_id": schema.StringAttribute{
-						Required:    true,
+						Optional:    true,
 						Description: "Identifier for the Amazon Q index.",
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
@@ -145,11 +149,8 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"boosting_override": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[boostingOverrideData](ctx),
-						Validators: []validator.List{
-							listvalidator.SizeAtMost(200),
-						},
+					"date_boost_override": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[dateBoostConfigurationData](ctx),
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"boost_key": schema.StringAttribute{
@@ -160,84 +161,100 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 										stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
 									},
 								},
+								"boosting_level": schema.StringAttribute{
+									Description: "Specifies how much a document attribute is boosted.",
+									Optional:    true,
+									Validators: []validator.String{
+										enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
+									},
+								},
+								"boosting_duration": schema.Int64Attribute{
+									Description: "The duration of the boost in seconds.",
+									Optional:    true,
+									Validators: []validator.Int64{
+										int64validator.Between(0, 999999999),
+									},
+								},
 							},
-							Blocks: map[string]schema.Block{
-								"date_configuration": schema.SingleNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[dateConfigurationData](ctx),
-									Validators: []validator.Object{
-										objectvalidator.ExactlyOneOf(
-											path.MatchRelative().AtParent().AtName("date_configuration"),
-											path.MatchRelative().AtParent().AtName("number_configuration"),
-											path.MatchRelative().AtParent().AtName("string_configuration"),
-											path.MatchRelative().AtParent().AtName("string_list_configuration"),
-										),
-									},
-									Attributes: map[string]schema.Attribute{
-										"boosting_level": schema.StringAttribute{
-											Description: "Specifies how much a document attribute is boosted.",
-											Required:    true,
-											Validators: []validator.String{
-												enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
-											},
-										},
-										"boosting_duration": schema.Int64Attribute{
-											Description: "The duration of the boost in seconds.",
-											Optional:    true,
-											Validators: []validator.Int64{
-												int64validator.Between(0, 999999999),
-											},
-										},
+						},
+					},
+					"number_boost_override": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[numberBoostConfigurationData](ctx),
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"boost_key": schema.StringAttribute{
+									Description: "Overrides the default boosts applied by Amazon Q Business to supported document attribute data types.",
+									Required:    true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 200),
+										stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
 									},
 								},
-								"number_configuration": schema.SingleNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[numberConfigurationData](ctx),
-									Attributes: map[string]schema.Attribute{
-										"boosting_level": schema.StringAttribute{
-											Description: "Specifies how much a document attribute is boosted.",
-											Required:    true,
-											Validators: []validator.String{
-												enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
-											},
-										},
-										"boosting_type": schema.StringAttribute{
-											Description: "Specifies how a document attribute is boosted.",
-											Optional:    true,
-											Validators: []validator.String{
-												enum.FrameworkValidate[awstypes.NumberAttributeBoostingType](),
-											},
-										},
+								"boosting_level": schema.StringAttribute{
+									Description: "Specifies how much a document attribute is boosted.",
+									Optional:    true,
+									Validators: []validator.String{
+										enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
 									},
 								},
-								"string_configuration": schema.SingleNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[stringConfigurationData](ctx),
-									Attributes: map[string]schema.Attribute{
-										"boosting_level": schema.StringAttribute{
-											Description: "Specifies how much a document attribute is boosted.",
-											Required:    true,
-											Validators: []validator.String{
-												enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
-											},
-										},
-										"attribute_value_boosting": schema.MapAttribute{
-											Description: "Specifies specific values of a STRING type document attribute being boosted.",
-											ElementType: types.StringType,
-											Optional:    true,
-											Validators: []validator.Map{
-												mapvalidator.SizeAtMost(10),
-											},
-										},
+								"boosting_type": schema.StringAttribute{
+									Description: "Specifies how a document attribute is boosted.",
+									Optional:    true,
+									Validators: []validator.String{
+										enum.FrameworkValidate[awstypes.NumberAttributeBoostingType](),
 									},
 								},
-								"string_list_configuration": schema.SingleNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[stringListConfigurationData](ctx),
-									Attributes: map[string]schema.Attribute{
-										"boosting_level": schema.StringAttribute{
-											Description: "Specifies how much a document attribute is boosted.",
-											Required:    true,
-											Validators: []validator.String{
-												enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
-											},
-										},
+							},
+						},
+					},
+					"string_boost_override": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[stringBoostConfigurationData](ctx),
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"boost_key": schema.StringAttribute{
+									Description: "Overrides the default boosts applied by Amazon Q Business to supported document attribute data types.",
+									Required:    true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 200),
+										stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
+									},
+								},
+								"boosting_level": schema.StringAttribute{
+									Description: "Specifies how much a document attribute is boosted.",
+									Optional:    true,
+									Validators: []validator.String{
+										enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
+									},
+								},
+								"attribute_value_boosting": schema.MapAttribute{
+									Description: "Specifies specific values of a STRING type document attribute being boosted.",
+									//ElementType: fwtypes.StringEnumType[awstypes.StringAttributeValueBoostingLevel](),
+									ElementType: types.StringType,
+									Optional:    true,
+									Validators: []validator.Map{
+										mapvalidator.SizeAtMost(10),
+									},
+								},
+							},
+						},
+					},
+					"string_list_boost_override": schema.ListNestedBlock{
+						CustomType: fwtypes.NewListNestedObjectTypeOf[stringListBoostConfigurationData](ctx),
+						NestedObject: schema.NestedBlockObject{
+							Attributes: map[string]schema.Attribute{
+								"boost_key": schema.StringAttribute{
+									Description: "Overrides the default boosts applied by Amazon Q Business to supported document attribute data types.",
+									Required:    true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 200),
+										stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
+									},
+								},
+								"boosting_level": schema.StringAttribute{
+									Description: "Specifies how much a document attribute is boosted.",
+									Optional:    true,
+									Validators: []validator.String{
+										enum.FrameworkValidate[awstypes.DocumentAttributeBoostingLevel](),
 									},
 								},
 							},
@@ -261,8 +278,6 @@ func (r *resourceRetriever) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	conn := r.Meta().QBusinessClient(ctx)
-
 	input := &qbusiness.CreateRetrieverInput{}
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if resp.Diagnostics.HasError() {
@@ -271,17 +286,16 @@ func (r *resourceRetriever) Create(ctx context.Context, req resource.CreateReque
 	input.Tags = getTagsIn(ctx)
 	input.ClientToken = aws.String(id.UniqueId())
 
-	// AutoFlEx doesn't handle union types.
-	conf, d := data.expandConfiguration(ctx)
+	conf, d := data.expandConfiguration(ctx, true)
 
 	resp.Diagnostics.Append(d...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input.Configuration = conf
 
+	conn := r.Meta().QBusinessClient(ctx)
 	out, err := conn.CreateRetriever(ctx, input)
 
 	if err != nil {
@@ -299,111 +313,267 @@ func (r *resourceRetriever) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
+	conf, d = data.expandConfiguration(ctx, false)
+
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if c, ok := conf.(*awstypes.RetrieverConfigurationMemberNativeIndexConfiguration); ok {
+		if len(c.Value.BoostingOverride) > 0 {
+			update := &qbusiness.UpdateRetrieverInput{
+				ApplicationId: input.ApplicationId,
+				RetrieverId:   out.RetrieverId,
+				Configuration: conf,
+			}
+
+			if _, err := conn.UpdateRetriever(ctx, update); err != nil {
+				resp.Diagnostics.AddError("failed to update Amazon Q retriever", err.Error())
+				return
+			}
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourceRetriever) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	data := &resourceRetrieverData{}
+
+	resp.Diagnostics.Append(req.State.Get(ctx, data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+
+	input := &qbusiness.DeleteRetrieverInput{
+		ApplicationId: aws.String(data.ApplicationId.ValueString()),
+		RetrieverId:   aws.String(data.RetrieverId.ValueString()),
+	}
+
+	_, err := conn.DeleteRetriever(ctx, input)
+
+	if err != nil {
+		resp.Diagnostics.AddError("failed to delete Amazon Q retriever", err.Error())
+		return
+	}
+
+	if _, err := waitRetrieverDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Q Business retriever deletion", err.Error())
+		return
+	}
+
 }
 
 func (r *resourceRetriever) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data resourceRetrieverData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+
+	out, err := FindRetrieverByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business retriever (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(data.flattenConfiguration(ctx, out.Configuration)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourceRetriever) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceRetrieverData
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !old.KendraIndexConfiguration.Equal(new.KendraIndexConfiguration) ||
+		!old.NativeIndexConfiguration.Equal(new.NativeIndexConfiguration) ||
+		!old.RoleArn.Equal(new.RoleArn) ||
+		!old.DisplayName.Equal(new.DisplayName) {
+
+		input := &qbusiness.UpdateRetrieverInput{
+			ApplicationId: aws.String(old.ApplicationId.ValueString()),
+			RetrieverId:   aws.String(old.RetrieverId.ValueString()),
+		}
+
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		conf, d := new.expandConfiguration(ctx, false)
+
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.Configuration = conf
+		conn := r.Meta().QBusinessClient(ctx)
+
+		if _, err := conn.UpdateRetriever(ctx, input); err != nil {
+			resp.Diagnostics.AddError("failed to update Amazon Q retriever", err.Error())
+			return
+		}
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 func (r *resourceRetriever) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
+const (
+	retrieverResourceIDPartCount = 2
+)
+
 func (data *resourceRetrieverData) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.RetrieverId.ValueString()}, indexResourceIDPartCount, false)))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.RetrieverId.ValueString()}, retrieverResourceIDPartCount, false)))
 }
 
-func (data *resourceRetrieverData) expandConfiguration(ctx context.Context) (awstypes.RetrieverConfiguration, diag.Diagnostics) {
+type dateBoostConfigurationDataI struct {
+	BoostingLevel          awstypes.DocumentAttributeBoostingLevel
+	AttributeValueBoosting map[string]string
+}
+
+func (data *resourceRetrieverData) flattenConfiguration(ctx context.Context, retrieverConf awstypes.RetrieverConfiguration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if conf, ok := retrieverConf.(*awstypes.RetrieverConfigurationMemberKendraIndexConfiguration); ok {
+		c, d := fwtypes.NewObjectValueOf[kendraIndexConfigurationData](ctx, &kendraIndexConfigurationData{
+			IndexId: fwflex.StringToFramework(ctx, conf.Value.IndexId),
+		})
+		diags.Append(d...)
+		data.KendraIndexConfiguration = c
+	}
+
+	if conf, ok := retrieverConf.(*awstypes.RetrieverConfigurationMemberNativeIndexConfiguration); ok {
+		stringBoostOverrides := []*stringBoostConfigurationData{}
+		numberBoostOverrides := []*numberBoostConfigurationData{}
+		dateBoostOverrides := []*dateBoostConfigurationData{}
+		stringListBoostOverrides := []*stringListBoostConfigurationData{}
+
+		for k, v := range conf.Value.BoostingOverride {
+			if stringConf, d := v.(*awstypes.DocumentAttributeBoostingConfigurationMemberStringConfiguration); d {
+				var sb stringBoostConfigurationData
+				diags.Append(fwflex.Flatten(ctx, dateBoostConfigurationDataI{
+					BoostingLevel:          stringConf.Value.BoostingLevel,
+					AttributeValueBoosting: convertStringAttributeValueBoostingLevelMap(stringConf.Value.AttributeValueBoosting),
+				}, &sb)...)
+				sb.BoostKey = fwflex.StringValueToFramework(ctx, k)
+				stringBoostOverrides = append(stringBoostOverrides, &sb)
+			} else if numberConf, d := v.(*awstypes.DocumentAttributeBoostingConfigurationMemberNumberConfiguration); d {
+				var nb numberBoostConfigurationData
+				diags.Append(fwflex.Flatten(ctx, numberConf.Value, &nb)...)
+				nb.BoostKey = fwflex.StringValueToFramework(ctx, k)
+				numberBoostOverrides = append(numberBoostOverrides, &nb)
+			} else if dateConf, d := v.(*awstypes.DocumentAttributeBoostingConfigurationMemberDateConfiguration); d {
+				var db dateBoostConfigurationData
+				diags.Append(fwflex.Flatten(ctx, dateConf.Value, &db)...)
+				db.BoostKey = fwflex.StringValueToFramework(ctx, k)
+				dateBoostOverrides = append(dateBoostOverrides, &db)
+			} else if stringListConf, d := v.(*awstypes.DocumentAttributeBoostingConfigurationMemberStringListConfiguration); d {
+				var slb stringListBoostConfigurationData
+				diags.Append(fwflex.Flatten(ctx, stringListConf.Value, &slb)...)
+				slb.BoostKey = fwflex.StringValueToFramework(ctx, k)
+				stringListBoostOverrides = append(stringListBoostOverrides, &slb)
+			}
+		}
+
+		c, d := fwtypes.NewObjectValueOf[nativeIndexConfigurationData](ctx, &nativeIndexConfigurationData{
+			IndexId:                    fwflex.StringToFramework(ctx, conf.Value.IndexId),
+			StringBoostingOverride:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, stringBoostOverrides),
+			NumberBoostingOverride:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, numberBoostOverrides),
+			StringListBoostingOverride: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, stringListBoostOverrides),
+			DateBoostingOverride:       fwtypes.NewListNestedObjectValueOfSliceMust(ctx, dateBoostOverrides),
+		})
+		diags.Append(d...)
+		data.NativeIndexConfiguration = c
+	}
+
+	return diags
+}
+
+func (data *resourceRetrieverData) expandConfiguration(ctx context.Context, omitBoostingOverrideData bool) (awstypes.RetrieverConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if !data.NativeIndexConfiguration.IsNull() {
 		nativeConfig, d := data.NativeIndexConfiguration.ToPtr(ctx)
-
 		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
 
 		ret := &awstypes.RetrieverConfigurationMemberNativeIndexConfiguration{}
 		ret.Value.IndexId = nativeConfig.IndexId.ValueStringPointer()
 
-		boosts := []boostingOverrideData{}
-
-		diags.Append(nativeConfig.BoostingOverride.ElementsAs(ctx, &boosts, false)...)
-		if diags.HasError() {
-			return nil, diags
+		if omitBoostingOverrideData {
+			return ret, diags
 		}
 
-		for _, boost := range boosts {
-			if !boost.DateConfiguration.IsNull() {
+		ret.Value.BoostingOverride = make(map[string]awstypes.DocumentAttributeBoostingConfiguration)
 
-				dateConf, d := boost.DateConfiguration.ToPtr(ctx)
+		dateBoosts := []dateBoostConfigurationData{}
+		diags.Append(nativeConfig.DateBoostingOverride.ElementsAs(ctx, &dateBoosts, false)...)
+		for _, dateBoost := range dateBoosts {
+			ret.Value.BoostingOverride[dateBoost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberDateConfiguration{
+				Value: awstypes.DateAttributeBoostingConfiguration{
+					BoostingLevel:             dateBoost.BoostingLevel.ValueEnum(),
+					BoostingDurationInSeconds: dateBoost.BoostingDurationInSeconds.ValueInt64Pointer(),
+				},
+			}
+		}
 
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, diags
-				}
+		numberBoosts := []numberBoostConfigurationData{}
+		diags.Append(nativeConfig.NumberBoostingOverride.ElementsAs(ctx, &numberBoosts, false)...)
+		for _, numberBoost := range numberBoosts {
+			ret.Value.BoostingOverride[numberBoost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberNumberConfiguration{
+				Value: awstypes.NumberAttributeBoostingConfiguration{
+					BoostingLevel: numberBoost.BoostingLevel.ValueEnum(),
+					BoostingType:  numberBoost.BoostingType.ValueEnum(),
+				},
+			}
+		}
 
-				ret.Value.BoostingOverride[boost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberDateConfiguration{
-					Value: awstypes.DateAttributeBoostingConfiguration{
-						BoostingLevel:             dateConf.BoostingLevel.ValueEnum(),
-						BoostingDurationInSeconds: dateConf.BoostingDurationInSeconds.ValueInt64Pointer(),
-					},
-				}
-			} else if !boost.NumberConfiguration.IsNull() {
-				numberConf, d := boost.NumberConfiguration.ToPtr(ctx)
+		stringBoosts := []stringBoostConfigurationData{}
+		diags.Append(nativeConfig.StringBoostingOverride.ElementsAs(ctx, &stringBoosts, false)...)
+		for _, stringBoost := range stringBoosts {
+			m := map[string]awstypes.StringAttributeValueBoostingLevel{}
+			diags.Append(stringBoost.AttributeValueBoosting.ElementsAs(ctx, &m, false)...)
+			ret.Value.BoostingOverride[stringBoost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberStringConfiguration{
+				Value: awstypes.StringAttributeBoostingConfiguration{
+					BoostingLevel:          stringBoost.BoostingLevel.ValueEnum(),
+					AttributeValueBoosting: m,
+				},
+			}
+		}
 
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, diags
-				}
-
-				ret.Value.BoostingOverride[boost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberNumberConfiguration{
-					Value: awstypes.NumberAttributeBoostingConfiguration{
-						BoostingLevel: numberConf.BoostingLevel.ValueEnum(),
-						BoostingType:  numberConf.BoostingType.ValueEnum(),
-					},
-				}
-			} else if !boost.StringConfiguration.IsNull() {
-				stringConf, d := boost.StringConfiguration.ToPtr(ctx)
-
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, diags
-				}
-
-				m := map[string]awstypes.StringAttributeValueBoostingLevel{}
-				diags.Append(stringConf.AttributeValueBoosting.ElementsAs(ctx, &m, false)...)
-
-				if diags.HasError() {
-					return nil, diags
-				}
-
-				ret.Value.BoostingOverride[boost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberStringConfiguration{
-					Value: awstypes.StringAttributeBoostingConfiguration{
-						BoostingLevel:          stringConf.BoostingLevel.ValueEnum(),
-						AttributeValueBoosting: m,
-					},
-				}
-			} else if !boost.StringListConfiguration.IsNull() {
-				stringListConf, d := boost.StringListConfiguration.ToPtr(ctx)
-
-				diags.Append(d...)
-				if diags.HasError() {
-					return nil, diags
-				}
-
-				ret.Value.BoostingOverride[boost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberStringListConfiguration{
-					Value: awstypes.StringListAttributeBoostingConfiguration{
-						BoostingLevel: stringListConf.BoostingLevel.ValueEnum(),
-					},
-				}
+		stringListBoosts := []stringListBoostConfigurationData{}
+		diags.Append(nativeConfig.StringListBoostingOverride.ElementsAs(ctx, &stringListBoosts, false)...)
+		for _, stringListBoost := range stringListBoosts {
+			ret.Value.BoostingOverride[stringListBoost.BoostKey.ValueString()] = &awstypes.DocumentAttributeBoostingConfigurationMemberStringListConfiguration{
+				Value: awstypes.StringListAttributeBoostingConfiguration{
+					BoostingLevel: stringListBoost.BoostingLevel.ValueEnum(),
+				},
 			}
 		}
 		return ret, diags
@@ -411,18 +581,13 @@ func (data *resourceRetrieverData) expandConfiguration(ctx context.Context) (aws
 
 	if !data.KendraIndexConfiguration.IsNull() {
 		kendraConfig, d := data.KendraIndexConfiguration.ToPtr(ctx)
-
 		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
 
 		ret := &awstypes.RetrieverConfigurationMemberKendraIndexConfiguration{}
 		ret.Value.IndexId = kendraConfig.IndexId.ValueStringPointer()
 
 		return ret, diags
 	}
-
 	return nil, diags
 }
 
@@ -446,40 +611,43 @@ type kendraIndexConfigurationData struct {
 }
 
 type nativeIndexConfigurationData struct {
-	IndexId          types.String                                          `tfsdk:"index_id"`
-	BoostingOverride fwtypes.ListNestedObjectValueOf[boostingOverrideData] `tfsdk:"boosting_override"`
+	IndexId                    types.String                                                      `tfsdk:"index_id"`
+	DateBoostingOverride       fwtypes.ListNestedObjectValueOf[dateBoostConfigurationData]       `tfsdk:"date_boost_override"`
+	NumberBoostingOverride     fwtypes.ListNestedObjectValueOf[numberBoostConfigurationData]     `tfsdk:"number_boost_override"`
+	StringBoostingOverride     fwtypes.ListNestedObjectValueOf[stringBoostConfigurationData]     `tfsdk:"string_boost_override"`
+	StringListBoostingOverride fwtypes.ListNestedObjectValueOf[stringListBoostConfigurationData] `tfsdk:"string_list_boost_override"`
 }
 
-type boostingOverrideData struct {
-	BoostKey                types.String                                       `tfsdk:"boost_key"`
-	DateConfiguration       fwtypes.ObjectValueOf[dateConfigurationData]       `tfsdk:"date_configuration"`
-	NumberConfiguration     fwtypes.ObjectValueOf[numberConfigurationData]     `tfsdk:"number_configuration"`
-	StringListConfiguration fwtypes.ObjectValueOf[stringListConfigurationData] `tfsdk:"string_list_configuration"`
-	StringConfiguration     fwtypes.ObjectValueOf[stringConfigurationData]     `tfsdk:"string_configuration"`
-}
-
-type dateConfigurationData struct {
+type dateBoostConfigurationData struct {
+	BoostKey                  types.String                                                `tfsdk:"boost_key"`
 	BoostingLevel             fwtypes.StringEnum[awstypes.DocumentAttributeBoostingLevel] `tfsdk:"boosting_level"`
 	BoostingDurationInSeconds types.Int64                                                 `tfsdk:"boosting_duration"`
 }
 
-type numberConfigurationData struct {
+type numberBoostConfigurationData struct {
+	BoostKey      types.String                                                `tfsdk:"boost_key"`
 	BoostingLevel fwtypes.StringEnum[awstypes.DocumentAttributeBoostingLevel] `tfsdk:"boosting_level"`
 	BoostingType  fwtypes.StringEnum[awstypes.NumberAttributeBoostingType]    `tfsdk:"boosting_type"`
 }
 
-type stringConfigurationData struct {
+type stringBoostConfigurationData struct {
+	BoostKey               types.String                                                `tfsdk:"boost_key"`
 	BoostingLevel          fwtypes.StringEnum[awstypes.DocumentAttributeBoostingLevel] `tfsdk:"boosting_level"`
 	AttributeValueBoosting fwtypes.MapValueOf[types.String]                            `tfsdk:"attribute_value_boosting"`
 }
 
-type stringListConfigurationData struct {
+type stringListBoostConfigurationData struct {
+	BoostKey      types.String                                                `tfsdk:"boost_key"`
 	BoostingLevel fwtypes.StringEnum[awstypes.DocumentAttributeBoostingLevel] `tfsdk:"boosting_level"`
 }
 
-const (
-	retrieverResourceIDPartCount = 2
-)
+func convertStringAttributeValueBoostingLevelMap(from map[string]awstypes.StringAttributeValueBoostingLevel) map[string]string {
+	ret := make(map[string]string)
+	for k, v := range from {
+		ret[k] = string(v)
+	}
+	return ret
+}
 
 func FindRetrieverByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetRetrieverOutput, error) {
 	parts, err := flex.ExpandResourceId(id, retrieverResourceIDPartCount, false)
