@@ -71,7 +71,7 @@ func resourceHost() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -206,7 +206,7 @@ func expandHostVPCConfiguration(l []interface{}) *types.VpcConfiguration {
 	m := l[0].(map[string]interface{})
 
 	vc := &types.VpcConfiguration{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
@@ -224,9 +224,9 @@ func flattenHostVPCConfiguration(vpcConfig *types.VpcConfiguration) []interface{
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": vpcConfig.SecurityGroupIds,
-		names.AttrSubnetIDs:  vpcConfig.SubnetIds,
-		names.AttrVPCID:      aws.ToString(vpcConfig.VpcId),
+		names.AttrSecurityGroupIDs: vpcConfig.SecurityGroupIds,
+		names.AttrSubnetIDs:        vpcConfig.SubnetIds,
+		names.AttrVPCID:            aws.ToString(vpcConfig.VpcId),
 	}
 
 	if vpcConfig.TlsCertificate != nil {
