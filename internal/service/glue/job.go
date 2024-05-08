@@ -235,8 +235,8 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.NonOverridableArguments = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("notification_property"); ok {
-		input.NotificationProperty = expandNotificationProperty(v.([]interface{}))
+	if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.NotificationProperty = expandNotificationProperty(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
@@ -363,8 +363,8 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("notification_property"); ok {
-			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]interface{}))
+		if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {
@@ -451,11 +451,15 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 	return jobCommand
 }
 
-func expandNotificationProperty(l []interface{}) *glue.NotificationProperty {
-	m := l[0].(map[string]interface{})
+func expandNotificationProperty(tfMap map[string]interface{}) *glue.NotificationProperty {
+	if tfMap == nil {
+		return nil
+	}
 
-	notificationProperty := &glue.NotificationProperty{
-		NotifyDelayAfter: aws.Int64(int64(m["notify_delay_after"].(int))),
+	notificationProperty := &glue.NotificationProperty{}
+
+	if v, ok := tfMap["notify_delay_after"].(int); ok && v != 0 {
+		notificationProperty.NotifyDelayAfter = aws.Int64(int64(v))
 	}
 
 	return notificationProperty
