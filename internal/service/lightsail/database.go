@@ -49,7 +49,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -204,7 +204,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:                          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -294,7 +294,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	rd := database.RelationalDatabase
 
 	d.Set(names.AttrARN, rd.Arn)
-	d.Set("availability_zone", rd.Location.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, rd.Location.AvailabilityZone)
 	d.Set("backup_retention_enabled", rd.BackupRetentionEnabled)
 	d.Set("blueprint_id", rd.RelationalDatabaseBlueprintId)
 	d.Set("bundle_id", rd.RelationalDatabaseBundleId)

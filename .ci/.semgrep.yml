@@ -645,6 +645,16 @@ rules:
       - pattern: '"arn"'
     severity: ERROR
     fix: "names.AttrARN"
+  - id: literal-availability_zone-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAvailabilityZone` for the string literal `availability_zone`
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"availability_zone"'
+    severity: ERROR
+    fix: "names.AttrAvailabilityZone"
   - id: literal-bucket-string-constant
     languages: [go]
     message: Use the constant `names.AttrBucket` for the string literal `bucket`

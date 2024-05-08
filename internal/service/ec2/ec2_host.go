@@ -64,7 +64,7 @@ func ResourceHost() *schema.Resource {
 				Default:      ec2.AutoPlacementOn,
 				ValidateFunc: validation.StringInSlice(ec2.AutoPlacement_Values(), false),
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -106,7 +106,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	input := &ec2.AllocateHostsInput{
 		AutoPlacement:     aws.String(d.Get("auto_placement").(string)),
-		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		HostRecovery:      aws.String(d.Get("host_recovery").(string)),
 		Quantity:          aws.Int64(1),
@@ -170,7 +170,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrARN, arn)
 	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
-	d.Set("availability_zone", host.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, host.AvailabilityZone)
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set("instance_type", host.HostProperties.InstanceType)

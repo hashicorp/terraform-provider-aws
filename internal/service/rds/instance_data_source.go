@@ -37,7 +37,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -255,7 +255,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(instance.DBInstanceIdentifier))
 	d.Set("allocated_storage", instance.AllocatedStorage)
 	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
 	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
 	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudhsm_v2_hsm", name="HSM")
@@ -39,12 +40,12 @@ func resourceHSM() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"availability_zone", "subnet_id"},
+				ExactlyOneOf: []string{names.AttrAvailabilityZone, "subnet_id"},
 			},
 			"cluster_id": {
 				Type:     schema.TypeString,
@@ -74,7 +75,7 @@ func resourceHSM() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"availability_zone", "subnet_id"},
+				ExactlyOneOf: []string{names.AttrAvailabilityZone, "subnet_id"},
 			},
 		},
 	}
@@ -89,7 +90,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		ClusterId: aws.String(clusterID),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	} else {
 		cluster, err := findClusterByID(ctx, conn, clusterID)
@@ -146,7 +147,7 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(aws.ToString(hsm.HsmId))
 	}
 
-	d.Set("availability_zone", hsm.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, hsm.AvailabilityZone)
 	d.Set("cluster_id", hsm.ClusterId)
 	d.Set("hsm_eni_id", hsm.EniId)
 	d.Set("hsm_id", hsm.HsmId)

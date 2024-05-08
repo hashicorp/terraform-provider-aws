@@ -46,7 +46,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -469,7 +469,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
 	d.Set("placement_group", instance.Placement.GroupName)
 	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	d.Set("tenancy", instance.Placement.Tenancy)

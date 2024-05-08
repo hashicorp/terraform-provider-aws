@@ -119,7 +119,7 @@ func DataSourceFirewall() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -318,8 +318,8 @@ func flattenDataSourceSyncStates(state map[string]*networkfirewall.SyncState) []
 	syncStates := make([]interface{}, 0, len(state))
 	for k, v := range state {
 		m := map[string]interface{}{
-			"availability_zone": k,
-			"attachment":        flattenDataSourceSyncStateAttachment(v.Attachment),
+			names.AttrAvailabilityZone: k,
+			"attachment":               flattenDataSourceSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}

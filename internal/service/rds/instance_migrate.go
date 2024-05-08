@@ -114,7 +114,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Required: true,
 			},
 
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -455,7 +455,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

@@ -453,7 +453,7 @@ func TestAccGlueDevEndpoint_SubnetID_securityGroupIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test", "availability_zone"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test", names.AttrAvailabilityZone),
 				),
 			},
 			{

@@ -42,7 +42,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -231,7 +231,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
 	}
-	d.Set("availability_zone", rsc.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, rsc.AvailabilityZone)
 	if v, err := clusterAvailabilityZoneRelocationStatus(rsc); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {

@@ -68,7 +68,7 @@ func ResourceInstance() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(opsworks.AutoScalingType_Values(), false),
 			},
 
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -496,7 +496,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ami_id", instance.AmiId)
 	d.Set("architecture", instance.Architecture)
 	d.Set("auto_scaling_type", instance.AutoScalingType)
-	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("created_at", instance.CreatedAt)
 	d.Set("ebs_optimized", instance.EbsOptimized)
 	d.Set("ec2_instance_id", instance.Ec2InstanceId)
@@ -597,7 +597,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		req.AutoScalingType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		req.AvailabilityZone = aws.String(v.(string))
 	}
 

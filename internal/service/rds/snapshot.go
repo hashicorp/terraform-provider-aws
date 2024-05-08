@@ -46,7 +46,7 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zone", snapshot.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_arn", arn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)

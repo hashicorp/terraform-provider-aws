@@ -30,7 +30,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -181,7 +181,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zone", snapshot.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)

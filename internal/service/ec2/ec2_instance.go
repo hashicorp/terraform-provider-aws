@@ -81,7 +81,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -1137,7 +1137,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("instance_state", instance.State.Name)
 
 	if v := instance.Placement; v != nil {
-		d.Set("availability_zone", v.AvailabilityZone)
+		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
 
 		d.Set("placement_group", v.GroupName)
 
@@ -2975,7 +2975,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Placement is used for aws_instance; SpotPlacement is used for
 	// aws_spot_instance_request. They represent the same data. :-|
 	opts.Placement = &ec2.Placement{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
 	if v, ok := d.GetOk("placement_partition_number"); ok {
@@ -2983,7 +2983,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	opts.SpotPlacement = &ec2.SpotPlacement{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {

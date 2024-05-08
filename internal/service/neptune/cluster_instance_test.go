@@ -42,7 +42,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "address"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("db:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexache.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrAvailabilityZone, regexache.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "address"),
@@ -226,7 +226,7 @@ func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 				Config: testAccClusterInstanceConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabiltyZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, availabiltyZonesDataSourceName, "names.0"),
 				),
 			},
 			{

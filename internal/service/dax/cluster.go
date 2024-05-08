@@ -192,7 +192,7 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -480,10 +480,10 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 
 	for _, node := range sortedNodes {
 		nodeData = append(nodeData, map[string]interface{}{
-			names.AttrID:        aws.ToString(node.NodeId),
-			"address":           aws.ToString(node.Endpoint.Address),
-			names.AttrPort:      node.Endpoint.Port,
-			"availability_zone": aws.ToString(node.AvailabilityZone),
+			names.AttrID:               aws.ToString(node.NodeId),
+			"address":                  aws.ToString(node.Endpoint.Address),
+			names.AttrPort:             node.Endpoint.Port,
+			names.AttrAvailabilityZone: aws.ToString(node.AvailabilityZone),
 		})
 	}
 
