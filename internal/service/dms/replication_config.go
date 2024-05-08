@@ -47,7 +47,7 @@ func ResourceReplicationConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -113,11 +113,16 @@ func ResourceReplicationConfig() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
+			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
 			"replication_settings": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringIsJSON),
+					validateReplicationSettings,
+				),
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},
@@ -230,7 +235,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", replicationConfig.ReplicationConfigArn)
+	d.Set(names.AttrARN, replicationConfig.ReplicationConfigArn)
 	if err := d.Set("compute_config", flattenComputeConfig(replicationConfig.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
@@ -249,7 +254,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_replication") {
 		if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -624,7 +629,7 @@ func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
 	tfMap := map[string]interface{}{
 		"availability_zone":            aws.StringValue(apiObject.AvailabilityZone),
 		"dns_name_servers":             aws.StringValue(apiObject.DnsNameServers),
-		"kms_key_id":                   aws.StringValue(apiObject.KmsKeyId),
+		names.AttrKMSKeyID:             aws.StringValue(apiObject.KmsKeyId),
 		"max_capacity_units":           aws.Int64Value(apiObject.MaxCapacityUnits),
 		"min_capacity_units":           aws.Int64Value(apiObject.MinCapacityUnits),
 		"multi_az":                     aws.BoolValue(apiObject.MultiAZ),
@@ -651,7 +656,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.DnsNameServers = aws.String(v)
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 

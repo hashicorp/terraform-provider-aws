@@ -6,8 +6,8 @@ package kms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +16,8 @@ import (
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// @SDKDataSource("aws_kms_ciphertext")
-func DataSourceCiphertext() *schema.Resource {
+// @SDKDataSource("aws_kms_ciphertext", name="Ciphertext")
+func dataSourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCiphertextRead,
 
@@ -46,7 +46,7 @@ func DataSourceCiphertext() *schema.Resource {
 
 func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.EncryptInput{
@@ -55,16 +55,16 @@ func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EncryptionContext = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	output, err := conn.EncryptWithContext(ctx, input)
+	output, err := conn.Encrypt(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "encrypting with KMS Key (%s): %s", keyID, err)
 	}
 
-	d.SetId(aws.StringValue(output.KeyId))
+	d.SetId(aws.ToString(output.KeyId))
 	d.Set("ciphertext_blob", itypes.Base64Encode(output.CiphertextBlob))
 
 	return diags

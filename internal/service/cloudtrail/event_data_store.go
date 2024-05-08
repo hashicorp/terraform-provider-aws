@@ -129,7 +129,7 @@ func resourceEventDataStore() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -138,11 +138,11 @@ func resourceEventDataStore() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -152,7 +152,7 @@ func resourceEventDataStore() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -186,7 +186,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		Name:                         aws.String(name),
@@ -200,7 +200,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -238,10 +238,10 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(output.AdvancedEventSelectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_event_selector: %s", err)
 	}
-	d.Set("arn", output.EventDataStoreArn)
-	d.Set("kms_key_id", output.KmsKeyId)
+	d.Set(names.AttrARN, output.EventDataStoreArn)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("multi_region_enabled", output.MultiRegionEnabled)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("organization_enabled", output.OrganizationEnabled)
 	d.Set("retention_period", output.RetentionPeriod)
 	d.Set("termination_protection_enabled", output.TerminationProtectionEnabled)
@@ -253,7 +253,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudtrail.UpdateEventDataStoreInput{
 			EventDataStore: aws.String(d.Id()),
 		}
@@ -266,8 +266,8 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.MultiRegionEnabled = aws.Bool(d.Get("multi_region_enabled").(bool))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("organization_enabled") {

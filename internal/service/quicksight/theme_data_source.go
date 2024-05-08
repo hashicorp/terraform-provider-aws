@@ -25,7 +25,7 @@ func DataSourceTheme() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -237,7 +237,7 @@ func DataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -258,7 +258,7 @@ func DataSourceTheme() *schema.Resource {
 						},
 					},
 				},
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -298,13 +298,13 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(id)
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
 	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("status", out.Version.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("theme_id", out.ThemeId)
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)

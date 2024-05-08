@@ -46,7 +46,7 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,12 +57,12 @@ func ResourceRule() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 256),
 				StateFunc:    trimTrailingPeriod,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validResolverName,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func ResourceRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsIPAddress,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      53,
@@ -126,7 +126,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -169,12 +169,12 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	arn := aws.StringValue(rule.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
 	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
-	d.Set("name", rule.Name)
-	d.Set("owner_id", rule.OwnerId)
+	d.Set(names.AttrName, rule.Name)
+	d.Set(names.AttrOwnerID, rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("rule_type", rule.RuleType)
 	d.Set("share_status", rule.ShareStatus)
@@ -188,13 +188,13 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
+	if d.HasChanges(names.AttrName, "resolver_endpoint_id", "target_ip") {
 		input := &route53resolver.UpdateResolverRuleInput{
 			Config:         &route53resolver.ResolverRuleConfig{},
 			ResolverRuleId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("name"); ok {
+		if v, ok := d.GetOk(names.AttrName); ok {
 			input.Config.Name = aws.String(v.(string))
 		}
 
@@ -371,7 +371,7 @@ func expandRuleTargetIPs(vTargetIps *schema.Set) []*route53resolver.TargetAddres
 		if vIp, ok := mTargetIp["ip"].(string); ok && vIp != "" {
 			targetAddress.Ip = aws.String(vIp)
 		}
-		if vPort, ok := mTargetIp["port"].(int); ok {
+		if vPort, ok := mTargetIp[names.AttrPort].(int); ok {
 			targetAddress.Port = aws.Int64(int64(vPort))
 		}
 		if vProtocol, ok := mTargetIp["protocol"].(string); ok && vProtocol != "" {
@@ -393,9 +393,9 @@ func flattenRuleTargetIPs(targetAddresses []*route53resolver.TargetAddress) []in
 
 	for _, targetAddress := range targetAddresses {
 		mTargetIp := map[string]interface{}{
-			"ip":       aws.StringValue(targetAddress.Ip),
-			"port":     int(aws.Int64Value(targetAddress.Port)),
-			"protocol": aws.StringValue(targetAddress.Protocol),
+			"ip":           aws.StringValue(targetAddress.Ip),
+			names.AttrPort: int(aws.Int64Value(targetAddress.Port)),
+			"protocol":     aws.StringValue(targetAddress.Protocol),
 		}
 
 		vTargetIps = append(vTargetIps, mTargetIp)

@@ -36,7 +36,7 @@ func testAccSearchDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSearchDataSourceConfig_basic(rName, "LOCAL"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.0.total_resources"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.arn"),
@@ -78,7 +78,7 @@ func testAccSearchDataSource_IndexType(t *testing.T) {
 			{
 				Config: testAccSearchDataSourceConfig_basic(rName, "AGGREGATOR"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.0.total_resources"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.arn"),

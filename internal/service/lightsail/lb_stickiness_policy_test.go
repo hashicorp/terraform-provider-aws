@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccLoadBalancerStickinessPolicy_basic(t *testing.T) {
@@ -41,7 +42,7 @@ func testAccLoadBalancerStickinessPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerStickinessPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cookie_duration", cookieDuration),
-					resource.TestCheckResourceAttr(resourceName, "enabled", enabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, enabled),
 					resource.TestCheckResourceAttr(resourceName, "lb_name", rName),
 				),
 			},
@@ -112,7 +113,7 @@ func testAccLoadBalancerStickinessPolicy_enabled(t *testing.T) {
 				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabledTrue, cookieDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerStickinessPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", enabledTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, enabledTrue),
 				),
 			},
 			{
@@ -124,7 +125,7 @@ func testAccLoadBalancerStickinessPolicy_enabled(t *testing.T) {
 				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabledFalse, cookieDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerStickinessPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", enabledFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, enabledFalse),
 				),
 			},
 		},

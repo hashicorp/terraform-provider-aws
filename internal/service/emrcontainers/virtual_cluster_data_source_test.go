@@ -37,7 +37,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVirtualClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.id", dataSourceResourceName, "container_provider.0.id"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.0.info.#", "1"),
@@ -45,9 +45,9 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.info.0.eks_info.0.namespace", dataSourceResourceName, "container_provider.0.info.0.eks_info.0.namespace"),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.type", dataSourceResourceName, "container_provider.0.type"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
-					resource.TestCheckResourceAttrSet(dataSourceResourceName, "state"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceResourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(dataSourceResourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
 				),
 			},

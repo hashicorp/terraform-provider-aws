@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_s3_bucket_object", name="Bucket Object")
@@ -29,7 +30,7 @@ func dataSourceBucketObject() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBucketObjectRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +38,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Deprecated: "Use the aws_s3_object data source instead",
 				Type:       schema.TypeString,
 				Required:   true,
@@ -82,7 +83,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -123,7 +124,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -144,8 +145,8 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	bucket := d.Get("bucket").(string)
-	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	bucket := d.Get(names.AttrBucket).(string)
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -167,7 +168,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 
-	id := bucket + "/" + d.Get("key").(string)
+	id := bucket + "/" + d.Get(names.AttrKey).(string)
 	if v, ok := d.GetOk("version_id"); ok {
 		id += "@" + v.(string)
 	}
@@ -177,7 +178,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
 	d.Set("cache_control", out.CacheControl)
@@ -244,7 +245,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -37,11 +37,11 @@ func ResourceService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -60,7 +60,7 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -103,7 +103,7 @@ func ResourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -127,7 +127,7 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -140,7 +140,7 @@ func ResourceService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -156,14 +156,14 @@ func ResourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateServiceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,7 +183,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NamespaceId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
+	if v, ok := d.GetOk(names.AttrType); ok {
 		input.Type = aws.String(v.(string))
 	}
 
@@ -214,8 +214,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	arn := aws.StringValue(service.Arn)
-	d.Set("arn", arn)
-	d.Set("description", service.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
 		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
 			return diag.Errorf("setting dns_config: %s", err)
@@ -237,9 +237,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("health_check_custom_config", nil)
 	}
-	d.Set("name", service.Name)
+	d.Set(names.AttrName, service.Name)
 	d.Set("namespace_id", service.NamespaceId)
-	d.Set("type", service.Type)
+	d.Set(names.AttrType, service.Type)
 
 	return nil
 }
@@ -247,11 +247,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &servicediscovery.UpdateServiceInput{
 			Id: aws.String(d.Id()),
 			Service: &servicediscovery.ServiceChange{
-				Description: aws.String(d.Get("description").(string)),
+				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
 		}
 
@@ -380,7 +380,7 @@ func expandDNSRecord(tfMap map[string]interface{}) *servicediscovery.DnsRecord {
 		apiObject.TTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -447,7 +447,7 @@ func flattenDNSRecord(apiObject *servicediscovery.DnsRecord) map[string]interfac
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -486,7 +486,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *servicediscovery.Hea
 		apiObject.ResourcePath = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -509,7 +509,7 @@ func flattenHealthCheckConfig(apiObject *servicediscovery.HealthCheckConfig) map
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap

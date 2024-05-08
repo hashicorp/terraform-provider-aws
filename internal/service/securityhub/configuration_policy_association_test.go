@@ -52,8 +52,8 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_1", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", names.AttrID),
 				),
 			},
 			{
@@ -65,15 +65,15 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", names.AttrID),
 				),
 			},
 			{
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, rootTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "parent_id"),
 				),
 			},
@@ -81,7 +81,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, accountTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", "account_id"),
 				),
 			},

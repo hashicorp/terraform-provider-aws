@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // testing rulesForGroupPermissions
@@ -606,7 +607,7 @@ func TestRulesMixedMatching(t *testing.T) {
 			for _, cs := range c.saves {
 				// deep equal cannot compare schema.Set's directly
 				// make sure we're not failing the reflect b/c of ports/type
-				for _, attr := range []string{"to_port", "from_port", "type"} {
+				for _, attr := range []string{"to_port", "from_port", names.AttrType} {
 					if s[attr] != cs[attr] {
 						continue
 					}

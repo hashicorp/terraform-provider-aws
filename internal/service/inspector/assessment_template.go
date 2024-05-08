@@ -40,7 +40,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -95,7 +95,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &inspector.CreateAssessmentTemplateInput{
 		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
 		AssessmentTemplateName: aws.String(name),
@@ -146,9 +146,9 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	template := resp.AssessmentTemplates[0]
 
 	arn := aws.StringValue(template.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("duration", template.DurationInSeconds)
-	d.Set("name", template.Name)
+	d.Set(names.AttrName, template.Name)
 	d.Set("rules_package_arns", aws.StringValueSlice(template.RulesPackageArns))
 	d.Set("target_arn", template.AssessmentTargetArn)
 

@@ -119,7 +119,7 @@ func ResourceCollaboration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -173,7 +173,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
 	}
 	input.QueryLogStatus = queryLogStatus
 
@@ -187,11 +187,11 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateCollaboration(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Collaboration == nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.Collaboration.Id))
 
@@ -246,7 +246,7 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cleanrooms.UpdateCollaborationInput{
 			CollaborationIdentifier: aws.String(d.Id()),
 		}
@@ -405,7 +405,7 @@ func flattenMembers(members []types.MemberSummary, ownerAccount *string) []inter
 	for _, member := range members {
 		if aws.ToString(member.AccountId) != aws.ToString(ownerAccount) {
 			memberMap := map[string]interface{}{}
-			memberMap["status"] = member.Status
+			memberMap[names.AttrStatus] = member.Status
 			memberMap["account_id"] = member.AccountId
 			memberMap["display_name"] = member.DisplayName
 			memberMap["member_abilities"] = flattenMemberAbilities(member.Abilities)

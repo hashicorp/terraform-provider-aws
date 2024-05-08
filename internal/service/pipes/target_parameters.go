@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func targetParametersSchema() *schema.Schema {
@@ -72,11 +73,11 @@ func targetParametersSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -92,12 +93,12 @@ func targetParametersSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"type": {
+													names.AttrType: {
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[types.BatchResourceRequirementType](),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -117,7 +118,7 @@ func targetParametersSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"type": {
+										names.AttrType: {
 											Type:             schema.TypeString,
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[types.BatchJobDependencyType](),
@@ -134,7 +135,7 @@ func targetParametersSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
-							"parameters": {
+							names.AttrParameters: {
 								Type:     schema.TypeMap,
 								Optional: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -324,11 +325,11 @@ func targetParametersSchema() *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"name": {
+																names.AttrName: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																},
@@ -340,12 +341,12 @@ func targetParametersSchema() *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"type": {
+																names.AttrType: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[types.EcsEnvironmentFileType](),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: verify.ValidARN,
@@ -361,7 +362,7 @@ func targetParametersSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -370,12 +371,12 @@ func targetParametersSchema() *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"type": {
+																names.AttrType: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[types.EcsResourceRequirementType](),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -447,7 +448,7 @@ func targetParametersSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 2000),
 										},
-										"type": {
+										names.AttrType: {
 											Type:             schema.TypeString,
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
@@ -466,7 +467,7 @@ func targetParametersSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
-										"type": {
+										names.AttrType: {
 											Type:             schema.TypeString,
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
@@ -488,7 +489,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 1024),
 							},
-							"tags": tftags.TagsSchema(),
+							names.AttrTags: tftags.TagsSchema(),
 							"task_count": {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -732,7 +733,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 200,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
@@ -740,7 +741,7 @@ func targetParametersSchema() *schema.Schema {
 												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 											),
 										},
-										"value": {
+										names.AttrValue: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -898,7 +899,7 @@ func expandPipeTargetBatchJobParameters(tfMap map[string]interface{}) *types.Pip
 		apiObject.JobName = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameters"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrParameters].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Parameters = flex.ExpandStringValueMap(v)
 	}
 
@@ -956,11 +957,11 @@ func expandBatchEnvironmentVariable(tfMap map[string]interface{}) *types.BatchEn
 
 	apiObject := &types.BatchEnvironmentVariable{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -1000,11 +1001,11 @@ func expandBatchResourceRequirement(tfMap map[string]interface{}) *types.BatchRe
 
 	apiObject := &types.BatchResourceRequirement{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.BatchResourceRequirementType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -1048,7 +1049,7 @@ func expandBatchJobDependency(tfMap map[string]interface{}) *types.BatchJobDepen
 		apiObject.JobId = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.BatchJobDependencyType(v)
 	}
 
@@ -1168,7 +1169,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 		apiObject.ReferenceId = aws.String(v)
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		for k, v := range flex.ExpandStringValueMap(v) {
 			apiObject.Tags = append(apiObject.Tags, types.Tag{Key: aws.String(k), Value: aws.String(v)})
 		}
@@ -1338,7 +1339,7 @@ func expandECSContainerOverride(tfMap map[string]interface{}) *types.EcsContaine
 		apiObject.MemoryReservation = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1382,11 +1383,11 @@ func expandECSEnvironmentVariable(tfMap map[string]interface{}) *types.EcsEnviro
 
 	apiObject := &types.EcsEnvironmentVariable{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -1426,11 +1427,11 @@ func expandECSEnvironmentFile(tfMap map[string]interface{}) *types.EcsEnvironmen
 
 	apiObject := &types.EcsEnvironmentFile{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.EcsEnvironmentFileType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -1470,11 +1471,11 @@ func expandECSResourceRequirement(tfMap map[string]interface{}) *types.EcsResour
 
 	apiObject := &types.EcsResourceRequirement{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.EcsResourceRequirementType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -1576,7 +1577,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) *types.PlacementCon
 		apiObject.Expression = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.PlacementConstraintType(v)
 	}
 
@@ -1620,7 +1621,7 @@ func expandPlacementStrategy(tfMap map[string]interface{}) *types.PlacementStrat
 		apiObject.Field = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.PlacementStrategyType(v)
 	}
 
@@ -1788,11 +1789,11 @@ func expandSageMakerPipelineParameter(tfMap map[string]interface{}) *types.SageM
 
 	apiObject := &types.SageMakerPipelineParameter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -1943,7 +1944,7 @@ func flattenPipeTargetBatchJobParameters(apiObject *types.PipeTargetBatchJobPara
 	}
 
 	if v := apiObject.Parameters; v != nil {
-		tfMap["parameters"] = v
+		tfMap[names.AttrParameters] = v
 	}
 
 	if v := apiObject.RetryStrategy; v != nil {
@@ -1997,11 +1998,11 @@ func flattenBatchEnvironmentVariable(apiObject types.BatchEnvironmentVariable) m
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -2025,11 +2026,11 @@ func flattenBatchResourceRequirement(apiObject types.BatchResourceRequirement) m
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -2057,7 +2058,7 @@ func flattenBatchJobDependency(apiObject types.BatchJobDependency) map[string]in
 	}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	}
 
 	return tfMap
@@ -2166,7 +2167,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 			tags[aws.ToString(apiObject.Key)] = aws.ToString(apiObject.Value)
 		}
 
-		tfMap["tags"] = tags
+		tfMap[names.AttrTags] = tags
 	}
 
 	if v := apiObject.TaskCount; v != nil {
@@ -2273,7 +2274,7 @@ func flattenECSContainerOverride(apiObject types.EcsContainerOverride) map[strin
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ResourceRequirements; v != nil {
@@ -2301,11 +2302,11 @@ func flattenECSResourceRequirement(apiObject types.EcsResourceRequirement) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["name"] = v
+		tfMap[names.AttrName] = v
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -2329,11 +2330,11 @@ func flattenECSEnvironmentFile(apiObject types.EcsEnvironmentFile) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["name"] = v
+		tfMap[names.AttrName] = v
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -2343,11 +2344,11 @@ func flattenECSEnvironmentVariable(apiObject types.EcsEnvironmentVariable) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -2465,7 +2466,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	}
 
 	return tfMap
@@ -2493,7 +2494,7 @@ func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]inte
 	}
 
 	if v := apiObject.Type; v != "" {
-		tfMap["type"] = v
+		tfMap[names.AttrType] = v
 	}
 
 	return tfMap
@@ -2643,11 +2644,11 @@ func flattenSageMakerPipelineParameter(apiObject types.SageMakerPipelineParamete
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -27,7 +27,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_cooldown", resourceName, "default_cooldown"),
 					resource.TestCheckResourceAttrPair(datasourceName, "desired_capacity", resourceName, "desired_capacity"),
@@ -45,12 +45,12 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "max_size", resourceName, "max_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "min_size", resourceName, "min_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "mixed_instances_policy.#", resourceName, "mixed_instances_policy.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(datasourceName, "new_instances_protected_from_scale_in", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
 					resource.TestCheckResourceAttrPair(datasourceName, "predicted_capacity", resourceName, "predicted_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "service_linked_role_arn", resourceName, "service_linked_role_arn"),
-					resource.TestCheckResourceAttr(datasourceName, "status", ""), // Only set when the DeleteAutoScalingGroup operation is in progress.
+					resource.TestCheckResourceAttr(datasourceName, names.AttrStatus, ""), // Only set when the DeleteAutoScalingGroup operation is in progress.
 					resource.TestCheckResourceAttrPair(datasourceName, "suspended_processes.#", resourceName, "suspended_processes.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "target_group_arns.#", resourceName, "target_group_arns.#"),
@@ -170,13 +170,13 @@ func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "tag.#", "2"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						"key":                 "key1",
-						"value":               "value1",
+						names.AttrKey:         "key1",
+						names.AttrValue:       "value1",
 						"propagate_at_launch": "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						"key":                 "key2",
-						"value":               "value2",
+						names.AttrKey:         "key2",
+						names.AttrValue:       "value2",
 						"propagate_at_launch": "false",
 					}),
 				),

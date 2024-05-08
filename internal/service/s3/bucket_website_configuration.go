@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_website_configuration", name="Bucket Website Configuration")
@@ -36,7 +37,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -48,7 +49,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -207,7 +208,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		websiteConfig.RoutingRules = unmarshalledRules
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
@@ -262,7 +263,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("reading S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("error_document", flattenErrorDocument(output.ErrorDocument)); err != nil {
 		return diag.Errorf("setting error_document: %s", err)
 	}
@@ -465,7 +466,7 @@ func expandErrorDocument(l []interface{}) *types.ErrorDocument {
 
 	result := &types.ErrorDocument{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		result.Key = aws.String(v)
 	}
 
@@ -619,7 +620,7 @@ func flattenErrorDocument(e *types.ErrorDocument) []interface{} {
 	m := make(map[string]interface{})
 
 	if e.Key != nil {
-		m["key"] = aws.ToString(e.Key)
+		m[names.AttrKey] = aws.ToString(e.Key)
 	}
 
 	return []interface{}{m}

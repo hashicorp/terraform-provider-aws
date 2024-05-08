@@ -62,11 +62,11 @@ func ResourcePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -175,7 +175,7 @@ func ResourcePlan() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
@@ -231,12 +231,12 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("advanced_backup_setting", flattenPlanAdvancedSettings(output.AdvancedBackupSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
 	}
-	d.Set("arn", output.BackupPlanArn)
-	d.Set("name", output.BackupPlan.BackupPlanName)
+	d.Set(names.AttrARN, output.BackupPlanArn)
+	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
 	if err := d.Set("rule", flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
-	d.Set("version", output.VersionId)
+	d.Set(names.AttrVersion, output.VersionId)
 
 	return diags
 }
@@ -250,7 +250,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
-				BackupPlanName:         aws.String(d.Get("name").(string)),
+				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
 				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			},
 		}

@@ -33,11 +33,11 @@ func TestAccKMSGrant_basic(t *testing.T) {
 				Config: testAccGrantConfig_basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
-					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "key_id"),
 				),
 			},
@@ -67,7 +67,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
                         baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
 						"encryption_context_equals.%":   "2",
@@ -87,7 +87,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 			            baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
 						"encryption_context_subset.%":   "2",
@@ -115,7 +115,7 @@ func TestAccKMSGrant_withRetiringPrincipal(t *testing.T) {
 				Config: testAccGrantConfig_retiringPrincipal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "retiring_principal", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "retiring_principal", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccKMSGrant_bare(t *testing.T) {
 				Config: testAccGrantConfig_bare(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "name"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrName),
 					resource.TestCheckNoResourceAttr(resourceName, "constraints.#"),
 					resource.TestCheckNoResourceAttr(resourceName, "retiring_principal"),
 				),
@@ -173,12 +173,12 @@ func TestAccKMSGrant_arn(t *testing.T) {
 				Config: testAccGrantConfig_arn(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
-					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -259,12 +259,12 @@ func TestAccKMSGrant_crossAccountARN(t *testing.T) {
 				Config: testAccGrantConfig_crossAccountARN(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
-					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -293,7 +293,7 @@ func TestAccKMSGrant_service(t *testing.T) {
 				Config: testAccGrantConfig_service(rName, "\"Encrypt\", \"Decrypt\"", servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "grantee_principal", servicePrincipal),
 					resource.TestCheckResourceAttr(resourceName, "retiring_principal", servicePrincipal),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
@@ -314,7 +314,7 @@ func TestAccKMSGrant_service(t *testing.T) {
 
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_grant" {
@@ -322,7 +322,6 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			keyID, grantID, err := tfkms.GrantParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -337,7 +336,7 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("KMS Grant still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("KMS Grant %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -351,17 +350,12 @@ func testAccCheckGrantExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No KMS Grant ID is set")
-		}
-
 		keyID, grantID, err := tfkms.GrantParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		_, err = tfkms.FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
 

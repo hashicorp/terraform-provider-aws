@@ -39,11 +39,11 @@ func ResourceTransitGatewayPolicyTable() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,8 +108,8 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-policy-table/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("state", transitGatewayPolicyTable.State)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrState, transitGatewayPolicyTable.State)
 	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayPolicyTable.Tags)

@@ -35,7 +35,7 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("studio_lifecycle_config_name", image.StudioLifecycleConfigName)
 	d.Set("studio_lifecycle_config_app_type", image.StudioLifecycleConfigAppType)
 	d.Set("studio_lifecycle_config_content", image.StudioLifecycleConfigContent)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

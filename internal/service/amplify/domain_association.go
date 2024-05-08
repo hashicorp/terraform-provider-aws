@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_amplify_domain_association", name="Domain Association")
@@ -43,7 +44,7 @@ func resourceDomainAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,7 +155,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("app_id", appID)
-	d.Set("arn", domainAssociation.DomainAssociationArn)
+	d.Set(names.AttrARN, domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
 	d.Set("domain_name", domainAssociation.DomainName)
 	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)

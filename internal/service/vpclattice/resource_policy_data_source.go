@@ -20,7 +20,7 @@ func DataSourceResourcePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(resourceArn)
-	d.Set("policy", out.Policy)
+	d.Set(names.AttrPolicy, out.Policy)
 
 	return nil
 }

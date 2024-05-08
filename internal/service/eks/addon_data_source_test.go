@@ -31,7 +31,7 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 				Config: testAccAddonDataSourceConfig_basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_values", dataSourceResourceName, "configuration_values"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", dataSourceResourceName, "modified_at"),
@@ -62,7 +62,7 @@ func TestAccEKSAddonDataSource_configurationValues(t *testing.T) {
 				Config: testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, eks.ResolveConflictsOverwrite),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_values", dataSourceResourceName, "configuration_values"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", dataSourceResourceName, "modified_at"),

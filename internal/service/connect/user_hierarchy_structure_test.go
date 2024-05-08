@@ -69,7 +69,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_two.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_two.0.name", levelTwoName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
 				),
 			},
 			{
@@ -95,7 +95,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_three.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_three.0.name", levelThreeName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
 				),
 			},
 			{
@@ -125,7 +125,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_four.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_four.0.name", levelFourName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_five.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_five.0.name", levelFiveName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
 				),
 			},
 			{
@@ -178,7 +178,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.0.name", levelOneName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
 				),
 			},
 		},

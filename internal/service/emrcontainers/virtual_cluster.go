@@ -42,7 +42,7 @@ func ResourceVirtualCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceVirtualCluster() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -85,7 +85,7 @@ func ResourceVirtualCluster() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -94,7 +94,7 @@ func ResourceVirtualCluster() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -116,7 +116,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -154,7 +154,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vc.Arn)
+	d.Set(names.AttrARN, vc.Arn)
 	if vc.ContainerProvider != nil {
 		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting container_provider: %s", err)
@@ -162,7 +162,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		d.Set("container_provider", nil)
 	}
-	d.Set("name", vc.Name)
+	d.Set(names.AttrName, vc.Name)
 
 	setTagsOut(ctx, vc.Tags)
 
@@ -216,7 +216,7 @@ func expandContainerProvider(tfMap map[string]interface{}) *emrcontainers.Contai
 
 	apiObject := &emrcontainers.ContainerProvider{}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.Id = aws.String(v)
 	}
 
@@ -224,7 +224,7 @@ func expandContainerProvider(tfMap map[string]interface{}) *emrcontainers.Contai
 		apiObject.Info = expandContainerInfo(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -267,7 +267,7 @@ func flattenContainerProvider(apiObject *emrcontainers.ContainerProvider) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.StringValue(v)
+		tfMap[names.AttrID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Info; v != nil {
@@ -275,7 +275,7 @@ func flattenContainerProvider(apiObject *emrcontainers.ContainerProvider) map[st
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap

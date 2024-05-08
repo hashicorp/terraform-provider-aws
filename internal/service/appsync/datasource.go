@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_datasource")
@@ -40,11 +41,11 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -210,7 +211,7 @@ func ResourceDataSource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
@@ -267,7 +268,7 @@ func ResourceDataSource() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.DataSourceType_Values(), true),
@@ -284,14 +285,14 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appsync.CreateDataSourceInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
 		Name:  aws.String(name),
-		Type:  aws.String(d.Get("type").(string)),
+		Type:  aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -333,7 +334,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating Appsync Data Source (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("api_id").(string) + "-" + d.Get("name").(string))
+	d.SetId(d.Get("api_id").(string) + "-" + d.Get(names.AttrName).(string))
 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
@@ -361,8 +362,8 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("api_id", apiID)
-	d.Set("arn", dataSource.DataSourceArn)
-	d.Set("description", dataSource.Description)
+	d.Set(names.AttrARN, dataSource.DataSourceArn)
+	d.Set(names.AttrDescription, dataSource.Description)
 	if err := d.Set("dynamodb_config", flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dynamodb_config: %s", err)
 	}
@@ -378,7 +379,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("lambda_config", flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_config: %s", err)
 	}
-	d.Set("name", dataSource.Name)
+	d.Set(names.AttrName, dataSource.Name)
 	if err := d.Set("opensearchservice_config", flattenOpenSearchServiceDataSourceConfig(dataSource.OpenSearchServiceConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting opensearchservice_config: %s", err)
 	}
@@ -386,7 +387,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
 	}
 	d.Set("service_role_arn", dataSource.ServiceRoleArn)
-	d.Set("type", dataSource.Type)
+	d.Set(names.AttrType, dataSource.Type)
 
 	return diags
 }
@@ -405,10 +406,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &appsync.UpdateDataSourceInput{
 		ApiId: aws.String(apiID),
 		Name:  aws.String(name),
-		Type:  aws.String(d.Get("type").(string)),
+		Type:  aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_wafv2_ip_set")
@@ -28,11 +29,11 @@ func DataSourceIPSet() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -40,7 +41,7 @@ func DataSourceIPSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -57,7 +58,7 @@ func DataSourceIPSet() *schema.Resource {
 func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	var foundIpSet *wafv2.IPSetSummary
 	input := &wafv2.ListIPSetsInput{
@@ -107,8 +108,8 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.StringValue(resp.IPSet.Id))
-	d.Set("arn", resp.IPSet.ARN)
-	d.Set("description", resp.IPSet.Description)
+	d.Set(names.AttrARN, resp.IPSet.ARN)
+	d.Set(names.AttrDescription, resp.IPSet.Description)
 	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
 
 	if err := d.Set("addresses", flex.FlattenStringList(resp.IPSet.Addresses)); err != nil {

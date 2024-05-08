@@ -32,7 +32,7 @@ func TestAccEC2AvailabilityZoneDataSource_allAvailabilityZones(t *testing.T) {
 				Config: testAccAvailabilityZoneDataSourceConfig_allAZs(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
@@ -61,7 +61,7 @@ func TestAccEC2AvailabilityZoneDataSource_filter(t *testing.T) {
 				Config: testAccAvailabilityZoneDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
@@ -90,7 +90,7 @@ func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
 				Config: testAccAvailabilityZoneDataSourceConfig_type("local-zone"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
@@ -119,7 +119,7 @@ func TestAccEC2AvailabilityZoneDataSource_name(t *testing.T) {
 				Config: testAccAvailabilityZoneDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
@@ -148,7 +148,7 @@ func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
 				Config: testAccAvailabilityZoneDataSourceConfig_type("wavelength-zone"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
@@ -177,7 +177,7 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 				Config: testAccAvailabilityZoneDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),

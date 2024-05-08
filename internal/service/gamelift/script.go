@@ -39,11 +39,11 @@ func ResourceScript() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -57,11 +57,11 @@ func ResourceScript() *schema.Resource {
 				ExactlyOneOf: []string{"zip_file", "storage_location"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -69,7 +69,7 @@ func ResourceScript() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -77,7 +77,7 @@ func ResourceScript() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -100,7 +100,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := gamelift.CreateScriptInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 		Tags: getTagsIn(ctx),
 	}
 
@@ -108,7 +108,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.StorageLocation = expandStorageLocation(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -165,15 +165,15 @@ func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Script (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", script.Name)
-	d.Set("version", script.Version)
+	d.Set(names.AttrName, script.Name)
+	d.Set(names.AttrVersion, script.Version)
 
 	if err := d.Set("storage_location", flattenStorageLocation(script.StorageLocation)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_location: %s", err)
 	}
 
 	arn := aws.StringValue(script.ScriptArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
@@ -182,15 +182,15 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		log.Printf("[INFO] Updating GameLift Script: %s", d.Id())
 		input := gamelift.UpdateScriptInput{
 			ScriptId: aws.String(d.Id()),
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if d.HasChange("version") {
-			if v, ok := d.GetOk("version"); ok {
+		if d.HasChange(names.AttrVersion) {
+			if v, ok := d.GetOk(names.AttrVersion); ok {
 				input.Version = aws.String(v.(string))
 			}
 		}
@@ -248,10 +248,10 @@ func flattenStorageLocation(sl *gamelift.S3Location) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"bucket":         aws.StringValue(sl.Bucket),
-		"key":            aws.StringValue(sl.Key),
-		"role_arn":       aws.StringValue(sl.RoleArn),
-		"object_version": aws.StringValue(sl.ObjectVersion),
+		names.AttrBucket:  aws.StringValue(sl.Bucket),
+		names.AttrKey:     aws.StringValue(sl.Key),
+		names.AttrRoleARN: aws.StringValue(sl.RoleArn),
+		"object_version":  aws.StringValue(sl.ObjectVersion),
 	}
 
 	return []interface{}{m}

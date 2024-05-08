@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccIPGroup_basic(t *testing.T) {
@@ -37,8 +38,8 @@ func testAccIPGroup_basic(t *testing.T) {
 				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", ipGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -52,8 +53,8 @@ func testAccIPGroup_basic(t *testing.T) {
 				Config: testAccIPGroupConfig_b(ipGroupNewName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", ipGroupNewName),
-					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
@@ -163,9 +164,9 @@ func testAccIPGroup_MultipleDirectories(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
 					testAccCheckDirectoryExists(ctx, directoryResourceName1, &d1),
-					resource.TestCheckTypeSetElemAttrPair(directoryResourceName1, "ip_group_ids.*", "aws_workspaces_ip_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(directoryResourceName1, "ip_group_ids.*", "aws_workspaces_ip_group.test", names.AttrID),
 					testAccCheckDirectoryExists(ctx, directoryResourceName2, &d2),
-					resource.TestCheckTypeSetElemAttrPair(directoryResourceName2, "ip_group_ids.*", "aws_workspaces_ip_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(directoryResourceName2, "ip_group_ids.*", "aws_workspaces_ip_group.test", names.AttrID),
 				),
 			},
 		},

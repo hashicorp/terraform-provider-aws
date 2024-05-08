@@ -359,7 +359,7 @@ func ResourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -592,7 +592,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateGSIProvisionedThroughput(gsi, billingMode); err != nil {
-					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get(names.AttrName).(string), err)
 				}
 
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
@@ -1875,7 +1875,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKey(ctx, client, "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
 	if err != nil {
 		return sseList
 	}
@@ -1906,7 +1906,7 @@ func clearReplicaDefaultKeys(ctx context.Context, client *conns.AWSClient, repli
 			continue
 		}
 
-		dk, err := kms.FindDefaultKey(ctx, client, "dynamodb", replica["region_name"].(string))
+		dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", replica["region_name"].(string))
 		if err != nil {
 			continue
 		}
@@ -2293,7 +2293,7 @@ func expandS3BucketSource(data map[string]interface{}) *dynamodb.S3BucketSource 
 
 	a := &dynamodb.S3BucketSource{}
 
-	if s, ok := data["bucket"].(string); ok && s != "" {
+	if s, ok := data[names.AttrBucket].(string); ok && s != "" {
 		a.S3Bucket = aws.String(s)
 	}
 

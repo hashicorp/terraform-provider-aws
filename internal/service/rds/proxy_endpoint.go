@@ -50,7 +50,7 @@ func resourceProxyEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func resourceProxyEndpoint() *schema.Resource {
 				Default:          types.DBProxyEndpointTargetRoleReadWrite,
 				ValidateDiagFunc: enum.Validate[types.DBProxyEndpointTargetRole](),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -157,13 +157,13 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", dbProxyEndpoint.DBProxyEndpointArn)
+	d.Set(names.AttrARN, dbProxyEndpoint.DBProxyEndpointArn)
 	d.Set("db_proxy_endpoint_name", dbProxyEndpoint.DBProxyEndpointName)
 	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
 	d.Set("endpoint", dbProxyEndpoint.Endpoint)
 	d.Set("is_default", dbProxyEndpoint.IsDefault)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
-	d.Set("vpc_id", dbProxyEndpoint.VpcId)
+	d.Set(names.AttrVPCID, dbProxyEndpoint.VpcId)
 	d.Set("vpc_security_group_ids", dbProxyEndpoint.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxyEndpoint.VpcSubnetIds)
 

@@ -41,12 +41,12 @@ func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
-						"type":  "IPV4",
-						"value": "192.0.7.0/24",
+						names.AttrType:  "IPV4",
+						names.AttrValue: "192.0.7.0/24",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexache.MustCompile("ipset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile("ipset/.+$")),
 				),
 			},
 			{
@@ -98,10 +98,10 @@ func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
-						"type":  "IPV4",
-						"value": "192.0.7.0/24",
+						names.AttrType:  "IPV4",
+						names.AttrValue: "192.0.7.0/24",
 					}),
 				),
 			},
@@ -109,10 +109,10 @@ func TestAccWAFRegionalIPSet_changeNameForceNew(t *testing.T) {
 				Config: testAccIPSetConfig_changeName(ipsetNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetNewName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
-						"type":  "IPV4",
-						"value": "192.0.7.0/24",
+						names.AttrType:  "IPV4",
+						names.AttrValue: "192.0.7.0/24",
 					}),
 				),
 			},
@@ -141,11 +141,11 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
-						"type":  "IPV4",
-						"value": "192.0.7.0/24",
+						names.AttrType:  "IPV4",
+						names.AttrValue: "192.0.7.0/24",
 					}),
 				),
 			},
@@ -153,11 +153,11 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 				Config: testAccIPSetConfig_changeDescriptors(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
-						"type":  "IPV4",
-						"value": "192.0.8.0/24",
+						names.AttrType:  "IPV4",
+						names.AttrValue: "192.0.8.0/24",
 					}),
 				),
 			},
@@ -233,7 +233,7 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 				Config: testAccIPSetConfig_noDescriptors(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &ipset),
-					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "0"),
 				),
 			},
@@ -257,10 +257,10 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 		{
 			// Change
 			Old: []interface{}{
-				map[string]interface{}{"type": "IPV4", "value": "192.0.7.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.7.0/24"},
 			},
 			New: []interface{}{
-				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.8.0/24"},
 			},
 			ExpectedUpdates: [][]*waf.IPSetUpdate{
 				{
@@ -285,9 +285,9 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 			// Fresh IPSet
 			Old: []interface{}{},
 			New: []interface{}{
-				map[string]interface{}{"type": "IPV4", "value": "10.0.1.0/24"},
-				map[string]interface{}{"type": "IPV4", "value": "10.0.2.0/24"},
-				map[string]interface{}{"type": "IPV4", "value": "10.0.3.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.1.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.2.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.3.0/24"},
 			},
 			ExpectedUpdates: [][]*waf.IPSetUpdate{
 				{
@@ -318,8 +318,8 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 		{
 			// Deletion
 			Old: []interface{}{
-				map[string]interface{}{"type": "IPV4", "value": "192.0.7.0/24"},
-				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.7.0/24"},
+				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.8.0/24"},
 			},
 			New: []interface{}{},
 			ExpectedUpdates: [][]*waf.IPSetUpdate{

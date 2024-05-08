@@ -40,7 +40,7 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
 					acctest.MatchResourceAttrGlobalHostname(resourceName, "domain_name", "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", rName),
@@ -51,11 +51,11 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", "true"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket":            bucketName,
+						names.AttrBucket:    bucketName,
 						"bucket_account_id": acctest.AccountID(),
 						"region":            acctest.Region(),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.MultiRegionAccessPointStatusReady)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
 				),
 			},
 			{
@@ -188,15 +188,15 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucket1Name,
+						names.AttrBucket: bucket1Name,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucket2Name,
+						names.AttrBucket: bucket2Name,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucket3Name,
+						names.AttrBucket: bucket3Name,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.MultiRegionAccessPointStatusReady)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
 				),
 			},
 			{

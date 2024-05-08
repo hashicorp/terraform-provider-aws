@@ -37,8 +37,8 @@ func TestAccVPCNetworkACLAssociation_basic(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "network_acl_id", naclResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_acl_id", naclResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -145,10 +145,10 @@ func TestAccVPCNetworkACLAssociation_twoAssociations(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resource1Name, &v1),
 					testAccCheckNetworkACLAssociationExists(ctx, resource1Name, &v2),
-					resource.TestCheckResourceAttrPair(resource1Name, "network_acl_id", naclResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resource1Name, "subnet_id", subnet1ResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resource2Name, "network_acl_id", naclResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resource2Name, "subnet_id", subnet2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resource1Name, "network_acl_id", naclResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resource1Name, "subnet_id", subnet1ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resource2Name, "network_acl_id", naclResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resource2Name, "subnet_id", subnet2ResourceName, names.AttrID),
 				),
 			},
 			{
@@ -182,7 +182,7 @@ func TestAccVPCNetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_default(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, names.AttrID),
 				),
 			},
 			{

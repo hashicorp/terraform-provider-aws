@@ -129,11 +129,11 @@ func DataSourceTaskExecution() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -148,7 +148,7 @@ func DataSourceTaskExecution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -157,12 +157,12 @@ func DataSourceTaskExecution() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(ecs.ResourceType_Values(), false),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -217,7 +217,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ecs.PlacementConstraintType_Values(), false),
@@ -235,7 +235,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -259,7 +259,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 			"task_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -291,7 +291,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -424,7 +424,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 	for _, item := range tfList {
 		tfMap := item.(map[string]interface{})
 		co := &ecs.ContainerOverride{
-			Name: aws.String(tfMap["name"].(string)),
+			Name: aws.String(tfMap[names.AttrName].(string)),
 		}
 		if v, ok := tfMap["command"]; ok {
 			commandStrings := v.([]interface{})
@@ -460,8 +460,8 @@ func expandTaskEnvironment(tfSet *schema.Set) []*ecs.KeyValuePair {
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		te := &ecs.KeyValuePair{
-			Name:  aws.String(tfMap["key"].(string)),
-			Value: aws.String(tfMap["value"].(string)),
+			Name:  aws.String(tfMap[names.AttrKey].(string)),
+			Value: aws.String(tfMap[names.AttrValue].(string)),
 		}
 		apiObject = append(apiObject, te)
 	}
@@ -478,8 +478,8 @@ func expandResourceRequirements(tfSet *schema.Set) []*ecs.ResourceRequirement {
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		rr := &ecs.ResourceRequirement{
-			Type:  aws.String(tfMap["type"].(string)),
-			Value: aws.String(tfMap["value"].(string)),
+			Type:  aws.String(tfMap[names.AttrType].(string)),
+			Value: aws.String(tfMap[names.AttrValue].(string)),
 		}
 		apiObject = append(apiObject, rr)
 	}

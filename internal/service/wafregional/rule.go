@@ -38,7 +38,7 @@ func resourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,7 +62,7 @@ func resourceRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(wafregional.PredicateType_Values(), false),
@@ -72,7 +72,7 @@ func resourceRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleInput{
 			ChangeToken: token,
@@ -142,9 +142,9 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Resource:  fmt.Sprintf("rule/%s", d.Id()),
 		Service:   "waf-regional",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("predicate", flattenPredicates(resp.Rule.Predicates))
-	d.Set("name", resp.Rule.Name)
+	d.Set(names.AttrName, resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
 	return diags
@@ -226,7 +226,7 @@ func flattenPredicates(ts []*waf.Predicate) []interface{} {
 	for i, p := range ts {
 		m := make(map[string]interface{})
 		m["negated"] = aws.BoolValue(p.Negated)
-		m["type"] = aws.StringValue(p.Type)
+		m[names.AttrType] = aws.StringValue(p.Type)
 		m["data_id"] = aws.StringValue(p.DataId)
 		out[i] = m
 	}

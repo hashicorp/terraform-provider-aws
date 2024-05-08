@@ -20,6 +20,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_alb_listener")
@@ -37,11 +38,11 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"load_balancer_arn", "port"},
+				ConflictsWith: []string{"load_balancer_arn", names.AttrPort},
 			},
 			"certificate_arn": {
 				Type:     schema.TypeString,
@@ -181,7 +182,7 @@ func DataSourceListener() *schema.Resource {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
@@ -193,7 +194,7 @@ func DataSourceListener() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"arn": {
+												names.AttrARN: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -224,7 +225,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"port": {
+									names.AttrPort: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -247,7 +248,7 @@ func DataSourceListener() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -258,8 +259,8 @@ func DataSourceListener() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"arn"},
-				RequiredWith:  []string{"port"},
+				ConflictsWith: []string{names.AttrARN},
+				RequiredWith:  []string{names.AttrPort},
 			},
 			"mutual_authentication": {
 				Type:     schema.TypeList,
@@ -281,11 +282,11 @@ func DataSourceListener() *schema.Resource {
 					},
 				},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"arn"},
+				ConflictsWith: []string{names.AttrARN},
 				RequiredWith:  []string{"load_balancer_arn"},
 			},
 			"protocol": {
@@ -296,7 +297,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -308,14 +309,14 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &elasticloadbalancingv2.DescribeListenersInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.ListenerArns = []string{v.(string)}
 	} else if v, ok := d.GetOk("load_balancer_arn"); ok {
 		input.LoadBalancerArn = aws.String(v.(string))
 	}
 
 	filter := tfslices.PredicateTrue[*awstypes.Listener]()
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		port := v.(int)
 		filter = func(v *awstypes.Listener) bool {
 			return int(aws.ToInt32(v.Port)) == port
@@ -331,7 +332,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
-	d.Set("arn", listener.ListenerArn)
+	d.Set(names.AttrARN, listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
@@ -345,7 +346,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
 	}
-	d.Set("port", listener.Port)
+	d.Set(names.AttrPort, listener.Port)
 	d.Set("protocol", listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
@@ -360,7 +361,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

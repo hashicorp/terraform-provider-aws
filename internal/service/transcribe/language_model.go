@@ -46,7 +46,7 @@ func ResourceLanguageModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +171,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  fmt.Sprintf("language-model/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("base_model_name", out.BaseModelName)
 	d.Set("language_code", out.LanguageCode)
 	d.Set("model_name", out.ModelName)

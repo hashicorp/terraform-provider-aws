@@ -39,7 +39,7 @@ func DataSourceGroup() *schema.Resource {
 							ExactlyOneOf: []string{"alternate_identifier.0.external_id", "alternate_identifier.0.unique_attribute"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -72,7 +72,7 @@ func DataSourceGroup() *schema.Resource {
 				},
 				ConflictsWith: []string{"filter", "group_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +85,7 @@ func DataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -186,7 +186,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		group := results[0]
 
 		d.SetId(aws.ToString(group.GroupId))
-		d.Set("description", group.Description)
+		d.Set(names.AttrDescription, group.Description)
 		d.Set("display_name", group.DisplayName)
 		d.Set("group_id", group.GroupId)
 
@@ -235,7 +235,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(group.GroupId))
 
-	d.Set("description", group.Description)
+	d.Set(names.AttrDescription, group.Description)
 	d.Set("display_name", group.DisplayName)
 	d.Set("group_id", group.GroupId)
 

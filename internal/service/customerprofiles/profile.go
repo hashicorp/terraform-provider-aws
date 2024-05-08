@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_customerprofiles_profile")
@@ -161,7 +162,7 @@ func customerProfileAddressSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"state": {
+				names.AttrState: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
@@ -538,7 +539,7 @@ func flattenAddress(apiObject *types.Address) []interface{} {
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.ToString(v)
+		tfMap[names.AttrState] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
@@ -592,7 +593,7 @@ func expandAddress(tfMap []interface{}) *types.Address {
 		apiObject.Province = aws.String(v.(string))
 	}
 
-	if v, ok := tfList["state"]; ok {
+	if v, ok := tfList[names.AttrState]; ok {
 		apiObject.State = aws.String(v.(string))
 	}
 
@@ -647,7 +648,7 @@ func expandUpdateAddress(tfMap []interface{}) *types.UpdateAddress {
 		apiObject.Province = aws.String(v.(string))
 	}
 
-	if v, ok := tfList["state"]; ok {
+	if v, ok := tfList[names.AttrState]; ok {
 		apiObject.State = aws.String(v.(string))
 	}
 

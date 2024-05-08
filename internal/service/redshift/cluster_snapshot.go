@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_redshift_cluster_snapshot", name="Cluster Snapshot")
 // @Tags(identifierAttribute="arn")
-func ResourceClusterSnapshot() *schema.Resource {
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
@@ -36,7 +36,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +103,8 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findClusterSnapshotByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -121,9 +122,9 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshot:%s/%s", aws.StringValue(snapshot.ClusterIdentifier), d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cluster_identifier", snapshot.ClusterIdentifier)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("manual_snapshot_retention_period", snapshot.ManualSnapshotRetentionPeriod)
 	d.Set("owner_account", snapshot.OwnerAccount)
 	d.Set("snapshot_identifier", snapshot.SnapshotIdentifier)
@@ -137,7 +138,7 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &redshift.ModifyClusterSnapshotInput{
 			ManualSnapshotRetentionPeriod: aws.Int64(int64(d.Get("manual_snapshot_retention_period").(int))),
 			SnapshotIdentifier:            aws.String(d.Id()),

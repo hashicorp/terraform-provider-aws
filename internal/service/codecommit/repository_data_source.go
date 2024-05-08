@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_codecommit_repository", name="Repository")
@@ -20,7 +21,7 @@ func dataSourceRepository() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,7 +33,7 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,10 +62,10 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(repository.RepositoryName))
-	d.Set("arn", repository.Arn)
+	d.Set(names.AttrARN, repository.Arn)
 	d.Set("clone_url_http", repository.CloneUrlHttp)
 	d.Set("clone_url_ssh", repository.CloneUrlSsh)
-	d.Set("kms_key_id", repository.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, repository.KmsKeyId)
 	d.Set("repository_id", repository.RepositoryId)
 	d.Set("repository_name", repository.RepositoryName)
 

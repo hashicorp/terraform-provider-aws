@@ -26,7 +26,7 @@ func TestAccSFNStateMachineVersionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccStateMachineVersionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "statemachine_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, "statemachine_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "statemachine_versions.#", "1"),
 				),
 			},

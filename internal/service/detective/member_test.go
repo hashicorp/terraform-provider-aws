@@ -42,7 +42,7 @@ func testAccMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, detective.MemberStatusInvited),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func testAccMember_message(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, detective.MemberStatusInvited),
 				),
 			},
 			{

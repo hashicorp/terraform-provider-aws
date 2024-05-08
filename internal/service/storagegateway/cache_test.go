@@ -96,7 +96,7 @@ func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCacheExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{

@@ -43,7 +43,7 @@ func resourceAggregateAuthorization() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("account_id", aggregationAuthorization.AuthorizedAccountId)
-	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
+	d.Set(names.AttrARN, aggregationAuthorization.AggregationAuthorizationArn)
 	d.Set("region", aggregationAuthorization.AuthorizedAwsRegion)
 
 	return diags

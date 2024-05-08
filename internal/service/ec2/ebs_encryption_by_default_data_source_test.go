@@ -53,7 +53,7 @@ func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string)
 			return fmt.Errorf("Error reading default EBS encryption toggle: %q", err)
 		}
 
-		attr, _ := strconv.ParseBool(rs.Primary.Attributes["enabled"])
+		attr, _ := strconv.ParseBool(rs.Primary.Attributes[names.AttrEnabled])
 
 		if attr != aws.BoolValue(actual.EbsEncryptionByDefault) {
 			return fmt.Errorf("EBS encryption by default is not in expected state (%t)", aws.BoolValue(actual.EbsEncryptionByDefault))

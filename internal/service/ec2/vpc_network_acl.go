@@ -70,17 +70,17 @@ func resourceNetworkACL() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 				"egress":  networkACLRuleSetNestedBlock(),
 				"ingress": networkACLRuleSetNestedBlock(),
-				"owner_id": {
+				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"subnet_ids": {
+				names.AttrSubnetIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Computed: true,
@@ -88,7 +88,7 @@ func resourceNetworkACL() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-				"vpc_id": {
+				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -170,7 +170,7 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.CreateNetworkAclInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkAcl),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	output, err := conn.CreateNetworkAclWithContext(ctx, input)
@@ -216,16 +216,16 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	var subnetIDs []string
 	for _, v := range nacl.Associations {
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 	}
-	d.Set("subnet_ids", subnetIDs)
+	d.Set(names.AttrSubnetIDs, subnetIDs)
 
-	d.Set("vpc_id", nacl.VpcId)
+	d.Set(names.AttrVPCID, nacl.VpcId)
 
 	var egressEntries []*ec2.NetworkAclEntry
 	var ingressEntries []*ec2.NetworkAclEntry
@@ -285,7 +285,7 @@ func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta 
 		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 	}
 	if len(subnetIDs) > 0 {
-		if err := networkACLAssociationsDelete(ctx, conn, d.Get("vpc_id").(string), subnetIDs); err != nil {
+		if err := networkACLAssociationsDelete(ctx, conn, d.Get(names.AttrVPCID).(string), subnetIDs); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting EC2 Network ACL (%s): %s", d.Id(), err)
 		}
 	}
@@ -326,7 +326,7 @@ func modifyNetworkACLAttributesOnCreate(ctx context.Context, conn *ec2.EC2, d *s
 		}
 	}
 
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			if _, err := networkACLAssociationCreate(ctx, conn, d.Id(), v.(string)); err != nil {
 				return err
@@ -358,13 +358,13 @@ func modifyNetworkACLAttributesOnUpdate(ctx context.Context, conn *ec2.EC2, d *s
 		}
 	}
 
-	if d.HasChange("subnet_ids") {
-		o, n := d.GetChange("subnet_ids")
+	if d.HasChange(names.AttrSubnetIDs) {
+		o, n := d.GetChange(names.AttrSubnetIDs)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := ns.Difference(os).List(), os.Difference(ns).List()
 
 		if len(del) > 0 && deleteAssociations {
-			if err := networkACLAssociationsDelete(ctx, conn, d.Get("vpc_id").(string), del); err != nil {
+			if err := networkACLAssociationsDelete(ctx, conn, d.Get(names.AttrVPCID).(string), del); err != nil {
 				return err
 			}
 		}

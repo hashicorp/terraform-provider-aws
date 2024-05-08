@@ -60,7 +60,7 @@ func ResourceListener() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(alpnPolicyEnum_Values(), true),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -230,7 +230,7 @@ func ResourceListener() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"arn": {
+												names.AttrARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -256,7 +256,7 @@ func ResourceListener() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 604800),
 												},
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 													Default:  false,
@@ -292,7 +292,7 @@ func ResourceListener() *schema.Resource {
 										Default:      "/#{path}",
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"port": {
+									names.AttrPort: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{port}",
@@ -327,7 +327,7 @@ func ResourceListener() *schema.Resource {
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
 							ValidateFunc:     verify.ValidARN,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
@@ -367,7 +367,7 @@ func ResourceListener() *schema.Resource {
 				},
 			},
 
-			"port": {
+			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IsPortNumber,
@@ -407,7 +407,7 @@ func suppressIfDefaultActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiff
 			}
 			return false
 		})
-		at := k[:i+1] + "type"
+		at := k[:i+1] + names.AttrType
 		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
@@ -443,7 +443,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Port = aws.Int32(int32(v.(int)))
 	}
 
@@ -525,7 +525,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
-	d.Set("arn", listener.ListenerArn)
+	d.Set(names.AttrARN, listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
@@ -539,7 +539,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
 	}
-	d.Set("port", listener.Port)
+	d.Set(names.AttrPort, listener.Port)
 	d.Set("protocol", listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
@@ -550,7 +550,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticloadbalancingv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
 		}
@@ -576,7 +576,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
@@ -706,14 +706,14 @@ func expandLbListenerActions(actionsPath cty.Path, l []any, diags *diag.Diagnost
 func expandLbListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diags *diag.Diagnostics) awstypes.Action {
 	action := awstypes.Action{
 		Order: aws.Int32(int32(i + 1)),
-		Type:  awstypes.ActionTypeEnum(tfMap["type"].(string)),
+		Type:  awstypes.ActionTypeEnum(tfMap[names.AttrType].(string)),
 	}
 
 	if order, ok := tfMap["order"].(int); ok && order != 0 {
 		action.Order = aws.Int32(int32(order))
 	}
 
-	switch awstypes.ActionTypeEnum(tfMap["type"].(string)) {
+	switch awstypes.ActionTypeEnum(tfMap[names.AttrType].(string)) {
 	case awstypes.ActionTypeEnumForward:
 		if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
 			action.TargetGroupArn = aws.String(v)
@@ -856,7 +856,7 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 	return &awstypes.RedirectActionConfig{
 		Host:       aws.String(tfMap["host"].(string)),
 		Path:       aws.String(tfMap["path"].(string)),
-		Port:       aws.String(tfMap["port"].(string)),
+		Port:       aws.String(tfMap[names.AttrPort].(string)),
 		Protocol:   aws.String(tfMap["protocol"].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
 		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap["status_code"].(string)),
@@ -929,7 +929,7 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes
 		}
 
 		group := awstypes.TargetGroupTuple{
-			TargetGroupArn: aws.String(tfMap["arn"].(string)),
+			TargetGroupArn: aws.String(tfMap[names.AttrARN].(string)),
 			Weight:         aws.Int32(int32(tfMap["weight"].(int))),
 		}
 
@@ -956,7 +956,7 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 	}
 
 	return &awstypes.TargetGroupStickinessConfig{
-		Enabled:         aws.Bool(tfMap["enabled"].(bool)),
+		Enabled:         aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		DurationSeconds: duration,
 	}
 }
@@ -970,8 +970,8 @@ func flattenLbListenerActions(d *schema.ResourceData, attrName string, actions [
 
 	for i, action := range actions {
 		m := map[string]interface{}{
-			"type":  string(action.Type),
-			"order": aws.ToInt32(action.Order),
+			names.AttrType: string(action.Type),
+			"order":        aws.ToInt32(action.Order),
 		}
 
 		switch action.Type {
@@ -1148,8 +1148,8 @@ func flattenLbListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGr
 
 	for _, group := range groups {
 		m := map[string]interface{}{
-			"arn":    aws.ToString(group.TargetGroupArn),
-			"weight": aws.ToInt32(group.Weight),
+			names.AttrARN: aws.ToString(group.TargetGroupArn),
+			"weight":      aws.ToInt32(group.Weight),
 		}
 
 		vGroups = append(vGroups, m)
@@ -1164,8 +1164,8 @@ func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *aws
 	}
 
 	m := map[string]interface{}{
-		"enabled":  aws.ToBool(config.Enabled),
-		"duration": aws.ToInt32(config.DurationSeconds),
+		names.AttrEnabled: aws.ToBool(config.Enabled),
+		"duration":        aws.ToInt32(config.DurationSeconds),
 	}
 
 	return []interface{}{m}
@@ -1177,12 +1177,12 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 	}
 
 	m := map[string]interface{}{
-		"host":        aws.ToString(config.Host),
-		"path":        aws.ToString(config.Path),
-		"port":        aws.ToString(config.Port),
-		"protocol":    aws.ToString(config.Protocol),
-		"query":       aws.ToString(config.Query),
-		"status_code": string(config.StatusCode),
+		"host":         aws.ToString(config.Host),
+		"path":         aws.ToString(config.Path),
+		names.AttrPort: aws.ToString(config.Port),
+		"protocol":     aws.ToString(config.Protocol),
+		"query":        aws.ToString(config.Query),
+		"status_code":  string(config.StatusCode),
 	}
 
 	return []interface{}{m}
@@ -1250,7 +1250,7 @@ func listenerActionsPlantimeValidate(actionsPath cty.Path, actions cty.Value, di
 }
 
 func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags *diag.Diagnostics) {
-	actionType := action.GetAttr("type")
+	actionType := action.GetAttr(names.AttrType)
 	if !actionType.IsKnown() {
 		return
 	}
@@ -1276,7 +1276,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 		switch awstypes.ActionTypeEnum(actionType.AsString()) {
 		case awstypes.ActionTypeEnumForward:
 			if tga.IsNull() && (f.IsNull() || f.LengthInt() == 0) {
-				typePath := actionPath.GetAttr("type")
+				typePath := actionPath.GetAttr(names.AttrType)
 				*diags = append(*diags, errs.NewAttributeErrorDiagnostic(typePath,
 					"Invalid Attribute Combination",
 					fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
@@ -1291,7 +1291,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 			if r := action.GetAttr("redirect"); r.IsNull() || r.LengthInt() == 0 {
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("redirect"),
-					actionPath.GetAttr("type"),
+					actionPath.GetAttr(names.AttrType),
 					string(awstypes.ActionTypeEnumRedirect),
 				))
 			}
@@ -1300,7 +1300,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 			if fr := action.GetAttr("fixed_response"); fr.IsNull() || fr.LengthInt() == 0 {
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("fixed_response"),
-					actionPath.GetAttr("type"),
+					actionPath.GetAttr(names.AttrType),
 					string(awstypes.ActionTypeEnumFixedResponse),
 				))
 			}
@@ -1309,7 +1309,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 			if ac := action.GetAttr("authenticate_cognito"); ac.IsNull() || ac.LengthInt() == 0 {
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("authenticate_cognito"),
-					actionPath.GetAttr("type"),
+					actionPath.GetAttr(names.AttrType),
 					string(awstypes.ActionTypeEnumAuthenticateCognito),
 				))
 			}
@@ -1318,7 +1318,7 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 			if ao := action.GetAttr("authenticate_oidc"); ao.IsNull() || ao.LengthInt() == 0 {
 				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
 					actionPath.GetAttr("authenticate_oidc"),
-					actionPath.GetAttr("type"),
+					actionPath.GetAttr(names.AttrType),
 					string(awstypes.ActionTypeEnumAuthenticateOidc),
 				))
 			}
@@ -1327,13 +1327,13 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 }
 
 func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, diags *diag.Diagnostics) {
-	actionType := awstypes.ActionTypeEnum(action["type"].(string))
+	actionType := awstypes.ActionTypeEnum(action[names.AttrType].(string))
 
 	if v, ok := action["target_group_arn"].(string); ok && v != "" {
 		if actionType != awstypes.ActionTypeEnumForward {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("target_group_arn"),
-				actionPath.GetAttr("type"),
+				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
 		}
@@ -1343,7 +1343,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumForward {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("forward"),
-				actionPath.GetAttr("type"),
+				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
 		}
@@ -1353,7 +1353,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumAuthenticateCognito {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("authenticate_cognito"),
-				actionPath.GetAttr("type"),
+				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
 		}
@@ -1363,7 +1363,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumAuthenticateOidc {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("authenticate_oidc"),
-				actionPath.GetAttr("type"),
+				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
 		}
@@ -1373,7 +1373,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumFixedResponse {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("fixed_response"),
-				actionPath.GetAttr("type"),
+				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
 		}
@@ -1383,7 +1383,7 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumRedirect {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("redirect"),
-				actionPath.GetAttr("type"),
+				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
 		}

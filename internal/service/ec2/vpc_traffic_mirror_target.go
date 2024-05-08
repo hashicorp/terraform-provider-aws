@@ -39,11 +39,11 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -79,7 +79,7 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorTarget),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -149,12 +149,12 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", target.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, target.Description)
 	d.Set("gateway_load_balancer_endpoint_id", target.GatewayLoadBalancerEndpointId)
 	d.Set("network_interface_id", target.NetworkInterfaceId)
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	setTagsOut(ctx, target.Tags)
 

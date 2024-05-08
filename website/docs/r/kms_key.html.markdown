@@ -45,7 +45,8 @@ The default value is `false`.
 If you specify a value, it must be between `7` and `30`, inclusive. If you do not specify a value, it defaults to `30`.
 If the KMS key is a multi-Region primary key with replicas, the waiting period begins when the last of its replica keys is deleted. Otherwise, the waiting period begins immediately.
 * `is_enabled` - (Optional) Specifies whether the key is enabled. Defaults to `true`.
-* `enable_key_rotation` - (Optional) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to `false`.
+* `enable_key_rotation` - (Optional, required to be enabled if `rotation_period_in_days` is specified) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to `false`.
+* `rotation_period_in_days` - (Optional) Custom period of time between each rotation date. Must be a number between 90 and 2560 (inclusive).
 * `multi_region` - (Optional) Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xks_key_id` - (Optional) Identifies the external key that serves as key material for the KMS key in an external key store.

@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssoadmin_customer_managed_policy_attachment")
@@ -49,7 +50,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -86,7 +87,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
-	policyName := tfMap["name"].(string)
+	policyName := tfMap[names.AttrName].(string)
 	policyPath := tfMap["path"].(string)
 	instanceARN := d.Get("instance_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
@@ -265,7 +266,7 @@ func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstype
 
 	apiObject := &awstypes.CustomerManagedPolicyReference{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -284,7 +285,7 @@ func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Path; v != nil {

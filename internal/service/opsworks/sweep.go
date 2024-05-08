@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -164,7 +165,7 @@ func sweepInstance(region string) error {
 			r := ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(instance.InstanceId))
-			d.Set("status", instance.Status)
+			d.Set(names.AttrStatus, instance.Status)
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
@@ -256,7 +257,7 @@ func sweepStacks(region string) error {
 		d.SetId(aws.StringValue(stack.StackId))
 
 		if aws.StringValue(stack.VpcId) != "" {
-			d.Set("vpc_id", stack.VpcId)
+			d.Set(names.AttrVPCID, stack.VpcId)
 		}
 
 		if aws.BoolValue(stack.UseOpsworksSecurityGroups) {

@@ -34,7 +34,7 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 			{
@@ -55,7 +55,7 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},
@@ -82,7 +82,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", shortCode),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "promotional_messages_per_second"),
 					resource.TestCheckResourceAttrSet(resourceName, "transactional_messages_per_second"),
 				),
@@ -107,7 +107,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", newShortCode),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "promotional_messages_per_second"),
 					resource.TestCheckResourceAttrSet(resourceName, "transactional_messages_per_second"),
 				),

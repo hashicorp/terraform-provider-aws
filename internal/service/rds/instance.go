@@ -126,7 +126,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,7 +169,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -231,6 +231,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"dedicated_log_volume": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"delete_automated_backups": {
 				Type:     schema.TypeBool,
@@ -351,7 +356,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -380,7 +385,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -410,7 +415,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -506,7 +511,7 @@ func ResourceInstance() *schema.Resource {
 					validation.IntDivisibleBy(31),
 				),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -622,7 +627,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -769,6 +774,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -781,7 +790,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 			if arnParts := strings.Split(sourceDBInstanceID, ":"); len(arnParts) >= 4 {
 				input.SourceRegion = aws.String(arnParts[3])
@@ -834,7 +843,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -981,6 +990,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
@@ -989,7 +1002,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -1049,7 +1062,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1158,6 +1171,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("domain"); ok {
@@ -1285,7 +1302,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1401,6 +1418,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("domain"); ok {
 			input.Domain = aws.String(v.(string))
 		}
@@ -1486,7 +1507,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1585,6 +1606,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("dedicated_log_volume"); ok {
+			input.DedicatedLogVolume = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("domain"); ok {
 			input.Domain = aws.String(v.(string))
 		}
@@ -1621,7 +1646,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -1689,7 +1714,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1809,7 +1834,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(v.DbiResourceId))
 
 	d.Set("allocated_storage", v.AllocatedStorage)
-	d.Set("arn", v.DBInstanceArn)
+	d.Set(names.AttrARN, v.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
@@ -1824,6 +1849,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
+	d.Set("dedicated_log_volume", v.DedicatedLogVolume)
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		v := v.DomainMemberships[0]
@@ -1848,7 +1874,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
 	d.Set("instance_class", v.DBInstanceClass)
 	d.Set("iops", v.Iops)
-	d.Set("kms_key_id", v.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, v.KmsKeyId)
 	if v.LatestRestorableTime != nil {
 		d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
 	} else {
@@ -1890,13 +1916,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
 	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
-	d.Set("port", v.DbInstancePort)
+	d.Set(names.AttrPort, v.DbInstancePort)
 	d.Set("publicly_accessible", v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
-	d.Set("status", v.DBInstanceStatus)
+	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set("storage_encrypted", v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
@@ -1914,7 +1940,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
 		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
-		d.Set("port", v.Endpoint.Port)
+		d.Set(names.AttrPort, v.Endpoint.Port)
 	}
 
 	if v.ListenerEndpoint != nil {
@@ -1971,7 +1997,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"final_snapshot_identifier",
 		"replicate_source_db",
 		"skip_final_snapshot",
-		"tags", "tags_all",
+		names.AttrTags, names.AttrTagsAll,
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
 			"allow_major_version_upgrade",
@@ -1980,7 +2006,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"final_snapshot_identifier",
 			"replicate_source_db",
 			"skip_final_snapshot",
-			"tags", "tags_all",
+			names.AttrTags, names.AttrTagsAll,
 			"deletion_protection",
 			"password",
 		) {
@@ -2209,6 +2235,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.DBSubnetGroupName = aws.String(d.Get("db_subnet_group_name").(string))
 	}
 
+	if d.HasChange("dedicated_log_volume") {
+		needsModify = true
+		input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
+	}
+
 	if d.HasChange("deletion_protection") {
 		needsModify = true
 	}
@@ -2344,9 +2375,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("port") {
+	if d.HasChange(names.AttrPort) {
 		needsModify = true
-		input.DBPortNumber = aws.Int32(int32(d.Get("port").(int)))
+		input.DBPortNumber = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 	}
 
 	if d.HasChange("publicly_accessible") {
@@ -2995,7 +3026,7 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.Int64Value(v)
+		tfMap[names.AttrPort] = aws.Int64Value(v)
 	}
 
 	return tfMap

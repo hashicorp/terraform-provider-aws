@@ -43,7 +43,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -85,7 +85,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(0, 300),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
@@ -152,11 +152,11 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 
 	out, err := conn.CreateRecordingConfigurationWithContext(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.RecordingConfiguration == nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.RecordingConfiguration.Arn))
@@ -185,15 +185,15 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 
 	if err := d.Set("destination_configuration", flattenDestinationConfiguration(out.DestinationConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("recording_reconnect_window_seconds", out.RecordingReconnectWindowSeconds)
-	d.Set("state", out.State)
+	d.Set(names.AttrState, out.State)
 
 	if err := d.Set("thumbnail_configuration", flattenThumbnailConfiguration(out.ThumbnailConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
