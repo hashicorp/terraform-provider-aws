@@ -92,7 +92,7 @@ func ResourceEndpoint() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.ResolverEndpointType_Values(), false),
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -132,7 +132,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        aws.String(d.Get("direction").(string)),
 		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -185,7 +185,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrName, ep.Name)
 	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
 	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
-	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(ep.SecurityGroupIds))
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
