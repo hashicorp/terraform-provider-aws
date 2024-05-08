@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.52.3 h1:BNPJmHOXNoM/iBWJKrvaQvJOweRcp3KLpzdb65CfQwU=
-github.com/aws/aws-sdk-go v1.52.3/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.52.4 h1:9VsBVJ2TKf8xPP3+yIPGSYcEBIEymXsJzQoFgQuyvA0=
+github.com/aws/aws-sdk-go v1.52.4/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=
 github.com/aws/aws-sdk-go-v2 v1.26.1/go.mod h1:ffIFB97e2yNsv4aTSGkqtHnppsIJzw7G7BReUZ3jCXM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevwDA+vi/wqhp1ct18mVXYN08/93to=
@@ -86,8 +86,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.1 h1:do/M2LfC11fMuitCHihcQf9Dz
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.1/go.mod h1:/D6V245MG0yEqSULoBf/zLdQk8lmsMZXR3d/vc2mOdo=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.0 h1:VqDSGymIERqxdeB3hDz0wgfV1bmF/1rkG3hUcVl+c+w=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.0/go.mod h1:6CwV+GE3wrFqkrU2LB8cajHMWJn7jFFhRtxBQiOZ5kw=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4 h1:sVv+p2Wo+sUXa8dC1pCMJ/+9ncOriq8EiRWvAkOuaLY=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4/go.mod h1:JFS3MaNoisHXHQm5/xRQjj1tICixIgT8Vv32D0lV5NE=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.23.0 h1:6S7G2RUoGYINXQoT6WHpGo3/C9lUHww6vx9tl/jKiEg=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.23.0/go.mod h1:JFS3MaNoisHXHQm5/xRQjj1tICixIgT8Vv32D0lV5NE=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.5 h1:ZP/RF+wQiit1QP3DAqaJLgCJDXpJXu2xvdsgrh5ds+s=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.5/go.mod h1:Lc//jOTNN9f39SHfFxtRSzfy1Do4GSz+1jZHT2hKdMs=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5 h1:FgeK3aPbB/ARkhxUXfSn9d2ibb4Q9kUhHl/dWwqIy8Y=
@@ -314,8 +314,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.11.0 h1:znBjrg7qGF7DOXpJ1Z
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.11.0/go.mod h1:RHFmC9Lds1jS1zBvnFq1GDh3yxFXH++n+2sI9TE53Cc=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4 h1:Qb7EiHvGJZGU43aCMahEJrP5sJjV62gGXm4y9x/syRQ=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4/go.mod h1:8wjITSWOCR+G7DhS2WraZnZ/geFYxXLLP0KKTfZtRGQ=
-github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.0 h1:on9+rCVnTcfYtz4i7sVsNuJYCAQO9xucyGtaWtlbIXY=
-github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.0/go.mod h1:tTj/YUqvGBhnxNh8gMjf31pSJF1L3STJwdPkjhSyl5I=
+github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.1 h1:rHmRT0PECIQvjTwKMfa5cb+eFAl7kd6V1N7ztJNqFs0=
+github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.1/go.mod h1:tTj/YUqvGBhnxNh8gMjf31pSJF1L3STJwdPkjhSyl5I=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1 h1:6cnno47Me9bRykw9AEv9zkXE+5or7jz8TsskTTccbgc=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1/go.mod h1:qmdkIIAC+GCLASF7R2whgNrJADz0QZPX+Seiw/i4S3o=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.44.6 h1:J6weNKyH2/bVlQ4dWpfprtIGf1tor3Ht5xurx+GXJjs=
