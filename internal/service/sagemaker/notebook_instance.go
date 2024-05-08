@@ -92,7 +92,7 @@ func ResourceNotebookInstance() *schema.Resource {
 					},
 				},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
@@ -169,7 +169,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	name := d.Get(names.AttrName).(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
 		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{})),
-		InstanceType:                         aws.String(d.Get("instance_type").(string)),
+		InstanceType:                         aws.String(d.Get(names.AttrInstanceType).(string)),
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get(names.AttrRoleARN).(string)),
 		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
@@ -253,7 +253,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrARN, notebookInstance.NotebookInstanceArn)
 	d.Set("default_code_repository", notebookInstance.DefaultCodeRepository)
 	d.Set("direct_internet_access", notebookInstance.DirectInternetAccess)
-	d.Set("instance_type", notebookInstance.InstanceType)
+	d.Set(names.AttrInstanceType, notebookInstance.InstanceType)
 	d.Set(names.AttrKMSKeyID, notebookInstance.KmsKeyId)
 	d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName)
 	d.Set(names.AttrName, notebookInstance.NotebookInstanceName)
@@ -310,8 +310,8 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.InstanceMetadataServiceConfiguration = expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{}))
 		}
 
-		if d.HasChange("instance_type") {
-			input.InstanceType = aws.String(d.Get("instance_type").(string))
+		if d.HasChange(names.AttrInstanceType) {
+			input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
 		}
 
 		if d.HasChange("lifecycle_config_name") {

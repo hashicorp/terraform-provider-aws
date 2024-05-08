@@ -98,7 +98,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -148,7 +148,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -354,7 +354,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -493,7 +493,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -557,7 +557,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -607,7 +607,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -704,7 +704,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -823,7 +823,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -888,7 +888,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -1541,7 +1541,7 @@ func expandResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
 
 	config := &sagemaker.ResourceSpec{}
 
-	if v, ok := m["instance_type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrInstanceType].(string); ok && v != "" {
 		config.InstanceType = aws.String(v)
 	}
 
@@ -1856,7 +1856,7 @@ func flattenResourceSpec(config *sagemaker.ResourceSpec) []map[string]interface{
 	m := map[string]interface{}{}
 
 	if config.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(config.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(config.InstanceType)
 	}
 
 	if config.LifecycleConfigArn != nil {

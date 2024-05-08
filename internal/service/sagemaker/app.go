@@ -70,7 +70,7 @@ func ResourceApp() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),

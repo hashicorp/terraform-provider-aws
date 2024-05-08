@@ -308,7 +308,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -446,7 +446,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -663,7 +663,7 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.VolumeSizeInGB = aws.Int64(int64(v))
 		}
 
-		if v, ok := data["instance_type"].(string); ok && v != "" {
+		if v, ok := data[names.AttrInstanceType].(string); ok && v != "" {
 			l.InstanceType = aws.String(v)
 		}
 
@@ -731,7 +731,7 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 		}
 
 		if i.InstanceType != nil {
-			l["instance_type"] = aws.StringValue(i.InstanceType)
+			l[names.AttrInstanceType] = aws.StringValue(i.InstanceType)
 		}
 
 		if i.RoutingConfig != nil {
