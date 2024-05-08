@@ -119,10 +119,10 @@ func validateReplicationSettings(i any, path cty.Path) diag.Diagnostics {
 			}
 		}
 
-		if _, ok := l["CloudWatchLogGroup"]; ok {
+		if v, ok := l["CloudWatchLogGroup"]; ok && v != nil {
 			diags = append(diags, errs.NewInvalidValueAttributeError(path, "The parameter Logging.CloudWatchLogGroup is read-only and cannot be set."))
 		}
-		if _, ok := l["CloudWatchLogStream"]; ok {
+		if v, ok := l["CloudWatchLogStream"]; ok && v != nil {
 			diags = append(diags, errs.NewInvalidValueAttributeError(path, "The parameter Logging.CloudWatchLogStream is read-only and cannot be set."))
 		}
 	}
