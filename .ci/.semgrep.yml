@@ -915,3 +915,13 @@ rules:
       - pattern: '"version"'
     severity: ERROR
     fix: "names.AttrVersion"
+  - id: literal-instance_type-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrInstanceType` for the string literal "instance_type"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"instance_type"'
+    severity: ERROR
+    fix: "names.AttrInstanceType"
