@@ -134,7 +134,7 @@ func ResourceImageBuilder() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"image_name", "image_arn"},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -186,7 +186,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get(names.AttrName).(string)
 	input := &appstream.CreateImageBuilderInput{
-		InstanceType: aws.String(d.Get("instance_type").(string)),
+		InstanceType: aws.String(d.Get(names.AttrInstanceType).(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
@@ -284,7 +284,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enable_default_internet_access", imageBuilder.EnableDefaultInternetAccess)
 	d.Set("iam_role_arn", imageBuilder.IamRoleArn)
 	d.Set("image_arn", imageBuilder.ImageArn)
-	d.Set("instance_type", imageBuilder.InstanceType)
+	d.Set(names.AttrInstanceType, imageBuilder.InstanceType)
 	d.Set(names.AttrName, imageBuilder.Name)
 	d.Set(names.AttrState, imageBuilder.State)
 	if imageBuilder.VpcConfig != nil {
