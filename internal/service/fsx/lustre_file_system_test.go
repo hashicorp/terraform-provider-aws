@@ -69,7 +69,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -122,7 +122,7 @@ func TestAccFSxLustreFileSystem_dataCompression(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_basic(rName),
@@ -166,7 +166,7 @@ func TestAccFSxLustreFileSystem_exportPath(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_exportPath(rName, "/prefix/"),
@@ -205,7 +205,7 @@ func TestAccFSxLustreFileSystem_importPath(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_importPath(rName, "/prefix/"),
@@ -243,7 +243,7 @@ func TestAccFSxLustreFileSystem_importedFileChunkSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_importedChunkSize(rName, 4096),
@@ -280,7 +280,7 @@ func TestAccFSxLustreFileSystem_securityGroupIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_securityGroupIDs2(rName),
@@ -317,7 +317,7 @@ func TestAccFSxLustreFileSystem_storageCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_storageCapacity(rName, 1200),
@@ -354,7 +354,7 @@ func TestAccFSxLustreFileSystem_storageCapacityUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_storageCapacityScratch2(rName, 1200),
@@ -399,7 +399,7 @@ func TestAccFSxLustreFileSystem_fileSystemTypeVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_typeVersion(rName, "2.12"),
@@ -437,7 +437,7 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -485,7 +485,7 @@ func TestAccFSxLustreFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -522,7 +522,7 @@ func TestAccFSxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_automaticBackupRetentionDays(rName, 0),
@@ -566,7 +566,7 @@ func TestAccFSxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -609,7 +609,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -640,7 +640,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1_perUnitStorageThroughp
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_persistent1DeploymentType(rName, 100),
@@ -683,7 +683,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -714,7 +714,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perUnitStorageThroughp
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_persistent2DeploymentType(rName, 250),
@@ -753,7 +753,7 @@ func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_log(rName, "ERROR_ONLY"),
@@ -792,7 +792,7 @@ func TestAccFSxLustreFileSystem_rootSquashConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_rootSquash(rName, "355534:64534"),
@@ -831,7 +831,7 @@ func TestAccFSxLustreFileSystem_fromBackup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids", "backup_id"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs, "backup_id"},
 			},
 		},
 	})
@@ -863,7 +863,7 @@ func TestAccFSxLustreFileSystem_kmsKeyID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_kmsKeyID2(rName),
@@ -903,7 +903,7 @@ func TestAccFSxLustreFileSystem_deploymentTypeScratch2(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -933,7 +933,7 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheRead(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -963,7 +963,7 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheNone(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -992,7 +992,7 @@ func TestAccFSxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -1021,7 +1021,7 @@ func TestAccFSxLustreFileSystem_autoImportPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccLustreFileSystemConfig_autoImportPolicy(rName, "", "NEW_CHANGED"),
