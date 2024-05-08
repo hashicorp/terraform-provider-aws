@@ -228,7 +228,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -563,7 +563,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, sg := range instance.SecurityGroupIds {
 		sgs = append(sgs, *sg)
 	}
-	if err := d.Set("security_group_ids", sgs); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, sgs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Instance (%s): setting security_group_ids: %s", d.Id(), err)
 	}
 	return diags
