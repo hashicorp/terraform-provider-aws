@@ -20,9 +20,9 @@ import (
 )
 
 var (
+	importalias string
 	out         string
 	service     string
-	importalias string
 
 	//go:embed patch.tmpl
 	patchTemplate string
@@ -47,9 +47,9 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags]\n\nFlags:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
+	flag.StringVar(&importalias, "importalias", "", "alias that the service package is imported as (optional)")
 	flag.StringVar(&out, "out", "awssdk.patch", "output file (optional)")
 	flag.StringVar(&service, "service", "", "service to migrate (required)")
-	flag.StringVar(&importalias, "importalias", "", "alias that the service package is imported as (optional)")
 	flag.Parse()
 
 	log.SetPrefix("awssdkpatch: ")
