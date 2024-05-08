@@ -948,11 +948,11 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			names.AttrID:        aws.StringValue(node.CacheNodeId),
-			"address":           aws.StringValue(node.Endpoint.Address),
-			names.AttrPort:      aws.Int64Value(node.Endpoint.Port),
+			names.AttrID:               aws.StringValue(node.CacheNodeId),
+			"address":                  aws.StringValue(node.Endpoint.Address),
+			names.AttrPort:             aws.Int64Value(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.StringValue(node.CustomerAvailabilityZone),
-			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
+			"outpost_arn":              aws.StringValue(node.CustomerOutpostArn),
 		})
 	}
 
