@@ -627,9 +627,9 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 
 			nodeSet.Add(map[string]interface{}{
 				names.AttrAvailabilityZone: aws.StringValue(node.AvailabilityZone),
-				"create_time":       aws.TimeValue(node.CreateTime).Format(time.RFC3339),
-				"endpoint":          flattenEndpoint(node.Endpoint),
-				names.AttrName:      aws.StringValue(node.Name),
+				"create_time":              aws.TimeValue(node.CreateTime).Format(time.RFC3339),
+				"endpoint":                 flattenEndpoint(node.Endpoint),
+				names.AttrName:             aws.StringValue(node.Name),
 			})
 		}
 
