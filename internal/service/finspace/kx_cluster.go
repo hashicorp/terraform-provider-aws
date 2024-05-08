@@ -331,7 +331,7 @@ func ResourceKxCluster() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(types.IPAddressTypeIpV4), true),
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -934,7 +934,7 @@ func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 		a.VpcId = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		a.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -1291,7 +1291,7 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		m["security_group_ids"] = v
+		m[names.AttrSecurityGroupIDs] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
