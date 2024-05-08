@@ -785,6 +785,16 @@ rules:
       - pattern: '"state"'
     severity: ERROR
     fix: "names.AttrState"
+  - id: literal-security_group_ids-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSecurityGroupIDs` for the string literal `security_group_ids`
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"security_group_ids"'
+    severity: ERROR
+    fix: "names.AttrSecurityGroupIDs"    
   - id: literal-status-string-constant
     languages: [go]
     message: Use the constant `names.AttrStatus` for the string literal `status`
