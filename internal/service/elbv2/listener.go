@@ -1010,17 +1010,17 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 	// On import, we have an empty State and empty Config
 
 	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
-		actions := rawConfig.GetAttr(attrName)
-		flattenLbForwardActionOneOf(actions, i, awsAction, actionMap)
-		return
+		if actions := rawConfig.GetAttr(attrName); actions.IsKnown() && !actions.IsNull() {
+			flattenLbForwardActionOneOf(actions, i, awsAction, actionMap)
+			return
+		}
 	}
 
-	rawState := d.GetRawState()
-	defaultActions := rawState.GetAttr(attrName)
-
-	if defaultActions.LengthInt() > 0 {
-		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
-		return
+	if rawState := d.GetRawState(); rawState.IsKnown() && !rawState.IsNull() {
+		if defaultActions := rawState.GetAttr(attrName); defaultActions.LengthInt() > 0 {
+			flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
+			return
+		}
 	}
 
 	flattenLbForwardActionBoth(awsAction, actionMap)
