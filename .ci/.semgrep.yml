@@ -715,6 +715,26 @@ rules:
       - pattern: '"key"'
     severity: ERROR
     fix: "names.AttrKey"
+  - id: literal-max-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrMax` for the string literal `max`
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"max"'
+    severity: ERROR
+    fix: "names.AttrMax"
+  - id: literal-min-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrMin` for the string literal `min`
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"min"'
+    severity: ERROR
+    fix: "names.AttrMin"        
   - id: literal-name-string-constant
     languages: [go]
     message: Use the constant `names.AttrName` for the string literal `name`
