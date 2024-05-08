@@ -72,7 +72,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -101,7 +101,7 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -134,7 +134,7 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_oneHaPair(rName, throughput2),
@@ -174,7 +174,7 @@ func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids", "fsx_admin_password"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs, "fsx_admin_password"},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_adminPassword(rName, pass2),
@@ -211,7 +211,7 @@ func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -242,7 +242,7 @@ func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName, 4000),
@@ -304,7 +304,7 @@ func TestAccFSxONTAPFileSystem_securityGroupIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs2(rName),
@@ -342,7 +342,7 @@ func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_routeTable(rName, 2),
@@ -389,7 +389,7 @@ func TestAccFSxONTAPFileSystem_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -437,7 +437,7 @@ func TestAccFSxONTAPFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -474,7 +474,7 @@ func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 0),
@@ -518,7 +518,7 @@ func TestAccFSxONTAPFileSystem_kmsKeyID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -547,7 +547,7 @@ func TestAccFSxONTAPFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -584,7 +584,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_throughputCapacity(rName),
@@ -630,7 +630,7 @@ func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_storageCapacity(rName),

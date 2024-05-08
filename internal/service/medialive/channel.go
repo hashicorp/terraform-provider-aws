@@ -710,7 +710,7 @@ func ResourceChannel() *schema.Resource {
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"security_group_ids": {
+							names.AttrSecurityGroupIDs: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Computed: true,
@@ -2435,7 +2435,7 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	m := tfList[0].(map[string]interface{})
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -2454,10 +2454,10 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 	}
 
 	m := map[string]interface{}{
-		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
-		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
-		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		names.AttrSubnetIDs:     flex.FlattenStringValueSet(apiObject.SubnetIds),
+		"availability_zones":       flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids":    flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 

@@ -172,7 +172,7 @@ func resourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -240,7 +240,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -293,7 +293,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
 	d.Set("publicly_accessible", out.PubliclyAccessible)
-	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(out.SubnetIds))
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("workgroup_name", out.WorkgroupName)
@@ -419,9 +419,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("security_group_ids") {
+	if d.HasChange(names.AttrSecurityGroupIDs) {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
+			SecurityGroupIds: flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
 			WorkgroupName:    aws.String(d.Id()),
 		}
 

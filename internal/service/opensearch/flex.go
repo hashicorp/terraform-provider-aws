@@ -238,7 +238,7 @@ func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOption
 
 	apiObject := &opensearchservice.VPCOptions{}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
@@ -261,7 +261,7 @@ func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[stri
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

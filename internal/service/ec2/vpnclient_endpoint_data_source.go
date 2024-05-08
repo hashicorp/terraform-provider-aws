@@ -137,7 +137,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": customFiltersSchema(),
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -246,7 +246,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set("dns_name", ep.DnsName)
 	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
-	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(ep.SecurityGroupIds))
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
 	} else {

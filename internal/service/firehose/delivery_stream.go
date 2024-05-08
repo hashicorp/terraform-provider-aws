@@ -390,7 +390,7 @@ func resourceDeliveryStream() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: verify.ValidARN,
 										},
-										"security_group_ids": {
+										names.AttrSecurityGroupIDs: {
 											Type:     schema.TypeSet,
 											Required: true,
 											ForceNew: true,
@@ -957,7 +957,7 @@ func resourceDeliveryStream() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: verify.ValidARN,
 										},
-										"security_group_ids": {
+										names.AttrSecurityGroupIDs: {
 											Type:     schema.TypeSet,
 											Required: true,
 											ForceNew: true,
@@ -1152,7 +1152,7 @@ func resourceDeliveryStream() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: verify.ValidARN,
 										},
-										"security_group_ids": {
+										names.AttrSecurityGroupIDs: {
 											Type:     schema.TypeSet,
 											Required: true,
 											ForceNew: true,
@@ -2355,7 +2355,7 @@ func expandVPCConfiguration(es map[string]interface{}) *types.VpcConfiguration {
 	return &types.VpcConfiguration{
 		RoleARN:          aws.String(vpcConfig[names.AttrRoleARN].(string)),
 		SubnetIds:        flex.ExpandStringValueSet(vpcConfig[names.AttrSubnetIDs].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringValueSet(vpcConfig["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(vpcConfig[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
@@ -3331,10 +3331,10 @@ func flattenVPCConfigurationDescription(description *types.VpcConfigurationDescr
 	}
 
 	m := map[string]interface{}{
-		names.AttrVPCID:      aws.ToString(description.VpcId),
-		names.AttrSubnetIDs:  description.SubnetIds,
-		"security_group_ids": description.SecurityGroupIds,
-		names.AttrRoleARN:    aws.ToString(description.RoleARN),
+		names.AttrVPCID:            aws.ToString(description.VpcId),
+		names.AttrSubnetIDs:        description.SubnetIds,
+		names.AttrSecurityGroupIDs: description.SecurityGroupIds,
+		names.AttrRoleARN:          aws.ToString(description.RoleARN),
 	}
 
 	return []map[string]interface{}{m}

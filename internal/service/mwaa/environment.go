@@ -203,7 +203,7 @@ func ResourceEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -785,7 +785,7 @@ func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.Netw
 	m := l[0].(map[string]interface{})
 
 	return &awstypes.NetworkConfiguration{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 	}
 }
@@ -794,7 +794,7 @@ func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *awstypes.Upda
 	m := l[0].(map[string]interface{})
 
 	return &awstypes.UpdateNetworkConfigurationInput{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
@@ -888,8 +888,8 @@ func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfigura
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
-		names.AttrSubnetIDs:  flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
 	}
 
 	return []interface{}{m}

@@ -335,7 +335,7 @@ func testAccFileCache_securityGroupID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations", "security_group_ids"},
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations", names.AttrSecurityGroupIDs},
 			},
 		},
 	})

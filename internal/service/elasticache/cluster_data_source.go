@@ -150,7 +150,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -212,7 +212,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
 	d.Set("replication_group_id", cluster.ReplicationGroupId)
-	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(cluster.SecurityGroups))
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)

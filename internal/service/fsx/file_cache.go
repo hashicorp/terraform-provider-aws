@@ -264,7 +264,7 @@ func resourceFileCache() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -326,7 +326,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.LustreConfiguration = expandCreateFileCacheLustreConfiguration(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 

@@ -89,7 +89,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -219,7 +219,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, v := range cluster.SecurityGroups {
 		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
 	}
-	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(securityGroupIds))
 
 	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)

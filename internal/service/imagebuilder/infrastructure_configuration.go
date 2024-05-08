@@ -124,7 +124,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				ForceNew: true,
 			},
 			"resource_tags": tftags.TagsSchema(),
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -195,7 +195,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -290,7 +290,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
 	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
 	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
 
@@ -313,7 +313,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		"key_pair",
 		"logging",
 		"resource_tags",
-		"security_group_ids",
+		names.AttrSecurityGroupIDs,
 		"sns_topic_arn",
 		"subnet_id",
 		"terminate_instance_on_failure",
@@ -351,7 +351,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 		}
 
-		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 

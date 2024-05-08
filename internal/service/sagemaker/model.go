@@ -316,7 +316,7 @@ func ResourceModel() *schema.Resource {
 							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 5,
@@ -392,7 +392,7 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	m := l[0].(map[string]interface{})
 
 	return &sagemaker.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
 	}
 }
@@ -446,8 +446,8 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnets":            flex.FlattenStringSet(vpcConfig.Subnets),
+		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		"subnets":                  flex.FlattenStringSet(vpcConfig.Subnets),
 	}
 
 	return []map[string]interface{}{m}

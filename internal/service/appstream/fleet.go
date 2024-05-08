@@ -197,7 +197,7 @@ func ResourceFleet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -679,7 +679,7 @@ func expandVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 	apiObject := &appstream.VpcConfig{}
 
 	tfMap := tfList[0].(map[string]interface{})
-	if v, ok := tfMap["security_group_ids"]; ok {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs]; ok {
 		apiObject.SecurityGroupIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
@@ -702,7 +702,7 @@ func flattenVPCConfig(apiObject *appstream.VpcConfig) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

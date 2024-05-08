@@ -810,7 +810,7 @@ func ResourceApplication() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"security_group_ids": {
+									names.AttrSecurityGroupIDs: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -2445,7 +2445,7 @@ func expandVPCConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2
 
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
 
-	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
 		vpcConfiguration.SecurityGroupIds = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
@@ -2465,7 +2465,7 @@ func expandVPCConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanaly
 
 	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
 
-	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+	if vSecurityGroupIds, ok := mVpcConfiguration[names.AttrSecurityGroupIDs].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
 		vpcConfigurationUpdate.SecurityGroupIdUpdates = flex.ExpandStringSet(vSecurityGroupIds)
 	}
 
@@ -2788,10 +2788,10 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
 
 		mVpcConfiguration := map[string]interface{}{
-			"security_group_ids":   flex.FlattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
-			names.AttrSubnetIDs:    flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
-			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
-			names.AttrVPCID:        aws.StringValue(vpcConfigurationDescription.VpcId),
+			names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
+			names.AttrSubnetIDs:        flex.FlattenStringSet(vpcConfigurationDescription.SubnetIds),
+			"vpc_configuration_id":     aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
+			names.AttrVPCID:            aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
 
 		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}

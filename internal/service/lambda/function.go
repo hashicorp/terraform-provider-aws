@@ -416,7 +416,7 @@ func resourceFunction() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -574,7 +574,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input.VpcConfig = &awstypes.VpcConfig{
 			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
-			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
 			SubnetIds:               flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 		}
 	}
@@ -904,7 +904,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				input.VpcConfig = &awstypes.VpcConfig{
 					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
-					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
 					SubnetIds:               flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 				}
 			} else {

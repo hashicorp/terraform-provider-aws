@@ -274,7 +274,7 @@ func resourceCluster() *schema.Resource {
 					"num_cache_nodes",
 					"parameter_group_name",
 					names.AttrPort,
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"snapshot_arns",
 					"snapshot_name",
 					"snapshot_retention_limit",
@@ -282,7 +282,7 @@ func resourceCluster() *schema.Resource {
 					"subnet_group_name",
 				},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -358,7 +358,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		input.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("node_type"); ok {
@@ -571,8 +571,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		requestUpdate := false
-		if d.HasChange("security_group_ids") {
-			if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
 				input.SecurityGroupIds = flex.ExpandStringSet(attr)
 				requestUpdate = true
 			}
@@ -982,7 +982,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
 		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
 

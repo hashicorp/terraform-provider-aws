@@ -256,7 +256,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"security_group_ids": schema.SetAttribute{
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,
