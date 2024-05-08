@@ -46,7 +46,7 @@ func ResourceStateMachine() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func ResourceStateMachine() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024*1024), // 1048576
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func ResourceStateMachine() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -103,7 +103,7 @@ func ResourceStateMachine() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
@@ -114,7 +114,7 @@ func ResourceStateMachine() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -123,7 +123,7 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,7 +140,7 @@ func ResourceStateMachine() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -148,7 +148,7 @@ func ResourceStateMachine() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -168,14 +168,14 @@ func ResourceStateMachine() *schema.Resource {
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		Publish:    aws.Bool(d.Get("publish").(bool)),
-		RoleArn:    aws.String(d.Get("role_arn").(string)),
+		RoleArn:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:       getTagsIn(ctx),
-		Type:       aws.String(d.Get("type").(string)),
+		Type:       aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -219,14 +219,14 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.StateMachineArn)
+	d.Set(names.AttrARN, output.StateMachineArn)
 	if output.CreationDate != nil {
 		d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 	} else {
 		d.Set("creation_date", nil)
 	}
 	d.Set("definition", output.Definition)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return diag.Errorf("setting logging_configuration: %s", err)
@@ -234,12 +234,12 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("logging_configuration", nil)
 	}
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("publish", d.Get("publish").(bool))
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
 			return diag.Errorf("setting tracing_configuration: %s", err)
@@ -247,7 +247,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("tracing_configuration", nil)
 	}
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 
 	input := &sfn.ListStateMachineVersionsInput{
 		StateMachineArn: aws.String(d.Id()),
@@ -272,11 +272,11 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
 		input := &sfn.UpdateStateMachineInput{
 			Definition:      aws.String(d.Get("definition").(string)),
-			RoleArn:         aws.String(d.Get("role_arn").(string)),
+			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			StateMachineArn: aws.String(d.Id()),
 			Publish:         aws.Bool(d.Get("publish").(bool)),
 		}
@@ -312,7 +312,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
-				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
+				d.HasChange(names.AttrRoleARN) && aws.StringValue(output.RoleArn) != d.Get(names.AttrRoleARN).(string) ||
 				//d.HasChange("publish") && aws.Bool(output.Publish) != d.Get("publish").(bool) ||
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
@@ -463,7 +463,7 @@ func expandTracingConfiguration(tfMap map[string]interface{}) *sfn.TracingConfig
 
 	apiObject := &sfn.TracingConfiguration{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -478,7 +478,7 @@ func flattenTracingConfiguration(apiObject *sfn.TracingConfiguration) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	return tfMap

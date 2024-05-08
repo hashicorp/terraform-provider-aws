@@ -80,7 +80,7 @@ func ResourceClassificationJob() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -93,10 +93,10 @@ func ResourceClassificationJob() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 500-id.UniqueIDSuffixLength),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -179,7 +179,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
-																		"key": {
+																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
@@ -205,12 +205,12 @@ func ResourceClassificationJob() *schema.Resource {
 																			Optional: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"value": {
+																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
 																					},
-																					"key": {
+																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
@@ -259,7 +259,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
-																		"key": {
+																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
@@ -285,12 +285,12 @@ func ResourceClassificationJob() *schema.Resource {
 																			Optional: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"value": {
+																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
 																					},
-																					"key": {
+																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
@@ -349,7 +349,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
-																		"key": {
+																		names.AttrKey: {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
@@ -377,12 +377,12 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"value": {
+																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
 																					},
-																					"key": {
+																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
@@ -390,7 +390,7 @@ func ResourceClassificationJob() *schema.Resource {
 																				},
 																			},
 																		},
-																		"key": {
+																		names.AttrKey: {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
@@ -442,7 +442,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
-																		"key": {
+																		names.AttrKey: {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			Computed: true,
@@ -467,12 +467,12 @@ func ResourceClassificationJob() *schema.Resource {
 																			Optional: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"value": {
+																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
 																					},
-																					"key": {
+																					names.AttrKey: {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
@@ -480,7 +480,7 @@ func ResourceClassificationJob() *schema.Resource {
 																				},
 																			},
 																		},
-																		"key": {
+																		names.AttrKey: {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
@@ -584,7 +584,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 		Tags:            getTagsIn(ctx),
@@ -599,7 +599,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("sampling_percentage"); ok {
 		input.SamplingPercentage = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("initial_run"); ok {
@@ -664,9 +664,9 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "schedule_frequency", d.Id(), err)
 	}
 	d.Set("sampling_percentage", resp.SamplingPercentage)
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("initial_run", resp.InitialRun)
 	d.Set("job_type", resp.JobType)
 	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
@@ -829,7 +829,7 @@ func expandSimpleCriterionForJob(criterion []interface{}) *macie2.SimpleCriterio
 	if v, ok := simpleCriterionMap["comparator"]; ok && v.(string) != "" {
 		simpleCriterion.Comparator = aws.String(v.(string))
 	}
-	if v, ok := simpleCriterionMap["key"]; ok && v.(string) != "" {
+	if v, ok := simpleCriterionMap[names.AttrKey]; ok && v.(string) != "" {
 		simpleCriterion.Key = aws.String(v.(string))
 	}
 	if v, ok := simpleCriterionMap["values"]; ok && len(v.([]interface{})) > 0 {
@@ -869,10 +869,10 @@ func expandTagCriterionPairForJob(tagValues []interface{}) []*macie2.TagCriterio
 		v1 := v.(map[string]interface{})
 		var tagValue macie2.TagCriterionPairForJob
 
-		if v2, ok := v1["value"]; ok && v2.(string) != "" {
+		if v2, ok := v1[names.AttrValue]; ok && v2.(string) != "" {
 			tagValue.Value = aws.String(v2.(string))
 		}
-		if v2, ok := v1["key"]; ok && v2.(string) != "" {
+		if v2, ok := v1[names.AttrKey]; ok && v2.(string) != "" {
 			tagValue.Key = aws.String(v2.(string))
 		}
 		tagValuesList = append(tagValuesList, &tagValue)
@@ -965,7 +965,7 @@ func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *macie2.SimpleScopeTer
 
 	simpleScopeTermMap := simpleScopeTerm[0].(map[string]interface{})
 
-	if v, ok := simpleScopeTermMap["key"]; ok && v.(string) != "" {
+	if v, ok := simpleScopeTermMap[names.AttrKey]; ok && v.(string) != "" {
 		simpleTerm.Key = aws.String(v.(string))
 	}
 	if v, ok := simpleScopeTermMap["values"]; ok && len(v.([]interface{})) > 0 {
@@ -987,7 +987,7 @@ func expandTagScopeTerm(tagScopeTerm []interface{}) *macie2.TagScopeTerm {
 
 	tagScopeTermMap := tagScopeTerm[0].(map[string]interface{})
 
-	if v, ok := tagScopeTermMap["key"]; ok && v.(string) != "" {
+	if v, ok := tagScopeTermMap[names.AttrKey]; ok && v.(string) != "" {
 		tagTerm.Key = aws.String(v.(string))
 	}
 	if v, ok := tagScopeTermMap["tag_values"]; ok && len(v.([]interface{})) > 0 {
@@ -1014,10 +1014,10 @@ func expandTagValues(tagValues []interface{}) []*macie2.TagValuePair {
 		v1 := v.(map[string]interface{})
 		var tagValue macie2.TagValuePair
 
-		if v2, ok := v1["value"]; ok && v2.(string) != "" {
+		if v2, ok := v1[names.AttrValue]; ok && v2.(string) != "" {
 			tagValue.Value = aws.String(v2.(string))
 		}
-		if v2, ok := v1["key"]; ok && v2.(string) != "" {
+		if v2, ok := v1[names.AttrKey]; ok && v2.(string) != "" {
 			tagValue.Key = aws.String(v2.(string))
 		}
 		tagValuesList = append(tagValuesList, &tagValue)
@@ -1143,9 +1143,9 @@ func flattenSimpleCriterionForJob(criterion *macie2.SimpleCriterionForJob) []map
 	var simpleCriterionList []map[string]interface{}
 
 	simpleCriterionList = append(simpleCriterionList, map[string]interface{}{
-		"comparator": aws.StringValue(criterion.Comparator),
-		"key":        aws.StringValue(criterion.Key),
-		"values":     flex.FlattenStringList(criterion.Values),
+		"comparator":  aws.StringValue(criterion.Comparator),
+		names.AttrKey: aws.StringValue(criterion.Key),
+		"values":      flex.FlattenStringList(criterion.Values),
 	})
 
 	return simpleCriterionList
@@ -1175,8 +1175,8 @@ func flattenTagCriterionPairForJob(tagValues []*macie2.TagCriterionPairForJob) [
 
 	for _, tagValue := range tagValues {
 		tagValuesList = append(tagValuesList, map[string]interface{}{
-			"value": aws.StringValue(tagValue.Value),
-			"key":   aws.StringValue(tagValue.Key),
+			names.AttrValue: aws.StringValue(tagValue.Value),
+			names.AttrKey:   aws.StringValue(tagValue.Key),
 		})
 	}
 
@@ -1257,9 +1257,9 @@ func flattenSimpleScopeTerm(simpleScopeTerm *macie2.SimpleScopeTerm) []map[strin
 	var simpleScopeTermList []map[string]interface{}
 
 	simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
-		"key":        aws.StringValue(simpleScopeTerm.Key),
-		"comparator": aws.StringValue(simpleScopeTerm.Comparator),
-		"values":     flex.FlattenStringList(simpleScopeTerm.Values),
+		names.AttrKey: aws.StringValue(simpleScopeTerm.Key),
+		"comparator":  aws.StringValue(simpleScopeTerm.Comparator),
+		"values":      flex.FlattenStringList(simpleScopeTerm.Values),
 	})
 
 	return simpleScopeTermList
@@ -1273,10 +1273,10 @@ func flattenTagScopeTerm(tagScopeTerm *macie2.TagScopeTerm) []map[string]interfa
 	var tagScopeTermList []map[string]interface{}
 
 	tagScopeTermList = append(tagScopeTermList, map[string]interface{}{
-		"key":        aws.StringValue(tagScopeTerm.Key),
-		"comparator": aws.StringValue(tagScopeTerm.Comparator),
-		"target":     aws.StringValue(tagScopeTerm.Target),
-		"tag_values": flattenTagValues(tagScopeTerm.TagValues),
+		names.AttrKey: aws.StringValue(tagScopeTerm.Key),
+		"comparator":  aws.StringValue(tagScopeTerm.Comparator),
+		"target":      aws.StringValue(tagScopeTerm.Target),
+		"tag_values":  flattenTagValues(tagScopeTerm.TagValues),
 	})
 
 	return tagScopeTermList
@@ -1291,8 +1291,8 @@ func flattenTagValues(tagValues []*macie2.TagValuePair) []map[string]interface{}
 
 	for _, tagValue := range tagValues {
 		tagValuesList = append(tagValuesList, map[string]interface{}{
-			"value": aws.StringValue(tagValue.Value),
-			"key":   aws.StringValue(tagValue.Key),
+			names.AttrValue: aws.StringValue(tagValue.Value),
+			names.AttrKey:   aws.StringValue(tagValue.Key),
 		})
 	}
 

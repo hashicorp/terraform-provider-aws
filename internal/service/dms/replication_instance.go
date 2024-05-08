@@ -75,7 +75,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -178,7 +178,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("engine_version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("network_type"); ok {
@@ -229,7 +229,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", instance.AvailabilityZone)
 	d.Set("engine_version", instance.EngineVersion)
-	d.Set("kms_key_arn", instance.KmsKeyId)
+	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
 	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
@@ -252,7 +252,7 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "allow_major_version_upgrade") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "allow_major_version_upgrade") {
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
 		input := &dms.ModifyReplicationInstanceInput{

@@ -35,10 +35,10 @@ func TestAccS3ControlBucket_basic(t *testing.T) {
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexache.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

@@ -49,7 +49,7 @@ func ResourceInstanceState() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped}, false),
@@ -70,7 +70,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
 	}
 
-	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get("state").(string), d.Get("force").(bool))
+	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -99,7 +99,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("instance_id", d.Id())
-	d.Set("state", state.Name)
+	d.Set(names.AttrState, state.Name)
 	d.Set("force", d.Get("force").(bool))
 
 	return diags
@@ -116,8 +116,8 @@ func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
 	}
 
-	if d.HasChange("state") {
-		o, n := d.GetChange("state")
+	if d.HasChange(names.AttrState) {
+		o, n := d.GetChange(names.AttrState)
 		err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool))
 
 		if err != nil {

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_delegated_administrator")
@@ -40,7 +41,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +61,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +71,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,14 +125,14 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("account_id", accountID)
-	d.Set("arn", delegatedAccount.Arn)
+	d.Set(names.AttrARN, delegatedAccount.Arn)
 	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
 	d.Set("email", delegatedAccount.Email)
 	d.Set("joined_method", delegatedAccount.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
-	d.Set("name", delegatedAccount.Name)
+	d.Set(names.AttrName, delegatedAccount.Name)
 	d.Set("service_principal", servicePrincipal)
-	d.Set("status", delegatedAccount.Status)
+	d.Set(names.AttrStatus, delegatedAccount.Status)
 
 	return diags
 }

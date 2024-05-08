@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_integration", name="Integration")
@@ -143,7 +144,7 @@ func resourceIntegration() *schema.Resource {
 					},
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -165,7 +166,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		Type:       types.IntegrationType(d.Get("type").(string)),
+		Type:       types.IntegrationType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("cache_key_parameters"); ok && v.(*schema.Set).Len() > 0 {
@@ -268,7 +269,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("request_templates", requestTemplates)
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
-	d.Set("type", integration.Type)
+	d.Set(names.AttrType, integration.Type)
 	d.Set("uri", integration.Uri)
 
 	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {

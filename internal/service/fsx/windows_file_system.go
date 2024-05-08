@@ -70,7 +70,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 					),
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,7 +165,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -177,7 +177,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -266,7 +266,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Default:      fsx.StorageTypeSsd,
 				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -280,7 +280,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(8, 2048),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -307,7 +307,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
-		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:               getTagsIn(ctx),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
@@ -317,7 +317,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:          flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:               getTagsIn(ctx),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
@@ -356,7 +356,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.WindowsConfiguration.DeploymentType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		inputC.KmsKeyId = aws.String(v.(string))
 		inputB.KmsKeyId = aws.String(v.(string))
 	}
@@ -434,7 +434,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
 	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
-	d.Set("arn", filesystem.ResourceARN)
+	d.Set(names.AttrARN, filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
 	}
@@ -446,9 +446,9 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set("dns_name", filesystem.DNSName)
-	d.Set("kms_key_id", filesystem.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set("owner_id", filesystem.OwnerId)
+	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("remote_administration_endpoint", windowsConfig.RemoteAdministrationEndpoint)
@@ -457,9 +457,9 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
-	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
-	d.Set("vpc_id", filesystem.VpcId)
+	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)
 
 	setTagsOut(ctx, filesystem.Tags)
@@ -541,7 +541,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChangesExcept("aliases", "tags", "tags_all") {
+	if d.HasChangesExcept("aliases", names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),

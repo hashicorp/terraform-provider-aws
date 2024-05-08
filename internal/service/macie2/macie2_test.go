@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMacie2_serial(t *testing.T) {
@@ -16,7 +17,7 @@ func TestAccMacie2_serial(t *testing.T) {
 		"Account": {
 			"basic":                        testAccAccount_basic,
 			"finding_publishing_frequency": testAccAccount_FindingPublishingFrequency,
-			"status":                       testAccAccount_WithStatus,
+			names.AttrStatus:               testAccAccount_WithStatus,
 			"finding_and_status":           testAccAccount_WithFindingAndStatus,
 			"disappears":                   testAccAccount_disappears,
 		},
@@ -28,9 +29,9 @@ func TestAccMacie2_serial(t *testing.T) {
 			"name_generated":  testAccClassificationJob_Name_Generated,
 			"name_prefix":     testAccClassificationJob_NamePrefix,
 			"disappears":      testAccClassificationJob_disappears,
-			"status":          testAccClassificationJob_Status,
+			names.AttrStatus:  testAccClassificationJob_Status,
 			"complete":        testAccClassificationJob_complete,
-			"tags":            testAccClassificationJob_WithTags,
+			names.AttrTags:    testAccClassificationJob_WithTags,
 			"bucket_criteria": testAccClassificationJob_BucketCriteria,
 		},
 		"CustomDataIdentifier": {
@@ -39,7 +40,7 @@ func TestAccMacie2_serial(t *testing.T) {
 			"name_prefix":        testAccCustomDataIdentifier_disappears,
 			"disappears":         testAccCustomDataIdentifier_NamePrefix,
 			"classification_job": testAccCustomDataIdentifier_WithClassificationJob,
-			"tags":               testAccCustomDataIdentifier_WithTags,
+			names.AttrTags:       testAccCustomDataIdentifier_WithTags,
 		},
 		"FindingsFilter": {
 			"basic":          testAccFindingsFilter_basic,
@@ -49,7 +50,7 @@ func TestAccMacie2_serial(t *testing.T) {
 			"complete":       testAccFindingsFilter_complete,
 			"date":           testAccFindingsFilter_WithDate,
 			"number":         testAccFindingsFilter_WithNumber,
-			"tags":           testAccFindingsFilter_withTags,
+			names.AttrTags:   testAccFindingsFilter_withTags,
 		},
 		"OrganizationAdminAccount": {
 			"basic":      testAccOrganizationAdminAccount_basic,
@@ -58,11 +59,11 @@ func TestAccMacie2_serial(t *testing.T) {
 		"Member": {
 			"basic":                                 testAccMember_basic,
 			"disappears":                            testAccMember_disappears,
-			"tags":                                  testAccMember_withTags,
+			names.AttrTags:                          testAccMember_withTags,
 			"invitation_disable_email_notification": testAccMember_invitationDisableEmailNotification,
 			"invite":                                testAccMember_invite,
 			"invite_removed":                        testAccMember_inviteRemoved,
-			"status":                                testAccMember_status,
+			names.AttrStatus:                        testAccMember_status,
 		},
 		"InvitationAccepter": {
 			"basic": testAccInvitationAccepter_basic,

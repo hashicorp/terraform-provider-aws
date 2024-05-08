@@ -37,7 +37,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	arn := aws.StringValue(clusterEp.DBClusterEndpointArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cluster_endpoint_identifier", clusterEp.DBClusterEndpointIdentifier)
 	d.Set("cluster_identifier", clusterEp.DBClusterIdentifier)
 	d.Set("custom_endpoint_type", clusterEp.CustomEndpointType)
@@ -154,7 +154,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBClusterEndpointInput{
 			DBClusterEndpointIdentifier: aws.String(d.Id()),
 		}

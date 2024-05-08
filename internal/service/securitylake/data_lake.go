@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -35,6 +36,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const dataLakeMutexKey = "aws_securitylake_data_lake"
 
 // @FrameworkResource(name="Data Lake")
 // @Tags(identifierAttribute="arn")
@@ -61,8 +64,8 @@ func (r *dataLakeResource) Metadata(_ context.Context, request resource.Metadata
 func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn":        framework.ARNAttributeComputedOnly(),
-			names.AttrID: framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -93,7 +96,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 							},
 							ElementType: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
-									"kms_key_id": types.StringType,
+									names.AttrKMSKeyID: types.StringType,
 								},
 							},
 							PlanModifiers: []planmodifier.List{
@@ -153,7 +156,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 										ElementType: types.StringType,
 										Optional:    true,
 									},
-									"role_arn": schema.StringAttribute{
+									names.AttrRoleARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
 									},
@@ -163,7 +166,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -190,7 +193,9 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateDataLake(ctx, input)
+	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateDataLakeOutput, error) {
+		return conn.CreateDataLake(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Data Lake", err.Error())
@@ -294,7 +299,9 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		_, err := conn.UpdateDataLake(ctx, input)
+		_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.UpdateDataLakeOutput, error) {
+			return conn.UpdateDataLake(ctx, input)
+		})
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Security Lake Data Lake (%s)", new.ID.ValueString()), err.Error())
@@ -321,15 +328,13 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	// "ConflictException: The request failed because your Security Lake configuration or resources are currently being updated. Wait a few minutes and then try again."
-	const (
-		timeout = 2 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
-		return conn.DeleteDataLake(ctx, &securitylake.DeleteDataLakeInput{
-			Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
-		})
-	}, "Wait a few minutes and then try again")
+	input := &securitylake.DeleteDataLakeInput{
+		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+	}
+
+	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
+		return conn.DeleteDataLake(ctx, input)
+	})
 
 	// No data lake:
 	// "An error occurred (AccessDeniedException) when calling the DeleteDataLake operation: User: ... is not authorized to perform: securitylake:DeleteDataLake", or
@@ -564,4 +569,21 @@ type dataLakeLifecycleTransitionModel struct {
 type dataLakeReplicationConfigurationModel struct {
 	Regions fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
 	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
+}
+
+func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, error)) (T, error) {
+	conns.GlobalMutexKV.Lock(dataLakeMutexKey)
+	defer conns.GlobalMutexKV.Unlock(dataLakeMutexKey)
+
+	const dataLakeTimeout = 2 * time.Minute
+
+	raw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, dataLakeTimeout, func() (any, error) {
+		return f()
+	})
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return raw.(T), err
 }

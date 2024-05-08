@@ -54,7 +54,7 @@ func resourceRole() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -93,7 +93,7 @@ func resourceRole() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true, // semantically required but syntactically optional to allow empty inline_policy
 							ValidateFunc: validation.All(
@@ -101,7 +101,7 @@ func resourceRole() *schema.Resource {
 								validRolePolicyName,
 							),
 						},
-						"policy": {
+						names.AttrPolicy: {
 							Type:                  schema.TypeString,
 							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
 							ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -137,7 +137,7 @@ func resourceRole() *schema.Resource {
 				Default:      3600,
 				ValidateFunc: validation.IntBetween(3600, 43200),
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -150,7 +150,7 @@ func resourceRole() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
 			},
 			"path": {
@@ -186,7 +186,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)
 	}
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
@@ -194,7 +194,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -280,11 +280,11 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
 
-	d.Set("arn", role.Arn)
+	d.Set(names.AttrARN, role.Arn)
 	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
-	d.Set("description", role.Description)
+	d.Set(names.AttrDescription, role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
-	d.Set("name", role.RoleName)
+	d.Set(names.AttrName, role.RoleName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(role.RoleName)))
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
@@ -366,10 +366,10 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &iam.UpdateRoleDescriptionInput{
 			RoleName:    aws.String(d.Id()),
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
 		_, err := conn.UpdateRoleDescription(ctx, input)
@@ -419,7 +419,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange("inline_policy") && inlinePoliciesActualDiff(d) {
-		roleName := d.Get("name").(string)
+		roleName := d.Get(names.AttrName).(string)
 
 		o, n := d.GetChange("inline_policy")
 
@@ -445,8 +445,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				continue
 			}
 
-			if v, ok := tfMap["name"].(string); ok && v != "" {
-				policyNames = append(policyNames, tfMap["name"].(string))
+			if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+				policyNames = append(policyNames, tfMap[names.AttrName].(string))
 			}
 		}
 		if err := deleteRoleInlinePolicies(ctx, conn, roleName, policyNames); err != nil {
@@ -756,8 +756,8 @@ func flattenRoleInlinePolicy(apiObject *iam.PutRolePolicyInput) map[string]inter
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["name"] = aws.ToString(apiObject.PolicyName)
-	tfMap["policy"] = aws.ToString(apiObject.PolicyDocument)
+	tfMap[names.AttrName] = aws.ToString(apiObject.PolicyName)
+	tfMap[names.AttrPolicy] = aws.ToString(apiObject.PolicyDocument)
 
 	return tfMap
 }
@@ -789,12 +789,12 @@ func expandRoleInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.
 
 	namePolicy := false
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.PolicyName = aws.String(v)
 		namePolicy = true
 	}
 
-	if v, ok := tfMap["policy"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPolicy].(string); ok && v != "" {
 		apiObject.PolicyDocument = aws.String(v)
 		namePolicy = true
 	}
@@ -902,7 +902,7 @@ func readRoleInlinePolicies(ctx context.Context, conn *iam.Client, roleName stri
 }
 
 func inlinePoliciesActualDiff(d *schema.ResourceData) bool {
-	roleName := d.Get("name").(string)
+	roleName := d.Get(names.AttrName).(string)
 	o, n := d.GetChange("inline_policy")
 	if o == nil {
 		o = new(schema.Set)

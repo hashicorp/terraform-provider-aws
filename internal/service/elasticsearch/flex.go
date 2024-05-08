@@ -8,6 +8,7 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
@@ -20,7 +21,7 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 
 	m := c[0].(map[string]interface{})
 
-	if cognitoEnabled, ok := m["enabled"]; ok {
+	if cognitoEnabled, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
@@ -30,7 +31,7 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
 				options.IdentityPoolId = aws.String(v.(string))
 			}
-			if v, ok := m["role_arn"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrRoleARN]; ok && v.(string) != "" {
 				options.RoleArn = aws.String(v.(string))
 			}
 		}
@@ -102,10 +103,10 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.EncryptionAtRestOptions {
 	options := elasticsearch.EncryptionAtRestOptions{}
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
-	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrKMSKeyID]; ok && v.(string) != "" {
 		options.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -122,7 +123,7 @@ func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		options.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
-	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		options.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -132,12 +133,12 @@ func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m["enabled"] = aws.BoolValue(c.Enabled)
+	m[names.AttrEnabled] = aws.BoolValue(c.Enabled)
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
 		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
-		m["role_arn"] = aws.StringValue(c.RoleArn)
+		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
@@ -198,10 +199,10 @@ func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m["enabled"] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(o.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.StringValue(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
@@ -233,10 +234,10 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 		m["security_group_ids"] = flex.FlattenStringSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
-		m["subnet_ids"] = flex.FlattenStringSet(o.SubnetIds)
+		m[names.AttrSubnetIDs] = flex.FlattenStringSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
-		m["vpc_id"] = aws.StringValue(o.VPCId)
+		m[names.AttrVPCID] = aws.StringValue(o.VPCId)
 	}
 
 	return m

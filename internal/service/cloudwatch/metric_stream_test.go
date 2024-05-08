@@ -45,17 +45,17 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 				Config: testAccMetricStreamConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", "false"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_update_date"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.metric_stream_to_firehose", "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.metric_stream_to_firehose", names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -107,7 +107,7 @@ func TestAccCloudWatchMetricStream_nameGenerated(t *testing.T) {
 				Config: testAccMetricStreamConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccCloudWatchMetricStream_namePrefix(t *testing.T) {
 				Config: testAccMetricStreamConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -163,7 +163,7 @@ func TestAccCloudWatchMetricStream_includeFilters(t *testing.T) {
 				Config: testAccMetricStreamConfig_includeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.#", "0"),
@@ -193,7 +193,7 @@ func TestAccCloudWatchMetricStream_includeFiltersWithMetricNames(t *testing.T) {
 				Config: testAccMetricStreamConfig_includeFiltersWithMetricNames(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.#", "2"),
@@ -225,7 +225,7 @@ func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 				Config: testAccMetricStreamConfig_excludeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "0")),
@@ -254,7 +254,7 @@ func TestAccCloudWatchMetricStream_excludeFiltersWithMetricNames(t *testing.T) {
 				Config: testAccMetricStreamConfig_excludeFiltersWithMetricNames(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "2"),
@@ -287,7 +287,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S1$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S1$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", regexache.MustCompile(`role/S1$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -301,7 +301,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S2$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S2$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", regexache.MustCompile(`role/S2$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -310,7 +310,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S3$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S3$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", regexache.MustCompile(`role/S3$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -320,7 +320,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S4$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S4$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", regexache.MustCompile(`role/S4$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -330,7 +330,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "firehose_arn", "firehose", regexache.MustCompile(`deliverystream/S4$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexache.MustCompile(`role/S4$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", regexache.MustCompile(`role/S4$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),

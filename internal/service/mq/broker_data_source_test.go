@@ -33,7 +33,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBrokerDataSourceConfig_byID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "broker_name", resourceName, "broker_name"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "authentication_strategy", resourceName, "authentication_strategy"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
@@ -58,7 +58,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBrokerDataSourceConfig_byName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_name", resourceName, "broker_name"),
 				),
 			},

@@ -35,7 +35,7 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 				Config: testAccVPCConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "SASL_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "client_subnets.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),

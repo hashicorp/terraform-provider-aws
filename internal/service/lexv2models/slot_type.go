@@ -63,7 +63,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotTypeComposition](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
 				"slot_type_id": schema.StringAttribute{
@@ -88,10 +88,10 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"locale_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -105,7 +105,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"parent_slot_type_signature": schema.StringAttribute{
@@ -151,7 +151,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 												"s3_object_key": schema.StringAttribute{
 													Required: true,
 												},
-												"kms_key_arn": schema.StringAttribute{
+												names.AttrKMSKeyARN: schema.StringAttribute{
 													Required: true,
 												},
 											},
@@ -174,7 +174,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 							CustomType: fwtypes.NewListNestedObjectTypeOf[SlotTypeValue](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -183,7 +183,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 						"synonyms": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -233,7 +233,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

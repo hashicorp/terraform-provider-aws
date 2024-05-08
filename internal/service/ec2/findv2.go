@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
@@ -407,7 +408,7 @@ func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx contex
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"attachment.instance-owner-id": attachmentInstanceOwnerID,
-			"description":                  description,
+			names.AttrDescription:          description,
 		}),
 	}
 

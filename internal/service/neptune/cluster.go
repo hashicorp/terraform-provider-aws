@@ -73,7 +73,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func ResourceCluster() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -211,7 +211,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -340,7 +340,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBClusterIdentifier:              aws.String(clusterID),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
 		Engine:                           aws.String(d.Get("engine").(string)),
-		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
 		Tags:                             getTagsIn(ctx),
@@ -350,7 +350,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBClusterIdentifier:              aws.String(clusterID),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
 		Engine:                           aws.String(d.Get("engine").(string)),
-		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
 		Tags:                             getTagsIn(ctx),
@@ -404,7 +404,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputR.EnableIAMDatabaseAuthentication = aws.Bool(v)
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		v := v.(string)
 
 		inputC.KmsKeyId = aws.String(v)
@@ -534,7 +534,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	arn := aws.StringValue(dbc.DBClusterArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
@@ -558,10 +558,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		iamRoles = append(iamRoles, aws.StringValue(v.RoleArn))
 	}
 	d.Set("iam_roles", iamRoles)
-	d.Set("kms_key_arn", dbc.KmsKeyId)
+	d.Set(names.AttrKMSKeyARN, dbc.KmsKeyId)
 	d.Set("neptune_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
-	d.Set("port", dbc.Port)
+	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
@@ -584,7 +584,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
@@ -707,7 +707,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing Neptune Clusters cannot be migrated between existing Neptune Global Clusters")
 		}
 
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -765,7 +765,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("global_cluster_identifier"); ok {
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ses_email_identity")
@@ -22,7 +23,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,6 +71,6 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		Resource:  fmt.Sprintf("identity/%s", email),
 		Service:   "ses",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	return diags
 }

@@ -174,7 +174,7 @@ type securityGroupRuleResource struct {
 func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -192,7 +192,7 @@ func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource
 					fwvalidators.IPv6CIDRNetworkAddress(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"from_port": schema.Int64Attribute{
@@ -201,7 +201,7 @@ func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource
 					int64validator.Between(-1, 65535),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"ip_protocol": schema.StringAttribute{
 				CustomType: ipProtocolType{},
 				Required:   true,
@@ -370,7 +370,7 @@ func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource
 	}
 
 	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 	err := r.securityGroupRule.delete(ctx, &data)
 
@@ -646,7 +646,7 @@ func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"from_port": schema.Int64Attribute{
@@ -708,7 +708,7 @@ func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema
 					int64planmodifier.RequiresReplace(),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[securityGroupRuleType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -717,7 +717,7 @@ func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 			}),
 		},

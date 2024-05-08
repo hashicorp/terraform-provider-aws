@@ -49,11 +49,11 @@ func resourceResourceShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -79,7 +79,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ram.CreateResourceShareInput{
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 		Name:                    aws.String(name),
@@ -130,8 +130,8 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
-	d.Set("arn", resourceShare.ResourceShareArn)
-	d.Set("name", resourceShare.Name)
+	d.Set(names.AttrARN, resourceShare.ResourceShareArn)
+	d.Set(names.AttrName, resourceShare.Name)
 
 	setTagsOut(ctx, resourceShare.Tags)
 
@@ -170,10 +170,10 @@ func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	if d.HasChanges("allow_external_principals", "name") {
+	if d.HasChanges("allow_external_principals", names.AttrName) {
 		input := &ram.UpdateResourceShareInput{
 			AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
-			Name:                    aws.String(d.Get("name").(string)),
+			Name:                    aws.String(d.Get(names.AttrName).(string)),
 			ResourceShareArn:        aws.String(d.Id()),
 		}
 

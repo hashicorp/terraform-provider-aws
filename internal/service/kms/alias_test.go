@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/kms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +23,7 @@ import (
 
 func TestAccKMSAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 	keyResourceName := "aws_kms_key.test"
@@ -38,10 +38,10 @@ func TestAccKMSAlias_basic(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`alias/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", tfkms.AliasNamePrefix+rName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`alias/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tfkms.AliasNamePrefix+rName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, names.AttrID),
 				),
 			},
 			{
@@ -55,7 +55,7 @@ func TestAccKMSAlias_basic(t *testing.T) {
 
 func TestAccKMSAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 
@@ -79,7 +79,7 @@ func TestAccKMSAlias_disappears(t *testing.T) {
 
 func TestAccKMSAlias_Name_generated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 
@@ -93,7 +93,7 @@ func TestAccKMSAlias_Name_generated(t *testing.T) {
 				Config: testAccAliasConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix),
 				),
 			},
@@ -108,7 +108,7 @@ func TestAccKMSAlias_Name_generated(t *testing.T) {
 
 func TestAccKMSAlias_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 
@@ -122,7 +122,7 @@ func TestAccKMSAlias_namePrefix(t *testing.T) {
 				Config: testAccAliasConfig_namePrefix(rName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				),
 			},
@@ -137,7 +137,7 @@ func TestAccKMSAlias_namePrefix(t *testing.T) {
 
 func TestAccKMSAlias_updateKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 	key1ResourceName := "aws_kms_key.test"
@@ -153,16 +153,16 @@ func TestAccKMSAlias_updateKeyID(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key1ResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccAliasConfig_updatedKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key2ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key2ResourceName, names.AttrID),
 				),
 			},
 			{
@@ -176,7 +176,7 @@ func TestAccKMSAlias_updateKeyID(t *testing.T) {
 
 func TestAccKMSAlias_multipleAliasesForSameKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 	alias2ResourceName := "aws_kms_alias.test2"
@@ -192,11 +192,11 @@ func TestAccKMSAlias_multipleAliasesForSameKey(t *testing.T) {
 				Config: testAccAliasConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, names.AttrID),
 					testAccCheckAliasExists(ctx, alias2ResourceName, &alias),
-					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_arn", keyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_id", keyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_arn", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_id", keyResourceName, names.AttrID),
 				),
 			},
 			{
@@ -210,7 +210,7 @@ func TestAccKMSAlias_multipleAliasesForSameKey(t *testing.T) {
 
 func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alias kms.AliasListEntry
+	var alias awstypes.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_alias.test"
 
@@ -243,7 +243,7 @@ func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 
 func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_alias" {
@@ -267,18 +267,14 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAliasExists(ctx context.Context, name string, v *kms.AliasListEntry) resource.TestCheckFunc {
+func testAccCheckAliasExists(ctx context.Context, n string, v *awstypes.AliasListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No KMS Alias ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 		output, err := tfkms.FindAliasByName(ctx, conn, rs.Primary.ID)
 

@@ -124,7 +124,7 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	analysisMethod, err := expandAnalysisMethod(d.Get("analysis_method").(string))
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get(names.AttrName).(string), err)
 	}
 	input.AnalysisMethod = analysisMethod
 
@@ -134,11 +134,11 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	out, err := conn.CreateConfiguredTable(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.ConfiguredTable == nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.ConfiguredTable.Id))
 
@@ -182,7 +182,7 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cleanrooms.UpdateConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(d.Id()),
 		}

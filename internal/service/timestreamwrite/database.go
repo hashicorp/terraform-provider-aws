@@ -37,7 +37,7 @@ func resourceDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func resourceDatabase() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -81,7 +81,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -111,9 +111,9 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("reading Timestream Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", db.Arn)
+	d.Set(names.AttrARN, db.Arn)
 	d.Set("database_name", db.DatabaseName)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	d.Set("table_count", db.TableCount)
 
 	return nil
@@ -122,10 +122,10 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	if d.HasChange("kms_key_id") {
+	if d.HasChange(names.AttrKMSKeyID) {
 		input := &timestreamwrite.UpdateDatabaseInput{
 			DatabaseName: aws.String(d.Id()),
-			KmsKeyId:     aws.String(d.Get("kms_key_id").(string)),
+			KmsKeyId:     aws.String(d.Get(names.AttrKMSKeyID).(string)),
 		}
 
 		_, err := conn.UpdateDatabase(ctx, input)

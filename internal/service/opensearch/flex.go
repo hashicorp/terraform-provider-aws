@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
@@ -20,7 +21,7 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 
 	m := c[0].(map[string]interface{})
 
-	if cognitoEnabled, ok := m["enabled"]; ok {
+	if cognitoEnabled, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
@@ -30,7 +31,7 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
 				options.IdentityPoolId = aws.String(v.(string))
 			}
-			if v, ok := m["role_arn"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrRoleARN]; ok && v.(string) != "" {
 				options.RoleArn = aws.String(v.(string))
 			}
 		}
@@ -103,10 +104,10 @@ func expandEBSOptions(m map[string]interface{}) *opensearchservice.EBSOptions {
 func expandEncryptAtRestOptions(m map[string]interface{}) *opensearchservice.EncryptionAtRestOptions {
 	options := opensearchservice.EncryptionAtRestOptions{}
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
-	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrKMSKeyID]; ok && v.(string) != "" {
 		options.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -116,12 +117,12 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *opensearchservice.Enc
 func flattenCognitoOptions(c *opensearchservice.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m["enabled"] = aws.BoolValue(c.Enabled)
+	m[names.AttrEnabled] = aws.BoolValue(c.Enabled)
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
 		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
-		m["role_arn"] = aws.StringValue(c.RoleArn)
+		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
@@ -182,10 +183,10 @@ func flattenEncryptAtRestOptions(o *opensearchservice.EncryptionAtRestOptions) [
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m["enabled"] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(o.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.StringValue(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
@@ -241,7 +242,7 @@ func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOption
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -264,11 +265,11 @@ func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[stri
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.VPCId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.StringValue(v)
 	}
 
 	return tfMap

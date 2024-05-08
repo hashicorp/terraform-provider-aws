@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestInstanceStateUpgradeV0(t *testing.T) {
@@ -34,7 +35,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 				"instance_class":    "db.t2.micro",
 				"password":          "avoid-plaintext-passwords",
 				"username":          "tfacctest",
-				"tags":              map[string]interface{}{"key1": "value1"},
+				names.AttrTags:      map[string]interface{}{"key1": "value1"},
 			},
 			ExpectedState: map[string]interface{}{
 				"allocated_storage":        10,
@@ -44,7 +45,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 				"instance_class":           "db.t2.micro",
 				"password":                 "avoid-plaintext-passwords",
 				"username":                 "tfacctest",
-				"tags":                     map[string]interface{}{"key1": "value1"},
+				names.AttrTags:             map[string]interface{}{"key1": "value1"},
 			},
 		},
 	}
@@ -85,23 +86,23 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 			InputState: map[string]interface{}{
 				"allocated_storage": 10,
 				"engine":            "mariadb",
-				"id":                "my-test-instance",
+				names.AttrID:        "my-test-instance",
 				"identifier":        "my-test-instance",
 				"instance_class":    "db.t2.micro",
 				"password":          "avoid-plaintext-passwords",
 				"resource_id":       "db-cnuap2ilnbmok4eunzklfvwjca",
-				"tags":              map[string]interface{}{"key1": "value1"},
+				names.AttrTags:      map[string]interface{}{"key1": "value1"},
 				"username":          "tfacctest",
 			},
 			ExpectedState: map[string]interface{}{
 				"allocated_storage": 10,
 				"engine":            "mariadb",
-				"id":                "db-cnuap2ilnbmok4eunzklfvwjca",
+				names.AttrID:        "db-cnuap2ilnbmok4eunzklfvwjca",
 				"identifier":        "my-test-instance",
 				"instance_class":    "db.t2.micro",
 				"password":          "avoid-plaintext-passwords",
 				"resource_id":       "db-cnuap2ilnbmok4eunzklfvwjca",
-				"tags":              map[string]interface{}{"key1": "value1"},
+				names.AttrTags:      map[string]interface{}{"key1": "value1"},
 				"username":          "tfacctest",
 			},
 		},

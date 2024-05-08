@@ -57,7 +57,7 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -522,7 +522,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("activation_key", d.Get("activation_key").(string))
 
-	d.Set("arn", output.GatewayARN)
+	d.Set(names.AttrARN, output.GatewayARN)
 	d.Set("gateway_id", output.GatewayId)
 
 	// The Storage Gateway API currently provides no way to read this value

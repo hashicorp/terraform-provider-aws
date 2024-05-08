@@ -27,7 +27,7 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4Basic(t *testing.T) {
 				Config: testAccIPAMPreviewNextCIDRDataSourceConfig_basic(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "cidr"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "netmask_length", netmaskLength),
 				),
 			},
@@ -51,7 +51,7 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4Allocated(t *testing.T) {
 				Config: testAccIPAMPreviewNextCIDRDataSourceConfig_basic(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "cidr", allocatedCidr),
-					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "netmask_length", netmaskLength),
 				),
 			},
@@ -60,7 +60,7 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4Allocated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// cidr should not change even after allocation
 					resource.TestCheckResourceAttr(datasourceName, "cidr", allocatedCidr),
-					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "netmask_length", netmaskLength),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4DisallowedCIDR(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "cidr", expectedCidr),
 					resource.TestCheckResourceAttr(datasourceName, "disallowed_cidrs.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "disallowed_cidrs.0", disallowedCidr),
-					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "netmask_length", netmaskLength),
 				),
 			},

@@ -42,7 +42,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 		//   - ntp_servers is Computed-only and is TypeString
 		//   - owner_id is Optional/Computed
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,13 +88,13 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	input.Filters = append(input.Filters,
-		newFilter("key", []string{"domain-name"}),
-		newFilter("value", []string{meta.(*conns.AWSClient).EC2RegionalPrivateDNSSuffix(ctx)}),
-		newFilter("key", []string{"domain-name-servers"}),
-		newFilter("value", []string{"AmazonProvidedDNS"}),
+		newFilter(names.AttrKey, []string{"domain-name"}),
+		newFilter(names.AttrValue, []string{meta.(*conns.AWSClient).EC2RegionalPrivateDNSSuffix(ctx)}),
+		newFilter(names.AttrKey, []string{"domain-name-servers"}),
+		newFilter(names.AttrValue, []string{"AmazonProvidedDNS"}),
 	)
 
-	if v, ok := d.GetOk("owner_id"); ok {
+	if v, ok := d.GetOk(names.AttrOwnerID); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"owner-id": v.(string),
 		})...)

@@ -16,6 +16,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_ipam_organization_admin_account")
@@ -30,7 +31,7 @@ func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +45,7 @@ func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,10 +107,10 @@ func resourceIPAMOrganizationAdminAccountRead(ctx context.Context, d *schema.Res
 
 	admin_account := output.DelegatedAdministrators[0]
 
-	d.Set("arn", admin_account.Arn)
+	d.Set(names.AttrARN, admin_account.Arn)
 	d.Set("delegated_admin_account_id", admin_account.Id)
 	d.Set("email", admin_account.Email)
-	d.Set("name", admin_account.Name)
+	d.Set(names.AttrName, admin_account.Name)
 	d.Set("service_principal", IPAMServicePrincipal)
 
 	return diags

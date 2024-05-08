@@ -36,17 +36,17 @@ func testAccDataSource_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 			{
@@ -73,14 +73,14 @@ func testAccDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccDataSourceConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
@@ -255,7 +255,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.org"),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
 			},
 			{
@@ -291,14 +291,14 @@ func testAccDataSource_type(t *testing.T) {
 				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 			{
 				Config: testAccDataSourceConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
 			},
 		},
@@ -323,10 +323,10 @@ func testAccDataSource_Type_dynamoDB(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "dynamodb_config.0.table_name", dynamodbTableResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "dynamodb_config.0.table_name", dynamodbTableResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_DYNAMODB"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_DYNAMODB"),
 				),
 			},
 			{
@@ -358,8 +358,8 @@ func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "elasticsearch_config.0.endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ELASTICSEARCH"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_ELASTICSEARCH"),
 				),
 			},
 			{
@@ -391,8 +391,8 @@ func TestAccAppSyncDataSource_Type_openSearchService(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchservice_config.0.endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_OPENSEARCH_SERVICE"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_OPENSEARCH_SERVICE"),
 				),
 			},
 			{
@@ -421,7 +421,7 @@ func testAccDataSource_Type_http(t *testing.T) {
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.endpoint", "http://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
 			},
 			{
@@ -455,7 +455,7 @@ func testAccDataSource_Type_httpAuth(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "http_config.0.authorization_config.0.aws_iam_config.0.signing_service_name", "appsync"),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 				),
 			},
 			{
@@ -483,8 +483,8 @@ func testAccDataSource_Type_relationalDatabase(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -513,9 +513,9 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.schema", "mydb"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", "database_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -545,9 +545,9 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.function_arn", lambdaFunctionResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.function_arn", lambdaFunctionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS_LAMBDA"),
 				),
 			},
 			{
@@ -577,9 +577,9 @@ func testAccDataSource_Type_eventBridge(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bridge_config.0.event_bus_arn", eventBusResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_EVENTBRIDGE"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bridge_config.0.event_bus_arn", eventBusResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AMAZON_EVENTBRIDGE"),
 				),
 			},
 			{
@@ -606,7 +606,7 @@ func testAccDataSource_Type_none(t *testing.T) {
 				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 			{

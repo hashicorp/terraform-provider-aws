@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_thing")
@@ -32,7 +33,7 @@ func ResourceThing() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +46,7 @@ func ResourceThing() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -56,7 +57,7 @@ func ResourceThing() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -68,7 +69,7 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateThingInput{
 		ThingName: aws.String(name),
 	}
@@ -111,12 +112,12 @@ func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading IoT Thing (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ThingArn)
+	d.Set(names.AttrARN, output.ThingArn)
 	d.Set("default_client_id", output.DefaultClientId)
-	d.Set("name", output.ThingName)
+	d.Set(names.AttrName, output.ThingName)
 	d.Set("attributes", aws.StringValueMap(output.Attributes))
 	d.Set("thing_type_name", output.ThingTypeName)
-	d.Set("version", output.Version)
+	d.Set(names.AttrVersion, output.Version)
 
 	return diags
 }
@@ -126,7 +127,7 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.UpdateThingInput{
-		ThingName: aws.String(d.Get("name").(string)),
+		ThingName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if d.HasChange("attributes") {

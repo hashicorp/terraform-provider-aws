@@ -100,7 +100,7 @@ func (d *fileDestination) Write() error {
 	} else {
 		flags = os.O_TRUNC | os.O_CREATE | os.O_WRONLY
 	}
-	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:gomnd
+	f, err := os.OpenFile(d.filename, flags, 0644) //nolint:mnd // good protection for new files
 
 	if err != nil {
 		return fmt.Errorf("opening file (%s): %w", d.filename, err)

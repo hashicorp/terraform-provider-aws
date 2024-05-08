@@ -45,11 +45,11 @@ func resourceSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(0, 512)),
@@ -87,12 +87,12 @@ func resourceSchedule() *schema.Resource {
 					validation.StringLenBetween(1, 64),
 				),
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -108,7 +108,7 @@ func resourceSchedule() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
@@ -130,7 +130,7 @@ func resourceSchedule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsRFC3339Time),
 			},
-			"state": {
+			names.AttrState: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          types.ScheduleStateEnabled,
@@ -142,7 +142,7 @@ func resourceSchedule() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
@@ -153,7 +153,7 @@ func resourceSchedule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"arn": {
+									names.AttrARN: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
@@ -246,7 +246,7 @@ func resourceSchedule() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
 												},
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
@@ -268,7 +268,7 @@ func resourceSchedule() *schema.Resource {
 														return strings.EqualFold(old, new)
 													},
 												},
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
@@ -289,7 +289,7 @@ func resourceSchedule() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"tags": tftags.TagsSchema(),
+									names.AttrTags: tftags.TagsSchema(),
 									"task_count": {
 										Type:             schema.TypeInt,
 										Optional:         true,
@@ -372,7 +372,7 @@ func resourceSchedule() *schema.Resource {
 								return verify.SuppressMissingOptionalConfigurationBlock(k, old, new, d)
 							},
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
@@ -390,12 +390,12 @@ func resourceSchedule() *schema.Resource {
 										Set:      sagemakerPipelineParameterHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -434,14 +434,14 @@ const (
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 
 	in := &scheduler.CreateScheduleInput{
 		Name:               aws.String(name),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
 	}
 
-	if v, ok := d.Get("description").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
 		in.Description = aws.String(v)
 	}
 
@@ -458,7 +458,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.GroupName = aws.String(v)
 	}
 
-	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrKMSKeyARN).(string); ok && v != "" {
 		in.KmsKeyArn = aws.String(v)
 	}
 
@@ -471,7 +471,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.StartDate = aws.Time(v)
 	}
 
-	if v, ok := d.Get("state").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrState).(string); ok && v != "" {
 		in.State = types.ScheduleState(v)
 	}
 
@@ -530,8 +530,8 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("description", out.Description)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrDescription, out.Description)
 
 	if out.EndDate != nil {
 		d.Set("end_date", aws.ToTime(out.EndDate).Format(time.RFC3339))
@@ -544,8 +544,8 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("group_name", out.GroupName)
-	d.Set("kms_key_arn", out.KmsKeyArn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrKMSKeyARN, out.KmsKeyArn)
+	d.Set(names.AttrName, out.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set("schedule_expression", out.ScheduleExpression)
 	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
@@ -556,7 +556,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("start_date", nil)
 	}
 
-	d.Set("state", string(out.State))
+	d.Set(names.AttrState, string(out.State))
 
 	if err := d.Set("target", []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
@@ -571,12 +571,12 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
 		GroupName:          aws.String(d.Get("group_name").(string)),
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
 		Target:             expandTarget(ctx, d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.Get("description").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
 		in.Description = aws.String(v)
 	}
 
@@ -585,7 +585,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		in.EndDate = aws.Time(v)
 	}
 
-	if v, ok := d.Get("kms_key_arn").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrKMSKeyARN).(string); ok && v != "" {
 		in.KmsKeyArn = aws.String(v)
 	}
 
@@ -598,7 +598,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		in.StartDate = aws.Time(v)
 	}
 
-	if v, ok := d.Get("state").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrState).(string); ok && v != "" {
 		in.State = types.ScheduleState(v)
 	}
 
@@ -698,7 +698,7 @@ func ResourceScheduleParseID(id string) (groupName, scheduleName string, err err
 
 func sagemakerPipelineParameterHash(v interface{}) int {
 	m := v.(map[string]interface{})
-	return create.StringHashcode(fmt.Sprintf("%s-%s", m["name"].(string), m["value"].(string)))
+	return create.StringHashcode(fmt.Sprintf("%s-%s", m[names.AttrName].(string), m[names.AttrValue].(string)))
 }
 
 func capacityProviderHash(v interface{}) int {
@@ -728,7 +728,7 @@ func placementConstraintHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := m["type"]; ok {
+	if v, ok := m[names.AttrType]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
@@ -743,7 +743,7 @@ func placementStrategyHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := m["type"]; ok {
+	if v, ok := m[names.AttrType]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 

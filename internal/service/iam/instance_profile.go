@@ -46,7 +46,7 @@ func resourceInstanceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func resourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -67,7 +67,7 @@ func resourceInstanceProfile() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
 			"path": {
@@ -96,7 +96,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
@@ -185,9 +185,9 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	d.Set("arn", instanceProfile.Arn)
+	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
-	d.Set("name", instanceProfile.InstanceProfileName)
+	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
 	d.Set("path", instanceProfile.Path)
 

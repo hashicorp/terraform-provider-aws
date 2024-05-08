@@ -39,7 +39,7 @@ func resourceWebhook() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func resourceWebhook() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -129,7 +129,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	authType := types.WebhookAuthenticationType(d.Get("authentication").(string))
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codepipeline.PutWebhookInput{
 		Tags: getTagsIn(ctx),
 		Webhook: &types.WebhookDefinition{
@@ -175,7 +175,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	webhookDef := webhook.Definition
-	d.Set("arn", webhook.Arn)
+	d.Set(names.AttrARN, webhook.Arn)
 	d.Set("authentication", webhookDef.Authentication)
 	if err := d.Set("authentication_configuration", flattenWebhookAuthConfiguration(webhookDef.AuthenticationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
@@ -183,7 +183,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("filter", flattenWebhookFilterRules(webhookDef.Filters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
-	d.Set("name", webhookDef.Name)
+	d.Set(names.AttrName, webhookDef.Name)
 	d.Set("target_action", webhookDef.TargetAction)
 	d.Set("target_pipeline", webhookDef.TargetPipeline)
 	d.Set("url", webhook.Url)
@@ -197,7 +197,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		authType := types.WebhookAuthenticationType(d.Get("authentication").(string))
 		input := &codepipeline.PutWebhookInput{
 			Webhook: &types.WebhookDefinition{
@@ -205,7 +205,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
 				AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
 				Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
-				Name:                        aws.String(d.Get("name").(string)),
+				Name:                        aws.String(d.Get(names.AttrName).(string)),
 				TargetAction:                aws.String(d.Get("target_action").(string)),
 				TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			},
@@ -231,7 +231,7 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Deleting CodePipeline Webhook: %s", d.Id())
 	_, err := conn.DeleteWebhook(ctx, &codepipeline.DeleteWebhookInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*types.WebhookNotFoundException](err) {

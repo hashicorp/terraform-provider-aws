@@ -38,7 +38,7 @@ func resourceClientCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func resourceClientCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -74,7 +74,7 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -111,9 +111,9 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", cert.CreatedDate.String())
-	d.Set("description", cert.Description)
+	d.Set(names.AttrDescription, cert.Description)
 	d.Set("expiration_date", cert.ExpirationDate.String())
 	d.Set("pem_encoded_certificate", cert.PemEncodedCertificate)
 
@@ -126,14 +126,14 @@ func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &apigateway.UpdateClientCertificateInput{
 			ClientCertificateId: aws.String(d.Id()),
 			PatchOperations: []types.PatchOperation{
 				{
 					Op:    types.OpReplace,
 					Path:  aws.String("/description"),
-					Value: aws.String(d.Get("description").(string)),
+					Value: aws.String(d.Get(names.AttrDescription).(string)),
 				},
 			},
 		}

@@ -50,7 +50,7 @@ func ResourceDocument() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,12 +60,12 @@ func ResourceDocument() *schema.Resource {
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ssm.AttachmentsSourceKey_Values(), false),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
@@ -97,7 +97,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,7 +128,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -150,15 +150,15 @@ func ResourceDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -181,7 +181,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,7 +213,7 @@ func ResourceDocument() *schema.Resource {
 					// since ValidateFunc validates only the value not the key.
 					tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
-					if v, ok := tfMap["type"]; ok {
+					if v, ok := tfMap[names.AttrType]; ok {
 						if v != ssm.DocumentPermissionTypeShare {
 							return fmt.Errorf("%q: only %s \"type\" supported", "permissions", ssm.DocumentPermissionTypeShare)
 						}
@@ -254,7 +254,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateDocumentInput{
 		Content:        aws.String(d.Get("content").(string)),
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
@@ -335,24 +335,24 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("document/%s", aws.StringValue(doc.Name)),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
-	d.Set("description", doc.Description)
+	d.Set(names.AttrDescription, doc.Description)
 	d.Set("document_format", doc.DocumentFormat)
 	d.Set("document_type", doc.DocumentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
-	d.Set("name", doc.Name)
+	d.Set(names.AttrName, doc.Name)
 	d.Set("owner", doc.Owner)
 	if err := d.Set("parameter", flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 	d.Set("platform_types", aws.StringValueSlice(doc.PlatformTypes))
 	d.Set("schema_version", doc.SchemaVersion)
-	d.Set("status", doc.Status)
+	d.Set(names.AttrStatus, doc.Status)
 	d.Set("target_type", doc.TargetType)
 	d.Set("version_name", doc.VersionName)
 
@@ -386,8 +386,8 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if accountsIDs := aws.StringValueSlice(output.AccountIds); len(accountsIDs) > 0 {
 			d.Set("permissions", map[string]string{
-				"account_ids": strings.Join(accountsIDs, ","),
-				"type":        ssm.DocumentPermissionTypeShare,
+				"account_ids":  strings.Join(accountsIDs, ","),
+				names.AttrType: ssm.DocumentPermissionTypeShare,
 			})
 		} else {
 			d.Set("permissions", nil)
@@ -452,7 +452,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
 		// Update for schema version 1.x is not allowed.
 		isSchemaVersion1, _ := regexp.MatchString(`^1[.][0-9]$`, d.Get("schema_version").(string))
 
@@ -534,7 +534,7 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] Deleting SSM Document: %s", d.Id())
 	_, err := conn.DeleteDocumentWithContext(ctx, &ssm.DeleteDocumentInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
@@ -644,11 +644,11 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSourc
 
 	apiObject := &ssm.AttachmentsSource{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -697,15 +697,15 @@ func flattenDocumentParameter(apiObject *ssm.DocumentParameter) map[string]inter
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap

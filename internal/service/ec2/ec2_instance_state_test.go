@@ -34,7 +34,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", state),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
 				),
 			},
 		},
@@ -59,7 +59,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", stateStopped),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", stateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateRunning),
 				),
 			},
 		},

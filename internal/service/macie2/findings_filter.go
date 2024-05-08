@@ -96,7 +96,7 @@ func ResourceFindingsFilter() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -107,10 +107,10 @@ func ResourceFindingsFilter() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(3, 64-id.UniqueIDSuffixLength),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -127,7 +127,7 @@ func ResourceFindingsFilter() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:        aws.String(create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
 		Tags:        getTagsIn(ctx),
 	}
@@ -153,7 +153,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating Macie FindingsFilter: %s", err)
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("position"); ok {
@@ -213,15 +213,15 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	if err = d.Set("finding_criteria", flattenFindingCriteriaFindingsFilter(resp.FindingCriteria)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie FindingsFilter (%s): %s", "finding_criteria", d.Id(), err)
 	}
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
 
 	setTagsOut(ctx, resp.Tags)
 
-	d.Set("arn", resp.Arn)
+	d.Set(names.AttrARN, resp.Arn)
 
 	return diags
 }
@@ -242,14 +242,14 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "updating Macie FindingsFilter (%s): %s", d.Id(), err)
 		}
 	}
-	if d.HasChange("name") {
-		input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
+	if d.HasChange(names.AttrName) {
+		input.Name = aws.String(create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string)))
 	}
 	if d.HasChange("name_prefix") {
-		input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
+		input.Name = aws.String(create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string)))
 	}
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 	if d.HasChange("action") {
 		input.Action = aws.String(d.Get("action").(string))

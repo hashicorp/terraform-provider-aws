@@ -48,7 +48,7 @@ func resourceFileCache() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +126,7 @@ func resourceFileCache() *schema.Resource {
 											),
 										},
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -140,7 +140,7 @@ func resourceFileCache() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -176,7 +176,7 @@ func resourceFileCache() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
 				),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -260,7 +260,7 @@ func resourceFileCache() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -279,7 +279,7 @@ func resourceFileCache() *schema.Resource {
 					validation.IntBetween(0, 2147483647),
 				),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -288,7 +288,7 @@ func resourceFileCache() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -306,7 +306,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 		FileCacheType:        aws.String(d.Get("file_cache_type").(string)),
 		FileCacheTypeVersion: aws.String(d.Get("file_cache_type_version").(string)),
 		StorageCapacity:      aws.Int64(int64(d.Get("storage_capacity").(int))),
-		SubnetIds:            flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:            flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -318,7 +318,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DataRepositoryAssociations = expandDataRepositoryAssociations(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -361,22 +361,22 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre File Cache (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", filecache.ResourceARN)
+	d.Set(names.AttrARN, filecache.ResourceARN)
 	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
 	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
 	d.Set("dns_name", filecache.DNSName)
 	d.Set("file_cache_id", filecache.FileCacheId)
 	d.Set("file_cache_type", filecache.FileCacheType)
 	d.Set("file_cache_type_version", filecache.FileCacheTypeVersion)
-	d.Set("kms_key_id", filecache.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, filecache.KmsKeyId)
 	if err := d.Set("lustre_configuration", flattenFileCacheLustreConfiguration(filecache.LustreConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lustre_configuration: %s", err)
 	}
 	d.Set("network_interface_ids", aws.StringValueSlice(filecache.NetworkInterfaceIds))
-	d.Set("owner_id", filecache.OwnerId)
+	d.Set(names.AttrOwnerID, filecache.OwnerId)
 	d.Set("storage_capacity", filecache.StorageCapacity)
-	d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds))
-	d.Set("vpc_id", filecache.VpcId)
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filecache.SubnetIds))
+	d.Set(names.AttrVPCID, filecache.VpcId)
 
 	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(ctx, conn, dataRepositoryAssociationIDs)
 
@@ -397,7 +397,7 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileCacheInput{
 			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileCacheId:         aws.String(d.Id()),
@@ -604,7 +604,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 			"imported_file_chunk_size":       dataRepositoryAssociation.ImportedFileChunkSize,
 			"nfs":                            flattenNFSDataRepositoryConfiguration(dataRepositoryAssociation.NFS),
 			"resource_arn":                   dataRepositoryAssociation.ResourceARN,
-			"tags":                           tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
+			names.AttrTags:                   tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
 		}
 		flattenedDataRepositoryAssociations = append(flattenedDataRepositoryAssociations, values)
 	}
@@ -617,8 +617,8 @@ func flattenNFSDataRepositoryConfiguration(nfsDataRepositoryConfiguration *fsx.N
 	}
 
 	values := map[string]interface{}{
-		"dns_ips": aws.StringValueSlice(nfsDataRepositoryConfiguration.DnsIps),
-		"version": aws.StringValue(nfsDataRepositoryConfiguration.Version),
+		"dns_ips":         aws.StringValueSlice(nfsDataRepositoryConfiguration.DnsIps),
+		names.AttrVersion: aws.StringValue(nfsDataRepositoryConfiguration.Version),
 	}
 	return []map[string]interface{}{values}
 }
@@ -703,7 +703,7 @@ func expandFileCacheNFSConfiguration(l []interface{}) *fsx.FileCacheNFSConfigura
 	if v, ok := data["dns_ips"]; ok {
 		req.DnsIps = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	if v, ok := data["version"].(string); ok {
+	if v, ok := data[names.AttrVersion].(string); ok {
 		req.Version = aws.String(v)
 	}
 

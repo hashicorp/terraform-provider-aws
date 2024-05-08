@@ -212,17 +212,17 @@ func TestAccEventsRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName1))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName1))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_pattern"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
@@ -244,14 +244,14 @@ func TestAccEventsRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					testAccCheckRuleRecreated(&v1, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
@@ -259,9 +259,9 @@ func TestAccEventsRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_defaultBusName(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					testAccCheckRuleNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 				),
 			},
@@ -288,9 +288,9 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 				Config: testAccRuleConfig_busName(rName1, busName1, "description 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName1, rName1))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName1, rName1))),
 				),
 			},
 			{
@@ -304,7 +304,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					testAccCheckRuleNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName1),
 				),
 			},
@@ -313,9 +313,9 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
 					testAccCheckRuleRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
 				),
 			},
 		},
@@ -339,8 +339,8 @@ func TestAccEventsRule_role(t *testing.T) {
 				Config: testAccRuleConfig_role(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -369,8 +369,8 @@ func TestAccEventsRule_description(t *testing.T) {
 				Config: testAccRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -383,8 +383,8 @@ func TestAccEventsRule_description(t *testing.T) {
 				Config: testAccRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -407,7 +407,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.ec2\"]}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 				),
@@ -422,7 +422,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.lambda\"]}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.lambda\"]}"),
 				),
 			},
@@ -446,7 +446,7 @@ func TestAccEventsRule_patternJSONEncoder(t *testing.T) {
 				Config: testAccRuleConfig_patternJSONEncoder(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", `{"detail":{"count":[{"numeric":[">",0,"<",5]}]}}`),
 				),
@@ -471,7 +471,7 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 				Config: testAccRuleConfig_scheduleAndPattern(rName, "{\"source\":[\"aws.ec2\"]}"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 				),
@@ -502,7 +502,7 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 				Config: testAccRuleConfig_namePrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
 			},
@@ -531,7 +531,7 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 				Config: testAccRuleConfig_nameGenerated,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -609,7 +609,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
 			},
@@ -624,7 +624,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
@@ -639,7 +639,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
 			},
@@ -664,7 +664,7 @@ func TestAccEventsRule_state(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.RuleStateDisabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.RuleStateDisabled)),
 					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateDisabled),
 				),
 			},
@@ -679,7 +679,7 @@ func TestAccEventsRule_state(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.RuleStateEnabled)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.RuleStateEnabled)),
 					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateEnabled),
 				),
 			},
@@ -715,14 +715,14 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 				Config: testAccRuleConfig_partnerBus(rName, busName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -754,14 +754,14 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 				Config: testAccRuleConfig_busARN(rName, eventBusName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -792,7 +792,7 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 			expectedState:     "ENABLED",
 		},
 
-		"enabled": {
+		names.AttrEnabled: {
 			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), true),
 			expectedIsEnabled: "true",
 			expectedState:     "ENABLED",
@@ -841,7 +841,7 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 						},
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
-							resource.TestCheckResourceAttr(resourceName, "state", string(testcase.expectedState)),
+							resource.TestCheckResourceAttr(resourceName, names.AttrState, string(testcase.expectedState)),
 							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
 						),
 					},
@@ -862,7 +862,7 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 		expectedIsEnabled string
 		expectedState     types.RuleState
 	}{
-		"enabled": {
+		names.AttrEnabled: {
 			enabled:           true,
 			state:             string(types.RuleStateEnabled),
 			expectedIsEnabled: "true",
@@ -914,7 +914,7 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 						},
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
-							resource.TestCheckResourceAttr(resourceName, "state", string(testcase.expectedState)),
+							resource.TestCheckResourceAttr(resourceName, names.AttrState, string(testcase.expectedState)),
 							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
 						),
 					},
@@ -933,7 +933,7 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.Descri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["name"])
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -954,7 +954,7 @@ func testAccCheckRuleEnabled(ctx context.Context, n string, want types.RuleState
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["name"])
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -977,7 +977,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["name"])
+			_, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1019,7 +1019,7 @@ func testAccRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportS
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["name"], nil
+		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

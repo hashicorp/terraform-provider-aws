@@ -202,20 +202,20 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "group_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("default/%s", name)),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("default/%s", name)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression_timezone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
@@ -223,7 +223,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", "185"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
 				),
@@ -293,7 +293,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 				Config: testAccScheduleConfig_description(name, "test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "description", "test 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test 1"),
 				),
 			},
 			{
@@ -305,7 +305,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 				Config: testAccScheduleConfig_description(name, "test 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "description", "test 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test 2"),
 				),
 			},
 			{
@@ -317,7 +317,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 				Config: testAccScheduleConfig_description(name, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -476,7 +476,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 				Config: testAccScheduleConfig_groupName(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", names.AttrName),
 				),
 			},
 			{
@@ -512,7 +512,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 				Config: testAccScheduleConfig_kmsKeyARN(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -524,7 +524,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 				Config: testAccScheduleConfig_kmsKeyARN(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test.1", names.AttrARN),
 				),
 			},
 			{
@@ -536,7 +536,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 			},
 			{
@@ -571,7 +571,7 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 				Config: testAccScheduleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -607,7 +607,7 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 				Config: testAccScheduleConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -812,7 +812,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 				Config: testAccScheduleConfig_state(name, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 				),
 			},
 			{
@@ -824,7 +824,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 				Config: testAccScheduleConfig_state(name, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 				),
 			},
 			{
@@ -836,7 +836,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 				),
 			},
 			{
@@ -872,7 +872,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetARN(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -884,7 +884,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetARN(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test.1", names.AttrARN),
 				),
 			},
 			{
@@ -920,7 +920,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 				Config: testAccScheduleConfig_targetDeadLetterConfig(name, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.0", names.AttrARN),
 				),
 			},
 			{
@@ -932,7 +932,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 				Config: testAccScheduleConfig_targetDeadLetterConfig(name, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.dead_letter_config.0.arn", "aws_sqs_queue.dlq.1", names.AttrARN),
 				),
 			},
 			{
@@ -993,7 +993,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1026,12 +1026,12 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111111"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
-						"type":       "memberOf",
-						"expression": "attribute:ecs.os-family in [LINUX]",
+						names.AttrType: "memberOf",
+						"expression":   "attribute:ecs.os-family in [LINUX]",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
-						"type":  "binpack",
-						"field": "cpu",
+						names.AttrType: "binpack",
+						"field":        "cpu",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "LATEST"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", "TASK_DEFINITION"),
@@ -1040,7 +1040,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1070,11 +1070,11 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111112"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111113"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
-						"type": "distinctInstance",
+						names.AttrType: "distinctInstance",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
-						"type":  "spread",
-						"field": "cpu",
+						names.AttrType: "spread",
+						"field":        "cpu",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "1.1.0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
@@ -1082,7 +1082,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1107,7 +1107,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
 			{
@@ -1407,7 +1407,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetRoleARN(name, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -1419,7 +1419,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 				Config: testAccScheduleConfig_targetRoleARN(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test1", names.AttrARN),
 				),
 			},
 			{
@@ -1459,8 +1459,8 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key1",
-							"value": "value1",
+							names.AttrName:  "key1",
+							names.AttrValue: "value1",
 						}),
 				),
 			},
@@ -1477,14 +1477,14 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key1",
-							"value": "value1updated",
+							names.AttrName:  "key1",
+							names.AttrValue: "value1updated",
 						}),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key2",
-							"value": "value2",
+							names.AttrName:  "key2",
+							names.AttrValue: "value2",
 						}),
 				),
 			},
@@ -1501,8 +1501,8 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							"name":  "key2",
-							"value": "value2",
+							names.AttrName:  "key2",
+							names.AttrValue: "value2",
 						}),
 				),
 			},

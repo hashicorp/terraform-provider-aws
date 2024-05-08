@@ -14,6 +14,7 @@ var (
 	FindAWSLogSourceBySourceName           = findAWSLogSourceBySourceName
 	FindCustomLogSourceBySourceName        = findCustomLogSourceBySourceName
 	FindDataLakeByARN                      = findDataLakeByARN
+	FindDataLakes                          = findDataLakes
 	FindSubscriberByID                     = findSubscriberByID
 	FindSubscriberNotificationByEndPointID = findSubscriberNotificationByEndPointID
 )

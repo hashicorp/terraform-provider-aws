@@ -46,11 +46,11 @@ func resourceSecret() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -59,11 +59,11 @@ func resourceSecret() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -76,10 +76,10 @@ func resourceSecret() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validSecretNamePrefix,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -109,7 +109,7 @@ func resourceSecret() *schema.Resource {
 
 					m := v.(map[string]interface{})
 
-					if v, ok := m["kms_key_id"].(string); ok {
+					if v, ok := m[names.AttrKMSKeyID].(string); ok {
 						buf.WriteString(fmt.Sprintf("%s-", v))
 					}
 
@@ -121,7 +121,7 @@ func resourceSecret() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -134,7 +134,7 @@ func resourceSecret() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -157,16 +157,16 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
 		ClientRequestToken:          aws.String(id.UniqueId()), // Needed because we're handling our own retries
-		Description:                 aws.String(d.Get("description").(string)),
+		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		ForceOverwriteReplicaSecret: d.Get("force_overwrite_replica_secret").(bool),
 		Name:                        aws.String(name),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -204,7 +204,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+	if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -239,10 +239,10 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ARN)
-	d.Set("description", output.Description)
-	d.Set("kms_key_id", output.KmsKeyId)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.ARN)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
+	d.Set(names.AttrName, output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	if err := d.Set("replica", flattenReplicationStatusTypes(output.ReplicationStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
@@ -273,14 +273,14 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
 	} else if v := policy.ResourcePolicy; v != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(v))
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(v))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	} else {
-		d.Set("policy", "")
+		d.Set(names.AttrPolicy, "")
 	}
 
 	setTagsOut(ctx, output.Tags)
@@ -309,14 +309,14 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("description", "kms_key_id") {
+	if d.HasChanges(names.AttrDescription, names.AttrKMSKeyID) {
 		input := &secretsmanager.UpdateSecretInput{
 			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
-			Description:        aws.String(d.Get("description").(string)),
+			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			SecretId:           aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -327,8 +327,8 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+	if d.HasChange(names.AttrPolicy) {
+		if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -513,7 +513,7 @@ func expandReplicaRegionType(tfMap map[string]interface{}) *types.ReplicaRegionT
 
 	apiObject := &types.ReplicaRegionType{}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -556,11 +556,11 @@ func expandReplicaRegionTypes(tfList []interface{}) []types.ReplicaRegionType {
 
 func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.ToString(v)
+		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
 	if v := apiObject.LastAccessedDate; v != nil {

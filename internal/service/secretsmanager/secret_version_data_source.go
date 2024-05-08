@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_secretsmanager_secret_version", name="Secret Version")
@@ -21,7 +22,7 @@ func dataSourceSecretVersion() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSecretVersionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +91,7 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(id)
-	d.Set("arn", output.ARN)
+	d.Set(names.AttrARN, output.ARN)
 	d.Set("created_date", aws.String(output.CreatedDate.Format(time.RFC3339)))
 	d.Set("secret_id", secretID)
 	d.Set("secret_binary", string(output.SecretBinary))

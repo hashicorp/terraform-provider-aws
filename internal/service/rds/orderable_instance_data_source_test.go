@@ -38,7 +38,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, "storage_type", storageType),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", names.AttrVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_preferredVersion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 				Config: testAccOrderableInstanceDataSourceConfig_preferredClassAndVersion(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 		},

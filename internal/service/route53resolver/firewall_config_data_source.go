@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_config")
@@ -26,7 +27,7 @@ func DataSourceFirewallConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +51,7 @@ func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(firewallConfig.Id))
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
-	d.Set("owner_id", firewallConfig.OwnerId)
+	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
 	d.Set("resource_id", firewallConfig.ResourceId)
 
 	return nil

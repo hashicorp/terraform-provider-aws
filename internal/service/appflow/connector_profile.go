@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
@@ -37,7 +38,7 @@ func resourceConnectorProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1124,7 +1125,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"role_arn": {
+												names.AttrRoleARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -1415,7 +1416,7 @@ func resourceConnectorProfile() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -1433,7 +1434,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appflow.CreateConnectorProfileInput{
 		ConnectionMode:       types.ConnectionMode(d.Get("connection_mode").(string)),
 		ConnectorProfileName: aws.String(name),
@@ -1487,13 +1488,13 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	// credentials resource -- but it is not documented in the API reference.
 	// (https://docs.aws.amazon.com/appflow/1.0/APIReference/API_ConnectorProfile.html#appflow-Type-ConnectorProfile-credentialsArn)
 	credentials := d.Get("connector_profile_config.0.connector_profile_credentials").([]interface{})
-	d.Set("arn", connectorProfile.ConnectorProfileArn)
+	d.Set(names.AttrARN, connectorProfile.ConnectorProfileArn)
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
 	d.Set("connector_label", connectorProfile.ConnectorLabel)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
 	d.Set("credentials_arn", connectorProfile.CredentialsArn)
-	d.Set("name", connectorProfile.ConnectorProfileName)
+	d.Set(names.AttrName, connectorProfile.ConnectorProfileName)
 
 	return diags
 }
@@ -1503,7 +1504,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appflow.UpdateConnectorProfileInput{
 		ConnectionMode:       types.ConnectionMode(d.Get("connection_mode").(string)),
 		ConnectorProfileName: aws.String(name),
@@ -1529,7 +1530,7 @@ func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Deleting AppFlow Connector Profile: %s", d.Id())
 	_, err := conn.DeleteConnectorProfile(ctx, &appflow.DeleteConnectorProfileInput{
-		ConnectorProfileName: aws.String(d.Get("name").(string)),
+		ConnectorProfileName: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -2066,7 +2067,7 @@ func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.R
 	properties := &types.RedshiftConnectorProfileProperties{
 		BucketName:        aws.String(m["bucket_name"].(string)),
 		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
-		RoleArn:           aws.String(m["role_arn"].(string)),
+		RoleArn:           aws.String(m[names.AttrRoleARN].(string)),
 		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
 		DatabaseName:      aws.String(m["database_name"].(string)),
 	}
@@ -2303,7 +2304,7 @@ func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnect
 		m["database_url"] = aws.ToString(properties.DatabaseUrl)
 	}
 
-	m["role_arn"] = aws.ToString(properties.RoleArn)
+	m[names.AttrRoleARN] = aws.ToString(properties.RoleArn)
 	m["cluster_identifier"] = aws.ToString(properties.ClusterIdentifier)
 	m["data_api_role_arn"] = aws.ToString(properties.DataApiRoleArn)
 	m["database_name"] = aws.ToString(properties.DatabaseName)

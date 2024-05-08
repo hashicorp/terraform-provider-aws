@@ -56,7 +56,7 @@ func resourceReportDefinition() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.SchemaElement](),
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -190,7 +190,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "definition/" + reportName,
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("compression", reportDefinition.Compression)
 	d.Set("format", reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)

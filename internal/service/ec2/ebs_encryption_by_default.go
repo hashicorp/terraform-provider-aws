@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ebs_encryption_by_default")
@@ -25,7 +26,7 @@ func ResourceEBSEncryptionByDefault() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -38,7 +39,7 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	enabled := d.Get("enabled").(bool)
+	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setEBSEncryptionByDefault(ctx, conn, enabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS encryption by default (%t): %s", enabled, err)
 	}
@@ -58,7 +59,7 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
 
-	d.Set("enabled", resp.EbsEncryptionByDefault)
+	d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
 
 	return diags
 }
@@ -67,7 +68,7 @@ func resourceEBSEncryptionByDefaultUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	enabled := d.Get("enabled").(bool)
+	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setEBSEncryptionByDefault(ctx, conn, enabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EBS encryption by default (%t): %s", enabled, err)
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_grafana_workspace_saml_configuration")
@@ -91,7 +92,7 @@ func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -251,7 +252,7 @@ func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("name_assertion", saml.Configuration.AssertionAttributes.Name)
 	d.Set("org_assertion", saml.Configuration.AssertionAttributes.Org)
 	d.Set("role_assertion", saml.Configuration.AssertionAttributes.Role)
-	d.Set("status", saml.Status)
+	d.Set(names.AttrStatus, saml.Status)
 
 	return diags
 }

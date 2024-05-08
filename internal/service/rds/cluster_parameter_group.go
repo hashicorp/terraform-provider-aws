@@ -42,11 +42,11 @@ func ResourceClusterParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -57,7 +57,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -70,7 +70,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
 			"parameter": {
@@ -83,11 +83,11 @@ func ResourceClusterParameterGroup() *schema.Resource {
 							Optional: true,
 							Default:  "immediate",
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -107,11 +107,11 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	groupName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
-		Description:                 aws.String(d.Get("description").(string)),
+		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                        getTagsIn(ctx),
 	}
 
@@ -123,7 +123,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	d.SetId(groupName)
 
 	// Set for update
-	d.Set("arn", output.DBClusterParameterGroup.DBClusterParameterGroupArn)
+	d.Set(names.AttrARN, output.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
 	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
 }
@@ -145,10 +145,10 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	arn := aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupArn)
-	d.Set("arn", arn)
-	d.Set("description", dbClusterParameterGroup.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
 	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
-	d.Set("name", dbClusterParameterGroup.DBClusterParameterGroupName)
+	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones

@@ -37,7 +37,7 @@ func ResourceSpace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -460,7 +460,7 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.StringValue(space.SpaceArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("domain_id", space.DomainId)
 	d.Set("home_efs_file_system_uid", space.HomeEfsFileSystemUid)
 	d.Set("space_display_name", space.SpaceDisplayName)
@@ -486,7 +486,7 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		domainID := d.Get("domain_id").(string)
 		name := d.Get("space_name").(string)
 

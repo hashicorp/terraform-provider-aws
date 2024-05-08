@@ -5,6 +5,8 @@ package iam
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidRoleProfileName(t *testing.T) {
@@ -15,7 +17,7 @@ func TestValidRoleProfileName(t *testing.T) {
 	}
 
 	for _, s := range validNames {
-		_, errors := validRolePolicyName(s, "name")
+		_, errors := validRolePolicyName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid IAM role policy name: %v", s, errors)
 		}
@@ -27,7 +29,7 @@ func TestValidRoleProfileName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := validRolePolicyName(s, "name")
+		_, errors := validRolePolicyName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid IAM role policy name: %v", s, errors)
 		}

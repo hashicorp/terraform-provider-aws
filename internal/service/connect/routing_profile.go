@@ -44,7 +44,7 @@ func ResourceRoutingProfile() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func ResourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
@@ -81,7 +81,7 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -138,10 +138,10 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateRoutingProfileInput{
 		DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		InstanceId:             aws.String(instanceID),
 		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 		Name:                   aws.String(name),
@@ -214,11 +214,11 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", routingProfile.RoutingProfileArn)
+	d.Set(names.AttrARN, routingProfile.RoutingProfileArn)
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
-	d.Set("description", routingProfile.Description)
+	d.Set(names.AttrDescription, routingProfile.Description)
 	d.Set("instance_id", instanceID)
-	d.Set("name", routingProfile.Name)
+	d.Set(names.AttrName, routingProfile.Name)
 
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 
@@ -289,9 +289,9 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		RoutingProfileId: aws.String(routingProfileID),
 	}
 
-	if d.HasChanges("name", "description") {
-		inputNameDesc.Name = aws.String(d.Get("name").(string))
-		inputNameDesc.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
+		inputNameDesc.Name = aws.String(d.Get(names.AttrName).(string))
+		inputNameDesc.Description = aws.String(d.Get(names.AttrDescription).(string))
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {

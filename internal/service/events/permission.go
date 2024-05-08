@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
@@ -50,17 +51,17 @@ func resourcePermission() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -325,9 +326,9 @@ func expandCondition(l []interface{}) *types.Condition {
 	m := l[0].(map[string]interface{})
 
 	condition := &types.Condition{
-		Key:   aws.String(m["key"].(string)),
-		Type:  aws.String(m["type"].(string)),
-		Value: aws.String(m["value"].(string)),
+		Key:   aws.String(m[names.AttrKey].(string)),
+		Type:  aws.String(m[names.AttrType].(string)),
+		Value: aws.String(m[names.AttrValue].(string)),
 	}
 
 	return condition
@@ -339,9 +340,9 @@ func flattenPermissionPolicyStatementCondition(c *permissionPolicyStatementCondi
 	}
 
 	m := map[string]interface{}{
-		"key":   c.Key,
-		"type":  c.Type,
-		"value": c.Value,
+		names.AttrKey:   c.Key,
+		names.AttrType:  c.Type,
+		names.AttrValue: c.Value,
 	}
 
 	return []interface{}{m}

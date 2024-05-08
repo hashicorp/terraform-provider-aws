@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_wafv2_regex_pattern_set")
@@ -22,15 +23,15 @@ func DataSourceRegexPatternSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -59,7 +60,7 @@ func DataSourceRegexPatternSet() *schema.Resource {
 func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	var foundRegexPatternSet *wafv2.RegexPatternSetSummary
 	input := &wafv2.ListRegexPatternSetsInput{
@@ -109,8 +110,8 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.StringValue(resp.RegexPatternSet.Id))
-	d.Set("arn", resp.RegexPatternSet.ARN)
-	d.Set("description", resp.RegexPatternSet.Description)
+	d.Set(names.AttrARN, resp.RegexPatternSet.ARN)
+	d.Set(names.AttrDescription, resp.RegexPatternSet.Description)
 
 	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regular_expression: %s", err)

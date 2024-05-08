@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_subnet_cidr_reservation")
@@ -50,12 +51,12 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 				ValidateFunc:     verify.ValidCIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +85,7 @@ func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.Resource
 		SubnetId:        aws.String(d.Get("subnet_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -117,8 +118,8 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("cidr_block", output.Cidr)
-	d.Set("description", output.Description)
-	d.Set("owner_id", output.OwnerId)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrOwnerID, output.OwnerId)
 	d.Set("reservation_type", output.ReservationType)
 	d.Set("subnet_id", output.SubnetId)
 

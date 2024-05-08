@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_response_headers_policy", name="Response Headers Policy")
@@ -114,7 +115,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -128,17 +129,17 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
 			"remove_headers_config": {
 				Type:     schema.TypeList,
@@ -281,7 +282,7 @@ func dataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -301,10 +302,10 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 
 	var responseHeadersPolicyID string
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		responseHeadersPolicyID = v.(string)
 	} else {
-		name := d.Get("name").(string)
+		name := d.Get(names.AttrName).(string)
 		input := &cloudfront.ListResponseHeadersPoliciesInput{}
 
 		err := listResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
@@ -357,7 +358,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		d.Set("custom_headers_config", nil)
 	}
 	d.Set("etag", output.ETag)
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
 		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)

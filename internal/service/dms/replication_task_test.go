@@ -56,7 +56,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_task_settings", defaultReplicationTaskSettings[migrationType]),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
 							resource.TestCheckResourceAttr(resourceName, "start_replication_task", "false"),
-							resource.TestCheckResourceAttr(resourceName, "status", "ready"),
+							resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ready"),
 							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
 							resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -460,7 +460,7 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 				Config: testAccReplicationTaskConfig_start(rName, true, "testrule"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "status", "running"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
 				),
 			},
 			{
@@ -473,14 +473,14 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 				Config: testAccReplicationTaskConfig_start(rName, true, "changedtestrule"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "status", "running"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "running"),
 				),
 			},
 			{
 				Config: testAccReplicationTaskConfig_start(rName, false, "changedtestrule"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "status", "stopped"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "stopped"),
 				),
 			},
 		},

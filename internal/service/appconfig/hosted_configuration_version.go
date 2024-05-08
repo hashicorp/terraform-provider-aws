@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appconfig_hosted_configuration_version")
@@ -40,7 +41,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +63,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -90,7 +91,7 @@ func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.Res
 		ContentType:            aws.String(d.Get("content_type").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -141,7 +142,7 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 	d.Set("content", string(output.Content))
 	d.Set("content_type", output.ContentType)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("version_number", output.VersionNumber)
 
 	arn := arn.ARN{
@@ -152,7 +153,7 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 		Service:   "appconfig",
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

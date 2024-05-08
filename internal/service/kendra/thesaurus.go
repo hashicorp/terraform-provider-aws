@@ -48,11 +48,11 @@ func ResourceThesaurus() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -61,11 +61,11 @@ func ResourceThesaurus() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -76,18 +76,18 @@ func ResourceThesaurus() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,13 +111,13 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &kendra.CreateThesaurusInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		IndexId:      aws.String(d.Get("index_id").(string)),
-		Name:         aws.String(d.Get("name").(string)),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
 		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -137,11 +137,11 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Thesaurus (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Thesaurus (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	if outputRaw == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Thesaurus (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Thesaurus (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	output := outputRaw.(*kendra.CreateThesaurusOutput)
@@ -188,12 +188,12 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("description", out.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("index_id", out.IndexId)
-	d.Set("name", out.Name)
-	d.Set("role_arn", out.RoleArn)
-	d.Set("status", out.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrRoleARN, out.RoleArn)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("thesaurus_id", out.Id)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
@@ -208,7 +208,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		id, indexId, err := ThesaurusParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -219,16 +219,16 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			IndexId: aws.String(indexId),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("source_s3_path") {

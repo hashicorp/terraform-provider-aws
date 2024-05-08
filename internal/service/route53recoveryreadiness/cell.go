@@ -42,7 +42,7 @@ func ResourceCell() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,7 +118,7 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.CellArn)
+	d.Set(names.AttrARN, resp.CellArn)
 	d.Set("cell_name", resp.CellName)
 	d.Set("cells", resp.Cells)
 	d.Set("parent_readiness_scopes", resp.ParentReadinessScopes)
@@ -130,7 +130,7 @@ func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateCellInput{
 			CellName: aws.String(d.Id()),
 			Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),

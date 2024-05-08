@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codestarconnections_host", name="Host")
@@ -41,11 +42,11 @@ func resourceHost() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -60,7 +61,7 @@ func resourceHost() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ProviderType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +77,7 @@ func resourceHost() *schema.Resource {
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -86,7 +87,7 @@ func resourceHost() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -101,7 +102,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codestarconnections.CreateHostInput{
 		Name:             aws.String(name),
 		ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),
@@ -140,11 +141,11 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading CodeStar Connections Host (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, output.Name)
 	d.Set("provider_endpoint", output.ProviderEndpoint)
 	d.Set("provider_type", output.ProviderType)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 	if err := d.Set("vpc_configuration", flattenHostVPCConfiguration(output.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
@@ -206,8 +207,8 @@ func expandHostVPCConfiguration(l []interface{}) *types.VpcConfiguration {
 
 	vc := &types.VpcConfiguration{
 		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
-		VpcId:            aws.String(m["vpc_id"].(string)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
+		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
 
 	if v, ok := m["tls_certificate"].(string); ok && v != "" {
@@ -224,8 +225,8 @@ func flattenHostVPCConfiguration(vpcConfig *types.VpcConfiguration) []interface{
 
 	m := map[string]interface{}{
 		"security_group_ids": vpcConfig.SecurityGroupIds,
-		"subnet_ids":         vpcConfig.SubnetIds,
-		"vpc_id":             aws.ToString(vpcConfig.VpcId),
+		names.AttrSubnetIDs:  vpcConfig.SubnetIds,
+		names.AttrVPCID:      aws.ToString(vpcConfig.VpcId),
 	}
 
 	if vpcConfig.TlsCertificate != nil {

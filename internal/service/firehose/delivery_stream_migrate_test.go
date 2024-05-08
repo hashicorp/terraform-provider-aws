@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestMigrateState(t *testing.T) {
@@ -26,7 +27,7 @@ func TestMigrateState(t *testing.T) {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				// EBS
-				"role_arn":            "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
+				names.AttrRoleARN:     "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
 				"s3_bucket_arn":       "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 				"s3_buffer_interval":  "400",
 				"s3_buffer_size":      "10",
@@ -45,8 +46,8 @@ func TestMigrateState(t *testing.T) {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				// EBS
-				"role_arn":      "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
-				"s3_bucket_arn": "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
+				names.AttrRoleARN: "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
+				"s3_bucket_arn":   "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 			},
 			Expected: map[string]string{
 				"s3_configuration.#":            "1",

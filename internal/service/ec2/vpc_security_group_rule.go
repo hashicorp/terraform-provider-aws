@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_security_group_rule")
@@ -60,7 +61,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ConflictsWith: []string{"source_security_group_id", "self"},
 				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validSecurityGroupRuleDescription,
@@ -143,7 +144,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 					return false
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -169,7 +170,7 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	ipPermission := expandIPPermission(d, sg)
-	ruleType := securityGroupRuleType(d.Get("type").(string))
+	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 	id := SecurityGroupRuleCreateID(securityGroupID, string(ruleType), ipPermission)
 
 	switch ruleType {
@@ -258,7 +259,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
-	ruleType := securityGroupRuleType(d.Get("type").(string))
+	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
@@ -296,8 +297,8 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	flattenIpPermission(d, ipPermission)
-	d.Set("description", description)
-	d.Set("type", ruleType)
+	d.Set(names.AttrDescription, description)
+	d.Set(names.AttrType, ruleType)
 
 	if strings.Contains(d.Id(), securityGroupRuleIDSeparator) {
 		// import so fix the id
@@ -327,7 +328,7 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		securityGroupID := d.Get("security_group_id").(string)
 
 		conns.GlobalMutexKV.Lock(securityGroupID)
@@ -340,7 +341,7 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		ipPermission := expandIPPermission(d, sg)
-		ruleType := securityGroupRuleType(d.Get("type").(string))
+		ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 		switch ruleType {
 		case securityGroupRuleTypeIngress:
@@ -384,7 +385,7 @@ func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	ipPermission := expandIPPermission(d, sg)
-	ruleType := securityGroupRuleType(d.Get("type").(string))
+	ruleType := securityGroupRuleType(d.Get(names.AttrType).(string))
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
@@ -478,7 +479,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("security_group_id", securityGroupID)
-	d.Set("type", ruleType)
+	d.Set(names.AttrType, ruleType)
 	d.Set("protocol", protocolName)
 	if v, err := strconv.Atoi(fromPort); err == nil {
 		d.Set("from_port", v)
@@ -816,7 +817,7 @@ func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPe
 		}
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		description := v.(string)
 
 		for _, v := range apiObject.IpRanges {

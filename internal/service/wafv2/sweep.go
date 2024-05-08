@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -70,7 +71,7 @@ func sweepIPSets(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("lock_token", v.LockToken)
-			d.Set("name", v.Name)
+			d.Set(names.AttrName, v.Name)
 			d.Set("scope", input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -119,7 +120,7 @@ func sweepRegexPatternSets(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("lock_token", v.LockToken)
-			d.Set("name", v.Name)
+			d.Set(names.AttrName, v.Name)
 			d.Set("scope", input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -168,7 +169,7 @@ func sweepRuleGroups(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("lock_token", v.LockToken)
-			d.Set("name", v.Name)
+			d.Set(names.AttrName, v.Name)
 			d.Set("scope", input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -227,7 +228,7 @@ func sweepWebACLs(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("lock_token", v.LockToken)
-			d.Set("name", name)
+			d.Set(names.AttrName, name)
 			d.Set("scope", input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

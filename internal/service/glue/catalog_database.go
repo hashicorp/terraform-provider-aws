@@ -40,7 +40,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -90,7 +90,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -117,7 +117,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -154,13 +154,13 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	dbInput := &glue.DatabaseInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		dbInput.Description = aws.String(v.(string))
 	}
 
@@ -168,7 +168,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 		dbInput.LocationUri = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
@@ -204,7 +204,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		catalogID, name, err := ReadCatalogID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
@@ -219,7 +219,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 			Name: aws.String(name),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			dbInput.Description = aws.String(v.(string))
 		}
 
@@ -227,7 +227,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 			dbInput.LocationUri = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameters"); ok {
+		if v, ok := d.GetOk(names.AttrParameters); ok {
 			dbInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 
@@ -277,12 +277,12 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("database/%s", aws.StringValue(database.Name)),
 	}.String()
-	d.Set("arn", databaseArn)
-	d.Set("name", database.Name)
+	d.Set(names.AttrARN, databaseArn)
+	d.Set(names.AttrName, database.Name)
 	d.Set("catalog_id", database.CatalogId)
-	d.Set("description", database.Description)
+	d.Set(names.AttrDescription, database.Description)
 	d.Set("location_uri", database.LocationUri)
-	d.Set("parameters", aws.StringValueMap(database.Parameters))
+	d.Set(names.AttrParameters, aws.StringValueMap(database.Parameters))
 
 	if database.FederatedDatabase != nil {
 		if err := d.Set("federated_database", []interface{}{flattenDatabaseFederatedDatabase(database.FederatedDatabase)}); err != nil {
@@ -313,7 +313,7 @@ func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &glue.DeleteDatabaseInput{
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		CatalogId: aws.String(d.Get("catalog_id").(string)),
 	})
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {

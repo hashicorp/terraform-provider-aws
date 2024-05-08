@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awstypes.RoleMapping {
@@ -21,7 +22,7 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awst
 		key := rm["identity_provider"].(string)
 
 		roleMapping := awstypes.RoleMapping{
-			Type: awstypes.RoleMappingType(rm["type"].(string)),
+			Type: awstypes.RoleMappingType(rm[names.AttrType].(string)),
 		}
 
 		if sv, ok := rm["ambiguous_role_resolution"].(string); ok {
@@ -37,8 +38,8 @@ func expandIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]awst
 				mr := awstypes.MappingRule{
 					Claim:     aws.String(rule["claim"].(string)),
 					MatchType: awstypes.MappingRuleMatchType(rule["match_type"].(string)),
-					RoleARN:   aws.String(rule["role_arn"].(string)),
-					Value:     aws.String(rule["value"].(string)),
+					RoleARN:   aws.String(rule[names.AttrRoleARN].(string)),
+					Value:     aws.String(rule[names.AttrValue].(string)),
 				}
 
 				mappingRules = append(mappingRules, mr)
@@ -109,7 +110,7 @@ func flattenIdentityPoolRoleMappingsAttachment(rms map[string]awstypes.RoleMappi
 		m := make(map[string]interface{})
 
 		if v.Type != "" {
-			m["type"] = string(v.Type)
+			m[names.AttrType] = string(v.Type)
 		}
 
 		if v.AmbiguousRoleResolution != "" {
@@ -134,8 +135,8 @@ func flattenIdentityPoolRolesAttachmentMappingRules(d []awstypes.MappingRule) []
 		r := make(map[string]interface{})
 		r["claim"] = aws.ToString(rule.Claim)
 		r["match_type"] = string(rule.MatchType)
-		r["role_arn"] = aws.ToString(rule.RoleARN)
-		r["value"] = aws.ToString(rule.Value)
+		r[names.AttrRoleARN] = aws.ToString(rule.RoleARN)
+		r[names.AttrValue] = aws.ToString(rule.Value)
 
 		rules = append(rules, r)
 	}

@@ -40,7 +40,7 @@ func testAccLoggingOptions_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},

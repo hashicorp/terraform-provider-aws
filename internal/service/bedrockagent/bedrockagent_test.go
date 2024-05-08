@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockAgent_serial(t *testing.T) {
@@ -16,9 +17,15 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 		"KnowledgeBase": {
 			"basicRDS":         testAccKnowledgeBase_basicRDS,
 			"disappears":       testAccKnowledgeBase_disappears,
-			"tags":             testAccKnowledgeBase_tags,
+			names.AttrTags:     testAccKnowledgeBase_tags,
 			"basicOpenSearch":  testAccKnowledgeBase_basicOpenSearch,
 			"updateOpenSearch": testAccKnowledgeBase_updateOpenSearch,
+		},
+		"DataSource": {
+			"basic":      testAccDataSource_basic,
+			"disappears": testAccDataSource_disappears,
+			"full":       testAccDataSource_full,
+			"update":     testAccDataSource_update,
 		},
 	}
 

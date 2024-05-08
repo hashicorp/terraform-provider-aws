@@ -31,11 +31,11 @@ func TestAccVPCLatticeServiceNetworkDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServiceNetworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
@@ -64,11 +64,11 @@ func TestAccVPCLatticeServiceNetworkDataSource_shared(t *testing.T) {
 			{
 				Config: testAccServiceNetworkDataSourceConfig_shared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "tags.%"),

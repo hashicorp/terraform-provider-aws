@@ -108,7 +108,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -165,7 +165,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -276,7 +276,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("engine", instance.Engine)
 	d.Set("engine_version", instance.EngineVersion)
 	d.Set("iops", instance.Iops)
-	d.Set("kms_key_id", instance.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
 	d.Set("license_model", instance.LicenseModel)
 	d.Set("master_username", instance.MasterUsername)
 	if instance.MasterUserSecret != nil {
@@ -313,12 +313,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("address", dbEndpoint.Address)
 		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
 		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
-		d.Set("port", dbEndpoint.Port)
+		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {
 		d.Set("address", nil)
 		d.Set("endpoint", nil)
 		d.Set("hosted_zone_id", nil)
-		d.Set("port", nil)
+		d.Set(names.AttrPort, nil)
 	}
 
 	setTagsOut(ctx, instance.TagList)

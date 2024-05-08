@@ -36,8 +36,8 @@ func TestAccELBV2TrustStore_basic(t *testing.T) {
 				Config: testAccTrustStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile("truststore/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("truststore/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -91,7 +91,7 @@ func TestAccELBV2TrustStore_nameGenerated(t *testing.T) {
 				Config: testAccTrustStoreConfig_nameGenerated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-"),
 				),
 			},
@@ -120,7 +120,7 @@ func TestAccELBV2TrustStore_namePrefix(t *testing.T) {
 				Config: testAccTrustStoreConfig_namePrefix(rName, "tf-px-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-px-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-px-"),
 				),
 			},

@@ -38,7 +38,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", policy.ResourcePolicySummary.Arn)
+	d.Set(names.AttrARN, policy.ResourcePolicySummary.Arn)
 	if policyToSet, err := verify.PolicyToSet(d.Get("content").(string), aws.StringValue(policy.Content)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
@@ -118,7 +118,7 @@ func resourceResourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		policy, err := structure.NormalizeJsonString(d.Get("content").(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

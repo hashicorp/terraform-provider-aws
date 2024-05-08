@@ -39,21 +39,21 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test cluster parameter group for terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_results",
-						"value": "utf8",
+						names.AttrName:  "character_set_results",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_server",
-						"value": "utf8",
+						names.AttrName:  "character_set_server",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_client",
-						"value": "utf8",
+						names.AttrName:  "character_set_client",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -68,28 +68,28 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test cluster parameter group for terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "collation_connection",
-						"value": "utf8_unicode_ci",
+						names.AttrName:  "collation_connection",
+						names.AttrValue: "utf8_unicode_ci",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_results",
-						"value": "utf8",
+						names.AttrName:  "character_set_results",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_server",
-						"value": "utf8",
+						names.AttrName:  "character_set_server",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "collation_server",
-						"value": "utf8_unicode_ci",
+						names.AttrName:  "collation_server",
+						names.AttrValue: "utf8_unicode_ci",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_client",
-						"value": "utf8",
+						names.AttrName:  "character_set_client",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -103,16 +103,16 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 					testAccCheckClusterParameterNotUserDefined(ctx, resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_results",
-						"value": "utf8",
+						names.AttrName:  "character_set_results",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_server",
-						"value": "utf8",
+						names.AttrName:  "character_set_server",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_client",
-						"value": "utf8",
+						names.AttrName:  "character_set_client",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -208,19 +208,19 @@ func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test cluster parameter group for terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":         "character_set_server",
-						"value":        "utf8",
-						"apply_method": "immediate",
+						names.AttrName:  "character_set_server",
+						names.AttrValue: "utf8",
+						"apply_method":  "immediate",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":         "character_set_client",
-						"value":        "utf8",
-						"apply_method": "pending-reboot",
+						names.AttrName:  "character_set_client",
+						names.AttrValue: "utf8",
+						"apply_method":  "pending-reboot",
 					}),
 				),
 			},
@@ -248,7 +248,7 @@ func TestAccRDSClusterParameterGroup_namePrefix(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -276,7 +276,7 @@ func TestAccRDSClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_namePrefixParameter("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -304,7 +304,7 @@ func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_generatedName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -332,7 +332,7 @@ func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_generatedName_Parameter,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -362,9 +362,9 @@ func TestAccRDSClusterParameterGroup_only(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 				),
 			},
 			{
@@ -393,19 +393,19 @@ func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_results",
-						"value": "utf8",
+						names.AttrName:  "character_set_results",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_server",
-						"value": "utf8",
+						names.AttrName:  "character_set_server",
+						names.AttrValue: "utf8",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_client",
-						"value": "utf8",
+						names.AttrName:  "character_set_client",
+						names.AttrValue: "utf8",
 					}),
 				),
 			},
@@ -420,16 +420,16 @@ func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_results",
-						"value": "ascii",
+						names.AttrName:  "character_set_results",
+						names.AttrValue: "ascii",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_server",
-						"value": "ascii",
+						names.AttrName:  "character_set_server",
+						names.AttrValue: "ascii",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "character_set_client",
-						"value": "utf8",
+						names.AttrName:  "character_set_client",
+						names.AttrValue: "utf8",
 					}),
 				),
 			},
@@ -454,11 +454,11 @@ func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "max_connections",
-						"value": "LEAST({DBInstanceClassMemory/6000000},10)",
+						names.AttrName:  "max_connections",
+						names.AttrValue: "LEAST({DBInstanceClassMemory/6000000},10)",
 					}),
 				),
 			},
@@ -492,20 +492,20 @@ func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora-postgresql12"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "track_activity_query_size", // system source
-						"value": "4096",
+						names.AttrName:  "track_activity_query_size", // system source
+						names.AttrValue: "4096",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "shared_preload_libraries", // system source
-						"value": "pg_stat_statements",
+						names.AttrName:  "shared_preload_libraries", // system source
+						names.AttrValue: "pg_stat_statements",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "track_io_timing", // system source
-						"value": "1",
+						names.AttrName:  "track_io_timing", // system source
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":  "track_activities", // user source
-						"value": "1",
+						names.AttrName:  "track_activities", // user source
+						names.AttrValue: "1",
 					}),
 				),
 			},

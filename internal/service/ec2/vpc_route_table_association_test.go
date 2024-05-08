@@ -37,8 +37,8 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, names.AttrID),
 				),
 			},
 			{
@@ -70,16 +70,16 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, names.AttrID),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnetChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, names.AttrID),
 				),
 			},
 		},
@@ -104,8 +104,8 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
 			},
 			{
@@ -137,16 +137,16 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gatewayChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
 				),
 			},
 		},

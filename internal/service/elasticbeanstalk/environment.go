@@ -39,7 +39,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 func settingSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,7 +51,7 @@ func settingSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -110,7 +110,7 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +129,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -152,7 +152,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -166,7 +166,7 @@ func ResourceEnvironment() *schema.Resource {
 			"poll_interval": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:gomnd
+				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:mnd // these are the limits set by AWS
 			},
 			"queues": {
 				Type:     schema.TypeList,
@@ -223,7 +223,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
@@ -231,7 +231,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v := d.Get("description"); v.(string) != "" {
+	if v := d.Get(names.AttrDescription); v.(string) != "" {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -341,7 +341,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("application", applicationName)
 	arn := aws.ToString(env.EnvironmentArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
 	}
@@ -358,7 +358,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("cname_prefix", "")
 	}
-	d.Set("description", env.Description)
+	d.Set(names.AttrDescription, env.Description)
 	d.Set("endpoint_url", env.EndpointURL)
 	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instances: %s", err)
@@ -369,7 +369,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
 	}
-	d.Set("name", environmentName)
+	d.Set(names.AttrName, environmentName)
 	d.Set("platform_arn", env.PlatformArn)
 	if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
@@ -390,7 +390,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if optionSetting.OptionName != nil {
-			m["name"] = aws.ToString(optionSetting.OptionName)
+			m[names.AttrName] = aws.ToString(optionSetting.OptionName)
 		}
 
 		if aws.ToString(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
@@ -400,11 +400,11 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		if value := aws.ToString(optionSetting.Value); value != "" {
 			switch aws.ToString(optionSetting.OptionName) {
 			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), value)
+				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), value)
 			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(value)
+				m[names.AttrValue] = sortValues(value)
 			default:
-				m["value"] = value
+				m[names.AttrValue] = value
 			}
 		}
 
@@ -453,8 +453,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	opTime := time.Now()
 
-	if d.HasChangesExcept("tags", "tags_all", "poll_interval", "wait_for_ready_timeout") {
-		if d.HasChange("tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "poll_interval", "wait_for_ready_timeout") {
+		if d.HasChange(names.AttrTagsAll) {
 			if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) tags update: %s", d.Id(), err)
 			}
@@ -464,8 +464,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			EnvironmentId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("platform_arn") {
@@ -785,12 +785,12 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 func optionSettingValueHash(v interface{}) int {
 	rd := v.(map[string]interface{})
 	namespace := rd["namespace"].(string)
-	optionName := rd["name"].(string)
+	optionName := rd[names.AttrName].(string)
 	var resourceName string
 	if v, ok := rd["resource"].(string); ok {
 		resourceName = v
 	}
-	value, _ := rd["value"].(string)
+	value, _ := rd[names.AttrValue].(string)
 	value, _ = structure.NormalizeJsonString(value)
 	hk := fmt.Sprintf("%s:%s%s=%s", namespace, optionName, resourceName, sortValues(value))
 	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
@@ -800,7 +800,7 @@ func optionSettingValueHash(v interface{}) int {
 func optionSettingKeyHash(v interface{}) int {
 	rd := v.(map[string]interface{})
 	namespace := rd["namespace"].(string)
-	optionName := rd["name"].(string)
+	optionName := rd[names.AttrName].(string)
 	var resourceName string
 	if v, ok := rd["resource"].(string); ok {
 		resourceName = v
@@ -823,8 +823,8 @@ func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting 
 		for _, setting := range s.List() {
 			optionSetting := awstypes.ConfigurationOptionSetting{
 				Namespace:  aws.String(setting.(map[string]interface{})["namespace"].(string)),
-				OptionName: aws.String(setting.(map[string]interface{})["name"].(string)),
-				Value:      aws.String(setting.(map[string]interface{})["value"].(string)),
+				OptionName: aws.String(setting.(map[string]interface{})[names.AttrName].(string)),
+				Value:      aws.String(setting.(map[string]interface{})[names.AttrValue].(string)),
 			}
 			if aws.ToString(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" {
 				if v, ok := setting.(map[string]interface{})["resource"].(string); ok && v != "" {

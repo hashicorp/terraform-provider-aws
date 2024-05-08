@@ -27,7 +27,7 @@ func TestAccCloudFormationExportDataSource_basic(t *testing.T) {
 				Config:                    testAccExportDataSourceConfig_staticValue(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "value", "waiter"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrValue, "waiter"),
 				),
 			},
 		},
@@ -49,8 +49,8 @@ func TestAccCloudFormationExportDataSource_resourceReference(t *testing.T) {
 				Config:                    testAccExportDataSourceConfig_resourceReference(rName),
 				PreventPostDestroyRefresh: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "exporting_stack_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "value", resourceName, "outputs.MyVpcId"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "exporting_stack_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, resourceName, "outputs.MyVpcId"),
 				),
 			},
 		},

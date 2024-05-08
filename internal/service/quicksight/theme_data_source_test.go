@@ -31,7 +31,7 @@ func TestAccQuickSightThemeDataSource_basic(t *testing.T) {
 			{
 				Config: testAccThemeDataSourceConfig_basic(rId, rName, themeId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.colors.0", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.min_max_gradient.0", "#FFFFFF"),
@@ -62,7 +62,7 @@ func TestAccQuickSightThemeDataSource_fullConfig(t *testing.T) {
 			{
 				Config: testAccThemeDataSourceConfig_fullConfig(rId, rName, themeId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.colors.0", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.min_max_gradient.0", "#FFFFFF"),

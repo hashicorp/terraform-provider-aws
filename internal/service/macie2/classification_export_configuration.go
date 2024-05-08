@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_classification_export_configuration")
@@ -44,7 +45,7 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -177,7 +178,7 @@ func expandClassificationExportConfiguration(tfMap map[string]interface{}) *maci
 		apiObject.KeyPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["kms_key_arn"].(string); ok {
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok {
 		apiObject.KmsKeyArn = aws.String(v)
 	}
 
@@ -200,7 +201,7 @@ func flattenClassificationExportConfigurationS3DestinationResult(apiObject *maci
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
-		tfMap["kms_key_arn"] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyARN] = aws.StringValue(v)
 	}
 
 	return tfMap

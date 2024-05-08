@@ -52,7 +52,7 @@ func resourceLustreFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,7 +147,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 512000),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -190,7 +190,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,7 +250,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				Default:      fsx.StorageTypeSsd,
 				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -260,7 +260,7 @@ func resourceLustreFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -308,7 +308,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:     aws.String(d.Get("storage_type").(string)),
-		SubnetIds:       flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
@@ -317,7 +317,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
 		StorageType: aws.String(d.Get("storage_type").(string)),
-		SubnetIds:   flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		SubnetIds:   flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -372,7 +372,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Applicable only for TypePersistent1 and TypePersistent2.
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		inputC.KmsKeyId = aws.String(v.(string))
 		inputB.KmsKeyId = aws.String(v.(string))
 	}
@@ -452,7 +452,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 		lustreConfig.DataRepositoryConfiguration = &fsx.DataRepositoryConfiguration{}
 	}
 
-	d.Set("arn", filesystem.ResourceARN)
+	d.Set(names.AttrARN, filesystem.ResourceARN)
 	d.Set("auto_import_policy", lustreConfig.DataRepositoryConfiguration.AutoImportPolicy)
 	d.Set("automatic_backup_retention_days", lustreConfig.AutomaticBackupRetentionDays)
 	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
@@ -465,21 +465,21 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
 	d.Set("import_path", lustreConfig.DataRepositoryConfiguration.ImportPath)
 	d.Set("imported_file_chunk_size", lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
-	d.Set("kms_key_id", filesystem.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	if err := d.Set("log_configuration", flattenLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
 	d.Set("mount_name", lustreConfig.MountName)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set("owner_id", filesystem.OwnerId)
+	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
 	if err := d.Set("root_squash_configuration", flattenLustreRootSquashConfiguration(lustreConfig.RootSquashConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting root_squash_configuration: %s", err)
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
-	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	d.Set("vpc_id", filesystem.VpcId)
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
 
 	setTagsOut(ctx, filesystem.Tags)
@@ -491,7 +491,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileSystemId:        aws.String(d.Id()),

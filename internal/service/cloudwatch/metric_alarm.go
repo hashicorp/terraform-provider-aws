@@ -72,7 +72,7 @@ func resourceMetricAlarm() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,7 +147,7 @@ func resourceMetricAlarm() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -383,7 +383,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("alarm_actions", alarm.AlarmActions)
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
-	d.Set("arn", alarm.AlarmArn)
+	d.Set(names.AttrARN, alarm.AlarmArn)
 	d.Set("comparison_operator", alarm.ComparisonOperator)
 	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
 	if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
@@ -419,7 +419,7 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := expandPutMetricAlarmInput(ctx, d)
 
 		_, err := conn.PutMetricAlarm(ctx, input)
@@ -570,7 +570,7 @@ func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{}
 		tfMap := map[string]interface{}{
 			"account_id":  aws.ToString(apiObject.AccountId),
 			"expression":  aws.ToString(apiObject.Expression),
-			"id":          aws.ToString(apiObject.Id),
+			names.AttrID:  aws.ToString(apiObject.Id),
 			"label":       aws.ToString(apiObject.Label),
 			"return_data": aws.ToBool(apiObject.ReturnData),
 		}
@@ -618,7 +618,7 @@ func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
 			continue
 		}
 
-		id := tfMap["id"].(string)
+		id := tfMap[names.AttrID].(string)
 		if id == "" {
 			continue
 		}

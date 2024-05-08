@@ -37,7 +37,7 @@ func ResourceSchema() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceSchema() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -59,7 +59,7 @@ func ResourceSchema() *schema.Resource {
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -75,13 +75,13 @@ func ResourceSchema() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(type_Values(), true),
 			},
 
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,17 +102,17 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	registryName := d.Get("registry_name").(string)
 	input := &schemas.CreateSchemaInput{
 		Content:      aws.String(d.Get("content").(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
 		Tags:         getTagsIn(ctx),
-		Type:         aws.String(d.Get("type").(string)),
+		Type:         aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -152,18 +152,18 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Schema (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.SchemaArn)
+	d.Set(names.AttrARN, output.SchemaArn)
 	d.Set("content", output.Content)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	if output.LastModified != nil {
 		d.Set("last_modified", aws.TimeValue(output.LastModified).Format(time.RFC3339))
 	} else {
 		d.Set("last_modified", nil)
 	}
-	d.Set("name", output.SchemaName)
+	d.Set(names.AttrName, output.SchemaName)
 	d.Set("registry_name", registryName)
-	d.Set("type", output.Type)
-	d.Set("version", output.SchemaVersion)
+	d.Set(names.AttrType, output.Type)
+	d.Set(names.AttrVersion, output.SchemaVersion)
 	if output.VersionCreatedDate != nil {
 		d.Set("version_created_date", aws.TimeValue(output.VersionCreatedDate).Format(time.RFC3339))
 	} else {
@@ -177,7 +177,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	if d.HasChanges("content", "description", "type") {
+	if d.HasChanges("content", names.AttrDescription, names.AttrType) {
 		name, registryName, err := SchemaParseResourceID(d.Id())
 
 		if err != nil {
@@ -189,13 +189,13 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			SchemaName:   aws.String(name),
 		}
 
-		if d.HasChanges("content", "type") {
+		if d.HasChanges("content", names.AttrType) {
 			input.Content = aws.String(d.Get("content").(string))
-			input.Type = aws.String(d.Get("type").(string))
+			input.Type = aws.String(d.Get(names.AttrType).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Schemas Schema: %s", input)

@@ -32,7 +32,7 @@ func TestAccLocationPlaceIndexDataSource_indexName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source", resourceName, "data_source"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source_configuration.#", resourceName, "data_source_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source_configuration.0.intended_use", resourceName, "data_source_configuration.0.intended_use"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "index_arn", resourceName, "index_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "index_name", resourceName, "index_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),

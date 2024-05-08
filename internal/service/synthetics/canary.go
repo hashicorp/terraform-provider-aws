@@ -46,7 +46,7 @@ func ResourceCanary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceCanary() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EncryptionMode](),
 									},
-									"kms_key_arn": {
+									names.AttrKMSKeyARN: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
@@ -109,7 +109,7 @@ func ResourceCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -202,7 +202,7 @@ func ResourceCanary() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -249,12 +249,12 @@ func ResourceCanary() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -276,7 +276,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &synthetics.CreateCanaryInput{
 		ArtifactS3Location: aws.String(d.Get("artifact_s3_location").(string)),
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
@@ -382,16 +382,16 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("canary:%s", aws.ToString(canary.Name)),
 	}.String()
-	d.Set("arn", canaryArn)
+	d.Set(names.AttrARN, canaryArn)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
 	d.Set("engine_arn", canary.EngineArn)
 	d.Set("execution_role_arn", canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
-	d.Set("name", canary.Name)
+	d.Set(names.AttrName, canary.Name)
 	d.Set("runtime_version", canary.RuntimeVersion)
 	d.Set("source_location_arn", canary.Code.SourceLocationArn)
-	d.Set("status", canary.Status.State)
+	d.Set(names.AttrStatus, canary.Status.State)
 	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 
 	if err := d.Set("vpc_config", flattenCanaryVPCConfig(canary.VpcConfig)); err != nil {
@@ -428,7 +428,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
 			Name: aws.String(d.Id()),
 		}
@@ -480,7 +480,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.ExecutionRoleArn = aws.String(n.(string))
 		}
 
-		status := d.Get("status").(string)
+		status := d.Get(names.AttrStatus).(string)
 		if status == string(awstypes.CanaryStateRunning) {
 			if err := stopCanary(ctx, d.Id(), conn); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Synthetics Canary (%s): %s", d.Id(), err)
@@ -511,7 +511,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("start_canary") {
-		status := d.Get("status").(string)
+		status := d.Get(names.AttrStatus).(string)
 		if d.Get("start_canary").(bool) {
 			if status != string(awstypes.CanaryStateRunning) {
 				if err := startCanary(ctx, d.Id(), conn); err != nil {
@@ -534,7 +534,7 @@ func resourceCanaryDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
-	if status := d.Get("status").(string); status == string(awstypes.CanaryStateRunning) {
+	if status := d.Get(names.AttrStatus).(string); status == string(awstypes.CanaryStateRunning) {
 		if err := stopCanary(ctx, d.Id(), conn); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting Synthetics Canary (%s): %s", d.Id(), err)
 		}
@@ -631,7 +631,7 @@ func expandCanaryS3EncryptionConfig(l []interface{}) *awstypes.S3EncryptionConfi
 		config.EncryptionMode = awstypes.EncryptionMode(v)
 	}
 
-	if v, ok := m["kms_key_arn"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyARN].(string); ok && v != "" {
 		config.KmsKeyArn = aws.String(v)
 	}
 
@@ -650,7 +650,7 @@ func flattenCanaryS3EncryptionConfig(config *awstypes.S3EncryptionConfig) []inte
 	}
 
 	if config.KmsKeyArn != nil {
-		m["kms_key_arn"] = aws.ToString(config.KmsKeyArn)
+		m[names.AttrKMSKeyARN] = aws.ToString(config.KmsKeyArn)
 	}
 
 	return []interface{}{m}
@@ -737,9 +737,9 @@ func flattenCanaryVPCConfig(canaryVpcOutput *awstypes.VpcConfigOutput) []interfa
 	}
 
 	m := map[string]interface{}{
-		"subnet_ids":         flex.FlattenStringValueSet(canaryVpcOutput.SubnetIds),
+		names.AttrSubnetIDs:  flex.FlattenStringValueSet(canaryVpcOutput.SubnetIds),
 		"security_group_ids": flex.FlattenStringValueSet(canaryVpcOutput.SecurityGroupIds),
-		"vpc_id":             aws.ToString(canaryVpcOutput.VpcId),
+		names.AttrVPCID:      aws.ToString(canaryVpcOutput.VpcId),
 	}
 
 	return []interface{}{m}
@@ -753,7 +753,7 @@ func expandCanaryVPCConfig(l []interface{}) *awstypes.VpcConfigInput {
 	m := l[0].(map[string]interface{})
 
 	codeConfig := &awstypes.VpcConfigInput{
-		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
 	}
 

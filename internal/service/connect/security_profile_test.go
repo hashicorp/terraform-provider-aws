@@ -37,12 +37,12 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "description", "Created"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Created"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -56,12 +56,12 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -87,12 +87,12 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "description", "TestPermissionsUpdate"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TestPermissionsUpdate"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -107,12 +107,12 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				Config: testAccSecurityProfileConfig_permissions(rName, rName2, "TestPermissionsUpdate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "description", "TestPermissionsUpdate"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TestPermissionsUpdate"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -126,7 +126,6 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 	var v connect.DescribeSecurityProfileOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "tags"
 
 	resourceName := "aws_connect_security_profile.test"
 
@@ -137,7 +136,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckSecurityProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityProfileConfig_basic(rName, rName2, description),
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -150,7 +149,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSecurityProfileConfig_tags(rName, rName2, description),
+				Config: testAccSecurityProfileConfig_tags(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -159,7 +158,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSecurityProfileConfig_tagsUpdated(rName, rName2, description),
+				Config: testAccSecurityProfileConfig_tagsUpdated(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
