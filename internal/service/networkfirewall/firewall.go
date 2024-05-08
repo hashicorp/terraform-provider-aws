@@ -575,7 +575,7 @@ func flattenSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
 	for k, v := range s {
 		m := map[string]interface{}{
 			names.AttrAvailabilityZone: k,
-			"attachment":        flattenSyncStateAttachment(v.Attachment),
+			"attachment":               flattenSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}

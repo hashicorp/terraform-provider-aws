@@ -319,7 +319,7 @@ func flattenDataSourceSyncStates(state map[string]*networkfirewall.SyncState) []
 	for k, v := range state {
 		m := map[string]interface{}{
 			names.AttrAvailabilityZone: k,
-			"attachment":        flattenDataSourceSyncStateAttachment(v.Attachment),
+			"attachment":               flattenDataSourceSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}
