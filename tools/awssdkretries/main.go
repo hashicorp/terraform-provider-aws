@@ -23,7 +23,7 @@ func main() {
 		MinRetryDelay:    client.DefaultRetryerMinRetryDelay,
 		MinThrottleDelay: client.DefaultRetryerMinThrottleDelay,
 		MaxRetryDelay:    maxBackoff,
-		MaxThrottleDelay: client.DefaultRetryerMaxThrottleDelay,
+		MaxThrottleDelay: maxBackoff,
 	}
 
 	err := awserr.New("ThrottlingException", "Rate exceeded", nil)
