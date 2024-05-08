@@ -95,7 +95,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 					},
 				},
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -209,7 +209,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("attachment", nil)
 	}
-	d.Set("availability_zone", eni.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, eni.AvailabilityZone)
 	d.Set(names.AttrDescription, eni.Description)
 	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)

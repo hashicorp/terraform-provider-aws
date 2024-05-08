@@ -34,7 +34,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,7 +140,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
-	d.Set("availability_zone", volume.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set("encrypted", volume.Encrypted)
 	d.Set("iops", volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)

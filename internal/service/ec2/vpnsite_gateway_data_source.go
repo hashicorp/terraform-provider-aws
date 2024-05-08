@@ -45,7 +45,7 @@ func dataSourceVPNGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -80,7 +80,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	input.Filters = newAttributeFilterList(
 		map[string]string{
 			names.AttrState:     d.Get(names.AttrState).(string),
-			"availability-zone": d.Get("availability_zone").(string),
+			"availability-zone": d.Get(names.AttrAvailabilityZone).(string),
 		},
 	)
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
@@ -132,7 +132,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 			break
 		}
 	}
-	d.Set("availability_zone", vgw.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, vgw.AvailabilityZone)
 	d.Set(names.AttrState, vgw.State)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

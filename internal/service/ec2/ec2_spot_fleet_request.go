@@ -125,7 +125,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -399,7 +399,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -1212,7 +1212,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	}
 
 	placement := new(ec2.SpotPlacement)
-	if v, ok := d["availability_zone"]; ok {
+	if v, ok := d[names.AttrAvailabilityZone]; ok {
 		placement.AvailabilityZone = aws.String(v.(string))
 		opts.Placement = placement
 	}
@@ -1534,7 +1534,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *ec2.LaunchTemp
 
 	apiObject := &ec2.LaunchTemplateOverrides{}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -1920,7 +1920,7 @@ func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, r
 	}
 
 	if l.Placement != nil {
-		m["availability_zone"] = aws.StringValue(l.Placement.AvailabilityZone)
+		m[names.AttrAvailabilityZone] = aws.StringValue(l.Placement.AvailabilityZone)
 	}
 
 	if l.SubnetId != nil {
@@ -2093,7 +2093,7 @@ func hashLaunchSpecification(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
-	if v, ok := m["availability_zone"].(string); ok && v != "" {
+	if v, ok := m[names.AttrAvailabilityZone].(string); ok && v != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := m["subnet_id"].(string); ok && v != "" {
@@ -2182,7 +2182,7 @@ func flattenLaunchTemplateOverrides(apiObject *ec2.LaunchTemplateOverrides) map[
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.InstanceRequirements; v != nil {

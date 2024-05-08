@@ -154,7 +154,7 @@ func ResourceFleet() *schema.Resource {
 							MaxItems: 300,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -1063,7 +1063,7 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.FleetLaunchTemplateOverridesRequest{}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -1175,7 +1175,7 @@ func expandPlacement(tfMap map[string]interface{}) *ec2.Placement {
 		apiObject.Affinity = aws.String(v)
 	}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -1433,7 +1433,7 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.InstanceRequirements; v != nil {

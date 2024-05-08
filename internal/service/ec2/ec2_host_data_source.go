@@ -42,7 +42,7 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, arn)
 	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
-	d.Set("availability_zone", host.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, host.AvailabilityZone)
 	d.Set("cores", host.HostProperties.Cores)
 	d.Set("host_id", host.HostId)
 	d.Set("host_recovery", host.HostRecovery)

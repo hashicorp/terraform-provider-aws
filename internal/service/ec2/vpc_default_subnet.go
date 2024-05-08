@@ -67,7 +67,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -167,7 +167,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	availabilityZone := d.Get("availability_zone").(string)
+	availabilityZone := d.Get(names.AttrAvailabilityZone).(string)
 	input := &ec2.DescribeSubnetsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
