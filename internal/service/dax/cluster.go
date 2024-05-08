@@ -127,7 +127,7 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -214,7 +214,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	nodeType := d.Get("node_type").(string)
 	numNodes := int32(d.Get("replication_factor").(int))
 	subnetGroupName := d.Get("subnet_group_name").(string)
-	securityIdSet := d.Get("security_group_ids").(*schema.Set)
+	securityIdSet := d.Get(names.AttrSecurityGroupIDs).(*schema.Set)
 	securityIds := flex.ExpandStringSet(securityIdSet)
 	input := &dax.CreateClusterInput{
 		ClusterName:       aws.String(clusterName),
@@ -346,7 +346,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
-	d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups))
 
 	if c.ParameterGroup != nil {
 		d.Set("parameter_group_name", c.ParameterGroup.ParameterGroupName)
@@ -386,8 +386,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		requestUpdate = true
 	}
 
-	if d.HasChange("security_group_ids") {
-		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
+	if d.HasChange(names.AttrSecurityGroupIDs) {
+		if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
 			req.SecurityGroupIds = flex.ExpandStringValueSet(attr)
 			requestUpdate = true
 		}
