@@ -480,9 +480,9 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 
 	for _, node := range sortedNodes {
 		nodeData = append(nodeData, map[string]interface{}{
-			names.AttrID:        aws.ToString(node.NodeId),
-			"address":           aws.ToString(node.Endpoint.Address),
-			names.AttrPort:      node.Endpoint.Port,
+			names.AttrID:               aws.ToString(node.NodeId),
+			"address":                  aws.ToString(node.Endpoint.Address),
+			names.AttrPort:             node.Endpoint.Port,
 			names.AttrAvailabilityZone: aws.ToString(node.AvailabilityZone),
 		})
 	}
