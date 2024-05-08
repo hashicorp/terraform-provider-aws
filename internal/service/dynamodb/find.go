@@ -21,7 +21,7 @@ func findTableByName(ctx context.Context, conn *dynamodb.Client, name string, op
 
 	output, err := conn.DescribeTable(ctx, input, optFns...)
 
-	if errs.IsA[*awstypes.ReplicaNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -62,7 +62,7 @@ func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName s
 
 	output, err := conn.DescribeContinuousBackups(ctx, input)
 
-	if errs.IsA[*awstypes.ReplicaNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -87,7 +87,7 @@ func findTTLByTableName(ctx context.Context, conn *dynamodb.Client, tableName st
 
 	output, err := conn.DescribeTimeToLive(ctx, input)
 
-	if errs.IsA[*awstypes.ReplicaNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -112,7 +112,7 @@ func findImportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*a
 
 	output, err := conn.DescribeImport(ctx, input)
 
-	if errs.IsA[*awstypes.ReplicaNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
