@@ -80,7 +80,7 @@ func resourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntAtMost(35),
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -416,7 +416,7 @@ func resourceCluster() *schema.Resource {
 				}
 
 				if diff.Id() != "" {
-					if o, n := diff.GetChange("availability_zone"); !azRelocationEnabled && o.(string) != n.(string) {
+					if o, n := diff.GetChange(names.AttrAvailabilityZone); !azRelocationEnabled && o.(string) != n.(string) {
 						return errors.New("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true")
 					}
 				}
@@ -458,7 +458,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.AquaConfigurationStatus = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		inputR.AvailabilityZone = aws.String(v.(string))
 		inputC.AvailabilityZone = aws.String(v.(string))
 	}
@@ -666,7 +666,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
 	}
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
-	d.Set("availability_zone", rsc.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, rsc.AvailabilityZone)
 	if v, err := clusterAvailabilityZoneRelocationStatus(rsc); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
@@ -743,7 +743,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "multi_az", "snapshot_copy", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
+	if d.HasChangesExcept("aqua_configuration_status", names.AttrAvailabilityZone, "iam_roles", "logging", "multi_az", "snapshot_copy", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
 		input := &redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 		}
@@ -902,9 +902,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Availability Zone cannot be changed at the same time as other settings
-	if d.HasChange("availability_zone") {
+	if d.HasChange(names.AttrAvailabilityZone) {
 		input := &redshift.ModifyClusterInput{
-			AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+			AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 			ClusterIdentifier: aws.String(d.Id()),
 		}
 
