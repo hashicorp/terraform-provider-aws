@@ -303,11 +303,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -329,11 +329,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -359,11 +359,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -403,11 +403,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -419,11 +419,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -435,11 +435,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -451,11 +451,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -479,11 +479,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -495,11 +495,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
