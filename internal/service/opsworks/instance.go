@@ -142,7 +142,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -506,7 +506,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("infrastructure_class", instance.InfrastructureClass)
 	d.Set("install_updates_on_boot", instance.InstallUpdatesOnBoot)
 	d.Set("instance_profile_arn", instance.InstanceProfileArn)
-	d.Set("instance_type", instance.InstanceType)
+	d.Set(names.AttrInstanceType, instance.InstanceType)
 	d.Set("last_service_error_id", instance.LastServiceErrorId)
 	var layerIds []string
 	for _, v := range instance.LayerIds {
@@ -583,7 +583,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Architecture:         aws.String(d.Get("architecture").(string)),
 		EbsOptimized:         aws.Bool(d.Get("ebs_optimized").(bool)),
 		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		InstanceType:         aws.String(d.Get("instance_type").(string)),
+		InstanceType:         aws.String(d.Get(names.AttrInstanceType).(string)),
 		LayerIds:             flex.ExpandStringList(d.Get("layer_ids").([]interface{})),
 		StackId:              aws.String(d.Get("stack_id").(string)),
 	}
@@ -762,7 +762,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		req.Hostname = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		req.InstanceType = aws.String(v.(string))
 	}
 
