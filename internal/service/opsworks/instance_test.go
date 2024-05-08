@@ -46,7 +46,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                       // inherited from opsworks_stack_test
 					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                          // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"), // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, "names.0"), // inherited from opsworks_stack_test
 				),
 			},
 			{
