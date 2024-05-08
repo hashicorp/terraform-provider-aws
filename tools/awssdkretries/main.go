@@ -20,8 +20,6 @@ func main() {
 	v2 := retry.NewExponentialJitterBackoff(maxBackoff)
 	v1 := client.DefaultRetryer{
 		NumMaxRetries:    maxRetries,
-		MinRetryDelay:    client.DefaultRetryerMinRetryDelay,
-		MinThrottleDelay: client.DefaultRetryerMinThrottleDelay,
 		MaxRetryDelay:    maxBackoff,
 		MaxThrottleDelay: maxBackoff,
 	}
