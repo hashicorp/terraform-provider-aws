@@ -84,7 +84,7 @@ func targetParametersSchema() *schema.Schema {
 												},
 											},
 										},
-										"instance_type": {
+										names.AttrInstanceType: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -939,7 +939,7 @@ func expandBatchContainerOverrides(tfMap map[string]interface{}) *types.BatchCon
 		apiObject.Environment = expandBatchEnvironmentVariables(v)
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
@@ -1984,7 +1984,7 @@ func flattenBatchContainerOverrides(apiObject *types.BatchContainerOverrides) ma
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.ToString(v)
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.ResourceRequirements; v != nil {
