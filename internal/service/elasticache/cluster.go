@@ -68,7 +68,7 @@ func resourceCluster() *schema.Resource {
 				Default:      "true",
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -448,7 +448,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AZMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
@@ -539,7 +539,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
-	d.Set("availability_zone", c.PreferredAvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, c.PreferredAvailabilityZone)
 	if aws.StringValue(c.PreferredAvailabilityZone) == "Multiple" {
 		d.Set("az_mode", "cross-az")
 	} else {
@@ -951,7 +951,7 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			names.AttrID:        aws.StringValue(node.CacheNodeId),
 			"address":           aws.StringValue(node.Endpoint.Address),
 			names.AttrPort:      aws.Int64Value(node.Endpoint.Port),
-			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
+			names.AttrAvailabilityZone: aws.StringValue(node.CustomerAvailabilityZone),
 			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
 		})
 	}

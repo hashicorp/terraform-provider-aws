@@ -532,7 +532,7 @@ func TestAccElastiCacheCluster_multiAZInVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_elasticache_subnet_group.test", &csg),
 					testAccCheckClusterExists(ctx, "aws_elasticache_cluster.test", &ec),
-					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "availability_zone", "Multiple"),
+					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", names.AttrAvailabilityZone, "Multiple"),
 				),
 			},
 		},
