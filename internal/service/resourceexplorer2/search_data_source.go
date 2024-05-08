@@ -43,7 +43,7 @@ func (d *dataSourceSearch) Metadata(_ context.Context, req datasource.MetadataRe
 func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"query_string": schema.StringAttribute{
 				Required: true,
 			},

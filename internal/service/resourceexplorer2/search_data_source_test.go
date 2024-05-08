@@ -111,6 +111,10 @@ resource "aws_resourceexplorer2_view" "test" {
 
   name         = %[1]q
   default_view = true
+
+  included_property {
+    name = "tags"
+  }
 }
 
 data "aws_resourceexplorer2_search" "test" {
