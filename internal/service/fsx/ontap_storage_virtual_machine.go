@@ -306,7 +306,8 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
 	d.Set("uuid", storageVirtualMachine.UUID)
 
-	setTagsOut(ctx, storageVirtualMachine.Tags)
+	// SVM tags aren't set in the Describe response.
+	// setTagsOut(ctx, storageVirtualMachine.Tags)
 
 	return diags
 }
