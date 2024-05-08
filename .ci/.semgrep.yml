@@ -794,7 +794,7 @@ rules:
     patterns:
       - pattern: '"security_group_ids"'
     severity: ERROR
-    fix: "names.AttrSecurityGroupIDs"    
+    fix: "names.AttrSecurityGroupIDs"
   - id: literal-status-string-constant
     languages: [go]
     message: Use the constant `names.AttrStatus` for the string literal `status`
