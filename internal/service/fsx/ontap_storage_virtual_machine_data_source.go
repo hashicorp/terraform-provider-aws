@@ -196,6 +196,8 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
@@ -235,7 +237,15 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	d.Set("subtype", svm.Subtype)
 	d.Set("uuid", svm.UUID)
 
-	setTagsOut(ctx, svm.Tags)
+	// SVM tags aren't set in the Describe response.
+	// setTagsOut(ctx, svm.Tags)
+
+	tags := KeyValueTags(ctx, svm.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }
