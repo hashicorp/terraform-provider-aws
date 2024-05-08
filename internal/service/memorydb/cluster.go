@@ -148,7 +148,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -316,7 +316,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Port = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -413,12 +413,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			waitParameterGroupInSync = true
 		}
 
-		if d.HasChange("security_group_ids") {
+		if d.HasChange(names.AttrSecurityGroupIDs) {
 			// UpdateCluster reads null and empty slice as "no change", so once
 			// at least one security group is present, it's no longer possible
 			// to remove all of them.
 
-			v := d.Get("security_group_ids").(*schema.Set)
+			v := d.Get(names.AttrSecurityGroupIDs).(*schema.Set)
 
 			if v.Len() == 0 {
 				return sdkdiag.AppendErrorf(diags, "unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
@@ -532,7 +532,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, v := range cluster.SecurityGroups {
 		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
 	}
-	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(securityGroupIds))
 
 	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
