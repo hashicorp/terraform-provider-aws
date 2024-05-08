@@ -627,7 +627,7 @@ func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrAvailabilityZone:            aws.StringValue(apiObject.AvailabilityZone),
+		names.AttrAvailabilityZone:     aws.StringValue(apiObject.AvailabilityZone),
 		"dns_name_servers":             aws.StringValue(apiObject.DnsNameServers),
 		names.AttrKMSKeyID:             aws.StringValue(apiObject.KmsKeyId),
 		"max_capacity_units":           aws.Int64Value(apiObject.MaxCapacityUnits),
