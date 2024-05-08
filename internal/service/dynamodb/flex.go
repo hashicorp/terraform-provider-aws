@@ -17,18 +17,18 @@ import (
 )
 
 func expandTableItemAttributes(jsonStream string) (map[string]awstypes.AttributeValue, error) {
-	var apiObject map[string]attributeValue
+	var m map[string]any
 	dec := json.NewDecoder(strings.NewReader(jsonStream))
 
 	for {
-		if err := dec.Decode(&apiObject); err == io.EOF {
+		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
 			return nil, err
 		}
 	}
 
-	return tfmaps.ApplyToAllValues(apiObject, attributeValueStructToInterface), nil
+	return tfmaps.ApplyToAllValuesWithError(m, attributeFromRaw)
 }
 
 func flattenTableItemAttributes(apiObject map[string]awstypes.AttributeValue) (string, error) {
@@ -83,6 +83,7 @@ func (a attributeValue) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+/*
 func (a *attributeValue) UnmarshalJSON(b []byte) error {
 	m := map[string]any{}
 
@@ -137,4 +138,71 @@ func (a *attributeValue) UnmarshalJSON(b []byte) error {
 	*a = attributeValueInterfaceToStruct(intf)
 
 	return nil
+}
+*/
+
+func itemFromRaw(m map[string]any) (map[string]awstypes.AttributeValue, error) {
+	return tfmaps.ApplyToAllValuesWithError(m, attributeFromRaw)
+}
+
+func attributeFromRaw(v any) (awstypes.AttributeValue, error) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("unexpected raw attribute type: %T", v)
+	}
+
+	if n := len(m); n != 1 {
+		return nil, fmt.Errorf("invalid raw attribute map len: %d", n)
+	}
+
+	for k, v := range m {
+		switch k {
+		case "B":
+			v, err := itypes.Base64Decode(v.(string))
+			if err != nil {
+				return nil, err
+			}
+			return &awstypes.AttributeValueMemberB{Value: v}, nil
+		case "BOOL":
+			return &awstypes.AttributeValueMemberBOOL{Value: v.(bool)}, nil
+		case "BS":
+			v, err := tfslices.ApplyToAllWithError(v.([]any), func(v any) ([]byte, error) {
+				return itypes.Base64Decode(v.(string))
+			})
+			if err != nil {
+				return nil, err
+			}
+			return &awstypes.AttributeValueMemberBS{Value: v}, nil
+		case "L":
+			v, err := tfslices.ApplyToAllWithError(v.([]any), attributeFromRaw)
+			if err != nil {
+				return nil, err
+			}
+			return &awstypes.AttributeValueMemberL{Value: v}, nil
+		case "M":
+			v, err := tfmaps.ApplyToAllValuesWithError(v.(map[string]any), attributeFromRaw)
+			if err != nil {
+				return nil, err
+			}
+			return &awstypes.AttributeValueMemberM{Value: v}, nil
+		case "N":
+			return &awstypes.AttributeValueMemberN{Value: v.(string)}, nil
+		case "NS":
+			return &awstypes.AttributeValueMemberNS{Value: tfslices.ApplyToAll(v.([]any), func(v any) string {
+				return v.(string)
+			})}, nil
+		case "NULL":
+			return &awstypes.AttributeValueMemberNULL{Value: v.(bool)}, nil
+		case "S":
+			return &awstypes.AttributeValueMemberS{Value: v.(string)}, nil
+		case "SS":
+			return &awstypes.AttributeValueMemberSS{Value: tfslices.ApplyToAll(v.([]any), func(v any) string {
+				return v.(string)
+			})}, nil
+		default:
+			return nil, fmt.Errorf("invalid raw attribute map key: %s", k)
+		}
+	}
+
+	return nil, fmt.Errorf("unexpected raw attribute type: %T", v)
 }
