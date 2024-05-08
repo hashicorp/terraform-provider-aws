@@ -31,7 +31,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
 	d.Set("allocated_storage", instance.AllocatedStorage)
 	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("engine_version", instance.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)

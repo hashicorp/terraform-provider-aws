@@ -37,7 +37,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
@@ -182,7 +182,7 @@ func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_availabilityZone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, "names.0"),
 				),
 			},
 			{

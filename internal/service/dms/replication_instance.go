@@ -64,7 +64,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -172,7 +172,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("allocated_storage"); ok {
 		input.AllocatedStorage = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("engine_version"); ok {
@@ -227,7 +227,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("allocated_storage", instance.AllocatedStorage)
 	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("engine_version", instance.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
