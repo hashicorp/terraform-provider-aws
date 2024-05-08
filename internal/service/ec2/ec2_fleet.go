@@ -170,12 +170,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -205,12 +205,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -243,12 +243,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -302,12 +302,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -321,12 +321,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -340,12 +340,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -359,12 +359,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -392,12 +392,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -411,12 +411,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
