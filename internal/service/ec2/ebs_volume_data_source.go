@@ -9,9 +9,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,12 +92,12 @@ func DataSourceEBSVolume() *schema.Resource {
 
 func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -104,7 +105,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := FindEBSVolumes(ctx, conn, input)
+	output, err := findEBSVolumesV2(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
@@ -114,7 +115,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var volume *ec2.Volume
+	var volume awstypes.Volume
 
 	if len(output) > 1 {
 		recent := d.Get("most_recent").(bool)
@@ -130,11 +131,11 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		volume = output[0]
 	}
 
-	d.SetId(aws.StringValue(volume.VolumeId))
+	d.SetId(aws.ToString(volume.VolumeId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
@@ -159,17 +160,17 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-type volumeSort []*ec2.Volume
+type volumeSort []awstypes.Volume
 
 func (a volumeSort) Len() int      { return len(a) }
 func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a volumeSort) Less(i, j int) bool {
-	itime := aws.TimeValue(a[i].CreateTime)
-	jtime := aws.TimeValue(a[j].CreateTime)
+	itime := aws.ToTime(a[i].CreateTime)
+	jtime := aws.ToTime(a[j].CreateTime)
 	return itime.Unix() < jtime.Unix()
 }
 
-func mostRecentVolume(volumes []*ec2.Volume) *ec2.Volume {
+func mostRecentVolume(volumes []awstypes.Volume) awstypes.Volume {
 	sortedVolumes := volumes
 	sort.Sort(volumeSort(sortedVolumes))
 	return sortedVolumes[len(sortedVolumes)-1]
