@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgentAlias_basic(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -53,7 +53,7 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_disappears(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -77,7 +77,7 @@ func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_update(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	descriptionOld := "Agent Alias Before Update"
@@ -128,7 +128,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -178,7 +178,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_tags(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
