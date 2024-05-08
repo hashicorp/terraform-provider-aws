@@ -102,7 +102,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"instance_type": schema.StringAttribute{
+			names.AttrInstanceType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,20}$`), ""),
