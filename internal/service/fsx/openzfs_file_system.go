@@ -514,7 +514,8 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", openZFSConfig.WeeklyMaintenanceStartTime)
 
-	setTagsOut(ctx, filesystem.Tags)
+	// FS tags aren't set in the Describe response.
+	// setTagsOut(ctx, filesystem.Tags)
 
 	rootVolume, err := findOpenZFSVolumeByID(ctx, conn, rootVolumeID)
 
