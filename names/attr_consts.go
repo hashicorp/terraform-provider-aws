@@ -9,9 +9,11 @@ const (
 	AttrDescription      = "description"
 	AttrEnabled          = "enabled"
 	AttrID               = "id" // Should be explicitly declared only for Framework resources
+	AttrKey              = "key"
 	AttrKMSKeyARN        = "kms_key_arn"
 	AttrKMSKeyID         = "kms_key_id"
-	AttrKey              = "key"
+	AttrMax              = "max"
+	AttrMin              = "min"
 	AttrName             = "name"
 	AttrOwnerID          = "owner_id"
 	AttrParameters       = "parameters"
@@ -26,7 +28,7 @@ const (
 	AttrTagsAll          = "tags_all"
 	AttrTimeouts         = "timeouts" // Should be explicitly declared only for Framework resources
 	AttrType             = "type"
-	AttrVPCID            = "vpc_id"
 	AttrValue            = "value"
 	AttrVersion          = "version"
+	AttrVPCID            = "vpc_id"
 )

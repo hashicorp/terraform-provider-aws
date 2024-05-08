@@ -734,7 +734,7 @@ rules:
     patterns:
       - pattern: '"min"'
     severity: ERROR
-    fix: "names.AttrMin"        
+    fix: "names.AttrMin"
   - id: literal-name-string-constant
     languages: [go]
     message: Use the constant `names.AttrName` for the string literal `name`
