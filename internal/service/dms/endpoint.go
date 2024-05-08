@@ -499,6 +499,17 @@ func ResourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"resource_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 31),
+					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+				),
+			},
 			"s3_settings": {
 				Description:      "This argument is deprecated and will be removed in a future version; use aws_dms_s3_endpoint instead",
 				Type:             schema.TypeList,
@@ -1012,6 +1023,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
 		expandTopLevelConnectionInfo(d, input)
+	}
+
+	if v, ok := d.GetOk("resource_identifier"); ok {
+		input.ResourceIdentifier = aws.String(v.(string))
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),

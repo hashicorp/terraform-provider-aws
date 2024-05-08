@@ -124,6 +124,7 @@ This resource supports the following arguments:
     - Cannot contain two consecutive hyphens.
 
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
+* `resource_identifier` - (Optional) A friendly name for the resource identifier at the end of the ReplicationInstanceArn response parameter that is returned in the created ReplicationInstance object.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 

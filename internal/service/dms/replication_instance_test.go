@@ -438,6 +438,34 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 	})
 }
 
+func TestAccDMSReplicationInstance_resourceIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationInstanceConfig_resourceIdentifier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_identifier", "identifier"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+		},
+	})
+}
+
 func TestAccDMSReplicationInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
@@ -721,6 +749,20 @@ resource "aws_dms_replication_instance" "test" {
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
 `, replicationInstanceClass, rName))
+}
+
+func testAccReplicationInstanceConfig_resourceIdentifier(rName string) string {
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_dms_replication_instance" "test" {
+  apply_immediately           = true
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
+  resource_identifier         = "identifier"
+}
+`, rName))
 }
 
 func testAccReplicationInstanceConfig_tags1(rName, key1, value1 string) string {

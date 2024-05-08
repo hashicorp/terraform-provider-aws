@@ -2206,6 +2206,29 @@ func TestAccDMSEndpoint_Redshift_SSEKMSKeyId(t *testing.T) {
 	})
 }
 
+func testAccDMSEndpoint_resourceIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceIdentifier := "test-identifier"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_resourceIdentifier(rName, resourceIdentifier),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_identifier", resourceIdentifier),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4679,6 +4702,23 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 `, rName))
+}
+
+func testAccEndpointConfig_resourceIdentifier(rName string, identifier string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_basic(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id         = %[1]q
+  endpoint_type       = "source"
+  engine_name         = "mysql"
+  server_name         = "tftest"
+  port                = 3306
+  username            = "tftest"
+  password            = "tftest"
+  database_name       = "tftest"
+  ssl_mode            = "none"
+  resource_identifier = %[2]q
+}
+`, rName, identifier))
 }
 
 func testAccEndpointConfig_pauseReplicationTasks(rName string, pause bool) string {
