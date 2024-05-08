@@ -10,7 +10,7 @@ const (
 	AttrDescription      = "description"
 	AttrEnabled          = "enabled"
 	AttrID               = "id" // Should be explicitly declared only for Framework resources
-	AttrInstanceType = "instance_type"
+	AttrInstanceType     = "instance_type"
 	AttrKMSKeyARN        = "kms_key_arn"
 	AttrKMSKeyID         = "kms_key_id"
 	AttrKey              = "key"
