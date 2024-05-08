@@ -57,7 +57,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backup_target", "region"),
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),

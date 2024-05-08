@@ -135,7 +135,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -762,7 +762,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			diags = sdkdiag.AppendWarningf(diags, `"allocated_storage" was ignored for DB Instance (%s) because a replica inherits the primary's allocated_storage and cannot be changed at creation.`, identifier)
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -978,7 +978,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Tags:                    getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1143,7 +1143,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			// InvalidParameterCombination: No modifications were requested
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1394,7 +1394,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.UseLatestRestorableTime = aws.Bool(v)
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1578,7 +1578,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Tags:                    getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1836,7 +1836,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", v.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_target", v.BackupTarget)
 	d.Set("backup_window", v.PreferredBackupWindow)
