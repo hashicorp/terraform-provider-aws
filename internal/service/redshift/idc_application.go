@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_redshift_idc_application", name="IDC Application")
 // @Tags(identifierAttribute="arn")
-func ResourceIdcApplication() *schema.Resource {
+func resourceIdcApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdcApplicationCreate,
 		ReadWithoutTimeout:   resourceIdcApplicationRead,
