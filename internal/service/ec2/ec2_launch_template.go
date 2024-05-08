@@ -613,9 +613,9 @@ func ResourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"instance_type"},
+				ConflictsWith: []string{names.AttrInstanceType},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"instance_requirements"},
@@ -1076,7 +1076,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"instance_initiated_shutdown_behavior",
 		"instance_market_options",
 		"instance_requirements",
-		"instance_type",
+		names.AttrInstanceType,
 		"kernel_id",
 		"key_name",
 		"license_specification",
@@ -1166,7 +1166,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 	}
 
 	var instanceType string
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		v := v.(string)
 
 		instanceType = v
@@ -2284,7 +2284,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	} else {
 		d.Set("instance_requirements", nil)
 	}
-	d.Set("instance_type", instanceType)
+	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("kernel_id", apiObject.KernelId)
 	d.Set("key_name", apiObject.KeyName)
 	if err := d.Set("license_specification", flattenLaunchTemplateLicenseConfigurations(apiObject.LicenseSpecifications)); err != nil {

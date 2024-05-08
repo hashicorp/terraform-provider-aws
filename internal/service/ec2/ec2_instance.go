@@ -458,11 +458,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				AtLeastOneOf: []string{"instance_type", "launch_template"},
+				AtLeastOneOf: []string{names.AttrInstanceType, "launch_template"},
 			},
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
@@ -492,7 +492,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems:     1,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"ami", "instance_type", "launch_template"},
+				AtLeastOneOf: []string{"ami", names.AttrInstanceType, "launch_template"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrID: {
@@ -901,16 +901,16 @@ func ResourceInstance() *schema.Resource {
 			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
-			customdiff.ForceNewIf("instance_type", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf(names.AttrInstanceType, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-				_, ok := diff.GetOk("instance_type")
+				_, ok := diff.GetOk(names.AttrInstanceType)
 
-				if diff.Id() == "" || !diff.HasChange("instance_type") || !ok {
+				if diff.Id() == "" || !diff.HasChange(names.AttrInstanceType) || !ok {
 					return false
 				}
 
-				o, n := diff.GetChange("instance_type")
+				o, n := diff.GetChange(names.AttrInstanceType)
 				it1, err := FindInstanceTypeByName(ctx, conn, o.(string))
 				if err != nil {
 					return false
@@ -1191,7 +1191,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instanceType)
+	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
 	d.Set("public_ip", instance.PublicIpAddress)
@@ -1774,14 +1774,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChanges("instance_type", "user_data", "user_data_base64") && !d.IsNewResource() {
+	if d.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") && !d.IsNewResource() {
 		// For each argument change, we start and stop the instance
 		// to account for behaviors occurring outside terraform.
 		// Only one attribute can be modified at a time, else we get
 		// "InvalidParameterCombination: Fields for multiple attribute types specified"
-		if d.HasChange("instance_type") {
+		if d.HasChange(names.AttrInstanceType) {
 			if !d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") {
-				instanceType := d.Get("instance_type").(string)
+				instanceType := d.Get(names.AttrInstanceType).(string)
 				input := &ec2.ModifyInstanceAttributeInput{
 					InstanceId: aws.String(d.Id()),
 					InstanceType: &ec2.AttributeValue{
@@ -2066,8 +2066,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange("instance_type") {
-					instanceType := d.Get("instance_type").(string)
+				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange(names.AttrInstanceType) {
+					instanceType := d.Get(names.AttrInstanceType).(string)
 					input := &ec2.ModifyInstanceAttributeInput{
 						InstanceId: aws.String(d.Id()),
 						InstanceType: &ec2.AttributeValue{
@@ -2895,7 +2895,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.ImageID = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		opts.InstanceType = aws.String(v.(string))
 	}
 
@@ -2916,7 +2916,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	instanceType := d.Get("instance_type").(string)
+	instanceType := d.Get(names.AttrInstanceType).(string)
 
 	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {

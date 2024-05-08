@@ -283,7 +283,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("spot_type", request.Type)
 	d.Set("spot_price", request.SpotPrice)
 	d.Set("key_name", request.LaunchSpecification.KeyName)
-	d.Set("instance_type", request.LaunchSpecification.InstanceType)
+	d.Set(names.AttrInstanceType, request.LaunchSpecification.InstanceType)
 	d.Set("ami", request.LaunchSpecification.ImageId)
 
 	return diags

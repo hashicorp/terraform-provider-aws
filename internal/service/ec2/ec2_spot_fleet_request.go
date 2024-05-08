@@ -230,7 +230,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -715,7 +715,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 											},
 										},
 									},
-									"instance_type": {
+									names.AttrInstanceType: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -1207,7 +1207,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 
 	opts := &ec2.SpotFleetLaunchSpecification{
 		ImageId:      aws.String(d["ami"].(string)),
-		InstanceType: aws.String(d["instance_type"].(string)),
+		InstanceType: aws.String(d[names.AttrInstanceType].(string)),
 		SpotPrice:    aws.String(d["spot_price"].(string)),
 	}
 
@@ -1542,7 +1542,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *ec2.LaunchTemp
 		apiObject.InstanceRequirements = expandInstanceRequirements(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
@@ -1888,7 +1888,7 @@ func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, r
 	}
 
 	if l.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(l.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(l.InstanceType)
 	}
 
 	if l.SpotPrice != nil {
@@ -2099,7 +2099,7 @@ func hashLaunchSpecification(v interface{}) int {
 	if v, ok := m["subnet_id"].(string); ok && v != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
 	return create.StringHashcode(buf.String())
 }
@@ -2190,7 +2190,7 @@ func flattenLaunchTemplateOverrides(apiObject *ec2.LaunchTemplateOverrides) map[
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Priority; v != nil {

@@ -50,7 +50,7 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "instance_initiated_shutdown_behavior", dataSourceName, "instance_initiated_shutdown_behavior"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_market_options.#", dataSourceName, "instance_market_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_requirements.#", dataSourceName, "instance_requirements.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_type", dataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceType, dataSourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(resourceName, "kernel_id", dataSourceName, "kernel_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_name", dataSourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "latest_version", dataSourceName, "latest_version"),
