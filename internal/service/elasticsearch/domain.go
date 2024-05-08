@@ -257,7 +257,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  elasticsearch.ESPartitionInstanceTypeM3MediumElasticsearch,
@@ -1107,7 +1107,7 @@ func expandClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchC
 	if v, ok := m["instance_count"]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := m["instance_type"]; ok {
+	if v, ok := m[names.AttrInstanceType]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
 
@@ -1192,7 +1192,7 @@ func flattenClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[str
 		m["instance_count"] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(c.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)
 	}
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)
