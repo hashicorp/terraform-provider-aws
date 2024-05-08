@@ -150,7 +150,7 @@ func waitGSIDeleted(ctx context.Context, conn *dynamodb.Client, tableName, index
 	return nil, err
 }
 
-func waitPITRUpdated(ctx context.Context, conn *dynamodb.Client, tableName string, toEnable bool, timeout time.Duration) (*awstypes.PointInTimeRecoveryDescription, error) {
+func waitPITRUpdated(ctx context.Context, conn *dynamodb.Client, tableName string, toEnable bool, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.PointInTimeRecoveryDescription, error) {
 	var pending []string
 	target := enum.Slice(awstypes.PointInTimeRecoveryStatusDisabled)
 
@@ -165,7 +165,7 @@ func waitPITRUpdated(ctx context.Context, conn *dynamodb.Client, tableName strin
 	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    statusPITR(ctx, conn, tableName),
+		Refresh:    statusPITR(ctx, conn, tableName, optFns...),
 		Timeout:    max(pitrUpdateTimeout, timeout),
 		MinTimeout: 15 * time.Second,
 	}

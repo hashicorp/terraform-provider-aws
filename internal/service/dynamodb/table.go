@@ -1422,7 +1422,7 @@ func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, en
 		return fmt.Errorf("updating PITR: %w", err)
 	}
 
-	if _, err := waitPITRUpdated(ctx, conn, tableName, enabled, timeout); err != nil {
+	if _, err := waitPITRUpdated(ctx, conn, tableName, enabled, timeout, optFn); err != nil {
 		return fmt.Errorf("waiting for PITR update: %w", err)
 	}
 

@@ -113,9 +113,9 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 	}
 }
 
-func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findPITRByTableName(ctx, conn, tableName)
+		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

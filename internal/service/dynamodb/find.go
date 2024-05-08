@@ -55,12 +55,12 @@ func findGSIByTwoPartKey(ctx context.Context, conn *dynamodb.Client, tableName, 
 	return nil, &retry.NotFoundError{}
 }
 
-func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName string) (*awstypes.PointInTimeRecoveryDescription, error) {
+func findPITRByTableName(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) (*awstypes.PointInTimeRecoveryDescription, error) {
 	input := &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	}
 
-	output, err := conn.DescribeContinuousBackups(ctx, input)
+	output, err := conn.DescribeContinuousBackups(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
