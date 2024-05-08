@@ -41,7 +41,7 @@ func ResourceDisk() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -83,7 +83,7 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	id := d.Get(names.AttrName).(string)
 	in := lightsail.CreateDiskInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		SizeInGb:         aws.Int32(int32(d.Get("size_in_gb").(int))),
 		DiskName:         aws.String(id),
 		Tags:             getTagsIn(ctx),
@@ -124,7 +124,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("availability_zone", out.Location.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set("size_in_gb", out.SizeInGb)

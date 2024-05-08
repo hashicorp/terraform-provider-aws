@@ -235,7 +235,7 @@ func ResourceDistribution() *schema.Resource {
 				Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "The Availability Zone.",
