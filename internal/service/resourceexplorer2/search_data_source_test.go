@@ -37,8 +37,8 @@ func testAccSearchDataSource_basic(t *testing.T) {
 				Config: testAccSearchDataSourceConfig_basic(rName, "LOCAL"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, "arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.complete"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.total_resources"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.0.total_resources"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.last_reported_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.owning_account_id"),
@@ -79,8 +79,8 @@ func testAccSearchDataSource_IndexType(t *testing.T) {
 				Config: testAccSearchDataSourceConfig_basic(rName, "AGGREGATOR"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, "arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.complete"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.total_resources"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.0.total_resources"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.last_reported_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.owning_account_id"),
@@ -96,6 +96,8 @@ func testAccSearchDataSource_IndexType(t *testing.T) {
 
 func testAccSearchDataSourceConfig_basic(rName, indexType string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_resourceexplorer2_index" "test" {
   type = %[2]q
 
@@ -114,7 +116,7 @@ resource "aws_resourceexplorer2_view" "test" {
 data "aws_resourceexplorer2_search" "test" {
   depends_on = [aws_resourceexplorer2_view.test]
 
-  query_string = "region:global"
+  query_string = "region:${data.aws_region.current.name}"
   view_arn     = aws_resourceexplorer2_view.test.arn
 }
 `, rName, indexType)

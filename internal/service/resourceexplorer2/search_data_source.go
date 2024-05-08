@@ -59,6 +59,7 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 			"view_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
+				Computed:   true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1011),
 				},
