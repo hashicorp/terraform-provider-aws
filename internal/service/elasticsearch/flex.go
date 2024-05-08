@@ -120,7 +120,7 @@ func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 
 	options := elasticsearch.VPCOptions{}
 
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		options.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -231,7 +231,7 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 		m["availability_zones"] = flex.FlattenStringSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(o.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
 		m[names.AttrSubnetIDs] = flex.FlattenStringSet(o.SubnetIds)
