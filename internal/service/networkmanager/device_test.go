@@ -212,7 +212,7 @@ func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:ci.aws
 					testAccCheckDeviceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.0.subnet_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.zone", subnetResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.zone", subnetResourceName, names.AttrAvailabilityZone),
 				),
 			},
 		},
