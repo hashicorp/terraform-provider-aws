@@ -17,6 +17,7 @@ var (
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
 	ResourceIntegration                  = newIntegrationResource
+	ResourceIdcApplication               = resourceIdcApplication
 	ResourceLogging                      = newLoggingResource
 	ResourceParameterGroup               = resourceParameterGroup
 	ResourcePartner                      = resourcePartner
