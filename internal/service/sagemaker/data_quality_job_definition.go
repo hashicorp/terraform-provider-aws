@@ -402,7 +402,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"security_group_ids": {
+									names.AttrSecurityGroupIDs: {
 										Type:     schema.TypeSet,
 										MinItems: 1,
 										MaxItems: 5,
@@ -922,7 +922,7 @@ func flattenVPCConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if config.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(config.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(config.SecurityGroupIds)
 	}
 
 	if config.Subnets != nil {
@@ -1300,7 +1300,7 @@ func expandVPCConfig(configured []interface{}) *sagemaker.VpcConfig {
 
 	c := &sagemaker.VpcConfig{}
 
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		c.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 

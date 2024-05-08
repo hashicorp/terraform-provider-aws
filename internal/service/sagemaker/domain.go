@@ -931,7 +931,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -1175,7 +1175,7 @@ func expandDomainSettings(l []interface{}) *sagemaker.DomainSettings {
 		config.ExecutionRoleIdentityConfig = aws.String(v)
 	}
 
-	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		config.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
@@ -2180,7 +2180,7 @@ func flattenDomainSettings(config *sagemaker.DomainSettings) []map[string]interf
 	m := map[string]interface{}{
 		"execution_role_identity_config":      aws.StringValue(config.ExecutionRoleIdentityConfig),
 		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
-		"security_group_ids":                  flex.FlattenStringSet(config.SecurityGroupIds),
+		names.AttrSecurityGroupIDs:            flex.FlattenStringSet(config.SecurityGroupIds),
 	}
 
 	return []map[string]interface{}{m}
