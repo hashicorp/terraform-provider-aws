@@ -113,7 +113,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:         schema.TypeSet,
 				Optional:     true,
 				ForceNew:     true,
@@ -125,7 +125,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				RequiredWith: []string{"security_group_ids"},
+				RequiredWith: []string{names.AttrSecurityGroupIDs},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -220,7 +220,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		securityGroupIDs := flex.ExpandStringSet(v.(*schema.Set))
 		input.SecurityGroupIds = securityGroupIDs
 	}
@@ -359,7 +359,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting security_configuration for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("security_group_ids", flex.FlattenStringSet(endpoint.SecurityGroupIds)); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(endpoint.SecurityGroupIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_group_ids for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
