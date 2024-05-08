@@ -152,7 +152,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				ConflictsWith: []string{"number_of_nodes"},
 				ForceNew:      true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -303,7 +303,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting arguments for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("availability_zone", endpoint.AvailabilityZone); err != nil {
+	if err := d.Set(names.AttrAvailabilityZone, endpoint.AvailabilityZone); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting availability_zone for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
