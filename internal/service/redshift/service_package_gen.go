@@ -182,7 +182,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceIdcApplication,
+			Factory:  resourceIdcApplication,
 			TypeName: "aws_redshift_idc_application",
 			Name:     "IDC Application",
 			Tags: &types.ServicePackageResourceTags{
@@ -190,7 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceParameterGroup,
+			Factory:  resourceParameterGroup,
 			TypeName: "aws_redshift_parameter_group",
 			Name:     "Parameter Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
