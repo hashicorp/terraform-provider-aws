@@ -999,11 +999,8 @@ func FindInstancesV2(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdk
 		}
 
 		for _, v := range page.Reservations {
-			for _, v := range v.Instances {
-				output = append(output, v)
-			}
+			output = append(output, v.Instances...)
 		}
-
 	}
 
 	return output, nil
@@ -6381,7 +6378,6 @@ func FindFindSnapshotTierStatuses(ctx context.Context, conn *ec2_sdkv2.Client, i
 		}
 
 		output = append(output, page.SnapshotTierStatuses...)
-
 	}
 
 	return output, nil

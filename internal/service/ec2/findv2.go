@@ -432,9 +432,7 @@ func findEBSVolumesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 			return nil, err
 		}
 
-		for _, v := range page.Volumes {
-			output = append(output, v)
-		}
+		output = append(output, page.Volumes...)
 	}
 
 	return output, nil
