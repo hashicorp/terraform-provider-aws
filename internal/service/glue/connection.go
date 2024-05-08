@@ -309,9 +309,9 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.
 	}
 
 	m := map[string]interface{}{
-		names.AttrAvailabilityZone:      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
-		"security_group_id_list": flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
-		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
+		names.AttrAvailabilityZone: aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
+		"security_group_id_list":   flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
+		"subnet_id":                aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}
 
 	return []map[string]interface{}{m}
