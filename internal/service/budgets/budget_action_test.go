@@ -152,6 +152,54 @@ func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 	})
 }
 
+func TestAccBudgetsBudgetAction_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget_action.test"
+	var conf awstypes.Action
+
+	const thresholdValue = "1000000000"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetActionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBudgetActionConfig_tags2(rName, string(awstypes.ApprovalModelManual), thresholdValue, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetActionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetActionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -243,8 +291,68 @@ func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccBudgetActionConfig_basic(rName, approvalModel, thresholdValue string) string {
+func testAccBudgetActionConfig_base(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name              = %[1]q
+  budget_type       = "USAGE"
+  limit_amount      = "1.0"
+  limit_unit        = "dollars"
+  time_period_start = "2006-01-02_15:04"
+  time_unit         = "MONTHLY"
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
+  description = "My test policy"
+
+  policy = <<EOF
+	  {
+		"Version": "2012-10-17",
+		"Statement": [
+		  {
+			"Action": [
+			  "ec2:Describe*"
+			],
+			"Effect": "Allow",
+			"Resource": "*"
+		  }
+		]
+	  }
+	  EOF
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+	  {
+		"Version": "2012-10-17",
+		"Statement": [
+		  {
+			"Effect": "Allow",
+			"Principal": {
+			  "Service": [
+				"budgets.${data.aws_partition.current.dns_suffix}"
+			  ]
+			},
+			"Action": [
+			  "sts:AssumeRole"
+			]
+		  }
+		]
+	  }
+	  EOF
+}
+`, rName)
+}
+
+func testAccBudgetActionConfig_basic(rName, approvalModel, thresholdValue string) string {
+	return acctest.ConfigCompose(
+		testAccBudgetActionConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_budgets_budget_action" "test" {
   budget_name        = aws_budgets_budget.test.name
   action_type        = "APPLY_IAM_POLICY"
@@ -269,59 +377,76 @@ resource "aws_budgets_budget_action" "test" {
     subscription_type = "EMAIL"
   }
 }
-
-resource "aws_budgets_budget" "test" {
-  name              = %[1]q
-  budget_type       = "USAGE"
-  limit_amount      = "1.0"
-  limit_unit        = "dollars"
-  time_period_start = "2006-01-02_15:04"
-  time_unit         = "MONTHLY"
+`, rName, approvalModel, thresholdValue, acctest.DefaultEmailAddress))
 }
 
-resource "aws_iam_policy" "test" {
-  name        = %[1]q
-  description = "My test policy"
+func testAccBudgetActionConfig_tags1(rName, approvalModel, thresholdValue, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccBudgetActionConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_budgets_budget_action" "test" {
+  budget_name        = aws_budgets_budget.test.name
+  action_type        = "APPLY_IAM_POLICY"
+  approval_model     = %[2]q
+  notification_type  = "ACTUAL"
+  execution_role_arn = aws_iam_role.test.arn
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
+  action_threshold {
+    action_threshold_type  = "ABSOLUTE_VALUE"
+    action_threshold_value = %[3]s
+  }
+
+  definition {
+    iam_action_definition {
+      policy_arn = aws_iam_policy.test.arn
+      roles      = [aws_iam_role.test.name]
     }
-  ]
+  }
+
+  subscriber {
+    address           = %[4]q
+    subscription_type = "EMAIL"
+  }
+
+  tags = {
+    %[5]q = %[6]q
+  }
 }
-EOF
+`, rName, approvalModel, thresholdValue, acctest.DefaultEmailAddress, tagKey1, tagValue1))
 }
 
-data "aws_partition" "current" {}
+func testAccBudgetActionConfig_tags2(rName, approvalModel, thresholdValue, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccBudgetActionConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_budgets_budget_action" "test" {
+  budget_name        = aws_budgets_budget.test.name
+  action_type        = "APPLY_IAM_POLICY"
+  approval_model     = %[2]q
+  notification_type  = "ACTUAL"
+  execution_role_arn = aws_iam_role.test.arn
 
-resource "aws_iam_role" "test" {
-  name = %[1]q
+  action_threshold {
+    action_threshold_type  = "ABSOLUTE_VALUE"
+    action_threshold_value = %[3]s
+  }
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "budgets.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": [
-        "sts:AssumeRole"
-      ]
+  definition {
+    iam_action_definition {
+      policy_arn = aws_iam_policy.test.arn
+      roles      = [aws_iam_role.test.name]
     }
-  ]
+  }
+
+  subscriber {
+    address           = %[4]q
+    subscription_type = "EMAIL"
+  }
+
+  tags = {
+    %[5]q = %[6]q
+    %[7]q = %[8]q
+  }
 }
-EOF
-}
-`, rName, approvalModel, thresholdValue, acctest.DefaultEmailAddress)
+`, rName, approvalModel, thresholdValue, acctest.DefaultEmailAddress, tagKey1, tagValue1, tagKey2, tagValue2))
 }

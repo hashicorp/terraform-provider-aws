@@ -508,6 +508,52 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 	})
 }
 
+func TestAccBudgetsBudget_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetExists(ctx, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBudgetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetExists(ctx, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccBudgetConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetExists(ctx, resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccBudgetExists(ctx context.Context, resourceName string, v *awstypes.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -796,6 +842,49 @@ resource "aws_budgets_budget" "test" {
   %[2]s
 }
 `, rName, config)
+}
+
+func testAccBudgetConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "QUARTERLY"
+
+  cost_filter {
+    name   = "Service"
+    values = ["Amazon Redshift"]
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccBudgetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "QUARTERLY"
+
+  cost_filter {
+    name   = "Service"
+    values = ["Amazon Redshift"]
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {
