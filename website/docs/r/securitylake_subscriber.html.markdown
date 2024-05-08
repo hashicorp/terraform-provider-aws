@@ -69,6 +69,7 @@ Custom Log Source Resource support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Lake.
+* `id` - The Subscriber ID of the subscriber.
 * `s3_bucket_arn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
 * `resource_share_arn` - The Amazon Resource Name (ARN) which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.
 * `role_arn` - The Amazon Resource Name (ARN) specifying the role of the subscriber.
