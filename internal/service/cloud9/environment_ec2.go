@@ -80,7 +80,7 @@ func resourceEnvironmentEC2() *schema.Resource {
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -123,7 +123,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
-		InstanceType:       aws.String(d.Get("instance_type").(string)),
+		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),
 		Name:               aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
