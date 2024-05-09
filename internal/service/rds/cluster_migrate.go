@@ -78,7 +78,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

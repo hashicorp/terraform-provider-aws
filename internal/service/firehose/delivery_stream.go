@@ -661,7 +661,7 @@ func resourceDeliveryStream() *schema.Resource {
 														Optional: true,
 														Computed: true,
 													},
-													"database_name": {
+													names.AttrDatabaseName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -2200,7 +2200,7 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 	m := l[0].(map[string]interface{})
 
 	config := &types.SchemaConfiguration{
-		DatabaseName: aws.String(m["database_name"].(string)),
+		DatabaseName: aws.String(m[names.AttrDatabaseName].(string)),
 		RoleARN:      aws.String(m[names.AttrRoleARN].(string)),
 		TableName:    aws.String(m["table_name"].(string)),
 		VersionId:    aws.String(m["version_id"].(string)),
@@ -3695,12 +3695,12 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 	}
 
 	m := map[string]interface{}{
-		"catalog_id":      aws.ToString(sc.CatalogId),
-		"database_name":   aws.ToString(sc.DatabaseName),
-		"region":          aws.ToString(sc.Region),
-		names.AttrRoleARN: aws.ToString(sc.RoleARN),
-		"table_name":      aws.ToString(sc.TableName),
-		"version_id":      aws.ToString(sc.VersionId),
+		"catalog_id":           aws.ToString(sc.CatalogId),
+		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
+		"region":               aws.ToString(sc.Region),
+		names.AttrRoleARN:      aws.ToString(sc.RoleARN),
+		"table_name":           aws.ToString(sc.TableName),
+		"version_id":           aws.ToString(sc.VersionId),
 	}
 
 	return []map[string]interface{}{m}

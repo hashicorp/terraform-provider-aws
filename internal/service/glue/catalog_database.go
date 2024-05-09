@@ -135,7 +135,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -372,7 +372,7 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseId
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -413,7 +413,7 @@ func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[strin
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {

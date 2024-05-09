@@ -44,7 +44,7 @@ func resourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -182,7 +182,7 @@ func resourceTable() *schema.Resource {
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	databaseName := d.Get("database_name").(string)
+	databaseName := d.Get(names.AttrDatabaseName).(string)
 	tableName := d.Get("table_name").(string)
 	id := tableCreateResourceID(tableName, databaseName)
 	input := &timestreamwrite.CreateTableInput{
@@ -231,7 +231,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, table.Arn)
-	d.Set("database_name", table.DatabaseName)
+	d.Set(names.AttrDatabaseName, table.DatabaseName)
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
 		return diag.Errorf("setting magnetic_store_write_properties: %s", err)
 	}

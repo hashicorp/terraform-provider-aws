@@ -51,7 +51,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -202,7 +202,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	// diff.
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
 	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("database_name", dbc.DatabaseName)
+		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
 	}
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)

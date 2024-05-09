@@ -116,7 +116,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -174,7 +174,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 				Config: testAccGlobalClusterConfig_databaseName(rName, "database1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "database_name", "database1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database1"),
 				),
 			},
 			{
@@ -187,7 +187,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "database_name", "database2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database2"),
 				),
 			},
 		},

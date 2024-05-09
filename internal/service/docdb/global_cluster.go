@@ -46,7 +46,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -128,7 +128,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	if v, ok := d.GetOk("database_name"); ok {
+	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 		input.DatabaseName = aws.String(v.(string))
 	}
 
@@ -185,7 +185,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
-	d.Set("database_name", globalCluster.DatabaseName)
+	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
 	d.Set("deletion_protection", globalCluster.DeletionProtection)
 	d.Set("engine", globalCluster.Engine)
 	d.Set(names.AttrEngineVersion, globalCluster.EngineVersion)

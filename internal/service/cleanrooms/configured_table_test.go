@@ -45,8 +45,8 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": rName,
-						"table_name":    rName,
+						names.AttrDatabaseName: rName,
+						"table_name":           rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),
 				),
@@ -172,8 +172,8 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": secondDatabaseName,
-						"table_name":    TEST_SECOND_ADDITIONAL_TABLE_NAME,
+						names.AttrDatabaseName: secondDatabaseName,
+						"table_name":           TEST_SECOND_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -207,8 +207,8 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyDatabase(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": secondDatabaseName,
-						"table_name":    TEST_FIRST_ADDITIONAL_TABLE_NAME,
+						names.AttrDatabaseName: secondDatabaseName,
+						"table_name":           TEST_FIRST_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -242,8 +242,8 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyTable(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": firstDatabaseName,
-						"table_name":    TEST_SECOND_ADDITIONAL_TABLE_NAME,
+						names.AttrDatabaseName: firstDatabaseName,
+						"table_name":           TEST_SECOND_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},

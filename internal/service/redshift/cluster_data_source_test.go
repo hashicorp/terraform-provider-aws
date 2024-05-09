@@ -39,7 +39,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_revision_number"),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_version"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "database_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "encrypted"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "master_username"),
