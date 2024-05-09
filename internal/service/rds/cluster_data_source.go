@@ -162,7 +162,7 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -237,7 +237,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", securityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
 
 	tags := KeyValueTags(ctx, dbc.TagList)
 

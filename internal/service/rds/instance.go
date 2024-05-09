@@ -664,7 +664,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"replicate_source_db"},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -860,7 +860,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1074,7 +1074,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1320,7 +1320,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.TdeCredentialArn = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -1523,7 +1523,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.TdeCredentialArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1730,7 +1730,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Timezone = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -1932,7 +1932,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, v := range v.VpcSecurityGroups {
 		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	if v.Endpoint != nil {
 		d.Set("address", v.Endpoint.Address)
@@ -2412,8 +2412,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("vpc_security_group_ids") {
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+	if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			needsModify = true
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
