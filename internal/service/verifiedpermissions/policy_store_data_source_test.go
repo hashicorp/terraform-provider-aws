@@ -41,7 +41,7 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
-					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrLastUpdatedDate),
 				),
 			},
 		},

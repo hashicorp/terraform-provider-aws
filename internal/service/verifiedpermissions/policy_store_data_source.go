@@ -49,7 +49,7 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.Schem
 			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"last_updated_date": schema.StringAttribute{
+			names.AttrLastUpdatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
