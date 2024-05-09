@@ -20,6 +20,7 @@ const (
 	AttrDescription                = "description"
 	AttrDomainName                 = "domain_name"
 	AttrEnabled                    = "enabled"
+	AttrEndpoint                   = "endpoint"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
 	AttrID                         = "id" // Should be explicitly declared only for Framework resources
@@ -47,6 +48,7 @@ const (
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
+	AttrSession                    = "session"
 	AttrSharedConfigFiles          = "shared_config_files"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"

@@ -23,7 +23,7 @@ func dataSourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -131,7 +131,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(workgroupName)
 	d.Set(names.AttrARN, resource.WorkgroupArn)
-	if err := d.Set("endpoint", []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
+	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)

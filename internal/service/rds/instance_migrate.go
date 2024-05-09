@@ -261,7 +261,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -551,7 +551,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

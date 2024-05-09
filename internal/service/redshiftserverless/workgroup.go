@@ -94,7 +94,7 @@ func resourceWorkgroup() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -285,7 +285,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
-	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)

@@ -185,7 +185,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -720,16 +720,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}))
 
 	d.Set("dns_name", nil)
-	d.Set("endpoint", nil)
+	d.Set(names.AttrEndpoint, nil)
 	d.Set(names.AttrPort, nil)
 	if endpoint := rsc.Endpoint; endpoint != nil {
 		if address := aws.StringValue(endpoint.Address); address != "" {
 			d.Set("dns_name", address)
 			if port := aws.Int64Value(endpoint.Port); port != 0 {
-				d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
+				d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
 				d.Set(names.AttrPort, port)
 			} else {
-				d.Set("endpoint", address)
+				d.Set(names.AttrEndpoint, address)
 			}
 		}
 	}

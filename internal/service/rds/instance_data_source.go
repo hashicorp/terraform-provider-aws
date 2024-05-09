@@ -88,7 +88,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -311,12 +311,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	// The endpoint might not be shown for instances whose status is creating.
 	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
 		d.Set("address", dbEndpoint.Address)
-		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
 		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
 		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {
 		d.Set("address", nil)
-		d.Set("endpoint", nil)
+		d.Set(names.AttrEndpoint, nil)
 		d.Set("hosted_zone_id", nil)
 		d.Set(names.AttrPort, nil)
 	}

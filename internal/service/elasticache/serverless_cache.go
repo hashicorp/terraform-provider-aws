@@ -83,7 +83,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"endpoint": schema.ListAttribute{
+			names.AttrEndpoint: schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpointModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[endpointModel](ctx),
 				Computed:    true,

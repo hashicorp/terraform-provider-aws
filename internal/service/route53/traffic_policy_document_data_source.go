@@ -21,7 +21,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -267,7 +267,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	trafficDoc := &Route53TrafficPolicyDoc{}
 
-	if v, ok := d.GetOk("endpoint"); ok {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok {
 		trafficDoc.Endpoints = expandDataTrafficPolicyEndpointsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("record_type"); ok {

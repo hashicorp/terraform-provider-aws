@@ -1245,3 +1245,23 @@ rules:
       - pattern: '"skip_requesting_account_id"'
     severity: ERROR
     fix: "names.AttrSkipRequestingAccountID"
+  - id: literal-endpoint-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEndpoint` for the string literal "endpoint"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"endpoint"'
+    severity: ERROR
+    fix: "names.AttrEndpoint"
+  - id: literal-session-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSession` for the string literal "session"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"session"'
+    severity: ERROR
+    fix: "names.AttrSession"

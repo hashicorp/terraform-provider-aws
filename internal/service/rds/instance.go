@@ -292,7 +292,7 @@ func ResourceInstance() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1937,7 +1937,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v.Endpoint != nil {
 		d.Set("address", v.Endpoint.Address)
 		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
-			d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
+			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
 		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
 		d.Set(names.AttrPort, v.Endpoint.Port)

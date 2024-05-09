@@ -179,7 +179,7 @@ func ResourceCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"endpoint": endpointSchema(),
+									names.AttrEndpoint: endpointSchema(),
 									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
@@ -628,7 +628,7 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 			nodeSet.Add(map[string]interface{}{
 				names.AttrAvailabilityZone: aws.StringValue(node.AvailabilityZone),
 				"create_time":              aws.TimeValue(node.CreateTime).Format(time.RFC3339),
-				"endpoint":                 flattenEndpoint(node.Endpoint),
+				names.AttrEndpoint:         flattenEndpoint(node.Endpoint),
 				names.AttrName:             aws.StringValue(node.Name),
 			})
 		}

@@ -134,7 +134,7 @@ func ResourceCluster() *schema.Resource {
 					}, false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -548,7 +548,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
-	d.Set("endpoint", dbc.Endpoint)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)

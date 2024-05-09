@@ -129,7 +129,7 @@ func ResourceExperience() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -492,7 +492,7 @@ func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
 		m := make(map[string]interface{})
 
 		if v := apiObject.Endpoint; v != nil {
-			m["endpoint"] = aws.ToString(v)
+			m[names.AttrEndpoint] = aws.ToString(v)
 		}
 
 		if v := string(apiObject.EndpointType); v != "" {
