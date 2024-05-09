@@ -1120,7 +1120,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -1953,7 +1953,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = flattenAnalysisComponents(v)
+		tfMap[names.AttrSecurityGroups] = flattenAnalysisComponents(v)
 	}
 
 	if v := apiObject.SourceVpc; v != nil {
