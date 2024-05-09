@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_orderable_db_instance")
@@ -28,7 +29,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -471,7 +472,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	for _, v := range found.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
-	d.Set("availability_zones", availabilityZones)
+	d.Set(names.AttrAvailabilityZones, availabilityZones)
 	d.Set("engine", found.Engine)
 	d.Set("engine_version", found.EngineVersion)
 	d.Set("instance_class", found.DBInstanceClass)
