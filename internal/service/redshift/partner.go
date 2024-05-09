@@ -33,7 +33,7 @@ func resourcePartner() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -70,7 +70,7 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	account := d.Get("account_id").(string)
+	account := d.Get(names.AttrAccountID).(string)
 	clusterId := d.Get("cluster_identifier").(string)
 	input := redshift.AddPartnerInput{
 		AccountId:         aws.String(account),
@@ -106,7 +106,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Partner (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", d.Get("account_id").(string))
+	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID).(string))
 	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
 	d.Set("partner_name", out.PartnerName)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
