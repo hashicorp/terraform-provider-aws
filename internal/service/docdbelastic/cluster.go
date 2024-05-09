@@ -102,7 +102,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{
+			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
