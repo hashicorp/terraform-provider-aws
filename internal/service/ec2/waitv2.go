@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -179,9 +178,9 @@ const (
 	ClientVPNEndpointAttributeUpdatedTimeout = 5 * time.Minute
 )
 
-func WaitClientVPNEndpointDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ClientVpnEndpoint, error) {
+func WaitClientVPNEndpointDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.ClientVpnEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClientVpnEndpointStatusCodeDeleting),
+		Pending: enum.Slice(types.ClientVpnEndpointStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: StatusClientVPNEndpointState(ctx, conn, id),
 		Timeout: ClientVPNEndpointDeletedTimeout,
@@ -189,7 +188,7 @@ func WaitClientVPNEndpointDeleted(ctx context.Context, conn *ec2.Client, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ClientVpnEndpoint); ok {
+	if output, ok := outputRaw.(*types.ClientVpnEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -198,17 +197,17 @@ func WaitClientVPNEndpointDeleted(ctx context.Context, conn *ec2.Client, id stri
 	return nil, err
 }
 
-func WaitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ClientConnectResponseOptions, error) {
+func WaitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.ClientConnectResponseOptions, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClientVpnEndpointAttributeStatusCodeApplying),
-		Target:  enum.Slice(awstypes.ClientVpnEndpointAttributeStatusCodeApplied),
+		Pending: enum.Slice(types.ClientVpnEndpointAttributeStatusCodeApplying),
+		Target:  enum.Slice(types.ClientVpnEndpointAttributeStatusCodeApplied),
 		Refresh: StatusClientVPNEndpointClientConnectResponseOptionsState(ctx, conn, id),
 		Timeout: ClientVPNEndpointAttributeUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ClientConnectResponseOptions); ok {
+	if output, ok := outputRaw.(*types.ClientConnectResponseOptions); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -222,17 +221,17 @@ const (
 	ClientVPNAuthorizationRuleDeletedTimeout = 10 * time.Minute
 )
 
-func WaitClientVPNAuthorizationRuleCreated(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string, timeout time.Duration) (*awstypes.AuthorizationRule, error) {
+func WaitClientVPNAuthorizationRuleCreated(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string, timeout time.Duration) (*types.AuthorizationRule, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClientVpnAuthorizationRuleStatusCodeAuthorizing),
-		Target:  enum.Slice(awstypes.ClientVpnAuthorizationRuleStatusCodeActive),
+		Pending: enum.Slice(types.ClientVpnAuthorizationRuleStatusCodeAuthorizing),
+		Target:  enum.Slice(types.ClientVpnAuthorizationRuleStatusCodeActive),
 		Refresh: StatusClientVPNAuthorizationRule(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.AuthorizationRule); ok {
+	if output, ok := outputRaw.(*types.AuthorizationRule); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -241,9 +240,9 @@ func WaitClientVPNAuthorizationRuleCreated(ctx context.Context, conn *ec2.Client
 	return nil, err
 }
 
-func WaitClientVPNAuthorizationRuleDeleted(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string, timeout time.Duration) (*awstypes.AuthorizationRule, error) {
+func WaitClientVPNAuthorizationRuleDeleted(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string, timeout time.Duration) (*types.AuthorizationRule, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClientVpnAuthorizationRuleStatusCodeRevoking),
+		Pending: enum.Slice(types.ClientVpnAuthorizationRuleStatusCodeRevoking),
 		Target:  []string{},
 		Refresh: StatusClientVPNAuthorizationRule(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID),
 		Timeout: timeout,
@@ -251,7 +250,7 @@ func WaitClientVPNAuthorizationRuleDeleted(ctx context.Context, conn *ec2.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.AuthorizationRule); ok {
+	if output, ok := outputRaw.(*types.AuthorizationRule); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -268,10 +267,10 @@ const (
 	ClientVPNNetworkAssociationStatusPollInterval = 10 * time.Second
 )
 
-func WaitClientVPNNetworkAssociationCreated(ctx context.Context, conn *ec2.Client, associationID, endpointID string, timeout time.Duration) (*awstypes.TargetNetwork, error) {
+func WaitClientVPNNetworkAssociationCreated(ctx context.Context, conn *ec2.Client, associationID, endpointID string, timeout time.Duration) (*types.TargetNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(awstypes.AssociationStatusCodeAssociating),
-		Target:       enum.Slice(awstypes.AssociationStatusCodeAssociated),
+		Pending:      enum.Slice(types.AssociationStatusCodeAssociating),
+		Target:       enum.Slice(types.AssociationStatusCodeAssociated),
 		Refresh:      StatusClientVPNNetworkAssociation(ctx, conn, associationID, endpointID),
 		Timeout:      timeout,
 		Delay:        ClientVPNNetworkAssociationCreatedDelay,
@@ -280,7 +279,7 @@ func WaitClientVPNNetworkAssociationCreated(ctx context.Context, conn *ec2.Clien
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.TargetNetwork); ok {
+	if output, ok := outputRaw.(*types.TargetNetwork); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -289,9 +288,9 @@ func WaitClientVPNNetworkAssociationCreated(ctx context.Context, conn *ec2.Clien
 	return nil, err
 }
 
-func WaitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.Client, associationID, endpointID string, timeout time.Duration) (*awstypes.TargetNetwork, error) {
+func WaitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.Client, associationID, endpointID string, timeout time.Duration) (*types.TargetNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(awstypes.AssociationStatusCodeDisassociating),
+		Pending:      enum.Slice(types.AssociationStatusCodeDisassociating),
 		Target:       []string{},
 		Refresh:      StatusClientVPNNetworkAssociation(ctx, conn, associationID, endpointID),
 		Timeout:      timeout,
@@ -301,7 +300,7 @@ func WaitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.Clien
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.TargetNetwork); ok {
+	if output, ok := outputRaw.(*types.TargetNetwork); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -310,17 +309,17 @@ func WaitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.Clien
 	return nil, err
 }
 
-func WaitClientVPNRouteCreated(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*awstypes.ClientVpnRoute, error) {
+func WaitClientVPNRouteCreated(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*types.ClientVpnRoute, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClientVpnRouteStatusCodeCreating),
-		Target:  enum.Slice(awstypes.ClientVpnRouteStatusCodeActive),
+		Pending: enum.Slice(types.ClientVpnRouteStatusCodeCreating),
+		Target:  enum.Slice(types.ClientVpnRouteStatusCodeActive),
 		Refresh: StatusClientVPNRoute(ctx, conn, endpointID, targetSubnetID, destinationCIDR),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ClientVpnRoute); ok {
+	if output, ok := outputRaw.(*types.ClientVpnRoute); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
@@ -329,9 +328,9 @@ func WaitClientVPNRouteCreated(ctx context.Context, conn *ec2.Client, endpointID
 	return nil, err
 }
 
-func WaitClientVPNRouteDeleted(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*awstypes.ClientVpnRoute, error) {
+func WaitClientVPNRouteDeleted(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*types.ClientVpnRoute, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClientVpnRouteStatusCodeActive, awstypes.ClientVpnRouteStatusCodeDeleting),
+		Pending: enum.Slice(types.ClientVpnRouteStatusCodeActive, types.ClientVpnRouteStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: StatusClientVPNRoute(ctx, conn, endpointID, targetSubnetID, destinationCIDR),
 		Timeout: timeout,
@@ -339,7 +338,7 @@ func WaitClientVPNRouteDeleted(ctx context.Context, conn *ec2.Client, endpointID
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ClientVpnRoute); ok {
+	if output, ok := outputRaw.(*types.ClientVpnRoute); ok {
 		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
