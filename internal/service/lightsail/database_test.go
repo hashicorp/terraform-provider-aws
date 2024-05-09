@@ -53,7 +53,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "cpu_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_size"),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_size"),
