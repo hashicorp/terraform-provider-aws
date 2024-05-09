@@ -1264,4 +1264,4 @@ rules:
     patterns:
       - pattern: '"session"'
     severity: ERROR
-    fix: "names.AttrSession"    
+    fix: "names.AttrSession"
