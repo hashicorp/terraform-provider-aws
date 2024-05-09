@@ -175,7 +175,7 @@ func resourceIdcApplicationRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	rsIdc, err := FindIdcApplicationByArn(ctx, conn, d.Id())
+	rsIdc, err := findIdcApplicationByArn(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift IDC Application (%s) not found, removing from state", d.Id())

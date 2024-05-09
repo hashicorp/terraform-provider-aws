@@ -52,12 +52,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `trusted_token_issuer_arn` - The connection endpoint ID for connecting an Amazon Redshift cluster through the proxy.
 
 ### ServiceIntegrations
+
 * `lake_formation` - (Optional) A list of scopes set up for Lake Formation integration.
 
 ### LakeFormation
+
 * `lake_formation_query` - (Optional) The Lake Formation scope.
 
 ### LakeFormationQuery
+
 * `authorization` - (Required) Determines whether the query scope is enabled or disabled.
 
 
