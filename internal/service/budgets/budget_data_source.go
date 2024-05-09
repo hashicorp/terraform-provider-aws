@@ -119,7 +119,7 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Schema{
