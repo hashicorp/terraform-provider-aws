@@ -97,7 +97,7 @@ func ResourceAMI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -610,7 +610,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		Ebs: &ec2.EbsBlockDevice{},
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -686,7 +686,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Ebs.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = aws.BoolValue(v)
+		tfMap[names.AttrDeleteOnTermination] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.DeviceName; v != nil {

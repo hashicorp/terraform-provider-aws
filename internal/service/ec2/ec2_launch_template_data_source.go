@@ -49,7 +49,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -607,7 +607,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -63,7 +63,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
@@ -745,7 +745,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:             nullable.TypeNullableBool,
 							Optional:         true,
 							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
@@ -1373,7 +1373,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -1977,7 +1977,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -2395,7 +2395,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Encrypted; v != nil {
@@ -2969,7 +2969,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Description; v != nil {

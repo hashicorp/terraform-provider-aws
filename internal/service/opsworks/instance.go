@@ -306,7 +306,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -397,7 +397,7 @@ func ResourceInstance() *schema.Resource {
 					// Termination flag on the block device mapping entry for the root
 					// device volume." - bit.ly/ec2bdmap
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -636,7 +636,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &opsworks.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
@@ -681,7 +681,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &opsworks.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
@@ -988,7 +988,7 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 	for _, bdm := range instance.BlockDeviceMappings {
 		bd := make(map[string]interface{})
 		if bdm.Ebs != nil && bdm.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
+			bd[names.AttrDeleteOnTermination] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
 			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)

@@ -230,7 +230,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -588,7 +588,7 @@ func ResourceInstance() *schema.Resource {
 				Computed:      true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Default:  false,
 							Optional: true,
@@ -693,7 +693,7 @@ func ResourceInstance() *schema.Resource {
 					// "For the root volume, you can only modify the following: volume size, volume type, and the Delete on Termination flag."
 					// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -1253,7 +1253,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 					ni["device_index"] = aws.Int64Value(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.Int64Value(iNi.Attachment.NetworkCardIndex)
 					ni[names.AttrNetworkInterfaceID] = aws.StringValue(iNi.NetworkInterfaceId)
-					ni["delete_on_termination"] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
+					ni[names.AttrDeleteOnTermination] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -2330,7 +2330,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		bd["volume_id"] = aws.StringValue(vol.VolumeId)
 
 		if instanceBd.Ebs != nil && instanceBd.Ebs.DeleteOnTermination != nil {
-			bd["delete_on_termination"] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
+			bd[names.AttrDeleteOnTermination] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
 		}
 		if vol.Size != nil {
 			bd["volume_size"] = aws.Int64Value(vol.Size)
@@ -2535,7 +2535,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 				DeviceIndex:         aws.Int64(int64(ini["device_index"].(int))),
 				NetworkCardIndex:    aws.Int64(int64(ini["network_card_index"].(int))),
 				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-				DeleteOnTermination: aws.Bool(ini["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
 			}
 			networkInterfaces = append(networkInterfaces, ni)
 		}
@@ -2552,7 +2552,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
@@ -2630,7 +2630,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd["encrypted"].(bool); ok && v {
