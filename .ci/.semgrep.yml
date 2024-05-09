@@ -985,3 +985,13 @@ rules:
       - pattern: '"resource_arn"'
     severity: ERROR
     fix: "names.AttrResourceARN"
+  - id: literal-security_groups-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSecurityGroups` for the string literal "security_groups"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"security_groups"'
+    severity: ERROR
+    fix: "names.AttrSecurityGroups"

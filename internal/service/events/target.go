@@ -173,7 +173,7 @@ func resourceTarget() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"security_groups": {
+									names.AttrSecurityGroups: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1018,7 +1018,7 @@ func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *types.Netw
 	}
 	awsVpcConfig := &types.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
-	if val, ok := raw["security_groups"]; ok {
+	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw["subnets"].(*schema.Set))
@@ -1235,7 +1235,7 @@ func flattenTargetECSParametersNetworkConfiguration(nc *types.NetworkConfigurati
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = nc.AwsvpcConfiguration.SecurityGroups
+	result[names.AttrSecurityGroups] = nc.AwsvpcConfiguration.SecurityGroups
 	result["subnets"] = nc.AwsvpcConfiguration.Subnets
 	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == types.AssignPublicIpEnabled
 

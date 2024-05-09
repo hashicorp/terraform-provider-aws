@@ -213,7 +213,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 				"fd00::1/128",
 				"fd00::2/128",
 			},
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-11111",
 				"sg-22222",
 				"sg-33333",
@@ -316,7 +316,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-11111",
 			}),
 		},
@@ -326,7 +326,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
@@ -336,7 +336,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-33333",
 			}),
 		},
@@ -447,7 +447,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			"protocol":  "tcp",
 			"from_port": int64(80),
 			"to_port":   int64(80),
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
@@ -456,7 +456,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			"from_port":       int64(0),
 			"to_port":         int64(0),
 			"prefix_list_ids": []string{"pl-12345678"},
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 			names.AttrDescription: "desc",
@@ -478,9 +478,9 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 					}
 				}
 
-				if _, ok := i["security_groups"]; ok {
-					outSet := i["security_groups"].(*schema.Set)
-					localSet := l["security_groups"].(*schema.Set)
+				if _, ok := i[names.AttrSecurityGroups]; ok {
+					outSet := i[names.AttrSecurityGroups].(*schema.Set)
+					localSet := l[names.AttrSecurityGroups].(*schema.Set)
 
 					if !outSet.Equal(localSet) {
 						t.Fatalf("Security Group sets are not equal")
@@ -502,7 +502,7 @@ func TestExpandIPPerms(t *testing.T) {
 			"from_port":   1,
 			"to_port":     -1,
 			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -619,7 +619,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 			"from_port":   0,
 			"to_port":     0,
 			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -685,7 +685,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 			"from_port":   0,
 			"to_port":     65535,
 			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -713,7 +713,7 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 			"from_port":   0,
 			"to_port":     0,
 			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -779,7 +779,7 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 			"from_port":   0,
 			"to_port":     65535,
 			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),

@@ -165,7 +165,7 @@ var (
 				Required:  true,
 				StateFunc: ProtocolStateFunc,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -625,7 +625,7 @@ func SecurityGroupRuleHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}
-	if v, ok := m["security_groups"]; ok {
+	if v, ok := m[names.AttrSecurityGroups]; ok {
 		vs := v.(*schema.Set).List()
 		s := make([]string, len(vs))
 		for i, raw := range vs {
@@ -707,7 +707,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 					continue
 				}
 
-				raw, ok := rule["security_groups"]
+				raw, ok := rule[names.AttrSecurityGroups]
 				if !ok {
 					raw = schema.NewSet(schema.HashString, nil)
 				}
@@ -718,7 +718,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 				} else {
 					list.Add(*g.GroupId)
 				}
-				rule["security_groups"] = list
+				rule[names.AttrSecurityGroups] = list
 			}
 		}
 	}
@@ -842,7 +842,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 		}
 
 		var groups []string
-		if raw, ok := m["security_groups"]; ok {
+		if raw, ok := m[names.AttrSecurityGroups]; ok {
 			list := raw.(*schema.Set).List()
 			for _, v := range list {
 				groups = append(groups, v.(string))
@@ -1011,9 +1011,9 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 				if ok {
 					numExpectedPrefixLists = len(l["prefix_list_ids"].([]interface{}))
 				}
-				lsRaw, ok := l["security_groups"]
+				lsRaw, ok := l[names.AttrSecurityGroups]
 				if ok {
-					numExpectedSGs = len(l["security_groups"].(*schema.Set).List())
+					numExpectedSGs = len(l[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
 				rcRaw, ok := r["cidr_blocks"]
@@ -1029,9 +1029,9 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 					numRemotePrefixLists = len(r["prefix_list_ids"].([]string))
 				}
 
-				rsRaw, ok := r["security_groups"]
+				rsRaw, ok := r[names.AttrSecurityGroups]
 				if ok {
-					numRemoteSGs = len(r["security_groups"].(*schema.Set).List())
+					numRemoteSGs = len(r[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
 				// check some early failures
@@ -1218,9 +1218,9 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 									// pop local sgs from remote
 									diffSGs := remoteSGSet.Difference(localSGSet)
 									if len(diffSGs.List()) > 0 {
-										r["security_groups"] = diffSGs
+										r[names.AttrSecurityGroups] = diffSGs
 									} else {
-										delete(r, "security_groups")
+										delete(r, names.AttrSecurityGroups)
 									}
 
 									// copy over any remote rule description
@@ -1252,7 +1252,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 		if rPrefixLists, ok := r["prefix_list_ids"]; ok {
 			lenPrefixLists = len(rPrefixLists.([]string))
 		}
-		if rawSGs, ok := r["security_groups"]; ok {
+		if rawSGs, ok := r[names.AttrSecurityGroups]; ok {
 			lenSGs = len(rawSGs.(*schema.Set).List())
 		}
 
@@ -1299,7 +1299,7 @@ func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k stri
 // For more detail, see comments for
 // SecurityGroupExpandRules()
 func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
-	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	collapsed := make(map[string]map[string]interface{})
 
@@ -1320,7 +1320,7 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 		for _, key := range keys_to_collapse {
 			if _, ok := r[key]; ok {
 				if _, ok := collapsed[ruleHash][key]; ok {
-					if key == "security_groups" {
+					if key == names.AttrSecurityGroups {
 						collapsed[ruleHash][key] = collapsed[ruleHash][key].(*schema.Set).Union(r[key].(*schema.Set))
 					} else {
 						collapsed[ruleHash][key] = append(collapsed[ruleHash][key].([]interface{}), r[key].([]interface{})...)
@@ -1385,7 +1385,7 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 // execution. Such compact form helps reduce the number of
 // API calls.
 func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
-	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	normalized := schema.NewSet(SecurityGroupRuleHash, nil)
 
@@ -1400,14 +1400,14 @@ func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 			item, exists := rule[key]
 			if exists {
 				var list []interface{}
-				if key == "security_groups" {
+				if key == names.AttrSecurityGroups {
 					list = item.(*schema.Set).List()
 				} else {
 					list = item.([]interface{})
 				}
 				for _, v := range list {
 					var new_rule map[string]interface{}
-					if key == "security_groups" {
+					if key == names.AttrSecurityGroups {
 						new_v := schema.NewSet(schema.HashString, nil)
 						new_v.Add(v)
 						new_rule = resourceSecurityGroupCopyRule(rule, false, key, new_v)

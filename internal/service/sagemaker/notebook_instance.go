@@ -134,7 +134,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Default:      sagemaker.RootAccessEnabled,
 				ValidateFunc: validation.StringInSlice(sagemaker.RootAccess_Values(), false),
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				MinItems: 1,
 				Optional: true,
@@ -172,7 +172,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		InstanceType:                         aws.String(d.Get(names.AttrInstanceType).(string)),
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get(names.AttrRoleARN).(string)),
-		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+		SecurityGroupIds:                     flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		Tags:                                 getTagsIn(ctx),
 	}
 
@@ -261,7 +261,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("platform_identifier", notebookInstance.PlatformIdentifier)
 	d.Set(names.AttrRoleARN, notebookInstance.RoleArn)
 	d.Set("root_access", notebookInstance.RootAccess)
-	d.Set("security_groups", aws.StringValueSlice(notebookInstance.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(notebookInstance.SecurityGroups))
 	d.Set("subnet_id", notebookInstance.SubnetId)
 	d.Set("url", notebookInstance.Url)
 	d.Set("volume_size", notebookInstance.VolumeSizeInGB)

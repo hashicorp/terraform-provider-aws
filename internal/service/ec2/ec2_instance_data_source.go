@@ -358,7 +358,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{

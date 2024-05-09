@@ -69,7 +69,7 @@ func DataSourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -135,7 +135,7 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
 
 	return diags
 }

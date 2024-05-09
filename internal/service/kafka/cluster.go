@@ -199,7 +199,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -1240,7 +1240,7 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *types.BrokerNodeGr
 		apiObject.InstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
@@ -1684,7 +1684,7 @@ func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.StorageInfo; v != nil {

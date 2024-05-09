@@ -84,7 +84,7 @@ func ResourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -128,7 +128,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -190,7 +190,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
 
 	return diags
 }
@@ -199,10 +199,10 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &efs.ModifyMountTargetSecurityGroupsInput{
 			MountTargetId:  aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyMountTargetSecurityGroupsWithContext(ctx, input)

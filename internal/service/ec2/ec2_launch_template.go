@@ -825,7 +825,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2049,7 +2049,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		for _, v := range v.List() {
 			apiObject.Groups = append(apiObject.Groups, aws.String(v.(string)))
 		}
@@ -3053,7 +3053,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.Groups; v != nil {
-		tfMap["security_groups"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroups] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetId; v != nil {

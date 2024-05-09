@@ -254,7 +254,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -374,7 +374,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.IpAddressType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -460,7 +460,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 			LoadBalancerArn: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("security_groups"); ok {
+		if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 			input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -509,7 +509,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("load_balancer_type", lbType)
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
-	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(lb.SecurityGroups))
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
@@ -576,10 +576,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", "security_groups") {
+	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", names.AttrSecurityGroups) {
 		input := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
-			SecurityGroups:  flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups:  flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		if v := d.Get("load_balancer_type"); v == elbv2.LoadBalancerTypeEnumNetwork {
@@ -1151,13 +1151,13 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	}
 
 	// Get diff for security groups.
-	if diff.HasChange("security_groups") {
-		if v := config.GetAttr("security_groups"); v.IsWhollyKnown() {
-			o, n := diff.GetChange("security_groups")
+	if diff.HasChange(names.AttrSecurityGroups) {
+		if v := config.GetAttr(names.AttrSecurityGroups); v.IsWhollyKnown() {
+			o, n := diff.GetChange(names.AttrSecurityGroups)
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
 			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-				if err := diff.ForceNew("security_groups"); err != nil {
+				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
 					return err
 				}
 			}

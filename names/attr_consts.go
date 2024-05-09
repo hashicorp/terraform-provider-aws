@@ -14,9 +14,9 @@ const (
 	AttrEngineVersion      = "engine_version"
 	AttrID                 = "id" // Should be explicitly declared only for Framework resources
 	AttrInstanceType       = "instance_type"
-	AttrKey                = "key"
 	AttrKMSKeyARN          = "kms_key_arn"
 	AttrKMSKeyID           = "kms_key_id"
+	AttrKey                = "key"
 	AttrMax                = "max"
 	AttrMin                = "min"
 	AttrName               = "name"
@@ -29,6 +29,7 @@ const (
 	AttrResourceARN        = "resource_arn"
 	AttrRoleARN            = "role_arn"
 	AttrSecurityGroupIDs   = "security_group_ids"
+	AttrSecurityGroups     = "security_groups"
 	AttrState              = "state"
 	AttrStatus             = "status"
 	AttrSubnetIDs          = "subnet_ids"

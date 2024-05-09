@@ -582,7 +582,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -755,7 +755,7 @@ func ResourceInstance() *schema.Resource {
 					ValidateFunc: validation.IsIPv4Address,
 				},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -2774,11 +2774,11 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 			sgs = append(sgs, aws.StringValue(sg.GroupName))
 		}
 		log.Printf("[DEBUG] Setting Security Group Names: %#v", sgs)
-		if err := d.Set("security_groups", sgs); err != nil {
+		if err := d.Set(names.AttrSecurityGroups, sgs); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
-		if err := d.Set("security_groups", []string{}); err != nil {
+		if err := d.Set(names.AttrSecurityGroups, []string{}); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
@@ -3023,7 +3023,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	var groups []*string
-	if v := d.Get("security_groups"); v != nil {
+	if v := d.Get(names.AttrSecurityGroups); v != nil {
 		// Security group names.
 		// For a nondefault VPC, you must use security group IDs instead.
 		// See http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html

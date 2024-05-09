@@ -147,7 +147,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -211,7 +211,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set(names.AttrAvailabilityZone, eni.AvailabilityZone)
 	d.Set(names.AttrDescription, eni.Description)
-	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
+	d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)

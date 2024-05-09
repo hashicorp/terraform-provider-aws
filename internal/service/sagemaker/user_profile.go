@@ -535,7 +535,7 @@ func ResourceUserProfile() *schema.Resource {
 								},
 							},
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,

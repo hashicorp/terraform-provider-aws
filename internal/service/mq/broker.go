@@ -301,7 +301,7 @@ func resourceBroker() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 5,
@@ -436,7 +436,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("storage_type"); ok {
@@ -491,7 +491,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
 	d.Set("publicly_accessible", output.PubliclyAccessible)
-	d.Set("security_groups", output.SecurityGroups)
+	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
@@ -542,10 +542,10 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	requiresReboot := false
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:       aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
