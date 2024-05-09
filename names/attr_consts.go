@@ -24,6 +24,7 @@ const (
 	AttrKMSKeyARN                  = "kms_key_arn"
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
+	AttrLastUpdatedDate            = "last_updated_date"
 	AttrMax                        = "max"
 	AttrMin                        = "min"
 	AttrName                       = "name"

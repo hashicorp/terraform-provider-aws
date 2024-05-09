@@ -50,7 +50,7 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Testing lex bot alias create."),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, testBotAliasID),

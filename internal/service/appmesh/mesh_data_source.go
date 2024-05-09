@@ -32,7 +32,7 @@ func dataSourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -72,7 +72,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(mesh.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)

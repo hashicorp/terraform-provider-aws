@@ -58,7 +58,7 @@ func DataSourceBot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,7 +121,7 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("enable_model_improvements", output.EnableModelImprovements)
 	d.Set("failure_reason", output.FailureReason)
 	d.Set("idle_session_ttl_in_seconds", output.IdleSessionTTLInSeconds)
-	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("locale", output.Locale)
 	d.Set(names.AttrName, output.Name)
 	d.Set("nlu_intent_confidence_threshold", output.NluIntentConfidenceThreshold)

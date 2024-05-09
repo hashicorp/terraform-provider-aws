@@ -38,7 +38,7 @@ func testAccMesh_basic(t *testing.T) {
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
