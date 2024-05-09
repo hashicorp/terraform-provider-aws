@@ -84,7 +84,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -245,7 +245,7 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInte
 	}
 
 	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.ToString(v)
+		tfMap[names.AttrInstanceID] = aws.ToString(v)
 	}
 
 	if v := apiObject.InstanceOwnerId; v != nil {

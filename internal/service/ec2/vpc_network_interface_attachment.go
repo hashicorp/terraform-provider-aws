@@ -35,7 +35,7 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,7 +59,7 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 
 	attachmentID, err := attachNetworkInterface(ctx, conn,
 		d.Get(names.AttrNetworkInterfaceID).(string),
-		d.Get("instance_id").(string),
+		d.Get(names.AttrInstanceID).(string),
 		d.Get("device_index").(int),
 		networkInterfaceAttachedTimeout,
 	)
@@ -94,7 +94,7 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrNetworkInterfaceID, network_interface.NetworkInterfaceId)
 	d.Set("attachment_id", network_interface.Attachment.AttachmentId)
 	d.Set("device_index", network_interface.Attachment.DeviceIndex)
-	d.Set("instance_id", network_interface.Attachment.InstanceId)
+	d.Set(names.AttrInstanceID, network_interface.Attachment.InstanceId)
 	d.Set(names.AttrStatus, network_interface.Attachment.Status)
 
 	return diags

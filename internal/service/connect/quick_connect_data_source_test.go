@@ -31,7 +31,7 @@ func testAccQuickConnectDataSource_id(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "quick_connect_config.#", resourceName, "quick_connect_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "quick_connect_config.0.quick_connect_type", resourceName, "quick_connect_config.0.quick_connect_type"),
@@ -63,7 +63,7 @@ func testAccQuickConnectDataSource_name(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "quick_connect_config.#", resourceName, "quick_connect_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "quick_connect_config.0.quick_connect_type", resourceName, "quick_connect_config.0.quick_connect_type"),

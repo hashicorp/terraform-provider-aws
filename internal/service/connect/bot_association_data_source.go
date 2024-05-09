@@ -20,7 +20,7 @@ func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAssociationRead,
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -52,7 +52,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	var name, region string
 	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -72,7 +72,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)
 	}

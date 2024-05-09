@@ -376,7 +376,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1029,7 +1029,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1749,7 +1749,7 @@ func flattenAnalysisRouteTableRoute(apiObject *ec2.AnalysisRouteTableRoute) map[
 	}
 
 	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NatGatewayId; v != nil {

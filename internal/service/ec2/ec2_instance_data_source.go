@@ -186,7 +186,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -419,7 +419,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		input.InstanceIds = aws.StringSlice([]string{v.(string)})
 	}
 
