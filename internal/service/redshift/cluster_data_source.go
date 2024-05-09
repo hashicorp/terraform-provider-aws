@@ -126,7 +126,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -261,7 +261,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("encrypted", rsc.Encrypted)
 	if rsc.Endpoint != nil {
-		d.Set("endpoint", rsc.Endpoint.Address)
+		d.Set(names.AttrEndpoint, rsc.Endpoint.Address)
 		d.Set(names.AttrPort, rsc.Endpoint.Port)
 	}
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
