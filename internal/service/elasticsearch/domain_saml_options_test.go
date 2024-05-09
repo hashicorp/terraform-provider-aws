@@ -187,7 +187,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
-			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -221,7 +221,7 @@ func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, sam
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
-		_, err := tfelasticsearch.FindDomainByName(ctx, conn, options.Primary.Attributes["domain_name"])
+		_, err := tfelasticsearch.FindDomainByName(ctx, conn, options.Primary.Attributes[names.AttrDomainName])
 
 		return err
 	}
