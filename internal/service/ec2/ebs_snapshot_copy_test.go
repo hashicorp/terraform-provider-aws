@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,7 +18,7 @@ import (
 
 func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot ec2.Snapshot
+	var snapshot awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
@@ -42,7 +42,7 @@ func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
 
 func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot ec2.Snapshot
+	var snapshot awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
@@ -66,7 +66,7 @@ func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 
 func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot ec2.Snapshot
+	var snapshot awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
@@ -107,7 +107,7 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 
 func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot ec2.Snapshot
+	var snapshot awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
@@ -130,7 +130,7 @@ func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
 
 func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot ec2.Snapshot
+	var snapshot awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
@@ -155,7 +155,7 @@ func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
 
 func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var snapshot ec2.Snapshot
+	var snapshot awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_snapshot_copy.test"
@@ -179,7 +179,7 @@ func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 
 func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 

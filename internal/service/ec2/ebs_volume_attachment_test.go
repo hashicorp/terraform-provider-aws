@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -82,14 +82,14 @@ func TestAccEC2EBSVolumeAttachment_skipDestroy(t *testing.T) {
 
 func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 	ctx := acctest.Context(t)
-	var i ec2.Instance
+	var i awstypes.Instance
 	resourceName := "aws_volume_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	stopInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		err := tfec2.StopInstance(ctx, conn, aws.StringValue(i.InstanceId), false, 10*time.Minute)
+		err := tfec2.StopEBSVolumeAttachmentInstance(ctx, conn, aws.ToString(i.InstanceId), false, 10*time.Minute)
 
 		if err != nil {
 			t.Fatal(err)
@@ -105,7 +105,7 @@ func TestAccEC2EBSVolumeAttachment_attachStopped(t *testing.T) {
 			{
 				Config: testAccEBSVolumeAttachmentConfig_base(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, "aws_instance.test", &i),
+					testAccCheckVolumeAttachmentInstanceExists(ctx, "aws_instance.test", &i),
 				),
 			},
 			{
@@ -177,8 +177,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 
 func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var i ec2.Instance
-	var v ec2.Volume
+	var i awstypes.Instance
+	var v awstypes.Volume
 	resourceName := "aws_volume_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -191,7 +191,7 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 			{
 				Config: testAccEBSVolumeAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, "aws_instance.test", &i),
+					testAccCheckVolumeAttachmentInstanceExists(ctx, "aws_instance.test", &i),
 					testAccCheckVolumeExists(ctx, "aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVolumeAttachment(), resourceName),
@@ -244,7 +244,7 @@ func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("No EBS Volume Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["device_name"])
 
@@ -252,9 +252,34 @@ func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.
 	}
 }
 
+func testAccCheckVolumeAttachmentInstanceExists(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Instance ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindVolumeAttachmentInstanceByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckVolumeAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_volume_attachment" {
