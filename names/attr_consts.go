@@ -20,6 +20,7 @@ const (
 	AttrDescription                = "description"
 	AttrDomainName                 = "domain_name"
 	AttrEnabled                    = "enabled"
+	AttrEndpoint                   = "endpoint"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
 	AttrID                         = "id" // Should be explicitly declared only for Framework resources
