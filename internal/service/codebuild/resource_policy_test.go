@@ -35,7 +35,7 @@ func TestAccCodeBuildResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &reportGroup),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codebuild_report_group.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codebuild_report_group.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
