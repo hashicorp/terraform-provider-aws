@@ -604,7 +604,7 @@ func resourceGroupV0() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
