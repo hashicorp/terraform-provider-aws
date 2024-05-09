@@ -102,7 +102,7 @@ func ResourceCoreNetwork() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -245,9 +245,9 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, coreNetwork.CoreNetworkArn)
 	if coreNetwork.CreatedAt != nil {
-		d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
+		d.Set(names.AttrCreatedAt, aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set("created_at", nil)
+		d.Set(names.AttrCreatedAt, nil)
 	}
 	d.Set(names.AttrDescription, coreNetwork.Description)
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {

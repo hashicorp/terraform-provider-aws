@@ -52,7 +52,7 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 				CustomType: computePlatform,
 				Computed:   true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: framework.IDAttribute(),

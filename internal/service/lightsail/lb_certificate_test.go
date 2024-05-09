@@ -51,7 +51,7 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 					// When using a .test domain, Domain Validation Records return a single FAILED entry
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_records.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

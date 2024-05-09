@@ -41,7 +41,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -199,7 +199,7 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("domain_validation_records", flattenLoadBalancerDomainValidationRecords(out.DomainValidationRecords))
 	d.Set("lb_name", out.LoadBalancerName)

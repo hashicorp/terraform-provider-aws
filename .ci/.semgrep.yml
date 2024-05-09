@@ -1105,3 +1105,13 @@ rules:
       - pattern: '"last_updated_date"'
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
+  - id: literal-created_at-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCreatedAt` for the string literal "created_at"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"created_at"'
+    severity: ERROR
+    fix: "names.AttrCreatedAt"

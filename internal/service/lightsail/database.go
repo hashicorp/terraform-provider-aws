@@ -78,7 +78,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -300,7 +300,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("bundle_id", rd.RelationalDatabaseBundleId)
 	d.Set("ca_certificate_identifier", rd.CaCertificateIdentifier)
 	d.Set("cpu_count", rd.Hardware.CpuCount)
-	d.Set("created_at", rd.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, rd.CreatedAt.Format(time.RFC3339))
 	d.Set("disk_size", rd.Hardware.DiskSizeInGb)
 	d.Set("engine", rd.Engine)
 	d.Set(names.AttrEngineVersion, rd.EngineVersion)

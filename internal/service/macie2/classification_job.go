@@ -523,7 +523,7 @@ func ResourceClassificationJob() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{macie2.JobStatusCancelled, macie2.JobStatusRunning, macie2.JobStatusUserPaused}, false),
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -682,7 +682,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 		status = macie2.JobStatusRunning
 	}
 	d.Set("job_status", status)
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
 	}

@@ -83,7 +83,7 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -493,7 +493,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}.String()
 
 	d.Set(names.AttrARN, arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("edition", resp.Edition)
 	d.Set("error_message", resp.ErrorMessage)

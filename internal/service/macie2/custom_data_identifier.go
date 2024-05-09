@@ -95,7 +95,7 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -203,7 +203,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 		d.SetId("")
 	}
 
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set(names.AttrARN, resp.Arn)
 
 	return diags
