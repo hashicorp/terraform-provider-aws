@@ -331,7 +331,7 @@ func resourceCluster() *schema.Resource {
 				Default:      5439,
 				ValidateFunc: validation.IntBetween(1115, 65535),
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -537,7 +537,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// NumberOfNodes set below for CreateCluster.
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		inputR.PreferredMaintenanceWindow = aws.String(v.(string))
 		inputC.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
@@ -710,7 +710,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
-	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
 	if err := d.Set("snapshot_copy", flattenSnapshotCopy(rsc.ClusterSnapshotCopyStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_copy: %s", err)
@@ -813,8 +813,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManageMasterPassword = aws.Bool(d.Get("manage_master_password").(bool))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("publicly_accessible") {

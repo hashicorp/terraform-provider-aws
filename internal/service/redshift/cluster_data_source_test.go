@@ -47,7 +47,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "node_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "number_of_nodes"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPort),
-					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(dataSourceName, "manual_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_track_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
