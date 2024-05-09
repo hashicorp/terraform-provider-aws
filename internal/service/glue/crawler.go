@@ -257,7 +257,7 @@ func ResourceCrawler() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -1221,7 +1221,7 @@ func expandLakeFormationConfiguration(cfg []interface{}) *glue.LakeFormationConf
 
 	target := &glue.LakeFormationConfiguration{}
 
-	if v, ok := m["account_id"].(string); ok {
+	if v, ok := m[names.AttrAccountID].(string); ok {
 		target.AccountId = aws.String(v)
 	}
 
@@ -1238,7 +1238,7 @@ func flattenLakeFormationConfiguration(cfg *glue.LakeFormationConfiguration) []m
 	}
 
 	m := map[string]interface{}{
-		"account_id":                     aws.StringValue(cfg.AccountId),
+		names.AttrAccountID:              aws.StringValue(cfg.AccountId),
 		"use_lake_formation_credentials": aws.BoolValue(cfg.UseLakeFormationCredentials),
 	}
 
