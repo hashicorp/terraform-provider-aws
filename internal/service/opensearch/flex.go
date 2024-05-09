@@ -257,7 +257,7 @@ func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
+		tfMap[names.AttrAvailabilityZones] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {

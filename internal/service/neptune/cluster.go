@@ -77,7 +77,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				MaxItems: 3,
 				Optional: true,
@@ -360,7 +360,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBClusterIdentifier: aws.String(clusterID),
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
 		inputC.AvailabilityZones = flex.ExpandStringSet(v)
@@ -535,7 +535,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	arn := aws.StringValue(dbc.DBClusterArn)
 	d.Set(names.AttrARN, arn)
-	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))

@@ -86,7 +86,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -602,7 +602,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -729,7 +729,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -971,7 +971,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.AllocatedStorage = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1169,7 +1169,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("allocated_storage", dbc.AllocatedStorage)
 	clusterARN := aws.StringValue(dbc.DBClusterArn)
 	d.Set(names.AttrARN, clusterARN)
-	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)

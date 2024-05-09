@@ -228,7 +228,7 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
-		m["availability_zones"] = flex.FlattenStringSet(o.AvailabilityZones)
+		m[names.AttrAvailabilityZones] = flex.FlattenStringSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
 		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(o.SecurityGroupIds)

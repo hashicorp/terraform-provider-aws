@@ -935,3 +935,13 @@ rules:
       - pattern: '"name_prefix"'
     severity: ERROR
     fix: "names.AttrNamePrefix"
+  - id: literal-availability_zones-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAvailabilityZones` for the string literal "availability_zones"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"availability_zones"'
+    severity: ERROR
+    fix: "names.AttrAvailabilityZones"

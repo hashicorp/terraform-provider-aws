@@ -98,7 +98,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -247,7 +247,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	preferredAZs := d.Get("availability_zones").(*schema.Set)
+	preferredAZs := d.Get(names.AttrAvailabilityZones).(*schema.Set)
 	if preferredAZs.Len() > 0 {
 		input.AvailabilityZones = flex.ExpandStringValueSet(preferredAZs)
 	}

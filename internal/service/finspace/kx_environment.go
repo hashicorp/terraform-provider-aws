@@ -51,7 +51,7 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -273,7 +273,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("availability_zones", out.AvailabilityZoneIds)
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 	d.Set("infrastructure_account_id", out.DedicatedServiceAccountId)
 	d.Set("created_timestamp", out.CreationTimestamp.String())
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())

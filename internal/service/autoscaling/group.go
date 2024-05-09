@@ -71,7 +71,7 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -885,7 +885,7 @@ func resourceGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"availability_zones"},
+				ConflictsWith: []string{names.AttrAvailabilityZones},
 			},
 			"wait_for_capacity_timeout": {
 				Type:         schema.TypeString,
@@ -1063,7 +1063,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -1266,7 +1266,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
-	d.Set("availability_zones", g.AvailabilityZones)
+	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
@@ -1367,8 +1367,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 		}
 
-		if d.HasChange("availability_zones") {
-			if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if d.HasChange(names.AttrAvailabilityZones) {
+			if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 				input.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 			}
 		}

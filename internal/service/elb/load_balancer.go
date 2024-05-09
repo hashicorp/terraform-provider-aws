@@ -99,7 +99,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -288,7 +288,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -347,7 +347,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
-	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
 	d.Set("cross_zone_load_balancing", lbAttrs.CrossZoneLoadBalancing.Enabled)
@@ -648,8 +648,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("availability_zones") {
-		o, n := d.GetChange("availability_zones")
+	if d.HasChange(names.AttrAvailabilityZones) {
+		o, n := d.GetChange(names.AttrAvailabilityZones)
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
