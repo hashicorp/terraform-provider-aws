@@ -46,7 +46,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "0"),
