@@ -131,9 +131,9 @@ func (p *servicePackage) ServicePackageName() string {
 	{{if eq .SDKVersion "1" "1,2" }}
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 	{{- end }}
 
