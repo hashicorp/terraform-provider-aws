@@ -134,7 +134,7 @@ func ResourceContainerRecipe() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"delete_on_termination": {
+												names.AttrDeleteOnTermination: {
 													Type:             nullable.TypeNullableBool,
 													Optional:         true,
 													ForceNew:         true,
