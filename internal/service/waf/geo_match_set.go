@@ -91,7 +91,7 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	output, err := findGeoMatchSetByID(ctx, conn, d.Id())
+	geoMatchSet, err := findGeoMatchSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF GeoMatchSet (%s) not found, removing from state", d.Id())
@@ -110,10 +110,10 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  "geomatchset/" + d.Id(),
 	}
 	d.Set(names.AttrARN, arn.String())
-	if err := d.Set("geo_match_constraint", flattenGeoMatchConstraint(output.GeoMatchConstraints)); err != nil {
+	if err := d.Set("geo_match_constraint", flattenGeoMatchConstraint(geoMatchSet.GeoMatchConstraints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting geo_match_constraint: %s", err)
 	}
-	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrName, geoMatchSet.Name)
 
 	return diags
 }

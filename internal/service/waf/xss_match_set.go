@@ -212,7 +212,7 @@ func flattenXSSMatchTuples(ts []awstypes.XssMatchTuple) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
-		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
 		m["text_transformation"] = string(t.TextTransformation)
 		out[i] = m
 	}
@@ -233,7 +233,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []awstypes.XssMatchSetUpdat
 		updates = append(updates, awstypes.XssMatchSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			XssMatchTuple: &awstypes.XssMatchTuple{
-				FieldToMatch:       ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})
@@ -245,7 +245,7 @@ func diffXSSMatchSetTuples(oldT, newT []interface{}) []awstypes.XssMatchSetUpdat
 		updates = append(updates, awstypes.XssMatchSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			XssMatchTuple: &awstypes.XssMatchTuple{
-				FieldToMatch:       ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})

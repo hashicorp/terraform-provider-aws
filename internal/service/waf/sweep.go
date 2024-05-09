@@ -902,7 +902,7 @@ func sweepWebACLs(region string) error {
 		}
 
 		for _, webACL := range page.WebACLs {
-			r := ResourceWebACL()
+			r := resourceWebACL()
 			d := r.Data(nil)
 
 			id := aws.ToString(webACL.WebACLId)

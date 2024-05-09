@@ -7,7 +7,10 @@ package waf
 var (
 	ResourceByteMatchSet = resourceByteMatchSet
 	ResourceGeoMatchSet  = resourceGeoMatchSet
+	ResourceWebACL       = resourceWebACL
 
 	FindByteMatchSetByID = findByteMatchSetByID
 	FindGeoMatchSetByID  = findGeoMatchSetByID
+	FindWebACLByID       = findWebACLByID
+	FlattenFieldToMatch  = flattenFieldToMatch
 )

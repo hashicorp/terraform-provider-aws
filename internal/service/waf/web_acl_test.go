@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -332,21 +330,18 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetWebACL(ctx, &waf.GetWebACLInput{
-				WebACLId: aws.String(rs.Primary.ID),
-			})
 
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+			_, err := tfwaf.FindWebACLByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading WAF Web ACL (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if resp != nil && resp.WebACL != nil {
-				return fmt.Errorf("WAF Web ACL (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("WAF Web ACL %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -360,25 +355,17 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WebACL ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetWebACL(ctx, &waf.GetWebACLInput{
-			WebACLId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindWebACLByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.WebACL.WebACLId == rs.Primary.ID {
-			*v = *resp.WebACL
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WebACL (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -684,7 +671,7 @@ resource "aws_waf_web_acl" "test" {
   }
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -701,8 +688,8 @@ resource "aws_waf_web_acl" "test" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

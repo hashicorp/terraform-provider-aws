@@ -192,7 +192,7 @@ func flattenSQLInjectionMatchTuples(ts []awstypes.SqlInjectionMatchTuple) []inte
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["text_transformation"] = t.TextTransformation
-		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
 		out[i] = m
 	}
 
@@ -213,7 +213,7 @@ func diffSQLInjectionMatchTuples(oldT, newT []interface{}) []awstypes.SqlInjecti
 		updates = append(updates, awstypes.SqlInjectionMatchSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			SqlInjectionMatchTuple: &awstypes.SqlInjectionMatchTuple{
-				FieldToMatch:       ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})
@@ -225,7 +225,7 @@ func diffSQLInjectionMatchTuples(oldT, newT []interface{}) []awstypes.SqlInjecti
 		updates = append(updates, awstypes.SqlInjectionMatchSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			SqlInjectionMatchTuple: &awstypes.SqlInjectionMatchTuple{
-				FieldToMatch:       ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})

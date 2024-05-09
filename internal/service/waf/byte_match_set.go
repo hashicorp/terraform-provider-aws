@@ -109,7 +109,7 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	output, err := findByteMatchSetByID(ctx, conn, d.Id())
+	byteMatchSet, err := findByteMatchSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF ByteMatchSet (%s) not found, removing from state", d.Id())
@@ -121,10 +121,10 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading WAF ByteMatchSet (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("byte_match_tuples", flattenByteMatchTuples(output.ByteMatchTuples)); err != nil {
+	if err := d.Set("byte_match_tuples", flattenByteMatchTuples(byteMatchSet.ByteMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting byte_match_tuples: %s", err)
 	}
-	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrName, byteMatchSet.Name)
 
 	return diags
 }
@@ -225,7 +225,7 @@ func flattenByteMatchTuples(bmt []awstypes.ByteMatchTuple) []interface{} {
 		m := make(map[string]interface{})
 
 		if t.FieldToMatch != nil {
-			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
 		}
 		m["positional_constraint"] = t.PositionalConstraint
 		m["target_string"] = string(t.TargetString)
@@ -250,7 +250,7 @@ func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpd
 		updates = append(updates, awstypes.ByteMatchSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			ByteMatchTuple: &awstypes.ByteMatchTuple{
-				FieldToMatch:         ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: awstypes.PositionalConstraint(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   awstypes.TextTransformation(tuple["text_transformation"].(string)),
@@ -264,7 +264,7 @@ func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpd
 		updates = append(updates, awstypes.ByteMatchSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			ByteMatchTuple: &awstypes.ByteMatchTuple{
-				FieldToMatch:         ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: awstypes.PositionalConstraint(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   awstypes.TextTransformation(tuple["text_transformation"].(string)),

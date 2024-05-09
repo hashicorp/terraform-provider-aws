@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_waf_sql_injection_match_set",
 		},
 		{
-			Factory:  ResourceWebACL,
+			Factory:  resourceWebACL,
 			TypeName: "aws_waf_web_acl",
 			Name:     "Web ACL",
 			Tags: &types.ServicePackageResourceTags{
