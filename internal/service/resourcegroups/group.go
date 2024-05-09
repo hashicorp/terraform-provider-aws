@@ -62,7 +62,7 @@ func resourceGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Schema{
@@ -384,7 +384,7 @@ func expandGroupConfigurationParameters(parameterList []interface{}) []types.Gro
 	for _, param := range parameterList {
 		parameter := param.(map[string]interface{})
 		var values []string
-		for _, val := range parameter["values"].([]interface{}) {
+		for _, val := range parameter[names.AttrValues].([]interface{}) {
 			values = append(values, val.(string))
 		}
 		parameters = append(parameters, types.GroupConfigurationParameter{
@@ -427,7 +427,7 @@ func flattenGroupConfigurationParameter(param types.GroupConfigurationParameter)
 	}
 
 	if v := param.Values; v != nil {
-		tfMap["values"] = v
+		tfMap[names.AttrValues] = v
 	}
 
 	return tfMap
