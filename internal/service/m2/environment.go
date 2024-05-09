@@ -130,7 +130,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{
+			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
 				CustomType: fwtypes.OnceAWeekWindowType,
 				Optional:   true,
 				Computed:   true,
