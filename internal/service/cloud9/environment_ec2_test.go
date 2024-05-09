@@ -48,7 +48,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrInstanceType, "subnet_id", "image_id"},
+				ImportStateVerifyIgnore: []string{names.AttrInstanceType, names.AttrSubnetID, "image_id"},
 			},
 		},
 	})
@@ -82,7 +82,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_arn", "aws_iam_user.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ec2"),
 				),
 			},
@@ -90,7 +90,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"automatic_stop_time_minutes", "image_id", names.AttrInstanceType, "subnet_id"},
+				ImportStateVerifyIgnore: []string{"automatic_stop_time_minutes", "image_id", names.AttrInstanceType, names.AttrSubnetID},
 			},
 			{
 				Config: testAccEnvironmentEC2Config_allFields(rName, name2, description2, imageID),
@@ -128,7 +128,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrInstanceType, "subnet_id", "image_id"},
+				ImportStateVerifyIgnore: []string{names.AttrInstanceType, names.AttrSubnetID, "image_id"},
 			},
 			{
 				Config: testAccEnvironmentEC2Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
