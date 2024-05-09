@@ -430,7 +430,7 @@ func resourceTarget() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -889,7 +889,7 @@ func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters
 		param := c.(map[string]interface{})
 		command := types.RunCommandTarget{
 			Key:    aws.String(param[names.AttrKey].(string)),
-			Values: flex.ExpandStringValueList(param["values"].([]interface{})),
+			Values: flex.ExpandStringValueList(param[names.AttrValues].([]interface{})),
 		}
 		commands = append(commands, command)
 	}
@@ -1167,7 +1167,7 @@ func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[st
 		config := make(map[string]interface{})
 
 		config[names.AttrKey] = aws.ToString(x.Key)
-		config["values"] = x.Values
+		config[names.AttrValues] = x.Values
 
 		result = append(result, config)
 	}

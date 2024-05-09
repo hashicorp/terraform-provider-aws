@@ -173,7 +173,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
 																		},
-																		"values": {
+																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
@@ -253,7 +253,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
 																		},
-																		"values": {
+																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
@@ -343,7 +343,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
 																		},
-																		"values": {
+																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
@@ -436,7 +436,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Optional: true,
 																			Computed: true,
 																		},
-																		"values": {
+																		names.AttrValues: {
 																			Type:     schema.TypeList,
 																			Optional: true,
 																			Computed: true,
@@ -832,7 +832,7 @@ func expandSimpleCriterionForJob(criterion []interface{}) *macie2.SimpleCriterio
 	if v, ok := simpleCriterionMap[names.AttrKey]; ok && v.(string) != "" {
 		simpleCriterion.Key = aws.String(v.(string))
 	}
-	if v, ok := simpleCriterionMap["values"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := simpleCriterionMap[names.AttrValues]; ok && len(v.([]interface{})) > 0 {
 		simpleCriterion.Values = flex.ExpandStringList(v.([]interface{}))
 	}
 
@@ -968,7 +968,7 @@ func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *macie2.SimpleScopeTer
 	if v, ok := simpleScopeTermMap[names.AttrKey]; ok && v.(string) != "" {
 		simpleTerm.Key = aws.String(v.(string))
 	}
-	if v, ok := simpleScopeTermMap["values"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := simpleScopeTermMap[names.AttrValues]; ok && len(v.([]interface{})) > 0 {
 		simpleTerm.Values = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := simpleScopeTermMap["comparator"]; ok && v.(string) != "" {
@@ -1143,9 +1143,9 @@ func flattenSimpleCriterionForJob(criterion *macie2.SimpleCriterionForJob) []map
 	var simpleCriterionList []map[string]interface{}
 
 	simpleCriterionList = append(simpleCriterionList, map[string]interface{}{
-		"comparator":  aws.StringValue(criterion.Comparator),
-		names.AttrKey: aws.StringValue(criterion.Key),
-		"values":      flex.FlattenStringList(criterion.Values),
+		"comparator":     aws.StringValue(criterion.Comparator),
+		names.AttrKey:    aws.StringValue(criterion.Key),
+		names.AttrValues: flex.FlattenStringList(criterion.Values),
 	})
 
 	return simpleCriterionList
@@ -1257,9 +1257,9 @@ func flattenSimpleScopeTerm(simpleScopeTerm *macie2.SimpleScopeTerm) []map[strin
 	var simpleScopeTermList []map[string]interface{}
 
 	simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
-		names.AttrKey: aws.StringValue(simpleScopeTerm.Key),
-		"comparator":  aws.StringValue(simpleScopeTerm.Comparator),
-		"values":      flex.FlattenStringList(simpleScopeTerm.Values),
+		names.AttrKey:    aws.StringValue(simpleScopeTerm.Key),
+		"comparator":     aws.StringValue(simpleScopeTerm.Comparator),
+		names.AttrValues: flex.FlattenStringList(simpleScopeTerm.Values),
 	})
 
 	return simpleScopeTermList

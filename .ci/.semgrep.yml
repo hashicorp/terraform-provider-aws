@@ -1155,3 +1155,13 @@ rules:
       - pattern: '"subnet_id"'
     severity: ERROR
     fix: "names.AttrSubnetID"
+  - id: literal-values-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrValues` for the string literal "values"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"values"'
+    severity: ERROR
+    fix: "names.AttrValues"

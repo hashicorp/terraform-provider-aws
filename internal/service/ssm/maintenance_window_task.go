@@ -100,7 +100,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -156,7 +156,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 													Required: true,
 												},
 
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -275,7 +275,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 													Required: true,
 												},
 
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -645,7 +645,7 @@ func expandTaskInvocationCommonParameters(config []interface{}) map[string][]*st
 
 	for _, v := range config {
 		paramConfig := v.(map[string]interface{})
-		params[paramConfig[names.AttrName].(string)] = flex.ExpandStringList(paramConfig["values"].([]interface{}))
+		params[paramConfig[names.AttrName].(string)] = flex.ExpandStringList(paramConfig[names.AttrValues].([]interface{}))
 	}
 
 	return params
@@ -666,8 +666,8 @@ func flattenTaskInvocationCommonParameters(parameters map[string][]*string) []in
 			values = append(values, aws.StringValue(value))
 		}
 		params := map[string]interface{}{
-			names.AttrName: key,
-			"values":       values,
+			names.AttrName:   key,
+			names.AttrValues: values,
 		}
 		attributes = append(attributes, params)
 	}

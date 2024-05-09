@@ -264,7 +264,7 @@ func testAccPermissions_lfTag(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.key", tagName, names.AttrKey),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", tagName, "values"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", tagName, names.AttrValues),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ASSOCIATE"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", "DESCRIBE"),
@@ -301,7 +301,7 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", tagName, names.AttrKey),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, "values"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, names.AttrValues),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
@@ -929,7 +929,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 			for i := 0; i < count; i++ {
 				tagValues = append(tagValues, rs.Primary.Attributes[fmt.Sprintf("lf_tag.0.values.%d", i)])
 			}
-			tfMap["values"] = flex.FlattenStringSet(aws.StringSlice(tagValues))
+			tfMap[names.AttrValues] = flex.FlattenStringSet(aws.StringSlice(tagValues))
 		}
 
 		input.Resource.LFTag = tflakeformation.ExpandLFTagKeyResource(tfMap)
@@ -962,7 +962,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 					for j := 0; j < expressionValueCount; j++ {
 						valueSlice[j] = rs.Primary.Attributes[fmt.Sprintf("lf_tag_policy.0.expression.%d.values.%d", i, j)]
 					}
-					expression["values"] = flex.FlattenStringSet(aws.StringSlice(valueSlice))
+					expression[names.AttrValues] = flex.FlattenStringSet(aws.StringSlice(valueSlice))
 				}
 				expressionSlice[i] = expression
 			}

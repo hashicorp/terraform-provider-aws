@@ -73,7 +73,7 @@ func ResourceDocument() *schema.Resource {
 								validation.StringLenBetween(3, 128),
 							),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							MinItems: 1,
 							Required: true,
@@ -652,7 +652,7 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSourc
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringList(v)
 	}
 
