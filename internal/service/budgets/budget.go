@@ -200,9 +200,9 @@ func ResourceBudget() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -304,7 +304,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
 	accountID := d.Get("account_id").(string)
@@ -388,7 +388,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrName, budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	if err := d.Set("planned_limit", convertPlannedBudgetLimitsToSet(budget.PlannedBudgetLimits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting planned_limit: %s", err)
