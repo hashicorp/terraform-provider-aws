@@ -103,7 +103,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 								listplanmodifier.UseStateForUnknown(),
 							},
 						},
-						"region": schema.StringAttribute{
+						names.AttrRegion: schema.StringAttribute{
 							Required: true,
 						},
 					},
