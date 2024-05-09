@@ -1015,3 +1015,13 @@ rules:
       - pattern: '"bucket_name"'
     severity: ERROR
     fix: "names.AttrBucketName"
+  - id: literal-instance_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrInstanceID` for the string literal "instance_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"instance_id"'
+    severity: ERROR
+    fix: "names.AttrInstanceID"
