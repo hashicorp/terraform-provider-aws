@@ -263,7 +263,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeMap,
 							Required: true,
 							ForceNew: true,
@@ -978,7 +978,7 @@ func expandSelfManagedEventSource(tfMap map[string]interface{}) *awstypes.SelfMa
 
 	apiObject := &awstypes.SelfManagedEventSource{}
 
-	if v, ok := tfMap["endpoints"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEndpoints].(map[string]interface{}); ok && len(v) > 0 {
 		m := map[string][]string{}
 
 		for k, v := range v {
@@ -1005,7 +1005,7 @@ func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) m
 			m[k] = strings.Join(v, ",")
 		}
 
-		tfMap["endpoints"] = m
+		tfMap[names.AttrEndpoints] = m
 	}
 
 	return tfMap
