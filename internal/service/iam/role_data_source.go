@@ -61,7 +61,7 @@ func dataSourceRole() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -132,7 +132,7 @@ func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"region": aws.ToString(apiObject.Region),
+		names.AttrRegion: aws.ToString(apiObject.Region),
 	}
 
 	if apiObject.LastUsedDate != nil {
