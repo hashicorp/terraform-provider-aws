@@ -40,7 +40,7 @@ func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -94,7 +94,7 @@ func TestAccNeptuneClusterParameterGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -122,7 +122,7 @@ func TestAccNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
