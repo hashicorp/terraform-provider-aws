@@ -462,7 +462,7 @@ func resourceCluster() *schema.Resource {
 								ForceNew: true,
 								Computed: true,
 							},
-							"subnet_id": {
+							names.AttrSubnetID: {
 								Type:          schema.TypeString,
 								Optional:      true,
 								Computed:      true,
@@ -871,7 +871,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := attributes["key_name"]; ok {
 			instanceConfig.Ec2KeyName = aws.String(v.(string))
 		}
-		if v, ok := attributes["subnet_id"]; ok {
+		if v, ok := attributes[names.AttrSubnetID]; ok {
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
 		if v, ok := attributes[names.AttrSubnetIDs]; ok {
@@ -1612,7 +1612,7 @@ func flattenEC2InstanceAttributes(ia *emr.Ec2InstanceAttributes) []map[string]in
 		attrs["key_name"] = aws.StringValue(ia.Ec2KeyName)
 	}
 	if ia.Ec2SubnetId != nil {
-		attrs["subnet_id"] = aws.StringValue(ia.Ec2SubnetId)
+		attrs[names.AttrSubnetID] = aws.StringValue(ia.Ec2SubnetId)
 	}
 	if ia.RequestedEc2SubnetIds != nil && len(ia.RequestedEc2SubnetIds) > 0 {
 		attrs[names.AttrSubnetIDs] = flex.FlattenStringSet(ia.RequestedEc2SubnetIds)
