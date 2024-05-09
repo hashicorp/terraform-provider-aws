@@ -67,7 +67,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -337,7 +337,7 @@ func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToC
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -386,7 +386,7 @@ func flattenDestination(apiObject *efs.Destination) map[string]interface{} {
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Status; v != nil {
