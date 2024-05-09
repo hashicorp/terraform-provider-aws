@@ -230,7 +230,7 @@ func resourceCluster() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -1047,7 +1047,7 @@ func enableLogging(ctx context.Context, conn *redshift.Redshift, clusterID strin
 		ClusterIdentifier: aws.String(clusterID),
 	}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		input.BucketName = aws.String(v)
 	}
 

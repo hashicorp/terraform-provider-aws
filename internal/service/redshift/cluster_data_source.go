@@ -50,7 +50,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"bucket_name": {
+			names.AttrBucketName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -297,7 +297,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if loggingStatus != nil && aws.BoolValue(loggingStatus.LoggingEnabled) {
-		d.Set("bucket_name", loggingStatus.BucketName)
+		d.Set(names.AttrBucketName, loggingStatus.BucketName)
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
 		d.Set("log_exports", aws.StringValueSlice(loggingStatus.LogExports))

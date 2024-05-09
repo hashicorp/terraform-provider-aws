@@ -49,7 +49,7 @@ func (r *resourceLogging) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"bucket_name": schema.StringAttribute{
+			names.AttrBucketName: schema.StringAttribute{
 				Optional: true,
 			},
 			"cluster_identifier": schema.StringAttribute{
