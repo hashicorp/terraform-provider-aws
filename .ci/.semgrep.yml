@@ -1055,3 +1055,13 @@ rules:
       - pattern: '"account_id"'
     severity: ERROR
     fix: "names.AttrAccountID"
+  - id: literal-transit_gateway_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrTransitGatewayID` for the string literal "transit_gateway_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"transit_gateway_id"'
+    severity: ERROR
+    fix: "names.AttrTransitGatewayID"
