@@ -1095,3 +1095,13 @@ rules:
       - pattern: '"transit_gateway_attachment_id"'
     severity: ERROR
     fix: "names.AttrTransitGatewayAttachmentID"
+  - id: literal-last_updated_date-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLastUpdatedDate` for the string literal "last_updated_date"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"last_updated_date"'
+    severity: ERROR
+    fix: "names.AttrLastUpdatedDate"
