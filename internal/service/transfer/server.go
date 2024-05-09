@@ -74,7 +74,7 @@ func resourceServer() *schema.Resource {
 				Default:      transfer.DomainS3,
 				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -491,7 +491,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("directory_id", "")
 	}
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 
