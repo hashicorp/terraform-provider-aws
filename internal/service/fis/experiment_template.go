@@ -210,7 +210,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Set:      schema.HashString,
@@ -791,7 +791,7 @@ func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTe
 			config.Path = aws.String(v)
 		}
 
-		if v, ok := raw["values"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 			config.Values = flex.ExpandStringValueSet(v)
 		}
 
@@ -948,7 +948,7 @@ func flattenExperimentTemplateTargetFilters(configured []types.ExperimentTemplat
 	for _, v := range configured {
 		item := make(map[string]interface{})
 		item["path"] = aws.ToString(v.Path)
-		item["values"] = v.Values
+		item[names.AttrValues] = v.Values
 
 		dataResources = append(dataResources, item)
 	}
