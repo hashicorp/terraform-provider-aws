@@ -38,7 +38,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -154,7 +154,7 @@ func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, aws.String(e.(string)))
 		}
 		filters = append(filters, &route53resolver.Filter{
