@@ -241,7 +241,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

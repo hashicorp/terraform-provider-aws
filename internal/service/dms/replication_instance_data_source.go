@@ -51,7 +51,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	arn := aws.StringValue(instance.ReplicationInstanceArn)
 	d.Set("replication_instance_arn", arn)

@@ -93,7 +93,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -184,7 +184,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("network_type"); ok {
 		input.NetworkType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("replication_subnet_group_id"); ok {
@@ -232,7 +232,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
@@ -281,8 +281,8 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("replication_instance_class") {

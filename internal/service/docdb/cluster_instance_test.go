@@ -56,7 +56,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "performance_insights_kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "publicly_accessible"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_encrypted"),

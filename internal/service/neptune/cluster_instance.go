@@ -143,7 +143,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -230,7 +230,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredBackupWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
@@ -286,7 +286,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("neptune_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
 	}
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
@@ -338,8 +338,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("promotion_tier") {

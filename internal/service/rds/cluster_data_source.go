@@ -145,7 +145,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -229,7 +229,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
