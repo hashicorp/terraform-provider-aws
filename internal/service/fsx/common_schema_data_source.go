@@ -21,7 +21,7 @@ func newSnapshotFilterList(s *schema.Set) []*fsx.SnapshotFilter {
 		tfMap := tfList.(map[string]interface{})
 		return &fsx.SnapshotFilter{
 			Name:   aws.String(tfMap[names.AttrName].(string)),
-			Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
+			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
 		}
 	})
 }
@@ -36,7 +36,7 @@ func snapshotFiltersSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Schema{
@@ -57,7 +57,7 @@ func newStorageVirtualMachineFilterList(s *schema.Set) []*fsx.StorageVirtualMach
 		tfMap := tfList.(map[string]interface{})
 		return &fsx.StorageVirtualMachineFilter{
 			Name:   aws.String(tfMap[names.AttrName].(string)),
-			Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
+			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
 		}
 	})
 }
@@ -72,7 +72,7 @@ func storageVirtualMachineFiltersSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Schema{
