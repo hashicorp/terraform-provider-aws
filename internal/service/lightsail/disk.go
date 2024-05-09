@@ -46,7 +46,7 @@ func ResourceDisk() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set("size_in_gb", out.SizeInGb)
 	d.Set("support_code", out.SupportCode)

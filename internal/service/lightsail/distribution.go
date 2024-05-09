@@ -196,7 +196,7 @@ func ResourceDistribution() *schema.Resource {
 				Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The timestamp when the distribution was created.",
@@ -431,7 +431,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("certificate_name", out.CertificateName)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)

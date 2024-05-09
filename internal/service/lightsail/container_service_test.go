@@ -41,7 +41,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
 					resource.TestCheckResourceAttr(resourceName, "scale", "1"),

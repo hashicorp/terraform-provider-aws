@@ -49,7 +49,7 @@ func ResourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,7 +132,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
 	d.Set("bundle_id", out.BundleId)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set("region", out.Location.RegionName)
 	d.Set("support_code", out.SupportCode)

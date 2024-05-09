@@ -44,7 +44,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -184,7 +184,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrARN, certificate.Arn)
-	d.Set("created_at", certificate.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, certificate.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrDomainName, certificate.DomainName)
 	d.Set("domain_validation_options", flattenDomainValidationRecords(certificate.DomainValidationRecords))
 	d.Set(names.AttrName, certificate.Name)

@@ -48,7 +48,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$`), "Invalid Bucket name. Must match regex: ^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$"),
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set("access_key_id", out.AccessKeyId)
 	d.Set(names.AttrBucketName, d.Get(names.AttrBucketName).(string))
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrStatus, out.Status)
 
 	return diags

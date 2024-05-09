@@ -52,7 +52,7 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 					// When using a .test domain, Domain Validation Records are not returned
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
