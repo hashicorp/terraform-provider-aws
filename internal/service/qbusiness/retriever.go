@@ -5,6 +5,7 @@ package qbusiness
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -79,9 +80,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
 				},
 			},
-			"retriever_id": schema.StringAttribute{
-				Computed: true,
-			},
+			"retriever_id": framework.IDAttribute(),
 			"display_name": schema.StringAttribute{
 				Description: "The display name of the Amazon Q retriever.",
 				Optional:    true,
@@ -109,7 +108,6 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-
 			"kendra_index_configuration": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[kendraIndexConfigurationData](ctx),
 				Validators: []validator.Object{
@@ -129,7 +127,6 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
-
 			"native_index_configuration": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[nativeIndexConfigurationData](ctx),
 				Validators: []validator.Object{
@@ -149,8 +146,8 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 				Blocks: map[string]schema.Block{
-					"date_boost_override": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[dateBoostConfigurationData](ctx),
+					"date_boost_override": schema.SetNestedBlock{
+						CustomType: fwtypes.NewSetNestedObjectTypeOf[dateBoostConfigurationData](ctx),
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"boost_key": schema.StringAttribute{
@@ -178,8 +175,8 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 							},
 						},
 					},
-					"number_boost_override": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[numberBoostConfigurationData](ctx),
+					"number_boost_override": schema.SetNestedBlock{
+						CustomType: fwtypes.NewSetNestedObjectTypeOf[numberBoostConfigurationData](ctx),
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"boost_key": schema.StringAttribute{
@@ -207,8 +204,8 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 							},
 						},
 					},
-					"string_boost_override": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[stringBoostConfigurationData](ctx),
+					"string_boost_override": schema.SetNestedBlock{
+						CustomType: fwtypes.NewSetNestedObjectTypeOf[stringBoostConfigurationData](ctx),
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"boost_key": schema.StringAttribute{
@@ -228,7 +225,6 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 								},
 								"attribute_value_boosting": schema.MapAttribute{
 									Description: "Specifies specific values of a STRING type document attribute being boosted.",
-									//ElementType: fwtypes.StringEnumType[awstypes.StringAttributeValueBoostingLevel](),
 									ElementType: types.StringType,
 									Optional:    true,
 									Validators: []validator.Map{
@@ -238,8 +234,8 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 							},
 						},
 					},
-					"string_list_boost_override": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[stringListBoostConfigurationData](ctx),
+					"string_list_boost_override": schema.SetNestedBlock{
+						CustomType: fwtypes.NewSetNestedObjectTypeOf[stringListBoostConfigurationData](ctx),
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"boost_key": schema.StringAttribute{
@@ -356,7 +352,11 @@ func (r *resourceRetriever) Delete(ctx context.Context, req resource.DeleteReque
 	_, err := conn.DeleteRetriever(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError("failed to delete Amazon Q retriever", err.Error())
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to delete Q Business retriever (%s)", data.RetrieverId.ValueString()), err.Error())
 		return
 	}
 
@@ -528,10 +528,10 @@ func (data *resourceRetrieverData) flattenConfiguration(ctx context.Context, ret
 
 		c, d := fwtypes.NewObjectValueOf[nativeIndexConfigurationData](ctx, &nativeIndexConfigurationData{
 			IndexId:                    fwflex.StringToFramework(ctx, conf.Value.IndexId),
-			StringBoostingOverride:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, stringBoostOverrides),
-			NumberBoostingOverride:     fwtypes.NewListNestedObjectValueOfSliceMust(ctx, numberBoostOverrides),
-			StringListBoostingOverride: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, stringListBoostOverrides),
-			DateBoostingOverride:       fwtypes.NewListNestedObjectValueOfSliceMust(ctx, dateBoostOverrides),
+			StringBoostingOverride:     fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, stringBoostOverrides),
+			NumberBoostingOverride:     fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, numberBoostOverrides),
+			StringListBoostingOverride: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, stringListBoostOverrides),
+			DateBoostingOverride:       fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, dateBoostOverrides),
 		})
 		diags.Append(d...)
 		data.NativeIndexConfiguration = c
@@ -635,11 +635,11 @@ type kendraIndexConfigurationData struct {
 }
 
 type nativeIndexConfigurationData struct {
-	IndexId                    types.String                                                      `tfsdk:"index_id"`
-	DateBoostingOverride       fwtypes.ListNestedObjectValueOf[dateBoostConfigurationData]       `tfsdk:"date_boost_override"`
-	NumberBoostingOverride     fwtypes.ListNestedObjectValueOf[numberBoostConfigurationData]     `tfsdk:"number_boost_override"`
-	StringBoostingOverride     fwtypes.ListNestedObjectValueOf[stringBoostConfigurationData]     `tfsdk:"string_boost_override"`
-	StringListBoostingOverride fwtypes.ListNestedObjectValueOf[stringListBoostConfigurationData] `tfsdk:"string_list_boost_override"`
+	IndexId                    types.String                                                     `tfsdk:"index_id"`
+	DateBoostingOverride       fwtypes.SetNestedObjectValueOf[dateBoostConfigurationData]       `tfsdk:"date_boost_override"`
+	NumberBoostingOverride     fwtypes.SetNestedObjectValueOf[numberBoostConfigurationData]     `tfsdk:"number_boost_override"`
+	StringBoostingOverride     fwtypes.SetNestedObjectValueOf[stringBoostConfigurationData]     `tfsdk:"string_boost_override"`
+	StringListBoostingOverride fwtypes.SetNestedObjectValueOf[stringListBoostConfigurationData] `tfsdk:"string_list_boost_override"`
 }
 
 type dateBoostConfigurationData struct {

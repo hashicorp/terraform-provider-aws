@@ -112,6 +112,8 @@ func TestAccQBusinessRetriever_boostOverrides(t *testing.T) {
 	var retriever qbusiness.GetRetrieverOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_retriever.test"
+	boostLevel1 := "HIGH"
+	boostLevel2 := "VERY_HIGH"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRetriever(ctx, t) },
@@ -120,17 +122,36 @@ func TestAccQBusinessRetriever_boostOverrides(t *testing.T) {
 		CheckDestroy:             testAccCheckRetrieverDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRetrieverConfig_boostOverrides(rName),
+				Config: testAccRetrieverConfig_boostOverrides(rName, boostLevel1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
-					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_list_boost_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.number_boost_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.date_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.0.boosting_level", boostLevel1),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_list_boost_override.0.boosting_level", boostLevel1),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.number_boost_override.0.boosting_level", boostLevel1),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.date_boost_override.0.boosting_level", boostLevel1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRetrieverConfig_boostOverrides(rName, boostLevel2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_list_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.number_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.date_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.0.boosting_level", boostLevel2),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_list_boost_override.0.boosting_level", boostLevel2),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.number_boost_override.0.boosting_level", boostLevel2),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.date_boost_override.0.boosting_level", boostLevel2),
 				),
 			},
 		},
@@ -208,7 +229,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_qbusiness_app" "test" {
   iam_service_role_arn = aws_iam_role.test.arn
   display_name         = %[1]q
-  
+
   identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   attachments_configuration {
@@ -256,7 +277,7 @@ EOF
 `, rName)
 }
 
-func testAccRetrieverConfig_boostOverrides(rName string) string {
+func testAccRetrieverConfig_boostOverrides(rName, boostingLevel string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_ssoadmin_instances" "test" {}
@@ -311,7 +332,7 @@ resource "aws_qbusiness_retriever" "test" {
 
     string_boost_override {
       boost_key      = "string"
-      boosting_level = "HIGH"
+      boosting_level = %[2]q
 
       attribute_value_boosting = {
         "key1" = "VERY_HIGH"
@@ -321,18 +342,18 @@ resource "aws_qbusiness_retriever" "test" {
 
     string_list_boost_override {
       boost_key      = "string_list"
-      boosting_level = "HIGH"
+      boosting_level = %[2]q
     }
 
     date_boost_override {
       boost_key         = "date"
-      boosting_level    = "HIGH"
+      boosting_level    = %[2]q
       boosting_duration = 100
     }
 
     number_boost_override {
       boost_key      = "number"
-      boosting_level = "HIGH"
+      boosting_level = %[2]q
       boosting_type  = "PRIORITIZE_LARGER_VALUES"
     }
   }
@@ -356,7 +377,7 @@ resource "aws_iam_role" "test" {
 }
 EOF
 }
-`, rName)
+`, rName, boostingLevel)
 }
 
 func testAccRetrieverConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -365,8 +386,9 @@ data "aws_partition" "current" {}
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_retriever" "test" {
-  application_id = aws_qbusiness_app.test.application_id
+  application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
+  type           = "NATIVE_INDEX"
 
   native_index_configuration {
     index_id = aws_qbusiness_index.test.index_id
