@@ -106,7 +106,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	d.Set(names.AttrOwnerID, transitGatewayMulticastDomain.OwnerId)
 	d.Set(names.AttrState, transitGatewayMulticastDomain.State)
 	d.Set("static_sources_support", transitGatewayMulticastDomain.Options.StaticSourcesSupport)
-	d.Set("transit_gateway_id", transitGatewayMulticastDomain.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayMulticastDomain.TransitGatewayId)
 	d.Set("transit_gateway_multicast_domain_id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

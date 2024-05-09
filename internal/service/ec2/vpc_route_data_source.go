@@ -94,7 +94,7 @@ func DataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -177,7 +177,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 			continue
 		}
 
-		if v, ok := d.GetOk("transit_gateway_id"); ok && aws.StringValue(r.TransitGatewayId) != v.(string) {
+		if v, ok := d.GetOk(names.AttrTransitGatewayID); ok && aws.StringValue(r.TransitGatewayId) != v.(string) {
 			continue
 		}
 
@@ -217,7 +217,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
-	d.Set("transit_gateway_id", route.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
 	return diags
