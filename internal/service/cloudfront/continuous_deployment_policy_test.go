@@ -58,7 +58,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "staging_distribution_dns_names.0.items.0", stagingDistributionResourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "staging_distribution_dns_names.0.items.0", stagingDistributionResourceName, names.AttrDomainName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleWeight",
 						"single_weight_config.#":        "1",
@@ -249,10 +249,10 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": domain1,
+						names.AttrDomainName: domain1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": domain1,
+						names.AttrDomainName: domain1,
 					}),
 				),
 			},
@@ -270,10 +270,10 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": domain2,
+						names.AttrDomainName: domain2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
-						"domain_name": domain2,
+						names.AttrDomainName: domain2,
 					}),
 				),
 			},
