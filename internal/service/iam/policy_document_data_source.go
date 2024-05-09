@@ -113,7 +113,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 											Type:     schema.TypeString,
 											Required: true,
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Required: true,
 											Elem: &schema.Schema{
@@ -345,7 +345,7 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.ToStringSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]interface{}))),
 			version,
 		)
 		if err != nil {
