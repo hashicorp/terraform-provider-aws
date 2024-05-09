@@ -103,7 +103,7 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -169,7 +169,7 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -198,7 +198,7 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -623,7 +623,7 @@ func expandElasticsearchDataSourceConfig(l []interface{}, currentRegion string) 
 
 	result := &appsync.ElasticsearchDataSourceConfig{
 		AwsRegion: aws.String(currentRegion),
-		Endpoint:  aws.String(configured["endpoint"].(string)),
+		Endpoint:  aws.String(configured[names.AttrEndpoint].(string)),
 	}
 
 	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
@@ -642,7 +642,7 @@ func expandOpenSearchServiceDataSourceConfig(l []interface{}, currentRegion stri
 
 	result := &appsync.OpenSearchServiceDataSourceConfig{
 		AwsRegion: aws.String(currentRegion),
-		Endpoint:  aws.String(configured["endpoint"].(string)),
+		Endpoint:  aws.String(configured[names.AttrEndpoint].(string)),
 	}
 
 	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
@@ -658,8 +658,8 @@ func flattenElasticsearchDataSourceConfig(config *appsync.ElasticsearchDataSourc
 	}
 
 	result := map[string]interface{}{
-		"endpoint":       aws.StringValue(config.Endpoint),
-		names.AttrRegion: aws.StringValue(config.AwsRegion),
+		names.AttrEndpoint: aws.StringValue(config.Endpoint),
+		names.AttrRegion:   aws.StringValue(config.AwsRegion),
 	}
 
 	return []map[string]interface{}{result}
@@ -671,8 +671,8 @@ func flattenOpenSearchServiceDataSourceConfig(config *appsync.OpenSearchServiceD
 	}
 
 	result := map[string]interface{}{
-		"endpoint":       aws.StringValue(config.Endpoint),
-		names.AttrRegion: aws.StringValue(config.AwsRegion),
+		names.AttrEndpoint: aws.StringValue(config.Endpoint),
+		names.AttrRegion:   aws.StringValue(config.AwsRegion),
 	}
 
 	return []map[string]interface{}{result}
@@ -686,7 +686,7 @@ func expandHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceConfig {
 	configured := l[0].(map[string]interface{})
 
 	result := &appsync.HttpDataSourceConfig{
-		Endpoint: aws.String(configured["endpoint"].(string)),
+		Endpoint: aws.String(configured[names.AttrEndpoint].(string)),
 	}
 
 	if v, ok := configured["authorization_config"].([]interface{}); ok && len(v) > 0 {
@@ -702,7 +702,7 @@ func flattenHTTPDataSourceConfig(config *appsync.HttpDataSourceConfig) []map[str
 	}
 
 	result := map[string]interface{}{
-		"endpoint": aws.StringValue(config.Endpoint),
+		names.AttrEndpoint: aws.StringValue(config.Endpoint),
 	}
 
 	if config.AuthorizationConfig != nil {
