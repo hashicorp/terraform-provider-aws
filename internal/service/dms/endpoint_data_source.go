@@ -358,7 +358,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -390,7 +390,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

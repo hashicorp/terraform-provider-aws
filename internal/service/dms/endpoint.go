@@ -475,7 +475,7 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -517,7 +517,7 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -933,7 +933,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 				settings.BucketFolder = aws.String(v)
 			}
 
-			if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 				settings.BucketName = aws.String(v)
 			}
 
@@ -1283,7 +1283,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 								input.RedshiftSettings.BucketFolder = aws.String(v)
 							}
 
-							if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+							if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 								input.RedshiftSettings.BucketName = aws.String(v)
 							}
 
@@ -2154,7 +2154,7 @@ func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interf
 
 	m := map[string]interface{}{
 		"bucket_folder":                     aws.StringValue(settings.BucketFolder),
-		"bucket_name":                       aws.StringValue(settings.BucketName),
+		names.AttrBucketName:                aws.StringValue(settings.BucketName),
 		"encryption_mode":                   aws.StringValue(settings.EncryptionMode),
 		"server_side_encryption_kms_key_id": aws.StringValue(settings.ServerSideEncryptionKmsKeyId),
 		"service_access_role_arn":           aws.StringValue(settings.ServiceAccessRoleArn),
@@ -2294,7 +2294,7 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["bucket_folder"].(string); ok {
 		apiObject.BucketFolder = aws.String(v)
 	}
-	if v, ok := tfMap["bucket_name"].(string); ok {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok {
 		apiObject.BucketName = aws.String(v)
 	}
 	if v, ok := tfMap["canned_acl_for_objects"].(string); ok {
@@ -2420,7 +2420,7 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 		tfMap["bucket_folder"] = aws.StringValue(v)
 	}
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.StringValue(v)
+		tfMap[names.AttrBucketName] = aws.StringValue(v)
 	}
 	if v := apiObject.CannedAclForObjects; v != nil {
 		tfMap["canned_acl_for_objects"] = aws.StringValue(v)
