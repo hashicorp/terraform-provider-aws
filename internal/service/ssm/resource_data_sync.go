@@ -59,7 +59,7 @@ func ResourceResourceDataSync() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -181,7 +181,7 @@ func FindResourceDataSyncItem(ctx context.Context, conn *ssm.SSM, name string) (
 func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
 	result := make(map[string]interface{})
 	result[names.AttrBucketName] = aws.StringValue(dest.BucketName)
-	result["region"] = aws.StringValue(dest.Region)
+	result[names.AttrRegion] = aws.StringValue(dest.Region)
 	result["sync_format"] = aws.StringValue(dest.SyncFormat)
 	if dest.AWSKMSKeyARN != nil {
 		result[names.AttrKMSKeyARN] = aws.StringValue(dest.AWSKMSKeyARN)
@@ -196,7 +196,7 @@ func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDa
 	raw := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
 	s3dest := &ssm.ResourceDataSyncS3Destination{
 		BucketName: aws.String(raw[names.AttrBucketName].(string)),
-		Region:     aws.String(raw["region"].(string)),
+		Region:     aws.String(raw[names.AttrRegion].(string)),
 		SyncFormat: aws.String(raw["sync_format"].(string)),
 	}
 	if v, ok := raw[names.AttrKMSKeyARN].(string); ok && v != "" {
