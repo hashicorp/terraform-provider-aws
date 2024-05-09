@@ -773,7 +773,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"database_name": {
+									names.AttrDatabaseName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1145,7 +1145,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1932,7 +1932,7 @@ func expandTimestreamAction(tfList []interface{}) *iot.TimestreamAction {
 	apiObject := &iot.TimestreamAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -3257,7 +3257,7 @@ func flattenTimestreamAction(apiObject *iot.TimestreamAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Dimensions; v != nil {
