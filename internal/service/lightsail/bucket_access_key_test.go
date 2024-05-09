@@ -52,7 +52,7 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"secret_access_key", "bucket_name"},
+				ImportStateVerifyIgnore: []string{"secret_access_key", names.AttrBucketName},
 			},
 		},
 	})
