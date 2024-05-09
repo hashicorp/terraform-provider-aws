@@ -75,7 +75,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -497,7 +497,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("architecture", instance.Architecture)
 	d.Set("auto_scaling_type", instance.AutoScalingType)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
-	d.Set("created_at", instance.CreatedAt)
+	d.Set(names.AttrCreatedAt, instance.CreatedAt)
 	d.Set("ebs_optimized", instance.EbsOptimized)
 	d.Set("ec2_instance_id", instance.Ec2InstanceId)
 	d.Set("ecs_cluster_arn", instance.EcsClusterArn)
