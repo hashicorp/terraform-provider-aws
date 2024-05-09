@@ -91,7 +91,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.Protocol](),
@@ -137,7 +137,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.Protocol](),
@@ -508,7 +508,7 @@ func expandRedirectAllRequestsTo(l []interface{}) *types.RedirectAllRequestsTo {
 		result.HostName = aws.String(v)
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		result.Protocol = types.Protocol(v)
 	}
 
@@ -583,7 +583,7 @@ func expandRedirect(l []interface{}) *types.Redirect {
 		result.HttpRedirectCode = aws.String(v)
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		result.Protocol = types.Protocol(v)
 	}
 
@@ -632,7 +632,7 @@ func flattenRedirectAllRequestsTo(r *types.RedirectAllRequestsTo) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"protocol": string(r.Protocol),
+		names.AttrProtocol: string(r.Protocol),
 	}
 
 	if r.HostName != nil {
@@ -686,7 +686,7 @@ func flattenRedirect(r *types.Redirect) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"protocol": string(r.Protocol),
+		names.AttrProtocol: string(r.Protocol),
 	}
 
 	if r.HostName != nil {
