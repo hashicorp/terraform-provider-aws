@@ -6,6 +6,8 @@ package waf
 // Exports for use in tests only.
 var (
 	ResourceByteMatchSet = resourceByteMatchSet
+	ResourceGeoMatchSet  = resourceGeoMatchSet
 
 	FindByteMatchSetByID = findByteMatchSetByID
+	FindGeoMatchSetByID  = findGeoMatchSetByID
 )

@@ -227,7 +227,7 @@ func sweepGeoMatchSet(region string) error {
 		}
 
 		for _, geoMatchSet := range page.GeoMatchSets {
-			r := ResourceGeoMatchSet()
+			r := resourceGeoMatchSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(geoMatchSet.GeoMatchSetId)

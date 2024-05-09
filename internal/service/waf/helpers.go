@@ -120,51 +120,6 @@ func FlattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
 	return out
 }
 
-func FlattenGeoMatchConstraint(ts []awstypes.GeoMatchConstraint) []interface{} {
-	out := make([]interface{}, len(ts))
-	for i, t := range ts {
-		m := make(map[string]interface{})
-		m[names.AttrType] = string(t.Type)
-		m[names.AttrValue] = string(t.Value)
-		out[i] = m
-	}
-	return out
-}
-
-func DiffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSetUpdate {
-	updates := make([]awstypes.GeoMatchSetUpdate, 0)
-
-	for _, od := range oldT {
-		constraint := od.(map[string]interface{})
-
-		if idx, contains := sliceContainsMap(newT, constraint); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
-			continue
-		}
-
-		updates = append(updates, awstypes.GeoMatchSetUpdate{
-			Action: awstypes.ChangeActionDelete,
-			GeoMatchConstraint: &awstypes.GeoMatchConstraint{
-				Type:  awstypes.GeoMatchConstraintType(constraint[names.AttrType].(string)),
-				Value: awstypes.GeoMatchConstraintValue(constraint[names.AttrValue].(string)),
-			},
-		})
-	}
-
-	for _, nd := range newT {
-		constraint := nd.(map[string]interface{})
-
-		updates = append(updates, awstypes.GeoMatchSetUpdate{
-			Action: awstypes.ChangeActionInsert,
-			GeoMatchConstraint: &awstypes.GeoMatchConstraint{
-				Type:  awstypes.GeoMatchConstraintType(constraint[names.AttrType].(string)),
-				Value: awstypes.GeoMatchConstraintValue(constraint[names.AttrValue].(string)),
-			},
-		})
-	}
-	return updates
-}
-
 func DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []awstypes.RegexPatternSetUpdate {
 	updates := make([]awstypes.RegexPatternSetUpdate, 0)
 

@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -114,7 +112,7 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
-					testAccCheckGeoMatchSetDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceGeoMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -204,47 +202,6 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckGeoMatchSetDisappears(ctx context.Context, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-
-		wr := tfwaf.NewRetryer(conn)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateGeoMatchSetInput{
-				ChangeToken:   token,
-				GeoMatchSetId: v.GeoMatchSetId,
-			}
-
-			for _, geoMatchConstraint := range v.GeoMatchConstraints {
-				geoMatchConstraintUpdate := awstypes.GeoMatchSetUpdate{
-					Action: awstypes.ChangeActionDelete,
-					GeoMatchConstraint: &awstypes.GeoMatchConstraint{
-						Type:  geoMatchConstraint.Type,
-						Value: geoMatchConstraint.Value,
-					},
-				}
-				req.Updates = append(req.Updates, geoMatchConstraintUpdate)
-			}
-			return conn.UpdateGeoMatchSet(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error updating GeoMatchSet: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteGeoMatchSetInput{
-				ChangeToken:   token,
-				GeoMatchSetId: v.GeoMatchSetId,
-			}
-			return conn.DeleteGeoMatchSet(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting GeoMatchSet: %s", err)
-		}
-		return nil
-	}
-}
-
 func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -252,25 +209,17 @@ func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.Ge
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF GeoMatchSet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetGeoMatchSet(ctx, &waf.GetGeoMatchSetInput{
-			GeoMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.GeoMatchSet.GeoMatchSetId == rs.Primary.ID {
-			*v = *resp.GeoMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF GeoMatchSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -282,22 +231,18 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetGeoMatchSet(ctx, &waf.GetGeoMatchSetInput{
-				GeoMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.GeoMatchSet.GeoMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF GeoMatchSet %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwaf.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the GeoMatchSet is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF GeoMatchSet %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -307,7 +252,7 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 func testAccGeoMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -325,7 +270,7 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 func testAccGeoMatchSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -343,7 +288,7 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 func testAccGeoMatchSetConfig_changeConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -361,7 +306,7 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 func testAccGeoMatchSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }

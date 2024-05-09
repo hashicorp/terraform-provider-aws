@@ -97,7 +97,7 @@ func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF ByteMatchSe (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF ByteMatchSet (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.(*waf.CreateByteMatchSetOutput).ByteMatchSet.ByteMatchSetId))
@@ -121,10 +121,10 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading WAF ByteMatchSet (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, output.Name)
 	if err := d.Set("byte_match_tuples", flattenByteMatchTuples(output.ByteMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting byte_match_tuples: %s", err)
 	}
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
@@ -148,13 +148,10 @@ func resourceByteMatchSetDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	oldTuples := d.Get("byte_match_tuples").(*schema.Set).List()
-	if len(oldTuples) > 0 {
+	if oldTuples := d.Get("byte_match_tuples").(*schema.Set).List(); len(oldTuples) > 0 {
 		noTuples := []interface{}{}
-		if err := updateByteMatchSet(ctx, conn, d.Id(), oldTuples, noTuples); err != nil {
-			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+		if err := updateByteMatchSet(ctx, conn, d.Id(), oldTuples, noTuples); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
