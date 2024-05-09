@@ -36,7 +36,7 @@ func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "timestream", fmt.Sprintf("database/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -89,7 +89,7 @@ func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
 			},

@@ -68,7 +68,7 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"created_at": {
+						names.AttrCreatedAt: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -436,7 +436,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("airflow_configuration_options", environment.AirflowConfigurationOptions)
 	d.Set("airflow_version", environment.AirflowVersion)
 	d.Set(names.AttrARN, environment.Arn)
-	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
 	d.Set("database_vpc_endpoint_service", environment.DatabaseVpcEndpointService)
 	d.Set("endpoint_management", environment.EndpointManagement)
@@ -806,7 +806,7 @@ func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 	m := map[string]interface{}{}
 
 	if lastUpdate.CreatedAt != nil {
-		m["created_at"] = aws.ToTime(lastUpdate.CreatedAt).String()
+		m[names.AttrCreatedAt] = aws.ToTime(lastUpdate.CreatedAt).String()
 	}
 
 	if lastUpdate.Error != nil {

@@ -159,7 +159,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -185,7 +185,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -275,7 +275,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set("internal", aws.StringValue(lb.Scheme) == "internal")
 	d.Set("load_balancer_type", lb.Type)
-	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(lb.SecurityGroups))
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}

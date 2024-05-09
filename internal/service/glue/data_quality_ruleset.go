@@ -84,7 +84,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -221,7 +221,7 @@ func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTabl
 	}
 
 	apiObject := &glue.DataQualityTargetTable{
-		DatabaseName: aws.String(tfMap["database_name"].(string)),
+		DatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
 		TableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
@@ -238,8 +238,8 @@ func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"database_name": aws.StringValue(apiObject.DatabaseName),
-		"table_name":    aws.StringValue(apiObject.TableName),
+		names.AttrDatabaseName: aws.StringValue(apiObject.DatabaseName),
+		"table_name":           aws.StringValue(apiObject.TableName),
 	}
 
 	if v := apiObject.CatalogId; v != nil {

@@ -45,7 +45,7 @@ func ResourceSecurityProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -83,7 +83,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	securityProfileName := d.Get(names.AttrName).(string)
 	input := &connect.CreateSecurityProfileInput{
 		InstanceId:          aws.String(instanceID),
@@ -147,7 +147,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, resp.SecurityProfile.Arn)
 	d.Set(names.AttrDescription, resp.SecurityProfile.Description)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("organization_resource_id", resp.SecurityProfile.OrganizationResourceId)
 	d.Set("security_profile_id", resp.SecurityProfile.Id)
 	d.Set(names.AttrName, resp.SecurityProfile.SecurityProfileName)

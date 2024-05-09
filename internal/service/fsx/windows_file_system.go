@@ -219,7 +219,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 								ValidateFunc: validation.IsIPAddress,
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -647,7 +647,7 @@ func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.S
 
 	data := l[0].(map[string]interface{})
 	req := &fsx.SelfManagedActiveDirectoryConfiguration{
-		DomainName: aws.String(data["domain_name"].(string)),
+		DomainName: aws.String(data[names.AttrDomainName].(string)),
 		DnsIps:     flex.ExpandStringSet(data["dns_ips"].(*schema.Set)),
 		Password:   aws.String(data["password"].(string)),
 		UserName:   aws.String(data["username"].(string)),
@@ -700,7 +700,7 @@ func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adop
 
 	m := map[string]interface{}{
 		"dns_ips":                                aws.StringValueSlice(adopts.DnsIps),
-		"domain_name":                            aws.StringValue(adopts.DomainName),
+		names.AttrDomainName:                     aws.StringValue(adopts.DomainName),
 		"file_system_administrators_group":       aws.StringValue(adopts.FileSystemAdministratorsGroup),
 		"organizational_unit_distinguished_name": aws.StringValue(adopts.OrganizationalUnitDistinguishedName),
 		"password":                               d.Get("self_managed_active_directory.0.password").(string),

@@ -62,10 +62,10 @@ func ResourceOptionGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validOptionGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -137,7 +137,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateOptionGroupInput{
 		EngineName:             aws.String(d.Get("engine_name").(string)),
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
@@ -177,7 +177,7 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("engine_name", option.EngineName)
 	d.Set("major_engine_version", option.MajorEngineVersion)
 	d.Set(names.AttrName, option.OptionGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
 	if err := d.Set("option", flattenOptions(option.Options, expandOptionConfiguration(d.Get("option").(*schema.Set).List()))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}

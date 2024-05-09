@@ -117,11 +117,11 @@ func resourceWorkgroup() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"availability_zone": {
+												names.AttrAvailabilityZone: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"network_interface_id": {
+												names.AttrNetworkInterfaceID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -129,7 +129,7 @@ func resourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -728,11 +728,11 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -740,7 +740,7 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 	return tfMap
 }

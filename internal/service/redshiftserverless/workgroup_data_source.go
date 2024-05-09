@@ -46,11 +46,11 @@ func dataSourceWorkgroup() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"availability_zone": {
+												names.AttrAvailabilityZone: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"network_interface_id": {
+												names.AttrNetworkInterfaceID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -58,7 +58,7 @@ func dataSourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},

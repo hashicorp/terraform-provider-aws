@@ -56,7 +56,7 @@ func ResourceSlotType() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceSlotType() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -193,9 +193,9 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("checksum", output.Checksum)
-	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, output.Name)
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
 

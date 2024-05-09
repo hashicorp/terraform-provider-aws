@@ -29,7 +29,7 @@ func TestAccEKSAccessEntryDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "access_entry_arn", dataSourceResourceName, "access_entry_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", dataSourceResourceName, "cluster_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedAt, dataSourceResourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_groups.#", dataSourceResourceName, "kubernetes_groups.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", dataSourceResourceName, "principal_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),

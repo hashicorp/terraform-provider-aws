@@ -672,7 +672,7 @@ func legacySecurityGroupRuleResourceSchemaV2(ctx context.Context) *schema.Schema
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"protocol": schema.StringAttribute{
+			names.AttrProtocol: schema.StringAttribute{
 				CustomType: ipProtocolType{},
 				Required:   true,
 				PlanModifiers: []planmodifier.String{

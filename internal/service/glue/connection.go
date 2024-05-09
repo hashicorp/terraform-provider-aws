@@ -88,7 +88,7 @@ func ResourceConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -98,7 +98,7 @@ func ResourceConnection() *schema.Resource {
 							MaxItems: 50,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -288,7 +288,7 @@ func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
 	physicalConnectionRequirements := &glue.PhysicalConnectionRequirements{}
 
-	if v, ok := m["availability_zone"]; ok {
+	if v, ok := m[names.AttrAvailabilityZone]; ok {
 		physicalConnectionRequirements.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -296,7 +296,7 @@ func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.Physic
 		physicalConnectionRequirements.SecurityGroupIdList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := m["subnet_id"]; ok {
+	if v, ok := m[names.AttrSubnetID]; ok {
 		physicalConnectionRequirements.SubnetId = aws.String(v.(string))
 	}
 
@@ -309,9 +309,9 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.
 	}
 
 	m := map[string]interface{}{
-		"availability_zone":      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
-		"security_group_id_list": flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
-		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
+		names.AttrAvailabilityZone: aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
+		"security_group_id_list":   flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
+		names.AttrSubnetID:         aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}
 
 	return []map[string]interface{}{m}

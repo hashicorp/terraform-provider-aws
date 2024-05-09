@@ -45,7 +45,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_record_tables.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.database_name", tableResourceName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.database_name", tableResourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.table_name", tableResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),

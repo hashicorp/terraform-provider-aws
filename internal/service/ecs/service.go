@@ -246,7 +246,7 @@ func ResourceService() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1249,7 +1249,7 @@ func flattenNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result[names.AttrSecurityGroups] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
 	result["subnets"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
@@ -1265,7 +1265,7 @@ func expandNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	}
 	awsVpcConfig := &ecs.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
-	if val, ok := raw["security_groups"]; ok {
+	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = flex.ExpandStringSet(raw["subnets"].(*schema.Set))

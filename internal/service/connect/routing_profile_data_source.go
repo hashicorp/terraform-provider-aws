@@ -35,7 +35,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -111,7 +111,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeRoutingProfileInput{
 		InstanceId: aws.String(instanceID),
@@ -153,7 +153,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrARN, routingProfile.RoutingProfileArn)
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
 	d.Set(names.AttrDescription, routingProfile.Description)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrName, routingProfile.Name)
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 

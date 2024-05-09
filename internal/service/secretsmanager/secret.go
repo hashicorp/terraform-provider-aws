@@ -68,10 +68,10 @@ func resourceSecret() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validSecretName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -157,7 +157,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &secretsmanager.CreateSecretInput{
 		ClientRequestToken:          aws.String(id.UniqueId()), // Needed because we're handling our own retries
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
@@ -243,7 +243,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set(names.AttrName, output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	if err := d.Set("replica", flattenReplicationStatusTypes(output.ReplicationStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
 	}

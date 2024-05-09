@@ -135,7 +135,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -203,7 +203,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.SnsTopicArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -292,7 +292,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
+	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)
 
@@ -315,7 +315,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		"resource_tags",
 		names.AttrSecurityGroupIDs,
 		"sns_topic_arn",
-		"subnet_id",
+		names.AttrSubnetID,
 		"terminate_instance_on_failure",
 	) {
 		input := &imagebuilder.UpdateInfrastructureConfigurationInput{
@@ -359,7 +359,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.SnsTopicArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("subnet_id"); ok {
+		if v, ok := d.GetOk(names.AttrSubnetID); ok {
 			input.SubnetId = aws.String(v.(string))
 		}
 

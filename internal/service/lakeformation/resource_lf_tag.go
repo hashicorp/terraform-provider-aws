@@ -135,7 +135,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"catalog_id": catalogIDSchemaOptional(),
-						"database_name": schema.StringAttribute{
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -192,7 +192,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								setplanmodifier.RequiresReplace(),
 							},
 						},
-						"database_name": schema.StringAttribute{
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),

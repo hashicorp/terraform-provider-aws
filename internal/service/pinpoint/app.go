@@ -107,9 +107,9 @@ func ResourceApp() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -146,7 +146,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
@@ -196,7 +196,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
 	}
 	d.Set(names.AttrName, app.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(app.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(app.Name)))
 	if err := d.Set("quiet_time", flattenQuietTime(settings.QuietTime)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
 	}

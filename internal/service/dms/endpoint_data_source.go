@@ -25,7 +25,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -358,7 +358,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -390,7 +390,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -588,7 +588,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	arn := aws.StringValue(out.EndpointArn)
 	d.Set("endpoint_arn", arn)
 	d.Set("endpoint_type", out.EndpointType)
-	d.Set("database_name", out.DatabaseName)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
 	d.Set(names.AttrPort, out.Port)
 	d.Set("server_name", out.ServerName)

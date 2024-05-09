@@ -48,7 +48,7 @@ func ResourceCatalogTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -335,7 +335,7 @@ func ResourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -402,7 +402,7 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get("database_name").(string)
+	dbName := d.Get(names.AttrDatabaseName).(string)
 	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateTableInput{
@@ -453,7 +453,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	}.String()
 	d.Set(names.AttrARN, tableArn)
 	d.Set("catalog_id", catalogID)
-	d.Set("database_name", dbName)
+	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
 	d.Set(names.AttrName, table.Name)
 	d.Set("owner", table.Owner)
@@ -1116,7 +1116,7 @@ func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier 
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -1143,7 +1143,7 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Name; v != nil {

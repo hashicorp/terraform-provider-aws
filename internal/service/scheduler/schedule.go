@@ -97,13 +97,13 @@ func resourceSchedule() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -221,7 +221,7 @@ func resourceSchedule() *schema.Resource {
 													Optional: true,
 													Default:  false,
 												},
-												"security_groups": {
+												names.AttrSecurityGroups: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -434,7 +434,7 @@ const (
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	in := &scheduler.CreateScheduleInput{
 		Name:               aws.String(name),
@@ -546,7 +546,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("group_name", out.GroupName)
 	d.Set(names.AttrKMSKeyARN, out.KmsKeyArn)
 	d.Set(names.AttrName, out.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set("schedule_expression", out.ScheduleExpression)
 	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
 

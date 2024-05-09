@@ -44,7 +44,7 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "private_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
 				),

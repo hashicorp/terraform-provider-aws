@@ -40,7 +40,7 @@ func TestAccOpenSearchServerlessLifecyclePolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy_version", resourceName, "policy_version"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_date"),
 				),
 			},

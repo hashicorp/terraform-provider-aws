@@ -60,7 +60,7 @@ func ResourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -72,7 +72,7 @@ func ResourceSubnet() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"availability_zone"},
+				ConflictsWith: []string{names.AttrAvailabilityZone},
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,
@@ -166,7 +166,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -247,7 +247,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
-	d.Set("availability_zone", subnet.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)

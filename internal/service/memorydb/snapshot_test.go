@@ -35,7 +35,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					testAccCheckSnapshotExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "snapshot/"+rName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.description", "aws_memorydb_cluster.test", names.AttrDescription),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine_version", "aws_memorydb_cluster.test", "engine_version"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine_version", "aws_memorydb_cluster.test", names.AttrEngineVersion),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.maintenance_window", "aws_memorydb_cluster.test", "maintenance_window"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.name", "aws_memorydb_cluster.test", names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.node_type", "aws_memorydb_cluster.test", "node_type"),
@@ -102,7 +102,7 @@ func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 		},
@@ -125,7 +125,7 @@ func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tftest-"),
 				),
 			},
 		},

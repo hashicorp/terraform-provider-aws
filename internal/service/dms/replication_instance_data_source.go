@@ -27,15 +27,15 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
@@ -111,13 +111,13 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
 	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
-	d.Set("engine_version", instance.EngineVersion)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	arn := aws.StringValue(instance.ReplicationInstanceArn)
 	d.Set("replication_instance_arn", arn)
@@ -129,7 +129,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
 		return aws.StringValue(sg.VpcSecurityGroupId)
 	})
-	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	tags, err := listTags(ctx, conn, arn)
 

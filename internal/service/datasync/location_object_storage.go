@@ -58,7 +58,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket_name": {
+			names.AttrBucketName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -116,7 +116,7 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	input := &datasync.CreateLocationObjectStorageInput{
 		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
-		BucketName:     aws.String(d.Get("bucket_name").(string)),
+		BucketName:     aws.String(d.Get(names.AttrBucketName).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
@@ -178,7 +178,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("access_key", output.AccessKey)
 	d.Set("agent_arns", output.AgentArns)
 	d.Set(names.AttrARN, output.LocationArn)
-	d.Set("bucket_name", bucketName)
+	d.Set(names.AttrBucketName, bucketName)
 	d.Set("server_certificate", string(output.ServerCertificate))
 	d.Set("server_hostname", hostname)
 	d.Set("server_port", output.ServerPort)

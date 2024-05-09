@@ -48,7 +48,7 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -129,14 +129,14 @@ func TestAccSageMakerNotebookInstance_update(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.t2.medium"),
 				),
 			},
 			{
 				Config: testAccNotebookInstanceConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.m4.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.m4.xlarge"),
 				),
 			},
 			{
@@ -452,9 +452,9 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
 				),
 			},
 			{
@@ -467,9 +467,9 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexache.MustCompile("eni-.*")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
 				),
 			},
 		},

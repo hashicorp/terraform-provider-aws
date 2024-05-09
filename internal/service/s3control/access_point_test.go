@@ -38,13 +38,13 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					// https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-alias.html:
 					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^.*-s3alias$`)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, bucketName),
 					acctest.CheckResourceAttrAccountID(resourceName, "bucket_account_id"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexache.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDomainName, "s3-accesspoint", regexache.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, accessPointName),
@@ -108,10 +108,10 @@ func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 				Config: testAccAccessPointConfig_bucketARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", fmt.Sprintf("outpost/[^/]+/accesspoint/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3control_bucket.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexache.MustCompile(fmt.Sprintf("^%s-\\d{12}", rName))),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDomainName, "s3-accesspoint", regexache.MustCompile(fmt.Sprintf("^%s-\\d{12}", rName))),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Vpc"),
@@ -191,7 +191,7 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
 					testAccCheckAccessPointHasPolicy(ctx, resourceName, expectedPolicyText1),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
@@ -244,7 +244,7 @@ func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 				Config: testAccAccessPointConfig_publicBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
@@ -285,7 +285,7 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 				Config: testAccAccessPointConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),

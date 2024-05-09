@@ -109,7 +109,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -133,7 +133,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 	config := expandConfigs(d.Get("config").(*schema.Set).List())
 	input := &connect.CreateHoursOfOperationInput{
@@ -200,7 +200,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrARN, resp.HoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrDescription, resp.HoursOfOperation.Description)
 	d.Set(names.AttrName, resp.HoursOfOperation.Name)
 	d.Set("time_zone", resp.HoursOfOperation.TimeZone)

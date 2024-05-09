@@ -41,7 +41,7 @@ func resourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -75,7 +75,7 @@ func resourceDatabase() *schema.Resource {
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	name := d.Get("database_name").(string)
+	name := d.Get(names.AttrDatabaseName).(string)
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -112,7 +112,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, db.Arn)
-	d.Set("database_name", db.DatabaseName)
+	d.Set(names.AttrDatabaseName, db.DatabaseName)
 	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	d.Set("table_count", db.TableCount)
 

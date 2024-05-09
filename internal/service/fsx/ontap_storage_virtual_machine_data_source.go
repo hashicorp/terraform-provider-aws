@@ -44,7 +44,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

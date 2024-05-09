@@ -42,7 +42,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -260,7 +260,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 	input := &customerprofiles.CreateDomainInput{
 		DomainName: aws.String(name),
 		Tags:       getTagsIn(ctx),
@@ -314,7 +314,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("domain_name", output.DomainName)
+	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
 	d.Set("default_expiration_days", output.DefaultExpirationDays)
@@ -332,7 +332,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &customerprofiles.UpdateDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		if d.HasChange("dead_letter_queue_url") {

@@ -37,7 +37,7 @@ func TestAccKendraFaqDataSource_basic(t *testing.T) {
 				Config: testAccFaqDataSourceConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "created_at", resourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreatedAt, resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "faq_id", resourceName, "faq_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "file_format", resourceName, "file_format"),

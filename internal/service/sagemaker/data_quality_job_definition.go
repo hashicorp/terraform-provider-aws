@@ -347,7 +347,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"instance_type": {
+									names.AttrInstanceType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -878,7 +878,7 @@ func flattenMonitoringClusterConfig(config *sagemaker.MonitoringClusterConfig) [
 	}
 
 	if config.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(config.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(config.InstanceType)
 	}
 
 	if config.VolumeKmsKeyId != nil {
@@ -1252,7 +1252,7 @@ func expandMonitoringClusterConfig(configured []interface{}) *sagemaker.Monitori
 		c.InstanceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["instance_type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrInstanceType].(string); ok && v != "" {
 		c.InstanceType = aws.String(v)
 	}
 

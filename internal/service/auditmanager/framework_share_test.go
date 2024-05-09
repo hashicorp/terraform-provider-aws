@@ -70,7 +70,7 @@ func TestAccAuditManagerFrameworkShare_basic(t *testing.T) {
 				Config: testAccFrameworkShareConfig_basic(rName, acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
 				),
@@ -134,7 +134,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 				Config: testAccFrameworkShareConfig_optional(rName, acctest.AlternateRegion(), "text"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "comment", "text"),
@@ -150,7 +150,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 				Config: testAccFrameworkShareConfig_basic(rName, acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
 				),
@@ -159,7 +159,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 				Config: testAccFrameworkShareConfig_optional(rName, acctest.AlternateRegion(), "text-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "comment", "text-updated"),
