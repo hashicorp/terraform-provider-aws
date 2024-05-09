@@ -1065,3 +1065,13 @@ rules:
       - pattern: '"transit_gateway_id"'
     severity: ERROR
     fix: "names.AttrTransitGatewayID"
+  - id: literal-created_date-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCreatedDate` for the string literal "created_date"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"created_date"'
+    severity: ERROR
+    fix: "names.AttrCreatedDate"

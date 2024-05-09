@@ -49,7 +49,7 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(rName, "conclusion_statement"),
 					resource.TestCheckNoResourceAttr(rName, "confirmation_prompt"),
 					resource.TestCheckResourceAttr(rName, "create_version", "false"),
-					acctest.CheckResourceAttrRFC3339(rName, "created_date"),
+					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(rName, "dialog_code_hook"),
 					resource.TestCheckNoResourceAttr(rName, "follow_up_prompt"),

@@ -28,7 +28,7 @@ func dataSourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -79,7 +79,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.StringValue(route.RouteName))
 	arn := aws.StringValue(route.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
 	meshOwner := aws.StringValue(route.Metadata.MeshOwner)

@@ -80,7 +80,7 @@ func ResourceBot() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -314,7 +314,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("checksum", output.Checksum)
 	d.Set("child_directed", output.ChildDirected)
-	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("detect_sentiment", output.DetectSentiment)
 	d.Set("enable_model_improvements", output.EnableModelImprovements)

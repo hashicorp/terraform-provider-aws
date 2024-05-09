@@ -10,6 +10,7 @@ const (
 	AttrAvailabilityZones   = "availability_zones"
 	AttrBucket              = "bucket"
 	AttrBucketName          = "bucket_name"
+	AttrCreatedDate         = "created_date"
 	AttrDatabaseName        = "database_name"
 	AttrDeleteOnTermination = "delete_on_termination"
 	AttrDescription         = "description"

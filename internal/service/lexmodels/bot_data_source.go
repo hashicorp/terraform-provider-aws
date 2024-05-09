@@ -34,7 +34,7 @@ func DataSourceBot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, arn.String())
 	d.Set("checksum", output.Checksum)
 	d.Set("child_directed", output.ChildDirected)
-	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("detect_sentiment", output.DetectSentiment)
 	d.Set("enable_model_improvements", output.EnableModelImprovements)
