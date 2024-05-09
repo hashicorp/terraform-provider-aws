@@ -36,7 +36,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
@@ -139,7 +139,7 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 			{
@@ -152,14 +152,14 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 		},

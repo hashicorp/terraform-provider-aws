@@ -130,7 +130,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -745,7 +745,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		sourceDBInstanceID := v.(string)
 		input := &rds.CreateDBInstanceReadReplicaInput{
-			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
@@ -958,7 +958,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceFromS3Input{
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -1110,7 +1110,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
@@ -1363,7 +1363,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
-			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
@@ -1563,7 +1563,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		input := &rds.CreateDBInstanceInput{
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -1835,7 +1835,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
-	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, v.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_target", v.BackupTarget)
@@ -2200,9 +2200,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("auto_minor_version_upgrade") {
+	if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
 		needsModify = true
-		input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 	}
 
 	if d.HasChange("backup_retention_period") {

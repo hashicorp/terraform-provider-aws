@@ -57,7 +57,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -279,7 +279,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateClusterInput{
 		ACLName:                 aws.String(d.Get("acl_name").(string)),
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
@@ -494,7 +494,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("acl_name", cluster.ACLName)
 	d.Set(names.AttrARN, cluster.ARN)
-	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, cluster.AutoMinorVersionUpgrade)
 
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))

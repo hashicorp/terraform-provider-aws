@@ -56,7 +56,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					testCheckEngineStuffDefault(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 				),
 			},
@@ -94,7 +94,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 					// Even though it is ignored, the API returns `true` in this case
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 			{
@@ -2170,7 +2170,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 			{
@@ -2183,7 +2183,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 		},

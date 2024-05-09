@@ -93,7 +93,7 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 				Config: testAccClusterConfig_engineRedis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.outpost_arn", ""),
@@ -168,7 +168,7 @@ func TestAccElastiCacheCluster_Engine_redis_v5(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 					// Even though it is ignored, the API returns `true` in this case
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 			{
@@ -1020,7 +1020,7 @@ func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_redisAutoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 			{
@@ -1035,7 +1035,7 @@ func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_redisAutoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 		},
@@ -1371,7 +1371,7 @@ func TestAccElastiCacheCluster_outpost_redis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 			{

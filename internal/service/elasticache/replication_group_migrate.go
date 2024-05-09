@@ -53,7 +53,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,

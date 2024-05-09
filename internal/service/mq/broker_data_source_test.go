@@ -36,7 +36,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "broker_name", resourceName, "broker_name"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "authentication_strategy", resourceName, "authentication_strategy"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "deployment_mode", resourceName, "deployment_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "configuration.#", resourceName, "configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "encryption_options.#", resourceName, "encryption_options.#"),

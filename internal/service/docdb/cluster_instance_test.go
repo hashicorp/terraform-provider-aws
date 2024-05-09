@@ -38,7 +38,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_immediately"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("db:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterIdentifier),
@@ -77,7 +77,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "3"),
 				),
 			},

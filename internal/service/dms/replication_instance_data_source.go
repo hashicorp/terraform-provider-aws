@@ -27,7 +27,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
 	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)

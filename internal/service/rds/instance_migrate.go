@@ -299,7 +299,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -450,7 +450,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,

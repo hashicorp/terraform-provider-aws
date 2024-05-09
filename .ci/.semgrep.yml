@@ -1125,3 +1125,13 @@ rules:
       - pattern: '"preferred_maintenance_window"'
     severity: ERROR
     fix: "names.AttrPreferredMaintenanceWindow"
+  - id: literal-auto_minor_version_upgrade-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAutoMinorVersionUpgrade` for the string literal "auto_minor_version_upgrade"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"auto_minor_version_upgrade"'
+    severity: ERROR
+    fix: "names.AttrAutoMinorVersionUpgrade"

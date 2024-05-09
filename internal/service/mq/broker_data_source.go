@@ -34,7 +34,7 @@ func dataSourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -289,7 +289,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(brokerID)
 	d.Set(names.AttrARN, output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
-	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
 	d.Set("broker_id", brokerID)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("deployment_mode", output.DeploymentMode)

@@ -77,7 +77,7 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
 				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,
@@ -414,7 +414,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.AuthToken = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
@@ -756,8 +756,8 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			ReplicationGroupId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 				if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 					input.AutoMinorVersionUpgrade = aws.Bool(v)
 					requestUpdate = true

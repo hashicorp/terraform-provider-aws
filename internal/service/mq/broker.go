@@ -73,7 +73,7 @@ func resourceBroker() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -398,7 +398,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
 	input := &mq.CreateBrokerInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
@@ -481,7 +481,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
-	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
@@ -604,9 +604,9 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
-	if d.HasChange("auto_minor_version_upgrade") {
+	if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
 		input := &mq.UpdateBrokerInput{
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BrokerId:                aws.String(d.Id()),
 		}
 

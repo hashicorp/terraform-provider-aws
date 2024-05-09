@@ -62,7 +62,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Default:      "true",
@@ -386,7 +386,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EngineVersion = aws.String(version)
 	}
 
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
@@ -633,8 +633,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			requestUpdate = true
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			v := d.Get("auto_minor_version_upgrade")
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			v := d.Get(names.AttrAutoMinorVersionUpgrade)
 			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				input.AutoMinorVersionUpgrade = aws.Bool(v)
 			}
@@ -979,7 +979,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)
 	}
-	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
+	d.Set(names.AttrAutoMinorVersionUpgrade, strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
 	if err := d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
