@@ -43,7 +43,7 @@ func dataSourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		log.Printf("[WARN] HostedZoneIDForRegion: %s", err)
 	}
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	if _, err := findBucketWebsite(ctx, conn, bucket, ""); err == nil {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
 		d.Set("website_domain", domain)

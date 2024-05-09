@@ -396,7 +396,7 @@ func resourceBucket() *schema.Resource {
 					return json
 				},
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1125,7 +1125,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) location: %s", d.Id(), err)
 	}
 
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Id(), region))
 
 	hostedZoneID, err := hostedZoneIDForRegion(region)
