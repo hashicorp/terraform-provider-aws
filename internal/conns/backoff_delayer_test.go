@@ -38,7 +38,7 @@ func TestBackoffDelayer(t *testing.T) {
 	req := request.Request{
 		Error: err1,
 		HTTPResponse: &http.Response{
-			StatusCode: 400,
+			StatusCode: http.StatusBadRequest,
 		},
 	}
 	for i := 0; i < maxRetries; i++ {
