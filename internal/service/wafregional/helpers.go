@@ -22,7 +22,7 @@ func SizeConstraintSetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"nam: {
+		names.AttrName: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
