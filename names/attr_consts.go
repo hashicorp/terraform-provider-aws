@@ -10,6 +10,7 @@ const (
 	AttrBucket              = "bucket"
 	AttrBucketName          = "bucket_name"
 	AttrDatabaseName        = "database_name"
+	AttrDeleteOnTermination = "delete_on_termination"
 	AttrDescription         = "description"
 	AttrDomainName          = "domain_name"
 	AttrEnabled             = "enabled"
