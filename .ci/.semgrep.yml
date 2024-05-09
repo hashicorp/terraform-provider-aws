@@ -995,3 +995,13 @@ rules:
       - pattern: '"security_groups"'
     severity: ERROR
     fix: "names.AttrSecurityGroups"
+  - id: literal-database_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDatabaseName` for the string literal "database_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"database_name"'
+    severity: ERROR
+    fix: "names.AttrDatabaseName"
