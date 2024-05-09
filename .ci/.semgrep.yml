@@ -1115,3 +1115,13 @@ rules:
       - pattern: '"created_at"'
     severity: ERROR
     fix: "names.AttrCreatedAt"
+  - id: literal-preferred_maintenance_window-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPreferredMaintenanceWindow` for the string literal "preferred_maintenance_window"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"preferred_maintenance_window"'
+    severity: ERROR
+    fix: "names.AttrPreferredMaintenanceWindow"
