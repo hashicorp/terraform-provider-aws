@@ -124,7 +124,7 @@ func ResourceExperience() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -257,7 +257,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrRoleARN, out.RoleArn)
 	d.Set(names.AttrStatus, out.Status)
 
-	if err := d.Set("endpoints", flattenEndpoints(out.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenEndpoints(out.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 

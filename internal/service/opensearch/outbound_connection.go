@@ -41,7 +41,7 @@ func ResourceOutboundConnection() *schema.Resource {
 						Required: true,
 						ForceNew: true,
 					},
-					"region": {
+					names.AttrRegion: {
 						Type:     schema.TypeString,
 						Required: true,
 						ForceNew: true,
@@ -353,7 +353,7 @@ func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservi
 		AWSDomainInformation: &opensearchservice.AWSDomainInformation{
 			DomainName: aws.String(mOptions[names.AttrDomainName].(string)),
 			OwnerId:    aws.String(mOptions[names.AttrOwnerID].(string)),
-			Region:     aws.String(mOptions["region"].(string)),
+			Region:     aws.String(mOptions[names.AttrRegion].(string)),
 		},
 	}
 }
@@ -365,7 +365,7 @@ func flattenOutboundConnectionDomainInfo(domainInfo *opensearchservice.DomainInf
 	return []interface{}{map[string]interface{}{
 		names.AttrOwnerID:    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
 		names.AttrDomainName: aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
-		"region":             aws.StringValue(domainInfo.AWSDomainInformation.Region),
+		names.AttrRegion:     aws.StringValue(domainInfo.AWSDomainInformation.Region),
 	}}
 }
 

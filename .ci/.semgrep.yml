@@ -1165,3 +1165,83 @@ rules:
       - pattern: '"values"'
     severity: ERROR
     fix: "names.AttrValues"
+  - id: literal-region-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrRegion` for the string literal "region"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"region"'
+    severity: ERROR
+    fix: "names.AttrRegion"
+  - id: literal-access_key-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAccessKey` for the string literal "access_key"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"access_key"'
+    severity: ERROR
+    fix: "names.AttrAccessKey"
+  - id: literal-endpoints-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEndpoints` for the string literal "endpoints"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"endpoints"'
+    severity: ERROR
+    fix: "names.AttrEndpoints"
+  - id: literal-profile-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrProfile` for the string literal "profile"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"profile"'
+    severity: ERROR
+    fix: "names.AttrProfile"
+  - id: literal-secret_key-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSecretKey` for the string literal "secret_key"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"secret_key"'
+    severity: ERROR
+    fix: "names.AttrSecretKey"
+  - id: literal-shared_config_files-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSharedConfigFiles` for the string literal "shared_config_files"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"shared_config_files"'
+    severity: ERROR
+    fix: "names.AttrSharedConfigFiles"
+  - id: literal-skip_credentials_validation-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSkipCredentialsValidation` for the string literal "skip_credentials_validation"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"skip_credentials_validation"'
+    severity: ERROR
+    fix: "names.AttrSkipCredentialsValidation"
+  - id: literal-skip_requesting_account_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSkipRequestingAccountID` for the string literal "skip_requesting_account_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"skip_requesting_account_id"'
+    severity: ERROR
+    fix: "names.AttrSkipRequestingAccountID"

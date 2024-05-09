@@ -82,7 +82,7 @@ func resourcePipeline() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -182,7 +182,7 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: pipelineValidateActionProvider,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -750,7 +750,7 @@ func expandArtifactStores(tfList []interface{}) map[string]types.ArtifactStore {
 
 		var region string
 
-		if v, ok := tfMap["region"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 			region = v
 		}
 
@@ -863,7 +863,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Provider = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -1245,7 +1245,7 @@ func flattenArtifactStores(apiObjects map[string]types.ArtifactStore) []interfac
 
 	for region, apiObject := range apiObjects {
 		tfMap := flattenArtifactStore(&apiObject)
-		tfMap["region"] = region
+		tfMap[names.AttrRegion] = region
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1344,7 +1344,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
