@@ -70,7 +70,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											"tag-value",
 											"tag-exists",
 											"resource-id",
-											"region",
+											names.AttrRegion,
 											"attachment-type",
 										}, false),
 									},
@@ -504,7 +504,7 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
 			}
 		}
-		if t == "region" || t == "resource-id" || t == "account-id" {
+		if t == names.AttrRegion || t == "resource-id" || t == "account-id" {
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
 			}
