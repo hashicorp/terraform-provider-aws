@@ -1165,3 +1165,13 @@ rules:
       - pattern: '"values"'
     severity: ERROR
     fix: "names.AttrValues"
+  - id: literal-region-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrRegion` for the string literal "region"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"region"'
+    severity: ERROR
+    fix: "names.AttrRegion"
