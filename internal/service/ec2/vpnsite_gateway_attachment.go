@@ -51,7 +51,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Gateway Attachment: %s", input)
+	log.Printf("[DEBUG] Creating EC2 VPN Gateway Attachment: %s", vpnGatewayID)
 	_, err := conn.AttachVpnGateway(ctx, input)
 
 	if err != nil {

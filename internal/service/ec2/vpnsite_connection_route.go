@@ -53,7 +53,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 		VpnConnectionId:      aws.String(vpnConnectionID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Connection Route: %s", input)
+	log.Printf("[DEBUG] Creating EC2 VPN Connection Route: %s", id)
 	_, err := conn.CreateVpnConnectionRoute(ctx, input)
 
 	if err != nil {
