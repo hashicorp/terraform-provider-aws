@@ -127,7 +127,7 @@ func ResourceClassificationJob() *schema.Resource {
 							Optional:      true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -893,7 +893,7 @@ func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefini
 
 		bucketDefinition := &macie2.S3BucketDefinitionForJob{
 			Buckets:   flex.ExpandStringList(v1["buckets"].([]interface{})),
-			AccountId: aws.String(v1["account_id"].(string)),
+			AccountId: aws.String(v1[names.AttrAccountID].(string)),
 		}
 
 		bucketDefinitions = append(bucketDefinitions, bucketDefinition)
@@ -1195,8 +1195,8 @@ func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJo
 			continue
 		}
 		bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
-			"account_id": aws.StringValue(bucket.AccountId),
-			"buckets":    flex.FlattenStringList(bucket.Buckets),
+			names.AttrAccountID: aws.StringValue(bucket.AccountId),
+			"buckets":           flex.FlattenStringList(bucket.Buckets),
 		})
 	}
 
