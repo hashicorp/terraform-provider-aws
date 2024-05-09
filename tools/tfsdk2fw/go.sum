@@ -206,6 +206,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.22.5 h1:rY9XVw6sdQIapakJyM4sQDnh
 github.com/aws/aws-sdk-go-v2/service/glacier v1.22.5/go.mod h1:8ofkOuh1SZLKR5EdfxPhQ1UgaQuCBAZzUwbeIBmeKIM=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.2 h1:/NSsWlu7y2w0Z90BPG6/CTG+68yH/SFV61/M6BVz40Y=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.2/go.mod h1:6morRSCgJD400qAu5DCEtvoaAC1owS5t6oq8ddLLwxw=
+github.com/aws/aws-sdk-go-v2/service/greengrass v1.23.5 h1:l170WLlYP1f4g8Lg6JHprzc5Kyxmrg4+/hk16U+Ch7Y=
+github.com/aws/aws-sdk-go-v2/service/greengrass v1.23.5/go.mod h1:9vvkkkaRVAOnsrJVJOhd7MS5ALEjDKwvOjvm9WbqFsU=
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.1 h1:/0eSYA99XFSK8kA+Jxem1QSmLOzitvgx0xiljPHHBho=
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.1/go.mod h1:yGNTqdu48YxjsCyLpalmwHCQF52GGERK7+J3nTcvJ3A=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.1 h1:HwqyGui0VHRHpezq987gS9O3MlsHQky37Z6lBHzlM1w=
@@ -228,6 +230,12 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.5 h1:f9RyWNtS8oH7cZ
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.5/go.mod h1:h5CoMZV2VF297/VLhRhO1WF+XYWOzXo+4HsObA4HjBQ=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.1 h1:PyHFjU1ODJvkAvpNP3JXX1ldgWj3vBHPhtdzEmq/04A=
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.1/go.mod h1:71th0isZef+quIOFAqbzFzV67NFkCpMhqogzqPCFSUE=
+github.com/aws/aws-sdk-go-v2/service/iot v1.53.4 h1:wOc9pnjOKO8egVmBht8Rgb8cnGyysUGE1fvLMpUIE1k=
+github.com/aws/aws-sdk-go-v2/service/iot v1.53.4/go.mod h1:7rtIbAvSP5Nbc1f7sbeWa+uMV+T6khOkWAh6VHsbOZI=
+github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.22.5 h1:ReeCbFCt4eqdb2oTO0VlykdzL/+TrLfHYrsbuwnl2dM=
+github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.22.5/go.mod h1:LxZg+GnzJjo0YtXRd6FHXevq7Fp+yJCWtWzIlRx/hE8=
+github.com/aws/aws-sdk-go-v2/service/iotevents v1.23.5 h1:Rn96djqxXG6L9lP1guJfdzsb/H2BB3/W7StfP2Sc2lk=
+github.com/aws/aws-sdk-go-v2/service/iotevents v1.23.5/go.mod h1:8lpyLdUYeRN+P7uTcOEkMuJU2iLhJ8dkIBsIxcwTsxE=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.6 h1:AFtl/wbZEmJuOCI5JJOy1TjAD4pAPegOv5rvIIE7lVM=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.6/go.mod h1:DWOHVe8yf0vrA6DStGG7FQ6GslgVPZljr13WjO3eGo0=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.31.4 h1:v6qZnVWCU32/4EvZ9K0eb5pQDWwBeoEjR1+pQJxPuFU=

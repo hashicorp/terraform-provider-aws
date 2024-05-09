@@ -93,12 +93,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.1
+	github.com/aws/aws-sdk-go-v2/service/iot v1.53.4
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.22.5
+	github.com/aws/aws-sdk-go-v2/service/iotevents v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.2
@@ -230,15 +234,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/greengrass v1.23.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iot v1.53.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.22.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iotevents v1.23.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.5 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
