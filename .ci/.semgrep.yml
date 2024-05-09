@@ -955,3 +955,13 @@ rules:
       - pattern: '"network_interface_id"'
     severity: ERROR
     fix: "names.AttrNetworkInterfaceID"
+  - id: literal-engine_version-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEngineVersion` for the string literal "engine_version"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"engine_version"'
+    severity: ERROR
+    fix: "names.AttrEngineVersion"
