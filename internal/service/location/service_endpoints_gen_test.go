@@ -403,8 +403,8 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	config := map[string]any{
-		names.AccessKey:                     servicemocks.MockStaticAccessKey,
-		names.SecretKey:                     servicemocks.MockStaticSecretKey,
+		names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
+		names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
 		names.AttrRegion:                    region,
 		names.AttrSkipCredentialsValidation: true,
 		names.AttrSkipRequestingAccountID:   true,
