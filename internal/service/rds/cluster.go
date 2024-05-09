@@ -342,7 +342,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -679,7 +679,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
@@ -801,7 +801,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
@@ -929,7 +929,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
@@ -1079,7 +1079,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
@@ -1239,7 +1239,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	if dbc.ScalingConfigurationInfo != nil {
@@ -1416,8 +1416,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("scaling_configuration") {

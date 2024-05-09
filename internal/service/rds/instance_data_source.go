@@ -173,7 +173,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -294,7 +294,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 	d.Set("option_group_memberships", optionGroupNames)
 	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", instance.DbiResourceId)

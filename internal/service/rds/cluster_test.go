@@ -1227,7 +1227,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "backup_retention_period", "5"),
 					resource.TestCheckResourceAttr(
-						resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+						resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
 				),
 			},
 			{
@@ -1239,7 +1239,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "backup_retention_period", "10"),
 					resource.TestCheckResourceAttr(
-						resourceName, "preferred_maintenance_window", "wed:01:00-wed:01:30"),
+						resourceName, names.AttrPreferredMaintenanceWindow, "wed:01:00-wed:01:30"),
 				),
 			},
 		},
@@ -2286,7 +2286,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:01:00-sun:01:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "sun:01:00-sun:01:30"),
 				),
 			},
 		},
