@@ -64,7 +64,7 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,7 +161,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("domain", eip.Domain)
 	d.Set("instance_id", eip.InstanceId)
-	d.Set("network_interface_id", eip.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("private_ip", eip.PrivateIpAddress)

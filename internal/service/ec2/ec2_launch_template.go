@@ -816,7 +816,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -2045,7 +2045,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.NetworkCardIndex = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
@@ -3045,7 +3045,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {

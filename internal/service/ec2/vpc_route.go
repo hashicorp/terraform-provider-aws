@@ -41,7 +41,7 @@ var routeValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
-	"network_interface_id",
+	names.AttrNetworkInterfaceID,
 	"transit_gateway_id",
 	"vpc_endpoint_id",
 	"vpc_peering_connection_id",
@@ -132,7 +132,7 @@ func resourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -334,7 +334,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("instance_id", route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
-	d.Set("network_interface_id", route.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
 	d.Set("origin", route.Origin)
 	d.Set(names.AttrState, route.State)
 	d.Set("transit_gateway_id", route.TransitGatewayId)

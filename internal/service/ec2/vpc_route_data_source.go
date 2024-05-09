@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route")
@@ -88,7 +89,7 @@ func DataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -172,7 +173,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 			continue
 		}
 
-		if v, ok := d.GetOk("network_interface_id"); ok && aws.StringValue(r.NetworkInterfaceId) != v.(string) {
+		if v, ok := d.GetOk(names.AttrNetworkInterfaceID); ok && aws.StringValue(r.NetworkInterfaceId) != v.(string) {
 			continue
 		}
 
@@ -215,7 +216,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("instance_id", route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
-	d.Set("network_interface_id", route.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
 	d.Set("transit_gateway_id", route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 

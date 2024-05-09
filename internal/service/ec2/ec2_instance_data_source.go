@@ -252,7 +252,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -502,7 +502,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
 				d.Set("subnet_id", ni.SubnetId)
-				d.Set("network_interface_id", ni.NetworkInterfaceId)
+				d.Set(names.AttrNetworkInterfaceID, ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 
 				secondaryIPs := make([]string, 0, len(ni.PrivateIpAddresses))
@@ -526,7 +526,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		}
 	} else {
 		d.Set("subnet_id", instance.SubnetId)
-		d.Set("network_interface_id", "")
+		d.Set(names.AttrNetworkInterfaceID, "")
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)

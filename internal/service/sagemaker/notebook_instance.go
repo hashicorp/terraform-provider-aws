@@ -112,7 +112,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -257,7 +257,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrKMSKeyID, notebookInstance.KmsKeyId)
 	d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName)
 	d.Set(names.AttrName, notebookInstance.NotebookInstanceName)
-	d.Set("network_interface_id", notebookInstance.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, notebookInstance.NetworkInterfaceId)
 	d.Set("platform_identifier", notebookInstance.PlatformIdentifier)
 	d.Set(names.AttrRoleARN, notebookInstance.RoleArn)
 	d.Set("root_access", notebookInstance.RootAccess)

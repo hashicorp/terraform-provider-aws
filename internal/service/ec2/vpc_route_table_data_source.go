@@ -114,7 +114,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -332,7 +332,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 			m["vpc_peering_connection_id"] = aws.StringValue(r.VpcPeeringConnectionId)
 		}
 		if r.NetworkInterfaceId != nil {
-			m["network_interface_id"] = aws.StringValue(r.NetworkInterfaceId)
+			m[names.AttrNetworkInterfaceID] = aws.StringValue(r.NetworkInterfaceId)
 		}
 
 		routes = append(routes, m)
