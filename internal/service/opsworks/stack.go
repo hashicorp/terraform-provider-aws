@@ -162,7 +162,7 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -206,7 +206,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	region := d.Get("region").(string)
+	region := d.Get(names.AttrRegion).(string)
 	input := &opsworks.CreateStackInput{
 		ChefConfiguration: &opsworks.ChefConfiguration{
 			ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
@@ -398,7 +398,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("default_subnet_id", stack.DefaultSubnetId)
 	d.Set("hostname_theme", stack.HostnameTheme)
 	d.Set(names.AttrName, stack.Name)
-	d.Set("region", stack.Region)
+	d.Set(names.AttrRegion, stack.Region)
 	d.Set("service_role_arn", stack.ServiceRoleArn)
 	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
