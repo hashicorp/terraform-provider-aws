@@ -105,7 +105,7 @@ func ResourceOutboundConnection() *schema.Resource {
 								},
 							},
 						},
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -387,7 +387,7 @@ func flattenOutboundConnectionConnectionProperties(cProperties *opensearchservic
 	}
 	return []interface{}{map[string]interface{}{
 		"cross_cluster_search": flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties.CrossClusterSearch),
-		"endpoint":             aws.StringValue(cProperties.Endpoint),
+		names.AttrEndpoint:     aws.StringValue(cProperties.Endpoint),
 	}}
 }
 
