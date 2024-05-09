@@ -63,7 +63,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `authorization` - (Required) Determines whether the query scope is enabled or disabled.
 
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift IDC Application using the `arn`. For example:
