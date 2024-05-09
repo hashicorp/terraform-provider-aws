@@ -57,12 +57,6 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			"domain": schema.StringAttribute{
 				Computed: true,
 			},
-			"email_verification_message": schema.StringAttribute{
-				Computed: true,
-			},
-			"email_verification_subject": schema.StringAttribute{
-				Computed: true,
-			},
 			"estimated_number_of_users": schema.Int64Attribute{
 				Computed: true,
 			},
@@ -351,8 +345,6 @@ type dataSourceUserPoolData struct {
 	DeviceConfiguration      fwtypes.ListNestedObjectValueOf[deviceConfigurationType]    `tfsdk:"device_configuration"`
 	Domain                   types.String                                                `tfsdk:"domain"`
 	EmailConfiguration       fwtypes.ListNestedObjectValueOf[emailConfigurationType]     `tfsdk:"email_configuration"`
-	EmailVerificationMessage types.String                                                `tfsdk:"email_verification_message"`
-	EmailVerificationSubject types.String                                                `tfsdk:"email_verification_subject"`
 	EstimatedNumberOfUsers   types.Int64                                                 `tfsdk:"estimated_number_of_users"`
 	ID                       types.String                                                `tfsdk:"id"`
 	LambdaConfig             fwtypes.ListNestedObjectValueOf[lambdaConfigType]           `tfsdk:"lambda_config"`
