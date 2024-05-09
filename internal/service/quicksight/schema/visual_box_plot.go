@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func boxPlotVisualSchema() *schema.Schema {
@@ -67,8 +68,8 @@ func boxPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"group_by": dimensionFieldSchema(1),                    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":   measureFieldSchema(measureFieldsMaxItems5), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"group_by":       dimensionFieldSchema(1),                    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems5), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -288,7 +289,7 @@ func expandBoxPlotAggregatedFieldWells(tfList []interface{}) *quicksight.BoxPlot
 	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
 		config.GroupBy = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -464,7 +465,7 @@ func flattenBoxPlotAggregatedFieldWells(apiObject *quicksight.BoxPlotAggregatedF
 		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

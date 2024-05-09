@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func radarChartVisualSchema() *schema.Schema {
@@ -71,9 +72,9 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category": dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"color":    dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":   measureFieldSchema(measureFieldsMaxItems20), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"category":       dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"color":          dimensionFieldSchema(1),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems20), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -239,7 +240,7 @@ func expandRadarChartAggregatedFieldWells(tfList []interface{}) *quicksight.Rada
 	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
 		config.Color = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -443,7 +444,7 @@ func flattenRadarChartAggregatedFieldWells(apiObject *quicksight.RadarChartAggre
 		tfMap["color"] = flattenDimensionFields(apiObject.Color)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

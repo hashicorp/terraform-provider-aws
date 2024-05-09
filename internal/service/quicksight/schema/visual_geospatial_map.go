@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func geospatialMapVisualSchema() *schema.Schema {
@@ -42,9 +43,9 @@ func geospatialMapVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"colors":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"geospatial": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":     measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"colors":         dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"geospatial":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -217,7 +218,7 @@ func expandGeospatialMapAggregatedFieldWells(tfList []interface{}) *quicksight.G
 	if v, ok := tfMap["geospatial"].([]interface{}); ok && len(v) > 0 {
 		config.Geospatial = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -386,7 +387,7 @@ func flattenGeospatialMapAggregatedFieldWells(apiObject *quicksight.GeospatialMa
 		tfMap["geospatial"] = flattenDimensionFields(apiObject.Geospatial)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

@@ -544,7 +544,7 @@ func expandFilterSelectableValues(tfList []interface{}) *quicksight.FilterSelect
 
 	values := &quicksight.FilterSelectableValues{}
 
-	if v, ok := tfMap["values"].([]interface{}); ok {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok {
 		values.Values = flex.ExpandStringList(v)
 	}
 
@@ -1334,7 +1334,7 @@ func flattenFilterSelectableValues(apiObject *quicksight.FilterSelectableValues)
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = flex.FlattenStringList(apiObject.Values)
+		tfMap[names.AttrValues] = flex.FlattenStringList(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

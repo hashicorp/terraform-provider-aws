@@ -443,7 +443,7 @@ func filterSelectableValuesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,

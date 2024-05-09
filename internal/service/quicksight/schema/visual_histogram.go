@@ -93,7 +93,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"values": measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													names.AttrValues: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -217,7 +217,7 @@ func expandHistogramAggregatedFieldWells(tfList []interface{}) *quicksight.Histo
 
 	config := &quicksight.HistogramAggregatedFieldWells{}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -422,7 +422,7 @@ func flattenHistogramAggregatedFieldWells(apiObject *quicksight.HistogramAggrega
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
