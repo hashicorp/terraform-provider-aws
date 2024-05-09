@@ -156,7 +156,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  "1.0",
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -445,7 +445,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		AutomatedSnapshotRetentionPeriod: aws.Int64(int64(d.Get("automated_snapshot_retention_period").(int))),
 		ClusterIdentifier:                aws.String(clusterID),
 		ClusterVersion:                   aws.String(d.Get("cluster_version").(string)),
-		DBName:                           aws.String(d.Get("database_name").(string)),
+		DBName:                           aws.String(d.Get(names.AttrDatabaseName).(string)),
 		MasterUsername:                   aws.String(d.Get("master_username").(string)),
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
@@ -687,7 +687,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
-	d.Set("database_name", rsc.DBName)
+	d.Set(names.AttrDatabaseName, rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	d.Set("encrypted", rsc.Encrypted)
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)

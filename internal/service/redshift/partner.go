@@ -44,7 +44,7 @@ func resourcePartner() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -75,7 +75,7 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := redshift.AddPartnerInput{
 		AccountId:         aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
-		DatabaseName:      aws.String(d.Get("database_name").(string)),
+		DatabaseName:      aws.String(d.Get(names.AttrDatabaseName).(string)),
 		PartnerName:       aws.String(d.Get("partner_name").(string)),
 	}
 
@@ -109,7 +109,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("account_id", d.Get("account_id").(string))
 	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
 	d.Set("partner_name", out.PartnerName)
-	d.Set("database_name", out.DatabaseName)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("status_message", out.StatusMessage)
 

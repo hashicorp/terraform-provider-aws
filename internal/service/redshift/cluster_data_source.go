@@ -106,7 +106,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,7 +254,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("cluster_type", clusterTypeSingleNode)
 	}
 	d.Set("cluster_version", rsc.ClusterVersion)
-	d.Set("database_name", rsc.DBName)
+	d.Set(names.AttrDatabaseName, rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
 	if rsc.ElasticIpStatus != nil {
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
