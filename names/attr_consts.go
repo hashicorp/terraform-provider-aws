@@ -11,6 +11,7 @@ const (
 	AttrBucket                     = "bucket"
 	AttrBucketName                 = "bucket_name"
 	AttrClusterIdentifier          = "cluster_identifier"
+	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
 	AttrDatabaseName               = "database_name"
 	AttrDeleteOnTermination        = "delete_on_termination"
