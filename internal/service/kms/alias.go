@@ -43,10 +43,10 @@ func resourceAlias() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validNameForResource,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -71,7 +71,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	namePrefix := d.Get("name_prefix").(string)
+	namePrefix := d.Get(names.AttrNamePrefix).(string)
 	if namePrefix == "" {
 		namePrefix = aliasNamePrefix
 	}
@@ -122,7 +122,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, aliasARN)
 	d.Set(names.AttrName, alias.AliasName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(alias.AliasName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(alias.AliasName)))
 	d.Set("target_key_arn", targetKeyARN)
 	d.Set("target_key_id", targetKeyID)
 
