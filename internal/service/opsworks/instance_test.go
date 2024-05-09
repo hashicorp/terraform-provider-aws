@@ -38,22 +38,22 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "state", "stopped"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "stopped"),
 					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
-					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                       // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                          // inherited from opsworks_stack_test
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"), // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                              // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttr(resourceName, "root_device_type", "ebs"),                                 // inherited from opsworks_stack_test
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, dataSourceName, "names.0"), // inherited from opsworks_stack_test
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
+				ImportStateVerifyIgnore: []string{names.AttrState}, //state is something we pass to the API and get back as status :(
 			},
 			{
 				Config: testAccInstanceConfig_update(rName),
@@ -61,7 +61,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.small"),
 					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2015.09"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
@@ -94,7 +94,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"},
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 			{
 				Config: testAccInstanceConfig_updateHostName(rName),

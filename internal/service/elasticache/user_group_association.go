@@ -5,9 +5,7 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,12 +15,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_elasticache_user_group_association")
-func ResourceUserGroupAssociation() *schema.Resource {
+const (
+	userGroupAssociationResourceIDPartCount = 2
+)
+
+// @SDKResource("aws_elasticache_user_group_association", name="User Group Association")
+func resourceUserGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupAssociationCreate,
 		ReadWithoutTimeout:   resourceUserGroupAssociationRead,
@@ -53,7 +57,7 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	userGroupID := d.Get("user_group_id").(string)
 	userID := d.Get("user_id").(string)
-	id := userGroupAssociationCreateResourceID(userGroupID, userID)
+	id := errs.Must(flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true))
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(userGroupID),
 		UserIdsToAdd: aws.StringSlice([]string{userID}),
@@ -80,13 +84,13 @@ func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	userGroupID, userID, err := UserGroupAssociationParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), userGroupAssociationResourceIDPartCount, true)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindUserGroupAssociation(ctx, conn, userGroupID, userID)
+	userGroupID, userID := parts[0], parts[1]
+	err = findUserGroupAssociationByTwoPartKey(ctx, conn, userGroupID, userID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User Group Association (%s) not found, removing from state", d.Id())
@@ -108,13 +112,13 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	userGroupID, userID, err := UserGroupAssociationParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), userGroupAssociationResourceIDPartCount, true)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting ElastiCache User Group Association: %s", d.Id())
+	userGroupID, userID := parts[0], parts[1]
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
 		return conn.ModifyUserGroupWithContext(ctx, &elasticache.ModifyUserGroupInput{
 			UserGroupId:     aws.String(userGroupID),
@@ -137,8 +141,8 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func FindUserGroupAssociation(ctx context.Context, conn *elasticache.ElastiCache, userGroupID, userID string) error {
-	userGroup, err := FindUserGroupByID(ctx, conn, userGroupID)
+func findUserGroupAssociationByTwoPartKey(ctx context.Context, conn *elasticache.ElastiCache, userGroupID, userID string) error {
+	userGroup, err := findUserGroupByID(ctx, conn, userGroupID)
 
 	if err != nil {
 		return err
@@ -151,21 +155,4 @@ func FindUserGroupAssociation(ctx context.Context, conn *elasticache.ElastiCache
 	}
 
 	return &retry.NotFoundError{}
-}
-
-const userGroupAssociationResourceIDSeparator = ","
-
-func userGroupAssociationCreateResourceID(userGroupID, userID string) string {
-	parts := []string{userGroupID, userID}
-	id := strings.Join(parts, userGroupAssociationResourceIDSeparator)
-	return id
-}
-
-func UserGroupAssociationParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, userGroupAssociationResourceIDSeparator)
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected '<user group ID>%[2]s<user ID>'", id, userGroupAssociationResourceIDSeparator)
 }

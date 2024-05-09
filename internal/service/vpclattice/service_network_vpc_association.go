@@ -47,7 +47,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				MaxItems: 5,
 				Optional: true,
@@ -67,7 +67,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -135,25 +135,25 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("created_by", out.CreatedBy)
 	d.Set("vpc_identifier", out.VpcId)
 	d.Set("service_network_identifier", out.ServiceNetworkId)
-	d.Set("security_group_ids", out.SecurityGroupIds)
-	d.Set("status", out.Status)
+	d.Set(names.AttrSecurityGroupIDs, out.SecurityGroupIds)
+	d.Set(names.AttrStatus, out.Status)
 
 	return nil
 }
 
 func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateServiceNetworkVpcAssociationInput{
 			ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("security_group_ids") {
-			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get("security_group_ids").([]interface{}))
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork VPC Association (%s): %#v", d.Id(), in)

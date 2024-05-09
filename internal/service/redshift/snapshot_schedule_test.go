@@ -37,10 +37,10 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "rate(12 hours)"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -259,7 +259,7 @@ func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test Schedule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Schedule"),
 				),
 			},
 			{

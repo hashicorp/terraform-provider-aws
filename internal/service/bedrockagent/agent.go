@@ -91,7 +91,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
@@ -147,7 +147,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -353,14 +353,14 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	if _, err := waitAgentDeleted(ctx, conn, agentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) delete", agentID), err.Error())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", agentID), err.Error())
 
 		return
 	}
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", data.ID.ValueString()), err.Error())
+	if _, err := waitAgentDeleted(ctx, conn, agentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) delete", agentID), err.Error())
 
 		return
 	}

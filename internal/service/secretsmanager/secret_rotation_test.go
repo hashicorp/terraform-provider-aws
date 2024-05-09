@@ -42,7 +42,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotate_immediately", "true"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
@@ -120,7 +120,7 @@ func TestAccSecretsManagerSecretRotation_rotateImmediately(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotate_immediately", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
@@ -215,7 +215,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
 				),
@@ -225,7 +225,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression02),
 				),
@@ -262,7 +262,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "0"),
@@ -273,7 +273,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
@@ -311,7 +311,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
 					testSecretValueIsCurrent(ctx, rName),
@@ -322,7 +322,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression02),
 				),
@@ -359,7 +359,7 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.duration", duration),

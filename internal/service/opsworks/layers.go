@@ -58,7 +58,7 @@ type opsworksLayerType struct {
 
 func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	resourceSchema := map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -89,7 +89,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"enabled": {
+					names.AttrEnabled: {
 						Type:     schema.TypeBool,
 						Optional: true,
 						DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -254,7 +254,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 						Type:     schema.TypeInt,
 						Required: true,
 					},
-					"type": {
+					names.AttrType: {
 						Type:     schema.TypeString,
 						Optional: true,
 						Default:  "standard",
@@ -420,13 +420,13 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	}
 
 	if lt.DefaultLayerName != "" {
-		resourceSchema["name"] = &schema.Schema{
+		resourceSchema[names.AttrName] = &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  lt.DefaultLayerName,
 		}
 	} else {
-		resourceSchema["name"] = &schema.Schema{
+		resourceSchema[names.AttrName] = &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		}
@@ -478,7 +478,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &opsworks.CreateLayerInput{
 		Attributes:           aws.StringMap(attributes),
 		AutoAssignElasticIps: aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
@@ -627,7 +627,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := aws.StringValue(layer.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("auto_assign_elastic_ips", layer.AutoAssignElasticIps)
 	d.Set("auto_assign_public_ips", layer.AutoAssignPublicIps)
 	d.Set("auto_healing", layer.EnableAutoHealing)
@@ -673,7 +673,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("setting ebs_volume: %s", err)
 	}
 	d.Set("install_updates_on_boot", layer.InstallUpdatesOnBoot)
-	d.Set("name", layer.Name)
+	d.Set(names.AttrName, layer.Name)
 	if lt.CustomShortName {
 		d.Set("short_name", layer.Shortname)
 	}
@@ -713,7 +713,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
-	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", "tags", "tags_all") {
+	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", names.AttrTags, names.AttrTagsAll) {
 		input := &opsworks.UpdateLayerInput{
 			LayerId: aws.String(d.Id()),
 		}
@@ -803,8 +803,8 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 			input.InstallUpdatesOnBoot = aws.Bool(d.Get("install_updates_on_boot").(bool))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("short_name") {
@@ -1029,7 +1029,7 @@ func expandCloudWatchLogsConfiguration(tfMap map[string]interface{}) *opsworks.C
 
 	apiObject := &opsworks.CloudWatchLogsConfiguration{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1128,7 +1128,7 @@ func flattenCloudWatchLogsConfiguration(apiObject *opsworks.CloudWatchLogsConfig
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.LogStreams; v != nil {
@@ -1243,7 +1243,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 		apiObject.Size = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.VolumeType = aws.String(v)
 	}
 
@@ -1308,7 +1308,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	}
 
 	if v := apiObject.VolumeType; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap

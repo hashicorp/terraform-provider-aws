@@ -39,10 +39,10 @@ func testAccMember_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, detective.MemberStatusInvited),
 				),
 			},
 			{
@@ -104,10 +104,10 @@ func testAccMember_message(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, detective.MemberStatusInvited),
 				),
 			},
 			{

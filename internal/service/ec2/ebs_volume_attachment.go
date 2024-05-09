@@ -13,12 +13,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_volume_attachment")
@@ -42,7 +44,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 				instanceID := idParts[2]
 				d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
 				d.Set("device_name", deviceName)
-				d.Set("instance_id", instanceID)
+				d.Set(names.AttrInstanceID, instanceID)
 				d.Set("volume_id", volumeID)
 
 				return []*schema.ResourceData{d}, nil
@@ -64,7 +66,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +92,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	deviceName := d.Get("device_name").(string)
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	volumeID := d.Get("volume_id").(string)
 
 	_, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
@@ -132,7 +134,7 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	deviceName := d.Get("device_name").(string)
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	volumeID := d.Get("volume_id").(string)
 
 	_, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
@@ -159,7 +161,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	deviceName := d.Get("device_name").(string)
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	volumeID := d.Get("volume_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
@@ -177,6 +179,10 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Deleting EBS Volume Attachment: %s", d.Id())
 	_, err := conn.DetachVolumeWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeIncorrectState, "available") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)

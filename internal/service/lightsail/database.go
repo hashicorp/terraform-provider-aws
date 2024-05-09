@@ -45,11 +45,11 @@ func ResourceDatabase() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -78,7 +78,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -145,7 +145,7 @@ func ResourceDatabase() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -204,7 +204,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:                          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -216,7 +216,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PreferredBackupWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
@@ -293,23 +293,23 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	rd := database.RelationalDatabase
 
-	d.Set("arn", rd.Arn)
-	d.Set("availability_zone", rd.Location.AvailabilityZone)
+	d.Set(names.AttrARN, rd.Arn)
+	d.Set(names.AttrAvailabilityZone, rd.Location.AvailabilityZone)
 	d.Set("backup_retention_enabled", rd.BackupRetentionEnabled)
 	d.Set("blueprint_id", rd.RelationalDatabaseBlueprintId)
 	d.Set("bundle_id", rd.RelationalDatabaseBundleId)
 	d.Set("ca_certificate_identifier", rd.CaCertificateIdentifier)
 	d.Set("cpu_count", rd.Hardware.CpuCount)
-	d.Set("created_at", rd.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, rd.CreatedAt.Format(time.RFC3339))
 	d.Set("disk_size", rd.Hardware.DiskSizeInGb)
 	d.Set("engine", rd.Engine)
-	d.Set("engine_version", rd.EngineVersion)
+	d.Set(names.AttrEngineVersion, rd.EngineVersion)
 	d.Set("master_database_name", rd.MasterDatabaseName)
 	d.Set("master_endpoint_address", rd.MasterEndpoint.Address)
 	d.Set("master_endpoint_port", rd.MasterEndpoint.Port)
 	d.Set("master_username", rd.MasterUsername)
 	d.Set("preferred_backup_window", rd.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", rd.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, rd.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rd.PubliclyAccessible)
 	d.Set("ram_size", rd.Hardware.RamSizeInGb)
 	d.Set("relational_database_name", rd.Name)
@@ -326,7 +326,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", "tags", "tags_all") {
+	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", names.AttrTags, names.AttrTagsAll) {
 		input := &lightsail.UpdateRelationalDatabaseInput{
 			ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
 			RelationalDatabaseName: aws.String(d.Id()),
@@ -352,8 +352,8 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("publicly_accessible") {

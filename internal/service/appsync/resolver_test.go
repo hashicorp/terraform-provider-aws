@@ -37,7 +37,7 @@ func testAccResolver_basic(t *testing.T) {
 				Config: testAccResolverConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),

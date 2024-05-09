@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_efs_mount_target")
@@ -60,20 +61,20 @@ func DataSourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,9 +123,9 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("ip_address", mt.IpAddress)
 	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set("mount_target_id", mt.MountTargetId)
-	d.Set("network_interface_id", mt.NetworkInterfaceId)
-	d.Set("owner_id", mt.OwnerId)
-	d.Set("subnet_id", mt.SubnetId)
+	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
+	d.Set(names.AttrOwnerID, mt.OwnerId)
+	d.Set(names.AttrSubnetID, mt.SubnetId)
 
 	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
@@ -134,7 +135,7 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
 
 	return diags
 }

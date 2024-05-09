@@ -42,7 +42,7 @@ func (d *dataSourceApplicationAssignments) Schema(ctx context.Context, req datas
 			"application_arn": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"application_assignments": schema.ListNestedBlock{

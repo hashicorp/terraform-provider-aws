@@ -26,6 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	anomalySubscriptionRootElementSchemaLevel = 2
+)
+
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
 // @Tags(identifierAttribute="id")
 func resourceAnomalySubscription() *schema.Resource {
@@ -40,14 +44,14 @@ func resourceAnomalySubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +68,7 @@ func resourceAnomalySubscription() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +85,7 @@ func resourceAnomalySubscription() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.SubscriberType](),
@@ -96,7 +100,7 @@ func resourceAnomalySubscription() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Optional: true,
-				Elem:     elemExpression(),
+				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
 			},
 		},
 
@@ -108,7 +112,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &awstypes.AnomalySubscription{
 			Frequency:        awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string)),
@@ -119,12 +123,12 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		ResourceTags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		input.AnomalySubscription.AccountId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
-		input.AnomalySubscription.ThresholdExpression = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
+		input.AnomalySubscription.ThresholdExpression = expandExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreateAnomalySubscription(ctx, input)
@@ -154,13 +158,13 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Anomaly Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", subscription.AccountId)
-	d.Set("arn", subscription.SubscriptionArn)
+	d.Set(names.AttrAccountID, subscription.AccountId)
+	d.Set(names.AttrARN, subscription.SubscriptionArn)
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
-	d.Set("name", subscription.SubscriptionName)
+	d.Set(names.AttrName, subscription.SubscriptionName)
 	d.Set("subscriber", flattenSubscribers(subscription.Subscribers))
-	if err := d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
+	if err := d.Set("threshold_expression", []interface{}{flattenExpression(subscription.ThresholdExpression)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting threshold_expression: %s", err)
 	}
 
@@ -172,7 +176,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
 			SubscriptionArn: aws.String(d.Id()),
 		}
@@ -190,7 +194,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("threshold_expression") {
-			input.ThresholdExpression = expandCostExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
+			input.ThresholdExpression = expandExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
 		}
 
 		_, err := conn.UpdateAnomalySubscription(ctx, input)
@@ -264,7 +268,7 @@ func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
 
 		apiObjects = append(apiObjects, awstypes.Subscriber{
 			Address: aws.String(tfMap["address"].(string)),
-			Type:    awstypes.SubscriberType(tfMap["type"].(string)),
+			Type:    awstypes.SubscriberType(tfMap[names.AttrType].(string)),
 		})
 	}
 
@@ -280,8 +284,8 @@ func flattenSubscribers(apiObjects []awstypes.Subscriber) []interface{} {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			"address": aws.ToString(apiObject.Address),
-			"type":    apiObject.Type,
+			"address":      aws.ToString(apiObject.Address),
+			names.AttrType: apiObject.Type,
 		})
 	}
 

@@ -2,10 +2,16 @@
 @@
 var x identifier
 @@
-
 -import "github.com/aws/aws-sdk-go/aws"
 +import "github.com/aws/aws-sdk-go-v2/aws"
 aws.x
+
+@@
+var x identifier
+@@
+-import "github.com/aws/aws-sdk-go/aws/arn"
++import "github.com/aws/aws-sdk-go-v2/aws/arn"
+arn.x
 
 @@
 @@
@@ -28,37 +34,43 @@ aws.x
 +aws.ToString
 
 @@
-var x identifier
+var x expression
 @@
 -aws.StringSlice([]string{x})
 +[]string{x}
 
 @@
-var x identifier
+var x expression
 @@
 -aws.StringValueSlice(x)
 +x
 
 @@
-var x identifier
+var x expression
 @@
 -aws.StringValueMap(x)
 +x
 
+# Replace endpoint constants which are not included in the V2 SDK
+@@
+@@
+-acctest.PreCheckPartitionHasService(t, {{ .GoV1Package }}.EndpointsID)
++acctest.PreCheckPartitionHasService(t, names.{{ .GoV1ClientTypeName }}EndpointID)
+
 # Step 2: Convert AWS SDK v1 (service) to v2
 @@
-var x identifier
+var {{ .ImportAlias }}, x identifier
 @@
--import "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-+import "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-{{ .GoV1Package }}.x
+-import {{ .ImportAlias }} "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
++import {{ .ImportAlias }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+{{ .ImportAlias }}.x
 
 # 2a: Most types are in the service's types package so do a simple mass-substitution
 # to get most things right
 @@
 var x identifier
 @@
--{{ .GoV1Package }}.x
+-{{ .ImportAlias }}.x
 +awstypes.x
 
 @@
@@ -70,7 +82,7 @@ awstypes.x
 @@
 @@
 -awstypes.{{ .GoV1ClientTypeName }}
-+{{ .GoV2Package }}.Client
++{{ .ImportAlias }}.Client
 
 @@
 @@
@@ -79,12 +91,12 @@ awstypes.x
 
 # 2b: Types used for passing Input and Outputs to a service's CRUD operations
 # remain in the main service package, so 'unconvert' these from 2a above
-{{ $goV2Package := .GoV2Package }}
+{{ $importAlias := .ImportAlias }}
 {{ range $typeName := .InputOutputTypes }}
 @@
 @@
 -awstypes.{{ $typeName }}
-+{{ $goV2Package }}.{{ $typeName }}
++{{ $importAlias }}.{{ $typeName }}
 {{ end }}
 
 {{ range $funcName := .ContextFunctions }}
@@ -94,6 +106,8 @@ awstypes.x
 +{{ $funcName }}
 {{ end }}
 
+# Step 3: Prefer the internal errs package when checking error codes
+#
 # gopatch doesn't understand generics yet. See https://github.com/uber-go/gopatch/issues/61.
 # for now we do our best with some simple substitutions but this will leave
 # tfresource.RetryWhenAWSErrMessageContains(...) still to convert to
@@ -107,12 +121,51 @@ awstypes.x
 @@
 var x identifier
 @@
--tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, x)
+-tfawserr.ErrMessageContains(err, awstypes.ErrCode{{ $exceptionName }}, x)
 +errs.IsAErrorMessageContains[*awstypes.{{ $exceptionName }}](err, x)
-{{ end }}
+{{- end }}
 
 @@
 var x identifier
 @@
 +import "github.com/hashicorp/terraform-provider-aws/internal/errs"
 errs.x
+
+# Step 4: Migrate enum types
+#
+# Note: The validation changes will only be partially correct. The enum.Validate
+# function implements ValidateDiagFunc, while StringInSlice implements ValidateFunc.
+# Due to limitations with how gopatch handles multiple matches within an elision, we
+# cannot replace all instances of ValidateFunc inside the schema defintion (just
+# the first one). Instead, we'll insert the proper validation function and
+# ValidateFunc can be changed to ValidateDiagFunc manually.
+#
+# Ref: https://github.com/uber-go/gopatch/issues/10
+{{- range $enum := .EnumTypes }}
+
+# Replace enum validation for {{ $enum }}. Assign this to ValidateDiagFunc (instead of ValidateFunc) once patched.
+@@
+@@
+-validation.StringInSlice(awstypes.{{ $enum }}_Values(), false)
++enum.Validate[awstypes.{{ $enum }}]()
+
+# Replace enum {{ $enum }} assignment on input structs.
+@@
+var input identifier
+@@
+-input.{{ $enum }} = aws.String(...)
++input.{{ $enum }} = awstypes.{{ $enum }}(...)
+
+# Replace enum {{ $enum }} conversion on output structs.
+@@
+var output identifier
+@@
+-aws.ToString(output.{{ $enum }})
++string(output.{{ $enum }})
+{{- end }}
+
+@@
+var x identifier
+@@
++import "github.com/hashicorp/terraform-provider-aws/internal/enum"
+enum.x

@@ -35,8 +35,8 @@ func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagOptionResourceAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "tag_option_id", "aws_servicecatalog_tag_option.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "tag_option_id", "aws_servicecatalog_tag_option.test", names.AttrID),
 				),
 			},
 			{

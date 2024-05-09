@@ -40,7 +40,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 200),
@@ -107,7 +107,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CertificateChain = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -143,11 +143,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("certificate", output.Certificate)
 	d.Set("certificate_chain", output.CertificateChain)
 	d.Set("certificate_id", output.CertificateId)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
 	setTagsOut(ctx, output.Tags)
@@ -159,10 +159,10 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &transfer.UpdateCertificateInput{
 			CertificateId: aws.String(d.Id()),
-			Description:   aws.String(d.Get("description").(string)),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
 		_, err := conn.UpdateCertificateWithContext(ctx, input)

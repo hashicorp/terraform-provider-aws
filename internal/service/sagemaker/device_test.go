@@ -37,7 +37,7 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "device.0.device_name", rName),
 				),

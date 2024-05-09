@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_tag_option_resource_association")
@@ -36,7 +37,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +140,7 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 		d.Set("resource_created_time", output.CreatedTime.Format(time.RFC3339))
 	}
 
-	d.Set("resource_arn", output.ARN)
+	d.Set(names.AttrResourceARN, output.ARN)
 	d.Set("resource_description", output.Description)
 	d.Set("resource_id", output.Id)
 	d.Set("resource_name", output.Name)

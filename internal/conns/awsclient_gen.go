@@ -15,6 +15,7 @@ import (
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
+	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -25,11 +26,13 @@ import (
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
+	chatbot_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chatbot"
 	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloud9_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloud9"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudfrontkeyvaluestore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	cloudhsmv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
@@ -81,6 +84,7 @@ import (
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
+	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
@@ -92,6 +96,7 @@ import (
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kms"
 	lakeformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
@@ -129,6 +134,7 @@ import (
 	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
+	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
@@ -158,8 +164,8 @@ import (
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
+	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
@@ -168,8 +174,6 @@ import (
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
-	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
@@ -195,7 +199,6 @@ import (
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
-	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
@@ -209,8 +212,6 @@ import (
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
-	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
-	lambda_sdkv1 "github.com/aws/aws-sdk-go/service/lambda"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
@@ -302,8 +303,8 @@ func (c *AWSClient) AppFlowClient(ctx context.Context) *appflow_sdkv2.Client {
 	return errs.Must(client[*appflow_sdkv2.Client](ctx, c, names.AppFlow, make(map[string]any)))
 }
 
-func (c *AWSClient) AppIntegrationsConn(ctx context.Context) *appintegrationsservice_sdkv1.AppIntegrationsService {
-	return errs.Must(conn[*appintegrationsservice_sdkv1.AppIntegrationsService](ctx, c, names.AppIntegrations, make(map[string]any)))
+func (c *AWSClient) AppIntegrationsClient(ctx context.Context) *appintegrations_sdkv2.Client {
+	return errs.Must(client[*appintegrations_sdkv2.Client](ctx, c, names.AppIntegrations, make(map[string]any)))
 }
 
 func (c *AWSClient) AppMeshConn(ctx context.Context) *appmesh_sdkv1.AppMesh {
@@ -378,6 +379,10 @@ func (c *AWSClient) CURClient(ctx context.Context) *costandusagereportservice_sd
 	return errs.Must(client[*costandusagereportservice_sdkv2.Client](ctx, c, names.CUR, make(map[string]any)))
 }
 
+func (c *AWSClient) ChatbotClient(ctx context.Context) *chatbot_sdkv2.Client {
+	return errs.Must(client[*chatbot_sdkv2.Client](ctx, c, names.Chatbot, make(map[string]any)))
+}
+
 func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
 	return errs.Must(conn[*chime_sdkv1.Chime](ctx, c, names.Chime, make(map[string]any)))
 }
@@ -402,12 +407,8 @@ func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol_sdkv2.
 	return errs.Must(client[*cloudcontrol_sdkv2.Client](ctx, c, names.CloudControl, make(map[string]any)))
 }
 
-func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv1.CloudFormation {
-	return errs.Must(conn[*cloudformation_sdkv1.CloudFormation](ctx, c, names.CloudFormation, make(map[string]any)))
-}
-
-func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudFront {
-	return errs.Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront, make(map[string]any)))
+func (c *AWSClient) CloudFormationClient(ctx context.Context) *cloudformation_sdkv2.Client {
+	return errs.Must(client[*cloudformation_sdkv2.Client](ctx, c, names.CloudFormation, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudFrontClient(ctx context.Context) *cloudfront_sdkv2.Client {
@@ -698,8 +699,8 @@ func (c *AWSClient) GlacierClient(ctx context.Context) *glacier_sdkv2.Client {
 	return errs.Must(client[*glacier_sdkv2.Client](ctx, c, names.Glacier, make(map[string]any)))
 }
 
-func (c *AWSClient) GlobalAcceleratorConn(ctx context.Context) *globalaccelerator_sdkv1.GlobalAccelerator {
-	return errs.Must(conn[*globalaccelerator_sdkv1.GlobalAccelerator](ctx, c, names.GlobalAccelerator, make(map[string]any)))
+func (c *AWSClient) GlobalAcceleratorClient(ctx context.Context) *globalaccelerator_sdkv2.Client {
+	return errs.Must(client[*globalaccelerator_sdkv2.Client](ctx, c, names.GlobalAccelerator, make(map[string]any)))
 }
 
 func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
@@ -770,8 +771,8 @@ func (c *AWSClient) IoTEventsConn(ctx context.Context) *iotevents_sdkv1.IoTEvent
 	return errs.Must(conn[*iotevents_sdkv1.IoTEvents](ctx, c, names.IoTEvents, make(map[string]any)))
 }
 
-func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
-	return errs.Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS, make(map[string]any)))
+func (c *AWSClient) KMSClient(ctx context.Context) *kms_sdkv2.Client {
+	return errs.Must(client[*kms_sdkv2.Client](ctx, c, names.KMS, make(map[string]any)))
 }
 
 func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
@@ -808,10 +809,6 @@ func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.Ki
 
 func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation_sdkv2.Client {
 	return errs.Must(client[*lakeformation_sdkv2.Client](ctx, c, names.LakeFormation, make(map[string]any)))
-}
-
-func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
-	return errs.Must(conn[*lambda_sdkv1.Lambda](ctx, c, names.Lambda, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
@@ -1042,6 +1039,10 @@ func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sd
 	return errs.Must(client[*route53domains_sdkv2.Client](ctx, c, names.Route53Domains, make(map[string]any)))
 }
 
+func (c *AWSClient) Route53ProfilesClient(ctx context.Context) *route53profiles_sdkv2.Client {
+	return errs.Must(client[*route53profiles_sdkv2.Client](ctx, c, names.Route53Profiles, make(map[string]any)))
+}
+
 func (c *AWSClient) Route53RecoveryControlConfigConn(ctx context.Context) *route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig {
 	return errs.Must(conn[*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig](ctx, c, names.Route53RecoveryControlConfig, make(map[string]any)))
 }
@@ -1232,6 +1233,10 @@ func (c *AWSClient) WorkLinkConn(ctx context.Context) *worklink_sdkv1.WorkLink {
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces_sdkv2.Client {
 	return errs.Must(client[*workspaces_sdkv2.Client](ctx, c, names.WorkSpaces, make(map[string]any)))
+}
+
+func (c *AWSClient) WorkSpacesWebClient(ctx context.Context) *workspacesweb_sdkv2.Client {
+	return errs.Must(client[*workspacesweb_sdkv2.Client](ctx, c, names.WorkSpacesWeb, make(map[string]any)))
 }
 
 func (c *AWSClient) XRayClient(ctx context.Context) *xray_sdkv2.Client {

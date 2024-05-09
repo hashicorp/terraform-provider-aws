@@ -45,7 +45,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),

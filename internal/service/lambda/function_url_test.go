@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 )
 
 func testAccFunctionURLPreCheck(t *testing.T) {
-	acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+	acctest.PreCheckPartition(t, names.StandardPartitionID)
 }
 
 func TestAccLambdaFunctionURL_basic(t *testing.T) {
@@ -43,7 +43,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
@@ -82,7 +82,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				Config: testAccFunctionURLConfig_cors(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "2"),
@@ -107,7 +107,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				Config: testAccFunctionURLConfig_corsUpdated(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeAwsIam),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "1"),
@@ -127,7 +127,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 				),
 			},
@@ -190,7 +190,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 				Config: testAccFunctionURLConfig_two(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFunctionURLExists(ctx, latestResourceName, &conf),
-					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(latestResourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(latestResourceName, "function_arn"),
 					resource.TestCheckResourceAttr(latestResourceName, "function_name", funcName),
@@ -199,7 +199,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 					resource.TestCheckResourceAttrSet(latestResourceName, "url_id"),
 
 					testAccCheckFunctionURLExists(ctx, liveResourceName, &conf),
-					resource.TestCheckResourceAttr(liveResourceName, "authorization_type", lambda.FunctionUrlAuthTypeNone),
+					resource.TestCheckResourceAttr(liveResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(liveResourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(liveResourceName, "function_arn"),
 					resource.TestCheckResourceAttr(liveResourceName, "function_name", funcName),
@@ -284,19 +284,9 @@ func testAccCheckFunctionURLExists(ctx context.Context, n string, v *lambda.GetF
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lambda Function URL ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-		name, qualifier, err := tflambda.FunctionURLParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
-
-		output, err := tflambda.FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
+		output, err := tflambda.FindFunctionURLByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["qualifier"])
 
 		if err != nil {
 			return err
@@ -310,20 +300,14 @@ func testAccCheckFunctionURLExists(ctx context.Context, n string, v *lambda.GetF
 
 func testAccCheckFunctionURLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function_url" {
 				continue
 			}
 
-			name, qualifier, err := tflambda.FunctionURLParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tflambda.FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
+			_, err := tflambda.FindFunctionURLByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["qualifier"])
 
 			if tfresource.NotFound(err) {
 				continue

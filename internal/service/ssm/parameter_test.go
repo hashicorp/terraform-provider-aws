@@ -37,12 +37,12 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s", name)),
-					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s", name)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
@@ -74,12 +74,12 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 				Config: testAccParameterConfig_multiple(rName, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s-1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s-1", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
@@ -104,8 +104,8 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
@@ -119,8 +119,8 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
@@ -147,12 +147,12 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterConfig_description(name, "description", "String", "test"),
+				Config: testAccParameterConfig_description(name, names.AttrDescription, "String", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
@@ -166,9 +166,9 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 				Config: testAccParameterConfig_description(name, "updated description", "String", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "description", "updated description"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
@@ -442,14 +442,14 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 				},
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "This value is set using Terraform"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", "true"),
 				),
 			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", "true"),
 				),
 			},
@@ -463,9 +463,9 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "value", "test3"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "version", "4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "4"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", "true"),
 				),
 			},
@@ -706,7 +706,7 @@ func TestAccSSMParameter_updateType(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 		},
@@ -738,7 +738,7 @@ func TestAccSSMParameter_Overwrite_updateDescription(t *testing.T) {
 				Config: testAccParameterConfig_basicOverwriteNoDescription(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -797,9 +797,9 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter%s", name)),
-					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter%s", name)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 			{
@@ -828,8 +828,8 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "SecureString", "secret"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
 				),
 			},
@@ -860,7 +860,7 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "notsecret"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 			{
@@ -868,7 +868,7 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "newvalue"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 			{
@@ -901,15 +901,15 @@ func TestAccSSMParameter_Secure_insecureChangeSecure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "notsecret"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 			{
 				Config: testAccParameterConfig_secure(rName, "newvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "value", "newvalue"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "newvalue"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 				),
 			},
 			{
@@ -917,7 +917,7 @@ func TestAccSSMParameter_Secure_insecureChangeSecure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "atlantis"),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
 			},
 		},
@@ -954,8 +954,7 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 }
 
 func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
-	ctx := //nosemgrep:ci.ssm-in-func-name
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 	var param ssm.Parameter
 	webhookName := sdkacctest.RandString(16)
 	rName := fmt.Sprintf("/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/%s", webhookName)
@@ -1037,8 +1036,8 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
 				),
 			},
@@ -1069,8 +1068,8 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 				Config: testAccParameterConfig_secure(name, "secret"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
 				),
 			},
@@ -1084,8 +1083,8 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 				Config: testAccParameterConfig_secureKey(name, "secret", randString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
 				),
 			},
@@ -1118,7 +1117,7 @@ func testAccCheckParameterExists(ctx context.Context, n string, param *ssm.Param
 
 		paramInput := &ssm.GetParametersInput{
 			Names: []*string{
-				aws.String(rs.Primary.Attributes["name"]),
+				aws.String(rs.Primary.Attributes[names.AttrName]),
 			},
 			WithDecryption: aws.Bool(true),
 		}
@@ -1149,7 +1148,7 @@ func testAccCheckParameterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			paramInput := &ssm.GetParametersInput{
 				Names: []*string{
-					aws.String(rs.Primary.Attributes["name"]),
+					aws.String(rs.Primary.Attributes[names.AttrName]),
 				},
 			}
 

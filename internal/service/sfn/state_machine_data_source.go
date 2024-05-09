@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sfn_state_machine")
@@ -20,7 +21,7 @@ func DataSourceStateMachine() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStateMachineRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,15 +33,15 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +49,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +60,7 @@ func DataSourceStateMachine() *schema.Resource {
 func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	var arns []string
 
 	err := conn.ListStateMachinesPagesWithContext(ctx, &sfn.ListStateMachinesInput{}, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
@@ -94,14 +95,14 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(arn)
-	d.Set("arn", output.StateMachineArn)
+	d.Set(names.AttrARN, output.StateMachineArn)
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("definition", output.Definition)
-	d.Set("name", output.Name)
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 
 	return nil
 }

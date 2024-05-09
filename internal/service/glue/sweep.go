@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -104,7 +105,7 @@ func sweepCatalogDatabases(region string) error {
 			r := ResourceCatalogDatabase()
 			d := r.Data(nil)
 			d.SetId("unused")
-			d.Set("name", name)
+			d.Set(names.AttrName, name)
 			d.Set("catalog_id", database.CatalogId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

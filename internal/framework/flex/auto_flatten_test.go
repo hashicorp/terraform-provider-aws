@@ -57,6 +57,20 @@ func TestFlatten(t *testing.T) {
 			WantErr:  true,
 		},
 		{
+			TestName: "json interface Source string Target",
+			Source: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					Value: &struct {
+						Test string `json:"test"`
+					}{
+						Test: "a",
+					},
+				},
+			},
+			Target:     &TestFlexTF19{},
+			WantTarget: &TestFlexTF19{Field1: types.StringValue(`{"test":"a"}`)},
+		},
+		{
 			TestName:   "empty struct Source and Target",
 			Source:     TestFlex00{},
 			Target:     &TestFlex00{},
@@ -147,15 +161,14 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTF03{},
 			WantTarget: &TestFlexTF03{
-				Field1: types.StringValue("field1"),
-				Field2: types.StringValue("field2"),
-				Field3: types.Int64Value(3),
-				Field4: types.Int64Value(-4),
-				Field5: types.Int64Value(5),
-				Field6: types.Int64Value(-6),
-				// float32 -> float64 precision problems.
-				Field7:  types.Float64Value(float64(float32(7.7))),
-				Field8:  types.Float64Value(float64(float32(-8.8))),
+				Field1:  types.StringValue("field1"),
+				Field2:  types.StringValue("field2"),
+				Field3:  types.Int64Value(3),
+				Field4:  types.Int64Value(-4),
+				Field5:  types.Int64Value(5),
+				Field6:  types.Int64Value(-6),
+				Field7:  types.Float64Value(7.7),
+				Field8:  types.Float64Value(-8.8),
 				Field9:  types.Float64Value(9.99),
 				Field10: types.Float64Value(-10.101),
 				Field11: types.BoolValue(true),
@@ -376,13 +389,13 @@ func TestFlatten(t *testing.T) {
 			TestName:   "single string Source and single ARN Target",
 			Source:     &TestFlexAWS01{Field1: testARN},
 			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 		},
 		{
 			TestName:   "single *string Source and single ARN Target",
 			Source:     &TestFlexAWS02{Field1: aws.String(testARN)},
 			Target:     &TestFlexTF17{},
-			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			WantTarget: &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 		},
 		{
 			TestName:   "single nil *string Source and single ARN Target",
@@ -606,6 +619,42 @@ func TestFlattenGeneric(t *testing.T) {
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF11{
 					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
+					}),
+				}),
+			},
+		},
+		{
+			TestName: "map of map of string",
+			Source: &TestFlexAWS21{
+				Field1: map[string]map[string]string{
+					"x": {
+						"y": "z",
+					},
+				},
+			},
+			Target: &TestFlexTF21{},
+			WantTarget: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+		},
+		{
+			TestName: "map of map of string pointer",
+			Source: &TestFlexAWS22{
+				Field1: map[string]map[string]*string{
+					"x": {
+						"y": aws.String("z"),
+					},
+				},
+			},
+			Target: &TestFlexTF21{},
+			WantTarget: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
 					}),
 				}),
 			},
@@ -891,6 +940,219 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
+func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64   `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *float32
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: aws.Float32(0.01)},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Float64 `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field1 float32
+		Field2 *float32
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field1: 1.11, Field2: aws.Float32(-2.22)}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64   `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *float64
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: aws.Float64(0.01)},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Float64 `tfsdk:"field1"`
+		Field2 types.Float64 `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field1 float64
+		Field2 *float64
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field1: 1.11, Field2: aws.Float64(-2.22)}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenOptions(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Bool                       `tfsdk:"field1"`
+		Tags   fwtypes.MapValueOf[types.String] `tfsdk:"tags"`
+	}
+	type aws01 struct {
+		Field1 bool
+		Tags   map[string]string
+	}
+
+	// For test cases below where a field of `MapValue` type is ignored, the
+	// result of `cmp.Diff` is intentionally not checked.
+	//
+	// When a target contains an ignored field of a `MapValue` type, the resulting
+	// target will contain a zero value, which, because the `elementType` is nil, will
+	// always return `false` from the `Equal` method, even when compared with another
+	// zero value. In practice, this zeroed `MapValue` would be overwritten
+	// by a subsequent step (ie. transparent tagging), and the temporary invalid
+	// state of the zeroed `MapValue` will not appear in the final state.
+	//
+	// Example expected diff:
+	// 	    unexpected diff (+wanted, -got):   &flex.tf01{
+	//                 Field1: s"false",
+	//         -       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]{},
+	//         +       Tags:   types.MapValueOf[github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue]{MapValue: basetypes.MapValue{elementType: basetypes.StringType{}}},
+	//           }
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "empty source with tags",
+			Source:   &aws01{},
+			Target:   &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolValue(false),
+				Tags:   fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+			WantDiff: true, // Ignored MapValue type, expect diff
+		},
+		{
+			TestName: "ignore tags by default",
+			Source: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+			Target: &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolValue(true),
+				Tags:   fwtypes.NewMapValueOfNull[types.String](ctx),
+			},
+			WantDiff: true, // Ignored MapValue type, expect diff
+		},
+		{
+			TestName: "include tags with option override",
+			Options: []AutoFlexOptionsFunc{
+				func(opts *AutoFlexOptions) {
+					opts.SetIgnoredFields([]string{})
+				},
+			},
+			Source: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+			Target: &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolValue(true),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+		},
+		{
+			TestName: "ignore custom field",
+			Options: []AutoFlexOptionsFunc{
+				func(opts *AutoFlexOptions) {
+					opts.SetIgnoredFields([]string{"Field1"})
+				},
+			},
+			Source: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+			Target: &tf01{},
+			WantTarget: &tf01{
+				Field1: types.BoolNull(),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
 func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
@@ -904,7 +1166,7 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 				testCtx = testCase.Context
 			}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target)
+			err := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
@@ -918,7 +1180,9 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 					t.Errorf("err = %q", err)
 				}
 			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				if !testCase.WantDiff {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
 			}
 		})
 	}

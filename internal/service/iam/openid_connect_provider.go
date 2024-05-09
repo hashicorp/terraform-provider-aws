@@ -39,7 +39,7 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading IAM OIDC Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
+	d.Set(names.AttrARN, d.Id())
 	d.Set("client_id_list", output.ClientIDList)
 	d.Set("thumbprint_list", output.ThumbprintList)
 	d.Set("url", output.Url)

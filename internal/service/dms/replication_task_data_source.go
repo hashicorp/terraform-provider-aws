@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_replication_task")
@@ -56,7 +57,7 @@ func DataSourceReplicationTask() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,7 @@ func DataSourceReplicationTask() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"target_endpoint_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -96,7 +97,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
 	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
-	d.Set("status", task.Status)
+	d.Set(names.AttrStatus, task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
@@ -109,7 +110,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

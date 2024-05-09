@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_licensemanager_association")
@@ -38,7 +39,7 @@ func ResourceAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -54,7 +55,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	licenseConfigurationARN := d.Get("license_configuration_arn").(string)
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
 		AddLicenseSpecifications: []*licensemanager.LicenseSpecification{{
@@ -99,7 +100,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("license_configuration_arn", licenseConfigurationARN)
-	d.Set("resource_arn", resourceARN)
+	d.Set(names.AttrResourceARN, resourceARN)
 
 	return diags
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_ipam_pool_cidrs")
@@ -39,7 +40,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -90,6 +91,6 @@ func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
 func flattenIPAMPoolCIDR(c *ec2.IpamPoolCidr) map[string]interface{} {
 	cidr := make(map[string]interface{})
 	cidr["cidr"] = aws.StringValue(c.Cidr)
-	cidr["state"] = aws.StringValue(c.State)
+	cidr[names.AttrState] = aws.StringValue(c.State)
 	return cidr
 }

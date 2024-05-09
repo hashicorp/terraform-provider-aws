@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sfn_activity")
@@ -20,26 +21,26 @@ func DataSourceActivity() *schema.Resource {
 		ReadWithoutTimeout: dataSourceActivityRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"arn",
-					"name",
+					names.AttrARN,
+					names.AttrName,
 				},
 			},
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 				ExactlyOneOf: []string{
-					"arn",
-					"name",
+					names.AttrARN,
+					names.AttrName,
 				},
 			},
 		},
@@ -49,7 +50,7 @@ func DataSourceActivity() *schema.Resource {
 func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		var activities []*sfn.ActivityListItem
 
@@ -81,10 +82,10 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		arn := aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
-		d.Set("name", activity.Name)
-	} else if v, ok := d.GetOk("arn"); ok {
+		d.Set(names.AttrName, activity.Name)
+	} else if v, ok := d.GetOk(names.AttrARN); ok {
 		arn := v.(string)
 		activity, err := FindActivityByARN(ctx, conn, arn)
 
@@ -94,9 +95,9 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		arn = aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
-		d.Set("name", activity.Name)
+		d.Set(names.AttrName, activity.Name)
 	}
 
 	return nil

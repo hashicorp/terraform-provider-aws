@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_glue_script")
@@ -52,7 +53,7 @@ func DataSourceScript() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -60,14 +61,14 @@ func DataSourceScript() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -142,9 +143,9 @@ func expandCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 		arg := &glue.CodeGenNodeArg{
-			Name:  aws.String(m["name"].(string)),
+			Name:  aws.String(m[names.AttrName].(string)),
 			Param: aws.Bool(m["param"].(bool)),
-			Value: aws.String(m["value"].(string)),
+			Value: aws.String(m[names.AttrValue].(string)),
 		}
 		args = append(args, arg)
 	}
@@ -177,7 +178,7 @@ func expandCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
 		m := mRaw.(map[string]interface{})
 		node := &glue.CodeGenNode{
 			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
-			Id:       aws.String(m["id"].(string)),
+			Id:       aws.String(m[names.AttrID].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}
 		if v, ok := m["line_number"]; ok && v.(int) != 0 {

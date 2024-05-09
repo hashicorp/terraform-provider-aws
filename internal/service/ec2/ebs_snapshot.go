@@ -45,7 +45,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -62,7 +62,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +76,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 		VolumeId:          aws.String(volumeID),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -192,14 +192,14 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
-	d.Set("description", snapshot.Description)
+	d.Set(names.AttrDescription, snapshot.Description)
 	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("outpost_arn", snapshot.OutpostArn)
 	d.Set("owner_alias", snapshot.OwnerAlias)
-	d.Set("owner_id", snapshot.OwnerId)
+	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)

@@ -70,12 +70,12 @@ func ResourceSharedDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      directoryservice.TargetTypeAccount,
@@ -197,11 +197,11 @@ func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarg
 
 	apiObject := &directoryservice.ShareTarget{}
 
-	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrID].(string); ok && len(v) > 0 {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrType].(string); ok && len(v) > 0 {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -215,11 +215,11 @@ func expandUnshareTarget(tfMap map[string]interface{}) *directoryservice.Unshare
 
 	apiObject := &directoryservice.UnshareTarget{}
 
-	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrID].(string); ok && len(v) > 0 {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrType].(string); ok && len(v) > 0 {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -236,10 +236,10 @@ func flattenShareTarget(apiObject *directoryservice.SharedDirectory) map[string]
 	tfMap := map[string]interface{}{}
 
 	if apiObject.SharedAccountId != nil {
-		tfMap["id"] = aws.StringValue(apiObject.SharedAccountId)
+		tfMap[names.AttrID] = aws.StringValue(apiObject.SharedAccountId)
 	}
 
-	tfMap["type"] = directoryservice.TargetTypeAccount // only type available
+	tfMap[names.AttrType] = directoryservice.TargetTypeAccount // only type available
 
 	return tfMap
 }

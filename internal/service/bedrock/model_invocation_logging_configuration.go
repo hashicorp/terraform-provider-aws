@@ -67,7 +67,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 								// Required: true,
 								Optional: true,
 							},
-							"role_arn": schema.StringAttribute{
+							names.AttrRoleARN: schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
 								Optional:   true,
 							},
@@ -76,7 +76,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							"large_data_delivery_s3_config": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									"bucket_name": schema.StringAttribute{
+									names.AttrBucketName: schema.StringAttribute{
 										// Required: true,
 										Optional: true,
 									},
@@ -90,7 +90,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					"s3_config": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"bucket_name": schema.StringAttribute{
+							names.AttrBucketName: schema.StringAttribute{
 								// Required: true,
 								Optional: true,
 							},

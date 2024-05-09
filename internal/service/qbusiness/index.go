@@ -80,7 +80,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"index_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Description: "A description of the Amazon Q application.",
 				Optional:    true,
 				Validators: []validator.String{
@@ -123,7 +123,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required:    true,
 							Description: "The name of the document attribute.",
 							Validators: []validator.String{
@@ -137,7 +137,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 								enum.FrameworkValidate[awstypes.Status](),
 							},
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required:    true,
 							Description: "The type of document attribute.",
 							Validators: []validator.String{
@@ -147,7 +147,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 				Update: true,

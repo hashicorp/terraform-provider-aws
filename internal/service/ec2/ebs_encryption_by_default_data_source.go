@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ebs_encryption_by_default")
@@ -24,7 +25,7 @@ func DataSourceEBSEncryptionByDefault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -41,7 +42,7 @@ func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.Resourc
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("enabled", res.EbsEncryptionByDefault)
+	d.Set(names.AttrEnabled, res.EbsEncryptionByDefault)
 
 	return diags
 }

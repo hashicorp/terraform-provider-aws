@@ -35,12 +35,12 @@ func ResourceQuickConnect() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,11 +48,11 @@ func ResourceQuickConnect() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -144,8 +144,8 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 	quickConnectConfig := expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{}))
 	input := &connect.CreateQuickConnectInput{
 		QuickConnectConfig: quickConnectConfig,
@@ -154,7 +154,7 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -208,10 +208,10 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("instance_id", instanceID)
-	d.Set("description", resp.QuickConnect.Description)
-	d.Set("name", resp.QuickConnect.Name)
-	d.Set("arn", resp.QuickConnect.QuickConnectARN)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrDescription, resp.QuickConnect.Description)
+	d.Set(names.AttrName, resp.QuickConnect.Name)
+	d.Set(names.AttrARN, resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
 	setTagsOut(ctx, resp.QuickConnect.Tags)
@@ -241,9 +241,9 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Either QuickConnectName or QuickConnectDescription must be specified. Both cannot be null or empty
-	if d.HasChanges("name", "description") {
-		inputNameDesc.Name = aws.String(d.Get("name").(string))
-		inputNameDesc.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
+		inputNameDesc.Name = aws.String(d.Get(names.AttrName).(string))
+		inputNameDesc.Description = aws.String(d.Get(names.AttrDescription).(string))
 		_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {

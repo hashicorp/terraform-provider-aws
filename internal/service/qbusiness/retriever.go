@@ -94,7 +94,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.",
 				Optional:    true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.RetrieverType](),
 				Required:    true,
 				Description: "Type of retriever you are using.",
@@ -262,7 +262,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

@@ -23,7 +23,7 @@ func dataSourceServiceNetwork() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,7 +31,7 @@ func dataSourceServiceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +39,7 @@ func dataSourceServiceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,11 +73,11 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(out.Id))
 	serviceNetworkARN := aws.ToString(out.Arn)
-	d.Set("arn", serviceNetworkARN)
+	d.Set(names.AttrARN, serviceNetworkARN)
 	d.Set("auth_type", out.AuthType)
-	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("number_of_associated_services", out.NumberOfAssociatedServices)
 	d.Set("number_of_associated_vpcs", out.NumberOfAssociatedVPCs)
 	d.Set("service_network_identifier", out.Id)

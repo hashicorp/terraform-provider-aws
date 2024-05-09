@@ -27,12 +27,12 @@ func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSchedulingPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.#", resourceName, "fair_share_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.compute_reservation", resourceName, "fair_share_policy.0.compute_reservation"),
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.share_decay_seconds", resourceName, "fair_share_policy.0.share_decay_seconds"),
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.share_distribution.#", resourceName, "fair_share_policy.0.share_distribution.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},

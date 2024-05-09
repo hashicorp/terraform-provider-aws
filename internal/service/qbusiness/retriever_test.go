@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessRetriever_basic(t *testing.T) {
@@ -35,8 +36,8 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 				),

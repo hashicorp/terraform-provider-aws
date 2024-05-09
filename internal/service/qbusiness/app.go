@@ -64,7 +64,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Description: "A description of the Amazon Q application.",
 				Optional:    true,
 				Validators: []validator.String{
@@ -74,7 +74,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"display_name": schema.StringAttribute{
 				Description: "The display name of the Amazon Q application.",
-				Optional:    true,
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
@@ -120,7 +120,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"kms_key_id": schema.StringAttribute{
+						names.AttrKMSKeyID: schema.StringAttribute{
 							Required:    true,
 							Description: "The identifier of the AWS KMS key that is used to encrypt your data. Amazon Q doesn't support asymmetric keys.",
 							Validators: []validator.String{
@@ -130,7 +130,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

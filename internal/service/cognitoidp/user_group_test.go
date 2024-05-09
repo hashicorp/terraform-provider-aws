@@ -35,7 +35,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(poolName, updatedGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
 				),
 			},
 		},
@@ -95,10 +95,10 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 				Config: testAccUserGroupConfig_complex(poolName, groupName, "This is the user group description", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", groupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is the user group description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -110,10 +110,10 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 				Config: testAccUserGroupConfig_complex(poolName, updatedGroupName, "This is the updated user group description", 42),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is the updated user group description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the updated user group description"),
 					resource.TestCheckResourceAttr(resourceName, "precedence", "42"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -135,7 +135,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 				Config: testAccUserGroupConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccCognitoIDPUserGroup_roleARN(t *testing.T) {
 				Config: testAccUserGroupConfig_roleARNUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -163,7 +163,7 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["name"])
+		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}
@@ -178,7 +178,7 @@ func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["name"])
+			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue

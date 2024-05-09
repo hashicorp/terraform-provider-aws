@@ -32,7 +32,7 @@ func dataSourceAccessEntry() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validClusterName,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,11 +82,11 @@ func dataSourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(id)
 	d.Set("access_entry_arn", output.AccessEntryArn)
 	d.Set("cluster_name", output.ClusterName)
-	d.Set("created_at", aws.ToTime(output.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
 	d.Set("kubernetes_groups", output.KubernetesGroups)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 	d.Set("user_name", output.Username)
 
 	setTagsOut(ctx, output.Tags)

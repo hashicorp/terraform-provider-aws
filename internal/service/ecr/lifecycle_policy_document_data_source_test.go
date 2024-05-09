@@ -55,5 +55,17 @@ data "aws_ecr_lifecycle_policy_document" "test" {
       count_number    = 40
     }
   }
+
+  rule {
+    priority    = 3
+    description = "This is tag pattern list test."
+
+    selection {
+      tag_status       = "tagged"
+      tag_pattern_list = ["*test*1*2*3", "test*1*2*3*"]
+      count_type       = "imageCountMoreThan"
+      count_number     = 100
+    }
+  }
 }
 `

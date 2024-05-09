@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_user_hierarchy_structure")
@@ -57,7 +58,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -75,15 +76,15 @@ func userHierarchyLevelSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"id": {
+				names.AttrID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 50),
@@ -98,7 +99,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.UpdateUserHierarchyStructureInput{
 		HierarchyStructure: expandUserHierarchyStructure(d.Get("hierarchy_structure").([]interface{})),
@@ -146,7 +147,7 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Structure hierarchy_structure for Connect instance: (%s)", d.Id())
 	}
 
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 
 	return diags
 }
@@ -225,7 +226,7 @@ func expandUserHierarchyStructureLevel(userHierarchyStructureLevel []interface{}
 	}
 
 	result := &connect.HierarchyLevelUpdate{
-		Name: aws.String(tfMap["name"].(string)),
+		Name: aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	return result
@@ -267,9 +268,9 @@ func flattenUserHierarchyStructureLevel(userHierarchyStructureLevel *connect.Hie
 	}
 
 	level := map[string]interface{}{
-		"arn":  aws.StringValue(userHierarchyStructureLevel.Arn),
-		"id":   aws.StringValue(userHierarchyStructureLevel.Id),
-		"name": aws.StringValue(userHierarchyStructureLevel.Name),
+		names.AttrARN:  aws.StringValue(userHierarchyStructureLevel.Arn),
+		names.AttrID:   aws.StringValue(userHierarchyStructureLevel.Id),
+		names.AttrName: aws.StringValue(userHierarchyStructureLevel.Name),
 	}
 
 	return []interface{}{level}

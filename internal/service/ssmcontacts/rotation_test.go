@@ -49,7 +49,7 @@ func testRotation_basic(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "time_zone_id", timeZoneId),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.number_of_on_calls", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.recurrence_multiplier", "1"),
@@ -57,7 +57,7 @@ func testRotation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`rotation\/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`rotation\/+.`)),
 				),
 			},
 			{

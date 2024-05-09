@@ -35,7 +35,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := aws.StringValue(humanTaskUi.HumanTaskUiArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("human_task_ui_name", humanTaskUi.HumanTaskUiName)
 
 	if err := d.Set("ui_template", flattenHumanTaskUiUiTemplate(humanTaskUi.UiTemplate, d.Get("ui_template.0.content").(string))); err != nil {
