@@ -52,7 +52,7 @@ func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrBucketName: schema.StringAttribute{
 				Optional: true,
 			},
-			"cluster_identifier": schema.StringAttribute{
+			names.AttrClusterIdentifier: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -234,7 +234,7 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 
 func (r *resourceLogging) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
 }
 
 func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*redshift.DescribeLoggingStatusOutput, error) {

@@ -35,7 +35,7 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 					testAccCheckPartnerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", "Datacoral"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_redshift_cluster.test", names.AttrDatabaseName),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 				),
 			},
@@ -43,7 +43,7 @@ func TestAccRedshiftPartner_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrAccountID, "cluster_identifier"},
+				ImportStateVerifyIgnore: []string{names.AttrAccountID, names.AttrClusterIdentifier},
 			},
 		},
 	})

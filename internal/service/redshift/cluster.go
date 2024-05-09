@@ -90,7 +90,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -431,7 +431,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	inputR := &redshift.RestoreFromClusterSnapshotInput{
 		AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
 		AutomatedSnapshotRetentionPeriod: aws.Int64(int64(d.Get("automated_snapshot_retention_period").(int))),
@@ -574,12 +574,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		if _, ok := d.GetOk("master_password"); !ok {
 			if _, ok := d.GetOk("manage_master_password"); !ok {
-				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: one of "manage_master_password" or "master_password" is required`, d.Get("cluster_identifier").(string))
+				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: one of "manage_master_password" or "master_password" is required`, d.Get(names.AttrClusterIdentifier).(string))
 			}
 		}
 
 		if _, ok := d.GetOk("master_username"); !ok {
-			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get("cluster_identifier").(string))
+			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get(names.AttrClusterIdentifier).(string))
 		}
 
 		if v, ok := d.GetOk("encrypted"); ok {
@@ -672,7 +672,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("availability_zone_relocation_enabled", v)
 	}
-	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, rsc.ClusterIdentifier)
 	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)

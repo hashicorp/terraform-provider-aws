@@ -39,7 +39,7 @@ func resourcePartner() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -71,7 +71,7 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	account := d.Get(names.AttrAccountID).(string)
-	clusterId := d.Get("cluster_identifier").(string)
+	clusterId := d.Get(names.AttrClusterIdentifier).(string)
 	input := redshift.AddPartnerInput{
 		AccountId:         aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
@@ -107,7 +107,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID).(string))
-	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
+	d.Set(names.AttrClusterIdentifier, d.Get(names.AttrClusterIdentifier).(string))
 	d.Set("partner_name", out.PartnerName)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set(names.AttrStatus, out.Status)

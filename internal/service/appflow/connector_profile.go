@@ -1107,7 +1107,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"cluster_identifier": {
+												names.AttrClusterIdentifier: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -2066,7 +2066,7 @@ func expandMarketoConnectorProfileProperties(m map[string]interface{}) *types.Ma
 func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.RedshiftConnectorProfileProperties {
 	properties := &types.RedshiftConnectorProfileProperties{
 		BucketName:        aws.String(m[names.AttrBucketName].(string)),
-		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
+		ClusterIdentifier: aws.String(m[names.AttrClusterIdentifier].(string)),
 		RoleArn:           aws.String(m[names.AttrRoleARN].(string)),
 		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
 		DatabaseName:      aws.String(m[names.AttrDatabaseName].(string)),
@@ -2305,7 +2305,7 @@ func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnect
 	}
 
 	m[names.AttrRoleARN] = aws.ToString(properties.RoleArn)
-	m["cluster_identifier"] = aws.ToString(properties.ClusterIdentifier)
+	m[names.AttrClusterIdentifier] = aws.ToString(properties.ClusterIdentifier)
 	m["data_api_role_arn"] = aws.ToString(properties.DataApiRoleArn)
 	m[names.AttrDatabaseName] = aws.ToString(properties.DatabaseName)
 

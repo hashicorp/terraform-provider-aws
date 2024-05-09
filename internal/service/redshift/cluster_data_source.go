@@ -54,7 +54,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -210,7 +210,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	rsc, err := findClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
@@ -237,7 +237,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		d.Set("availability_zone_relocation_enabled", v)
 	}
-	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, rsc.ClusterIdentifier)
 	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)

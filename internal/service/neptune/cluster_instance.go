@@ -71,7 +71,7 @@ func ResourceClusterInstance() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -201,7 +201,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	).Generate()
 	input := &neptune.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
+		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(instanceID),
 		Engine:                  aws.String(d.Get("engine").(string)),
@@ -271,7 +271,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
-	d.Set("cluster_identifier", clusterID)
+	d.Set(names.AttrClusterIdentifier, clusterID)
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set(names.AttrEngineVersion, db.EngineVersion)
 	d.Set("engine", db.Engine)

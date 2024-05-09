@@ -41,7 +41,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_subnet_group_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
