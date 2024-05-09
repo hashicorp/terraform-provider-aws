@@ -7,6 +7,8 @@ import (
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 )
 
 // AWS SDK for Go v1 compatible Backoff.
@@ -19,7 +21,16 @@ type v1CompatibleBackoff struct {
 // AWS SDK for Go v1 compatible Backoff.
 // See https://github.com/aws/aws-sdk-go/blob/e7dfa8a81550571e247af1ed63a698f9f43a4d51/aws/client/default_retryer.go#L78.
 func (c *v1CompatibleBackoff) BackoffDelay(attempt int, err error) (time.Duration, error) {
-	minDelay := 30 * time.Millisecond
+	const (
+		defaultMinRetryDelay    = 30 * time.Millisecond
+		defaultMinThrottleDelay = 500 * time.Millisecond
+	)
+	minDelay := defaultMinRetryDelay
+
+	if retry.IsErrorThrottles(retry.DefaultThrottles).IsErrorThrottle(err).Bool() {
+		minDelay = defaultMinThrottleDelay
+	}
+
 	maxDelay := c.maxRetryDelay
 	var delay time.Duration
 
