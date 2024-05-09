@@ -32,117 +32,19 @@ func expandTableItemAttributes(jsonStream string) (map[string]awstypes.Attribute
 }
 
 func flattenTableItemAttributes(apiObject map[string]awstypes.AttributeValue) (string, error) {
+	m, err := tfmaps.ApplyToAllValuesWithError(apiObject, rawFromAttribute)
+	if err != nil {
+		return "", err
+	}
+
 	b := new(bytes.Buffer)
 	enc := json.NewEncoder(b)
 
-	if err := enc.Encode(tfmaps.ApplyToAllValues(apiObject, attributeValueInterfaceToStruct)); err != nil {
+	if err := enc.Encode(m); err != nil {
 		return "", err
 	}
 
 	return b.String(), nil
-}
-
-func attributeValueInterfaceToStruct(v awstypes.AttributeValue) attributeValue {
-	return attributeValue{v}
-}
-
-func attributeValueStructToInterface(v attributeValue) awstypes.AttributeValue {
-	return v.AttributeValue
-}
-
-type attributeValue struct {
-	awstypes.AttributeValue
-}
-
-func (a attributeValue) MarshalJSON() ([]byte, error) {
-	m := map[string]any{}
-
-	switch v := a.AttributeValue.(type) {
-	case *awstypes.AttributeValueMemberB:
-		m["B"] = v.Value
-	case *awstypes.AttributeValueMemberBOOL:
-		m["BOOL"] = v.Value
-	case *awstypes.AttributeValueMemberBS:
-		m["BS"] = v.Value
-	case *awstypes.AttributeValueMemberL:
-		m["L"] = tfslices.ApplyToAll(v.Value, attributeValueInterfaceToStruct)
-	case *awstypes.AttributeValueMemberM:
-		m["M"] = tfmaps.ApplyToAllValues(v.Value, attributeValueInterfaceToStruct)
-	case *awstypes.AttributeValueMemberN:
-		m["N"] = v.Value
-	case *awstypes.AttributeValueMemberNS:
-		m["NS"] = v.Value
-	case *awstypes.AttributeValueMemberNULL:
-		m["NULL"] = v.Value
-	case *awstypes.AttributeValueMemberS:
-		m["S"] = v.Value
-	case *awstypes.AttributeValueMemberSS:
-		m["SS"] = v.Value
-	}
-
-	return json.Marshal(m)
-}
-
-/*
-func (a *attributeValue) UnmarshalJSON(b []byte) error {
-	m := map[string]any{}
-
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
-	}
-
-	if n := len(m); n != 1 {
-		return fmt.Errorf("invalid map len: %d", n)
-	}
-
-	var intf awstypes.AttributeValue
-	for k, v := range m {
-		switch k {
-		case "B":
-			v, err := itypes.Base64Decode(v.(string))
-			if err != nil {
-				return err
-			}
-			intf = &awstypes.AttributeValueMemberB{Value: v}
-		case "BOOL":
-			intf = &awstypes.AttributeValueMemberBOOL{Value: v.(bool)}
-		case "BS":
-			v, err := tfslices.ApplyToAllWithError(v.([]any), func(v any) ([]byte, error) {
-				return itypes.Base64Decode(v.(string))
-			})
-			if err != nil {
-				return err
-			}
-			intf = &awstypes.AttributeValueMemberBS{Value: v}
-		// case "L":
-		// 	intf = &awstypes.AttributeValueMemberL{Value: tfslices.ApplyToAll(v.([]any), attributeValueInterfaceToStruct)}
-		// case "M":
-		// 	intf = &awstypes.AttributeValueMemberM{Value: tfmaps.ApplyToAllValues(v.(map[string]any), attributeValueInterfaceToStruct)}
-		case "N":
-			intf = &awstypes.AttributeValueMemberN{Value: v.(string)}
-		case "NS":
-			intf = &awstypes.AttributeValueMemberNS{Value: tfslices.ApplyToAll(v.([]any), func(v any) string {
-				return v.(string)
-			})}
-		case "NULL":
-			intf = &awstypes.AttributeValueMemberNULL{Value: v.(bool)}
-		case "S":
-			intf = &awstypes.AttributeValueMemberS{Value: v.(string)}
-		case "SS":
-			intf = &awstypes.AttributeValueMemberSS{Value: tfslices.ApplyToAll(v.([]any), func(v any) string {
-				return v.(string)
-			})}
-		}
-	}
-
-	*a = attributeValueInterfaceToStruct(intf)
-
-	return nil
-}
-*/
-
-func itemFromRaw(m map[string]any) (map[string]awstypes.AttributeValue, error) {
-	return tfmaps.ApplyToAllValuesWithError(m, attributeFromRaw)
 }
 
 func attributeFromRaw(v any) (awstypes.AttributeValue, error) {
@@ -156,53 +58,135 @@ func attributeFromRaw(v any) (awstypes.AttributeValue, error) {
 	}
 
 	for k, v := range m {
-		switch k {
-		case "B":
-			v, err := itypes.Base64Decode(v.(string))
-			if err != nil {
-				return nil, err
+		switch v := v.(type) {
+		case bool:
+			switch k {
+			case dataTypeDescriptorBoolean:
+				return &awstypes.AttributeValueMemberBOOL{Value: v}, nil
+			case dataTypeDescriptorNull:
+				return &awstypes.AttributeValueMemberNULL{Value: v}, nil
 			}
-			return &awstypes.AttributeValueMemberB{Value: v}, nil
-		case "BOOL":
-			return &awstypes.AttributeValueMemberBOOL{Value: v.(bool)}, nil
-		case "BS":
-			v, err := tfslices.ApplyToAllWithError(v.([]any), func(v any) ([]byte, error) {
-				return itypes.Base64Decode(v.(string))
-			})
-			if err != nil {
-				return nil, err
+		case string:
+			switch k {
+			case dataTypeDescriptorBinary:
+				v, err := itypes.Base64Decode(v)
+				if err != nil {
+					return nil, err
+				}
+				return &awstypes.AttributeValueMemberB{Value: v}, nil
+			case dataTypeDescriptorNumber:
+				return &awstypes.AttributeValueMemberN{Value: v}, nil
+			case dataTypeDescriptorString:
+				return &awstypes.AttributeValueMemberS{Value: v}, nil
 			}
-			return &awstypes.AttributeValueMemberBS{Value: v}, nil
-		case "L":
-			v, err := tfslices.ApplyToAllWithError(v.([]any), attributeFromRaw)
-			if err != nil {
-				return nil, err
+		case []any:
+			switch k {
+			case dataTypeDescriptorBinarySet:
+				v, err := tfslices.ApplyToAllWithError(v, func(v any) ([]byte, error) {
+					switch v := v.(type) {
+					case string:
+						return itypes.Base64Decode(v)
+					default:
+						return nil, unexpectedRawAttributeElementTypeError(v, k)
+					}
+				})
+				if err != nil {
+					return nil, err
+				}
+				return &awstypes.AttributeValueMemberBS{Value: v}, nil
+			case dataTypeDescriptorList:
+				v, err := tfslices.ApplyToAllWithError(v, attributeFromRaw)
+				if err != nil {
+					return nil, err
+				}
+				return &awstypes.AttributeValueMemberL{Value: v}, nil
+			case dataTypeDescriptorNumberSet, dataTypeDescriptorStringSet:
+				v, err := tfslices.ApplyToAllWithError(v, func(v any) (string, error) {
+					switch v := v.(type) {
+					case string:
+						return v, nil
+					default:
+						return "", unexpectedRawAttributeElementTypeError(v, k)
+					}
+				})
+				if err != nil {
+					return nil, err
+				}
+				if k == dataTypeDescriptorNumberSet {
+					return &awstypes.AttributeValueMemberNS{Value: v}, nil
+				}
+				return &awstypes.AttributeValueMemberSS{Value: v}, nil
 			}
-			return &awstypes.AttributeValueMemberL{Value: v}, nil
-		case "M":
-			v, err := tfmaps.ApplyToAllValuesWithError(v.(map[string]any), attributeFromRaw)
-			if err != nil {
-				return nil, err
+		case map[string]any:
+			switch k {
+			case dataTypeDescriptorMap:
+				v, err := tfmaps.ApplyToAllValuesWithError(v, attributeFromRaw)
+				if err != nil {
+					return nil, err
+				}
+				return &awstypes.AttributeValueMemberM{Value: v}, nil
 			}
-			return &awstypes.AttributeValueMemberM{Value: v}, nil
-		case "N":
-			return &awstypes.AttributeValueMemberN{Value: v.(string)}, nil
-		case "NS":
-			return &awstypes.AttributeValueMemberNS{Value: tfslices.ApplyToAll(v.([]any), func(v any) string {
-				return v.(string)
-			})}, nil
-		case "NULL":
-			return &awstypes.AttributeValueMemberNULL{Value: v.(bool)}, nil
-		case "S":
-			return &awstypes.AttributeValueMemberS{Value: v.(string)}, nil
-		case "SS":
-			return &awstypes.AttributeValueMemberSS{Value: tfslices.ApplyToAll(v.([]any), func(v any) string {
-				return v.(string)
-			})}, nil
-		default:
-			return nil, fmt.Errorf("invalid raw attribute map key: %s", k)
 		}
+
+		return nil, fmt.Errorf("unexpected raw attribute type (%T) for data type descriptor: %s", v, k)
 	}
 
-	return nil, fmt.Errorf("unexpected raw attribute type: %T", v)
+	panic("unreachable")
+}
+
+func rawFromAttribute(a awstypes.AttributeValue) (any, error) {
+	m := map[string]any{}
+
+	switch a := a.(type) {
+	case *awstypes.AttributeValueMemberB:
+		m[dataTypeDescriptorBinary] = itypes.Base64Encode(a.Value)
+	case *awstypes.AttributeValueMemberBOOL:
+		m[dataTypeDescriptorBoolean] = a.Value
+	case *awstypes.AttributeValueMemberBS:
+		m[dataTypeDescriptorBinarySet] = tfslices.ApplyToAll(a.Value, itypes.Base64Encode)
+	case *awstypes.AttributeValueMemberL:
+		v, err := tfslices.ApplyToAllWithError(a.Value, rawFromAttribute)
+		if err != nil {
+			return nil, err
+		}
+		m[dataTypeDescriptorList] = v
+	case *awstypes.AttributeValueMemberM:
+		v, err := tfmaps.ApplyToAllValuesWithError(a.Value, rawFromAttribute)
+		if err != nil {
+			return nil, err
+		}
+		m[dataTypeDescriptorMap] = v
+	case *awstypes.AttributeValueMemberN:
+		m[dataTypeDescriptorNumber] = a.Value
+	case *awstypes.AttributeValueMemberNS:
+		m[dataTypeDescriptorNumberSet] = a.Value
+	case *awstypes.AttributeValueMemberNULL:
+		m[dataTypeDescriptorNull] = a.Value
+	case *awstypes.AttributeValueMemberS:
+		m[dataTypeDescriptorString] = a.Value
+	case *awstypes.AttributeValueMemberSS:
+		m[dataTypeDescriptorStringSet] = a.Value
+	default:
+		return nil, fmt.Errorf("unexpected attribute type: %T", a)
+	}
+
+	return m, nil
+}
+
+// See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.NamingRulesDataTypes.html#HowItWorks.DataTypes.
+const (
+	dataTypeDescriptorBinary    = "B"
+	dataTypeDescriptorBinarySet = "BS"
+	dataTypeDescriptorBoolean   = "BOOL"
+	dataTypeDescriptorList      = "L"
+	dataTypeDescriptorMap       = "M"
+	dataTypeDescriptorNull      = "NULL"
+	dataTypeDescriptorNumber    = "N"
+	dataTypeDescriptorNumberSet = "NS"
+	dataTypeDescriptorString    = "S"
+	dataTypeDescriptorStringSet = "SS"
+)
+
+func unexpectedRawAttributeElementTypeError(v any, k string) error {
+	return fmt.Errorf("unexpected raw attribute element type (%T) for data type descriptor: %s", v, k)
 }
