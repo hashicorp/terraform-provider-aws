@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -218,56 +216,12 @@ func TestAccWAFByteMatchSet_disappears(t *testing.T) {
 				Config: testAccByteMatchSetConfig_basic(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &v),
-					testAccCheckByteMatchSetDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceByteMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckByteMatchSetDisappears(ctx context.Context, v *awstypes.ByteMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-
-		wr := tfwaf.NewRetryer(conn)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateByteMatchSetInput{
-				ChangeToken:    token,
-				ByteMatchSetId: v.ByteMatchSetId,
-			}
-
-			for _, ByteMatchTuple := range v.ByteMatchTuples {
-				ByteMatchUpdate := awstypes.ByteMatchSetUpdate{
-					Action: awstypes.ChangeActionDelete,
-					ByteMatchTuple: &awstypes.ByteMatchTuple{
-						FieldToMatch:         ByteMatchTuple.FieldToMatch,
-						PositionalConstraint: ByteMatchTuple.PositionalConstraint,
-						TargetString:         ByteMatchTuple.TargetString,
-						TextTransformation:   ByteMatchTuple.TextTransformation,
-					},
-				}
-				req.Updates = append(req.Updates, ByteMatchUpdate)
-			}
-
-			return conn.UpdateByteMatchSet(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteByteMatchSetInput{
-				ChangeToken:    token,
-				ByteMatchSetId: v.ByteMatchSetId,
-			}
-			return conn.DeleteByteMatchSet(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
-		}
-		return nil
-	}
 }
 
 func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *awstypes.ByteMatchSet) resource.TestCheckFunc {
@@ -277,25 +231,17 @@ func testAccCheckByteMatchSetExists(ctx context.Context, n string, v *awstypes.B
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF ByteMatchSet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetByteMatchSet(ctx, &waf.GetByteMatchSetInput{
-			ByteMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindByteMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.ByteMatchSet.ByteMatchSetId == rs.Primary.ID {
-			*v = *resp.ByteMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF ByteMatchSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -307,21 +253,18 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetByteMatchSet(ctx, &waf.GetByteMatchSetInput{
-				ByteMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.ByteMatchSet.ByteMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF ByteMatchSet %s still exists", rs.Primary.ID)
-				}
-			}
+			_, err := tfwaf.FindByteMatchSetByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WAF ByteMatchSet %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -331,7 +274,7 @@ func testAccCheckByteMatchSetDestroy(ctx context.Context) resource.TestCheckFunc
 func testAccByteMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
-  name = "%s"
+  name = %[1]q
 
   byte_match_tuples {
     text_transformation   = "NONE"
@@ -361,7 +304,7 @@ resource "aws_waf_byte_match_set" "byte_set" {
 func testAccByteMatchSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
-  name = "%s"
+  name = %[1]q
 
   byte_match_tuples {
     text_transformation   = "NONE"
@@ -391,7 +334,7 @@ resource "aws_waf_byte_match_set" "byte_set" {
 func testAccByteMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
-  name = "%s"
+  name = %[1]q
 
   byte_match_tuples {
     text_transformation   = "NONE"
@@ -421,7 +364,7 @@ resource "aws_waf_byte_match_set" "byte_set" {
 func testAccByteMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }
