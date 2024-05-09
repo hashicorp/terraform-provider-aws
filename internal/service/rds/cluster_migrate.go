@@ -130,7 +130,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

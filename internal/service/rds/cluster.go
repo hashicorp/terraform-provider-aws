@@ -206,7 +206,7 @@ func ResourceCluster() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1203,7 +1203,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
-	d.Set("endpoint", dbc.Endpoint)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
 	clusterSetResourceDataEngineVersionFromCluster(d, dbc)

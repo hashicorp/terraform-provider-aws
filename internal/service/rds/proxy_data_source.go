@@ -59,7 +59,7 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,7 +116,7 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, dbProxy.DBProxyArn)
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
-	d.Set("endpoint", dbProxy.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
