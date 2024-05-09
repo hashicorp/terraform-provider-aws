@@ -180,7 +180,7 @@ func resourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1125,7 +1125,7 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m["endpoints"] = instance.Endpoints
+			m[names.AttrEndpoints] = instance.Endpoints
 		}
 		if instance.IpAddress != nil {
 			m["ip_address"] = aws.ToString(instance.IpAddress)
