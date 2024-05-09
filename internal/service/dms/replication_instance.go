@@ -139,7 +139,7 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -190,7 +190,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("replication_subnet_group_id"); ok {
 		input.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok {
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -243,7 +243,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
 		return aws.StringValue(sg.VpcSecurityGroupId)
 	})
-	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	return diags
 }
@@ -289,8 +289,8 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			input.ReplicationInstanceClass = aws.String(d.Get("replication_instance_class").(string))
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
 		}
 
 		_, err := conn.ModifyReplicationInstanceWithContext(ctx, input)

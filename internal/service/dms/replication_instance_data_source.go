@@ -86,7 +86,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
@@ -129,7 +129,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
 		return aws.StringValue(sg.VpcSecurityGroupId)
 	})
-	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	tags, err := listTags(ctx, conn, arn)
 
