@@ -98,7 +98,7 @@ func ResourceConnection() *schema.Resource {
 							MaxItems: 50,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -296,7 +296,7 @@ func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.Physic
 		physicalConnectionRequirements.SecurityGroupIdList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := m["subnet_id"]; ok {
+	if v, ok := m[names.AttrSubnetID]; ok {
 		physicalConnectionRequirements.SubnetId = aws.String(v.(string))
 	}
 
@@ -311,7 +311,7 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.
 	m := map[string]interface{}{
 		names.AttrAvailabilityZone: aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
 		"security_group_id_list":   flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
-		"subnet_id":                aws.StringValue(physicalConnectionRequirements.SubnetId),
+		names.AttrSubnetID:         aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}
 
 	return []map[string]interface{}{m}

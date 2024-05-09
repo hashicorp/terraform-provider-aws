@@ -119,9 +119,9 @@ func ResourceDevEndpoint() *schema.Resource {
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
 				Set:          schema.HashString,
-				RequiredWith: []string{"subnet_id"},
+				RequiredWith: []string{names.AttrSubnetID},
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -225,7 +225,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.SecurityGroupIds = securityGroupIDs
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -367,7 +367,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting status for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("subnet_id", endpoint.SubnetId); err != nil {
+	if err := d.Set(names.AttrSubnetID, endpoint.SubnetId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_id for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
