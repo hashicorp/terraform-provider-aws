@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -43,7 +46,7 @@ func resourceIdcApplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +162,7 @@ func resourceIdcApplicationCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] creating Redshift IDC Application: %s", input)
-	output, err := conn.CreateRedshiftIdcApplication(input)
+	output, err := conn.CreateRedshiftIdcApplicationWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift IDC Application (%s): %s", "", err)
 	}
@@ -191,7 +194,7 @@ func resourceIdcApplicationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("redshift_idc_application_name", rsIdc.RedshiftIdcApplicationName)
 	d.Set("service_integrations", flatternServiceIntegrations(rsIdc.ServiceIntegrations))
 
-	d.Set("arn", rsIdc.RedshiftIdcApplicationArn)
+	d.Set(names.AttrARN, rsIdc.RedshiftIdcApplicationArn)
 
 	return diags
 }
