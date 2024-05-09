@@ -5,9 +5,7 @@ package wafv2
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,9 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	webACLAssociationResourceIDPartCount = 2
 )
 
 // @SDKResource("aws_wafv2_web_acl_association", name="Web ACL Association")
@@ -62,7 +65,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 
 	webACLARN := d.Get("web_acl_arn").(string)
 	resourceARN := d.Get(names.AttrResourceARN).(string)
-	id := WebACLAssociationCreateResourceID(webACLARN, resourceARN)
+	id := errs.Must(flex.FlattenResourceId([]string{webACLARN, resourceARN}, webACLAssociationResourceIDPartCount, true))
 	input := &wafv2.AssociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
 		WebACLArn:   aws.String(webACLARN),
@@ -85,12 +88,12 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), webACLAssociationResourceIDPartCount, true)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	resourceARN := parts[1]
 	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -112,13 +115,13 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	_, resourceARN, err := WebACLAssociationParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), webACLAssociationResourceIDPartCount, true)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Association: %s", d.Id())
+	resourceARN := parts[1]
 	_, err = conn.DisassociateWebACL(ctx, &wafv2.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
 	})
@@ -157,23 +160,4 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string
 	}
 
 	return output.WebACL, nil
-}
-
-const webACLAssociationIDSeparator = ","
-
-func WebACLAssociationCreateResourceID(webACLARN, resourceARN string) string {
-	parts := []string{webACLARN, resourceARN}
-	id := strings.Join(parts, webACLAssociationIDSeparator)
-
-	return id
-}
-
-func WebACLAssociationParseResourceID(id string) (string, string, error) {
-	parts := strings.SplitN(id, webACLAssociationIDSeparator, 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected WEB-ACL-ARN%[2]sRESOURCE-ARN", id, webACLAssociationIDSeparator)
-	}
-
-	return parts[0], parts[1], nil
 }
