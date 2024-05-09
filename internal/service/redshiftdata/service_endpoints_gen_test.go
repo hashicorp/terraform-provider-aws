@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type endpointTestCase struct {
@@ -416,7 +417,7 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	config := map[string]any{
 		"access_key":                  servicemocks.MockStaticAccessKey,
 		"secret_key":                  servicemocks.MockStaticSecretKey,
-		"region":                      region,
+		names.AttrRegion:              region,
 		"skip_credentials_validation": true,
 		"skip_requesting_account_id":  true,
 	}
