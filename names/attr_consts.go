@@ -17,6 +17,7 @@ const (
 	AttrMax              = "max"
 	AttrMin              = "min"
 	AttrName             = "name"
+	AttrNamePrefix       = "name_prefix"
 	AttrOwnerID          = "owner_id"
 	AttrParameters       = "parameters"
 	AttrPolicy           = "policy"

@@ -120,10 +120,10 @@ func resourceMetricStream() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateMetricStreamName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -204,7 +204,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &cloudwatch.PutMetricStreamInput{
 		FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 		IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
@@ -294,7 +294,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
 	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
 	d.Set(names.AttrName, output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("output_format", output.OutputFormat)
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set(names.AttrState, output.State)

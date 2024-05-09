@@ -925,3 +925,13 @@ rules:
       - pattern: '"instance_type"'
     severity: ERROR
     fix: "names.AttrInstanceType"
+  - id: literal-name_prefix-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrNamePrefix` for the string literal "name_prefix"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"name_prefix"'
+    severity: ERROR
+    fix: "names.AttrNamePrefix"

@@ -108,7 +108,7 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -191,7 +191,7 @@ func TestAccELBV2TargetGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-"),
 				),
 			},
 			{
@@ -226,7 +226,7 @@ func TestAccELBV2TargetGroup_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-px-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-px-"),
 				),
 			},
 			{

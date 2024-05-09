@@ -235,10 +235,10 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -533,7 +533,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
@@ -585,7 +585,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {

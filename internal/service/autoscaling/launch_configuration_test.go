@@ -51,7 +51,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "placement_tenancy", ""),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
@@ -109,7 +109,7 @@ func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{

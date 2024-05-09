@@ -795,9 +795,9 @@ func resourceGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringLenBetween(0, 255),
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -1020,7 +1020,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	startTime := time.Now()
 
-	asgName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	asgName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputCASG := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
@@ -1305,7 +1305,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("mixed_instances_policy", nil)
 	}
 	d.Set(names.AttrName, g.AutoScalingGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(g.AutoScalingGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(g.AutoScalingGroupName)))
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("predicted_capacity", g.PredictedCapacity)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)

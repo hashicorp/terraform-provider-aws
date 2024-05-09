@@ -76,13 +76,13 @@ func ResourceSecurityGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255),
 					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -189,7 +189,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputC := &ec2.CreateSecurityGroupInput{
 		GroupName:         aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSecurityGroup),
@@ -303,7 +303,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrDescription, sg.Description)
 	d.Set(names.AttrName, sg.GroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(sg.GroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(sg.GroupName)))
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set(names.AttrVPCID, sg.VpcId)
 

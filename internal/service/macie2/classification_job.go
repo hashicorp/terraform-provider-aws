@@ -85,10 +85,10 @@ func ResourceClassificationJob() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 500),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -584,7 +584,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))),
+		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 		Tags:            getTagsIn(ctx),
@@ -665,7 +665,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("sampling_percentage", resp.SamplingPercentage)
 	d.Set(names.AttrName, resp.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("initial_run", resp.InitialRun)
 	d.Set("job_type", resp.JobType)

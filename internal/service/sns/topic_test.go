@@ -68,7 +68,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
@@ -157,7 +157,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
 				),
 			},
@@ -380,7 +380,7 @@ func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrName, tfsns.FIFOTopicNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
 			},
@@ -441,7 +441,7 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrName, rName, tfsns.FIFOTopicNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
 			},

@@ -185,7 +185,7 @@ func DataSourceBudget() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -274,7 +274,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	accountID := d.Get("account_id").(string)
 	if accountID == "" {
@@ -328,7 +328,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrName, budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	return diags
 }

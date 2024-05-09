@@ -209,10 +209,10 @@ func resourceLaunchConfiguration() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(1, 255),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -316,7 +316,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	lcName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	lcName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
 		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageId:                 aws.String(d.Get("image_id").(string)),
@@ -462,7 +462,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 		d.Set("metadata_options", nil)
 	}
 	d.Set(names.AttrName, lc.LaunchConfigurationName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(lc.LaunchConfigurationName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lc.LaunchConfigurationName)))
 	d.Set("placement_tenancy", lc.PlacementTenancy)
 	d.Set("security_groups", lc.SecurityGroups)
 	d.Set("spot_price", lc.SpotPrice)
