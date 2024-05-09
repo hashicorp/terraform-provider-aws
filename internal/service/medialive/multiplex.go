@@ -51,7 +51,7 @@ func ResourceMultiplex() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -117,7 +117,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(id.UniqueId()),
 		Name:              aws.String(d.Get(names.AttrName).(string)),
-		AvailabilityZones: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
+		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -167,7 +167,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("availability_zones", out.AvailabilityZones)
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZones)
 	d.Set(names.AttrName, out.Name)
 
 	if err := d.Set("multiplex_settings", flattenMultiplexSettings(out.MultiplexSettings)); err != nil {
