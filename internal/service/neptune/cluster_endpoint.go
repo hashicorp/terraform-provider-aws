@@ -57,7 +57,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, ep.DBClusterEndpointArn)
 	d.Set("cluster_endpoint_identifier", ep.DBClusterEndpointIdentifier)
 	d.Set(names.AttrClusterIdentifier, ep.DBClusterIdentifier)
-	d.Set("endpoint", ep.Endpoint)
+	d.Set(names.AttrEndpoint, ep.Endpoint)
 	d.Set("endpoint_type", ep.CustomEndpointType)
 	d.Set("excluded_members", aws.StringValueSlice(ep.ExcludedMembers))
 	d.Set("static_members", aws.StringValueSlice(ep.StaticMembers))
