@@ -61,7 +61,7 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*datapipeline_sdkv1.DataPipeline, error) {
 	sess := config["session"].(*session_sdkv1.Session)
 
-	return datapipeline_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return datapipeline_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
