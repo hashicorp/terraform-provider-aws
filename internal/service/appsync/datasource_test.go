@@ -514,7 +514,7 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.schema", "mydb"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.0.http_endpoint_config.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.db_cluster_identifier", "aws_rds_cluster.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.database_name", "aws_rds_cluster.test", names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "relational_database_config.0.http_endpoint_config.0.aws_secret_store_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},

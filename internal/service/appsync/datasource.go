@@ -233,7 +233,7 @@ func ResourceDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"database_name": {
+									names.AttrDatabaseName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -878,7 +878,7 @@ func testAccDataSourceConfig_expandRDSHTTPEndpoint(l []interface{}, currentRegio
 		result.AwsSecretStoreArn = aws.String(v.(string))
 	}
 
-	if v, ok := configured["database_name"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrDatabaseName]; ok && v.(string) != "" {
 		result.DatabaseName = aws.String(v.(string))
 	}
 
@@ -909,7 +909,7 @@ func flattenRDSHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[s
 	}
 
 	if config.DatabaseName != nil {
-		result["database_name"] = aws.StringValue(config.DatabaseName)
+		result[names.AttrDatabaseName] = aws.StringValue(config.DatabaseName)
 	}
 
 	if config.DbClusterIdentifier != nil {
