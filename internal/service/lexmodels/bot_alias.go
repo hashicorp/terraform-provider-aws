@@ -339,7 +339,7 @@ var logSettings = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.LogType_Values(), false),
 		},
-		"resource_arn": {
+		names.AttrResourceARN: {
 			Type:     schema.TypeString,
 			Required: true,
 			ValidateFunc: validation.All(
@@ -379,11 +379,11 @@ func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.Con
 func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
-			"destination":       response.Destination,
-			names.AttrKMSKeyARN: response.KmsKeyArn,
-			"log_type":          response.LogType,
-			"resource_arn":      response.ResourceArn,
-			"resource_prefix":   response.ResourcePrefix,
+			"destination":         response.Destination,
+			names.AttrKMSKeyARN:   response.KmsKeyArn,
+			"log_type":            response.LogType,
+			names.AttrResourceARN: response.ResourceArn,
+			"resource_prefix":     response.ResourcePrefix,
 		})
 	}
 	return
@@ -401,7 +401,7 @@ func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogS
 		request := &lexmodelbuildingservice.LogSettingsRequest{
 			Destination: aws.String(destination),
 			LogType:     aws.String(value["log_type"].(string)),
-			ResourceArn: aws.String(value["resource_arn"].(string)),
+			ResourceArn: aws.String(value[names.AttrResourceARN].(string)),
 		}
 
 		if v, ok := value[names.AttrKMSKeyARN]; ok && v != "" {

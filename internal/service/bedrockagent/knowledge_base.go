@@ -194,7 +194,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									"database_name": schema.StringAttribute{
 										Required: true,
 									},
-									"resource_arn": schema.StringAttribute{
+									names.AttrResourceARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},

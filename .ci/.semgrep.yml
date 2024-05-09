@@ -975,3 +975,13 @@ rules:
       - pattern: '"domain_name"'
     severity: ERROR
     fix: "names.AttrDomainName"
+  - id: literal-resource_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrResourceARN` for the string literal "resource_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"resource_arn"'
+    severity: ERROR
+    fix: "names.AttrResourceARN"

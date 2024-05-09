@@ -26,6 +26,7 @@ const (
 	AttrParameters         = "parameters"
 	AttrPolicy             = "policy"
 	AttrPort               = "port"
+	AttrResourceARN        = "resource_arn"
 	AttrRoleARN            = "role_arn"
 	AttrSecurityGroupIDs   = "security_group_ids"
 	AttrState              = "state"

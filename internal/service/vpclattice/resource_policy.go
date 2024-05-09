@@ -47,7 +47,7 @@ func ResourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,7 +63,7 @@ const (
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	resourceArn := d.Get("resource_arn").(string)
+	resourceArn := d.Get(names.AttrResourceARN).(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
@@ -107,7 +107,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameResourcePolicy, d.Id(), err)
 	}
 
-	d.Set("resource_arn", resourceArn)
+	d.Set(names.AttrResourceARN, resourceArn)
 
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.Policy))
 
