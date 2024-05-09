@@ -77,7 +77,7 @@ func resourceTable() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -456,7 +456,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
 
 	apiObject := &types.S3Configuration{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -481,10 +481,10 @@ func flattenS3Configuration(apiObject *types.S3Configuration) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"bucket_name":       aws.ToString(apiObject.BucketName),
-		"encryption_option": string(apiObject.EncryptionOption),
-		names.AttrKMSKeyID:  aws.ToString(apiObject.KmsKeyId),
-		"object_key_prefix": aws.ToString(apiObject.ObjectKeyPrefix),
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
+		"encryption_option":  string(apiObject.EncryptionOption),
+		names.AttrKMSKeyID:   aws.ToString(apiObject.KmsKeyId),
+		"object_key_prefix":  aws.ToString(apiObject.ObjectKeyPrefix),
 	}
 
 	return []interface{}{tfMap}
