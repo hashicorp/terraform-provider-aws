@@ -41,6 +41,7 @@ const (
 	AttrTags                = "tags"
 	AttrTagsAll             = "tags_all"
 	AttrTimeouts            = "timeouts" // Should be explicitly declared only for Framework resources
+	AttrTransitGatewayID    = "transit_gateway_id"
 	AttrType                = "type"
 	AttrVPCSecurityGroupIDs = "vpc_security_group_ids"
 	AttrValue               = "value"
