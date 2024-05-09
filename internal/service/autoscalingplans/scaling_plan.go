@@ -62,7 +62,7 @@ func ResourceScalingPlan() *schema.Resource {
 										Required: true,
 									},
 
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										MinItems: 0,
@@ -498,7 +498,7 @@ func expandApplicationSource(vApplicationSource []interface{}) *awstypes.Applica
 				tagFilter.Key = aws.String(v)
 			}
 
-			if vValues, ok := mTagFilter["values"].(*schema.Set); ok && vValues.Len() > 0 {
+			if vValues, ok := mTagFilter[names.AttrValues].(*schema.Set); ok && vValues.Len() > 0 {
 				tagFilter.Values = flex.ExpandStringValueSet(vValues)
 			}
 
@@ -525,8 +525,8 @@ func flattenApplicationSource(applicationSource *awstypes.ApplicationSource) []i
 
 		for _, tagFilter := range tagFilters {
 			mTagFilter := map[string]interface{}{
-				names.AttrKey: aws.ToString(tagFilter.Key),
-				"values":      flex.FlattenStringValueSet(tagFilter.Values),
+				names.AttrKey:    aws.ToString(tagFilter.Key),
+				names.AttrValues: flex.FlattenStringValueSet(tagFilter.Values),
 			}
 
 			vTagFilters = append(vTagFilters, mTagFilter)
