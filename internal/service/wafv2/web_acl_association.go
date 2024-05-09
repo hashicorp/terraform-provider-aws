@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafv2_web_acl_association")
@@ -38,7 +39,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"resource_arn": {
+				names.AttrResourceARN: {
 					Type:         schema.TypeString,
 					ForceNew:     true,
 					Required:     true,
@@ -59,7 +60,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	webACLARN := d.Get("web_acl_arn").(string)
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	id := WebACLAssociationCreateResourceID(webACLARN, resourceARN)
 	input := &wafv2.AssociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
@@ -101,7 +102,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("reading WAFv2 WebACL Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_arn", resourceARN)
+	d.Set(names.AttrResourceARN, resourceARN)
 	d.Set("web_acl_arn", webACL.ARN)
 
 	return nil
