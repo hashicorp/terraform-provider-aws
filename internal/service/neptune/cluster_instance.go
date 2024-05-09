@@ -60,7 +60,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -200,7 +200,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &neptune.CreateDBInstanceInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(instanceID),
@@ -269,7 +269,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterID := aws.StringValue(db.DBClusterIdentifier)
 	d.Set(names.AttrARN, db.DBInstanceArn)
-	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, db.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
 	d.Set(names.AttrClusterIdentifier, clusterID)
 	d.Set("dbi_resource_id", db.DbiResourceId)
@@ -322,8 +322,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange("instance_class") {
