@@ -605,7 +605,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 							Default:  0,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -1252,7 +1252,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 				if index == int(aws.Int64Value(iNi.Attachment.DeviceIndex)) {
 					ni["device_index"] = aws.Int64Value(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.Int64Value(iNi.Attachment.NetworkCardIndex)
-					ni["network_interface_id"] = aws.StringValue(iNi.NetworkInterfaceId)
+					ni[names.AttrNetworkInterfaceID] = aws.StringValue(iNi.NetworkInterfaceId)
 					ni["delete_on_termination"] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
 				}
 			}
@@ -2534,7 +2534,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 			ni := &ec2.InstanceNetworkInterfaceSpecification{
 				DeviceIndex:         aws.Int64(int64(ini["device_index"].(int))),
 				NetworkCardIndex:    aws.Int64(int64(ini["network_card_index"].(int))),
-				NetworkInterfaceId:  aws.String(ini["network_interface_id"].(string)),
+				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
 				DeleteOnTermination: aws.Bool(ini["delete_on_termination"].(bool)),
 			}
 			networkInterfaces = append(networkInterfaces, ni)

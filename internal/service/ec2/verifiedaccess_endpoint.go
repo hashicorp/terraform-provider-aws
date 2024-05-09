@@ -121,7 +121,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -405,7 +405,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	tfmap := map[string]interface{}{}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfmap["network_interface_id"] = aws.ToString(v)
+		tfmap[names.AttrNetworkInterfaceID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -470,7 +470,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 
 	apiobject := &types.CreateVerifiedAccessEndpointEniOptions{}
 
-	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
 		apiobject.NetworkInterfaceId = aws.String(v)
 	}
 

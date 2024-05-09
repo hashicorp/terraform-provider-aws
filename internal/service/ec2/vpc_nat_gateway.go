@@ -63,7 +63,7 @@ func ResourceNATGateway() *schema.Resource {
 				Default:      ec2.ConnectivityTypePublic,
 				ValidateFunc: validation.StringInSlice(ec2.ConnectivityType_Values(), false),
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -190,7 +190,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ng.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("association_id", address.AssociationId)
-			d.Set("network_interface_id", address.NetworkInterfaceId)
+			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
 		} else if !isPrimary {

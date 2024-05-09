@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eip_association", name="EIP Association")
@@ -48,7 +49,7 @@ func resourceEIPAssociation() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,7 +89,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.InstanceId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("network_interface_id"); ok {
+	if v, ok := d.GetOk(names.AttrNetworkInterfaceID); ok {
 		input.NetworkInterfaceId = aws.String(v.(string))
 	}
 
@@ -155,7 +156,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("allocation_id", address.AllocationId)
 	d.Set("instance_id", address.InstanceId)
-	d.Set("network_interface_id", address.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 	d.Set("private_ip_address", address.PrivateIpAddress)
 	d.Set("public_ip", address.PublicIp)
 

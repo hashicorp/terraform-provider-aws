@@ -66,7 +66,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -86,7 +86,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -254,7 +254,7 @@ func flattenTransitGatewayMulticastGroup(apiObject *ec2.TransitGatewayMulticastG
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	return tfMap
