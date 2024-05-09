@@ -18,11 +18,11 @@ import (
 
 func SizeConstraintSetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"name": {
+		"nam: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
