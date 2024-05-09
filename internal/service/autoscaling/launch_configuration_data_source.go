@@ -171,7 +171,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -223,7 +223,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set(names.AttrName, lc.LaunchConfigurationName)
 	d.Set("placement_tenancy", lc.PlacementTenancy)
-	d.Set("security_groups", lc.SecurityGroups)
+	d.Set(names.AttrSecurityGroups, lc.SecurityGroups)
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("user_data", lc.UserData)
 

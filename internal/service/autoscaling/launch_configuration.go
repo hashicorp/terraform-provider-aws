@@ -274,7 +274,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -349,7 +349,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.PlacementTenancy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -464,7 +464,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrName, lc.LaunchConfigurationName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lc.LaunchConfigurationName)))
 	d.Set("placement_tenancy", lc.PlacementTenancy)
-	d.Set("security_groups", lc.SecurityGroups)
+	d.Set(names.AttrSecurityGroups, lc.SecurityGroups)
 	d.Set("spot_price", lc.SpotPrice)
 	if v := aws.ToString(lc.UserData); v != "" {
 		if _, ok := d.GetOk("user_data_base64"); ok {
