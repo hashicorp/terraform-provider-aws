@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_snapshot_create_volume_permission")
@@ -36,7 +37,7 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +56,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	snapshotID := d.Get("snapshot_id").(string)
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	id := EBSSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
 	input := &ec2.ModifySnapshotAttributeInput{
 		Attribute: awstypes.SnapshotAttributeNameCreateVolumePermission,
@@ -162,7 +163,7 @@ func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, di
 				return fmt.Errorf("reading EBS Snapshot (%s): %w", snapshotID, err)
 			}
 
-			if accountID := diff.Get("account_id").(string); aws.ToString(snapshot.OwnerId) == accountID {
+			if accountID := diff.Get(names.AttrAccountID).(string); aws.ToString(snapshot.OwnerId) == accountID {
 				return fmt.Errorf("AWS Account (%s) owns EBS Snapshot (%s)", accountID, snapshotID)
 			}
 		}

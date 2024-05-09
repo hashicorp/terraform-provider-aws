@@ -141,7 +141,7 @@ func ResourceTaskSet() *schema.Resource {
 							Default:  false,
 							ForceNew: true,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							MaxItems: 5,
 							Optional: true,

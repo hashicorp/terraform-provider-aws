@@ -89,7 +89,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -336,7 +336,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Resource:  fmt.Sprintf("document/%s", aws.StringValue(doc.Name)),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, aws.TimeValue(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set(names.AttrDescription, doc.Description)
 	d.Set("document_format", doc.DocumentFormat)

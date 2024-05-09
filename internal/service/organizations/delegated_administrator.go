@@ -35,7 +35,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -83,7 +83,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	servicePrincipal := d.Get("service_principal").(string)
 	id := DelegatedAdministratorCreateResourceID(accountID, servicePrincipal)
 	input := &organizations.RegisterDelegatedAdministratorInput{
@@ -124,7 +124,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrARN, delegatedAccount.Arn)
 	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
 	d.Set("email", delegatedAccount.Email)

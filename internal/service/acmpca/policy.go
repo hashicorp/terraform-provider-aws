@@ -47,7 +47,7 @@ func resourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +65,7 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	input := &acmpca.PutPolicyInput{
 		Policy:      aws.String(policy),
 		ResourceArn: aws.String(resourceARN),
@@ -101,7 +101,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrPolicy, policy)
-	d.Set("resource_arn", d.Id())
+	d.Set(names.AttrResourceARN, d.Id())
 
 	return diags
 }

@@ -84,7 +84,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

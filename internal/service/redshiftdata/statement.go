@@ -40,7 +40,7 @@ func resourceStatement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -115,7 +115,7 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 		WithEvent: aws.Bool(d.Get("with_event").(bool)),
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
 		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
@@ -170,7 +170,7 @@ func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Data Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cluster_identifier", sub.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, sub.ClusterIdentifier)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
 	if err := d.Set(names.AttrParameters, flattenParameters(sub.QueryParameters)); err != nil {

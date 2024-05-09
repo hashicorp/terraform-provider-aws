@@ -53,7 +53,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

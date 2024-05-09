@@ -56,7 +56,7 @@ func ResourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -130,7 +130,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVolumeInput{
-		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVolume),
 	}
@@ -210,7 +210,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
-	d.Set("availability_zone", volume.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set("encrypted", volume.Encrypted)
 	d.Set("iops", volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)

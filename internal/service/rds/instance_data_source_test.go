@@ -33,7 +33,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
@@ -78,7 +78,7 @@ func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
@@ -124,7 +124,7 @@ func TestAccRDSInstanceDataSource_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),

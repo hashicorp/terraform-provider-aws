@@ -27,7 +27,7 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -36,7 +36,7 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 			"preferred_instance_types": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				ConflictsWith: []string{"instance_type"},
+				ConflictsWith: []string{names.AttrInstanceType},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -85,7 +85,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 	var resultInstanceType string
 
 	// Check requested instance type
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		for _, foundInstanceType := range foundInstanceTypes {
 			if foundInstanceType == v.(string) {
 				resultInstanceType = v.(string)
@@ -129,7 +129,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "no Outpost Instance Types found matching criteria; try different search")
 	}
 
-	d.Set("instance_type", resultInstanceType)
+	d.Set(names.AttrInstanceType, resultInstanceType)
 
 	d.SetId(outpostID)
 

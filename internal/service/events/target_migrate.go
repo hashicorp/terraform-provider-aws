@@ -63,7 +63,7 @@ func resourceTargetV0() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"security_groups": {
+									names.AttrSecurityGroups: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},

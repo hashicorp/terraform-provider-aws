@@ -167,7 +167,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				MinItems: 1,
 				MaxItems: 5,
@@ -266,7 +266,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.DnsServers = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -345,7 +345,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set("dns_name", ep.DnsName)
 	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
-	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(ep.SecurityGroupIds))
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", ec2.SelfServicePortalEnabled)
 	} else {
@@ -410,8 +410,8 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 			}
 		}
 
-		if d.HasChange("security_group_ids") {
-			input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			input.SecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set))
 			// "InvalidParameterValue: Security Groups cannot be modified without specifying Vpc Id"
 			input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
 		}

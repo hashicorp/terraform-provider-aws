@@ -68,7 +68,7 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"created_at": {
+						names.AttrCreatedAt: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -203,7 +203,7 @@ func ResourceEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -436,7 +436,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("airflow_configuration_options", environment.AirflowConfigurationOptions)
 	d.Set("airflow_version", environment.AirflowVersion)
 	d.Set(names.AttrARN, environment.Arn)
-	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
 	d.Set("database_vpc_endpoint_service", environment.DatabaseVpcEndpointService)
 	d.Set("endpoint_management", environment.EndpointManagement)
@@ -785,7 +785,7 @@ func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.Netw
 	m := l[0].(map[string]interface{})
 
 	return &awstypes.NetworkConfiguration{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 	}
 }
@@ -794,7 +794,7 @@ func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *awstypes.Upda
 	m := l[0].(map[string]interface{})
 
 	return &awstypes.UpdateNetworkConfigurationInput{
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
@@ -806,7 +806,7 @@ func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 	m := map[string]interface{}{}
 
 	if lastUpdate.CreatedAt != nil {
-		m["created_at"] = aws.ToTime(lastUpdate.CreatedAt).String()
+		m[names.AttrCreatedAt] = aws.ToTime(lastUpdate.CreatedAt).String()
 	}
 
 	if lastUpdate.Error != nil {
@@ -888,8 +888,8 @@ func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfigura
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
-		names.AttrSubnetIDs:  flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
 	}
 
 	return []interface{}{m}

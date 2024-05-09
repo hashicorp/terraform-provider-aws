@@ -165,7 +165,7 @@ func ResourceReceiptRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -376,8 +376,8 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.S3Action != nil {
 			s3Action := map[string]interface{}{
-				"bucket_name": aws.StringValue(element.S3Action.BucketName),
-				"position":    i + 1,
+				names.AttrBucketName: aws.StringValue(element.S3Action.BucketName),
+				"position":           i + 1,
 			}
 
 			if element.S3Action.KmsKeyArn != nil {
@@ -657,7 +657,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			s3Action := &ses.S3Action{
-				BucketName: aws.String(elem["bucket_name"].(string)),
+				BucketName: aws.String(elem[names.AttrBucketName].(string)),
 			}
 
 			if elem[names.AttrKMSKeyARN] != "" {

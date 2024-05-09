@@ -79,7 +79,7 @@ func resourceScheduledAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cluster_identifier": {
+									names.AttrClusterIdentifier: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -102,7 +102,7 @@ func resourceScheduledAction() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"cluster_identifier": {
+									names.AttrClusterIdentifier: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -132,7 +132,7 @@ func resourceScheduledAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cluster_identifier": {
+									names.AttrClusterIdentifier: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -349,7 +349,7 @@ func expandPauseClusterMessage(tfMap map[string]interface{}) *redshift.PauseClus
 
 	apiObject := &redshift.PauseClusterMessage{}
 
-	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -367,7 +367,7 @@ func expandResizeClusterMessage(tfMap map[string]interface{}) *redshift.ResizeCl
 		apiObject.Classic = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -393,7 +393,7 @@ func expandResumeClusterMessage(tfMap map[string]interface{}) *redshift.ResumeCl
 
 	apiObject := &redshift.ResumeClusterMessage{}
 
-	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -430,7 +430,7 @@ func flattenPauseClusterMessage(apiObject *redshift.PauseClusterMessage) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap["cluster_identifier"] = aws.StringValue(v)
+		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -448,7 +448,7 @@ func flattenResizeClusterMessage(apiObject *redshift.ResizeClusterMessage) map[s
 	}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap["cluster_identifier"] = aws.StringValue(v)
+		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ClusterType; v != nil {
@@ -474,7 +474,7 @@ func flattenResumeClusterMessage(apiObject *redshift.ResumeClusterMessage) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap["cluster_identifier"] = aws.StringValue(v)
+		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -44,7 +44,7 @@ func resourceAnomalySubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -123,7 +123,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		ResourceTags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		input.AnomalySubscription.AccountId = aws.String(v.(string))
 	}
 
@@ -158,7 +158,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Anomaly Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", subscription.AccountId)
+	d.Set(names.AttrAccountID, subscription.AccountId)
 	d.Set(names.AttrARN, subscription.SubscriptionArn)
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)

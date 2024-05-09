@@ -676,7 +676,7 @@ func resourceProject() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							MaxItems: 16,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1509,7 +1509,7 @@ func expandVPCConfig(tfMap map[string]interface{}) *types.VpcConfig {
 	}
 
 	apiObject := &types.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
 		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
 		VpcId:            aws.String(tfMap[names.AttrVPCID].(string)),
 	}
@@ -1914,7 +1914,7 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 
 	tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
 	tfMap["subnets"] = apiObject.Subnets
-	tfMap["security_group_ids"] = apiObject.SecurityGroupIds
+	tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 
 	return []interface{}{tfMap}
 }

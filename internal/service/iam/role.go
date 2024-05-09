@@ -142,10 +142,10 @@ func resourceRole() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validResourceName(roleNameMaxLen),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -186,7 +186,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
@@ -285,7 +285,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrDescription, role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set(names.AttrName, role.RoleName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(role.RoleName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(role.RoleName)))
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)

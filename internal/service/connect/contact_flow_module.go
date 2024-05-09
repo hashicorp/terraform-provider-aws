@@ -74,7 +74,7 @@ func ResourceContactFlowModule() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"content"},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -94,7 +94,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 
 	input := &connect.CreateContactFlowModuleInput{
@@ -170,7 +170,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set(names.AttrARN, resp.ContactFlowModule.Arn)
 	d.Set("contact_flow_module_id", resp.ContactFlowModule.Id)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrName, resp.ContactFlowModule.Name)
 	d.Set(names.AttrDescription, resp.ContactFlowModule.Description)
 	d.Set("content", resp.ContactFlowModule.Content)

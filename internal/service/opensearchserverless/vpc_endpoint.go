@@ -76,7 +76,7 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,

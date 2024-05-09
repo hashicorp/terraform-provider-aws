@@ -40,7 +40,7 @@ func DataSourceContactFlowModule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -69,7 +69,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeContactFlowModuleInput{
 		InstanceId: aws.String(instanceID),

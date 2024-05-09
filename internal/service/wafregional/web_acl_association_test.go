@@ -131,7 +131,7 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes["resource_arn"])
+			_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -157,7 +157,7 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
-		_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes["resource_arn"])
+		_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
 
 		return err
 	}

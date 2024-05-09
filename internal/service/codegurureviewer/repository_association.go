@@ -198,7 +198,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -225,7 +225,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -464,7 +464,7 @@ func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) 
 	values := map[string]interface{}{}
 
 	if v := s3RepositoryDetails.BucketName; v != nil {
-		values["bucket_name"] = aws.ToString(v)
+		values[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := s3RepositoryDetails.CodeArtifacts; v != nil {
@@ -574,7 +574,7 @@ func expandS3Repository(repository []interface{}) *types.S3Repository {
 
 	result := &types.S3Repository{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		result.BucketName = aws.String(v)
 	}
 

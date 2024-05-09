@@ -71,7 +71,7 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -147,7 +147,7 @@ func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -181,7 +181,7 @@ func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -231,7 +231,7 @@ func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -265,7 +265,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -317,7 +317,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -366,7 +366,7 @@ func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -407,7 +407,7 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -450,7 +450,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -491,7 +491,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -532,7 +532,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"self_managed_active_directory",
 					"skip_final_backup",
 				},
@@ -567,7 +567,7 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -609,7 +609,7 @@ func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 					"backup_id",
 				},
@@ -644,7 +644,7 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -696,7 +696,7 @@ func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -737,7 +737,7 @@ func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -781,7 +781,7 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -835,7 +835,7 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},

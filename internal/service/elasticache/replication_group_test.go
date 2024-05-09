@@ -56,7 +56,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					testCheckEngineStuffDefault(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 				),
 			},
@@ -91,10 +91,10 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 					// Even though it is ignored, the API returns `true` in this case
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 			{
@@ -161,7 +161,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "7.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.0"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
@@ -195,7 +195,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "4.0.10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "4.0.10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "4.0.10"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "4.0.10"),
 				),
 			},
@@ -204,7 +204,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
 					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
@@ -213,7 +213,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v3),
 					testAccCheckReplicationGroupNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
@@ -228,7 +228,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v4),
 					testAccCheckReplicationGroupRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 				),
 			},
@@ -237,7 +237,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v5),
 					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
@@ -246,7 +246,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v6),
 					testAccCheckReplicationGroupRecreated(&v5, &v6),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
@@ -274,7 +274,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
@@ -285,7 +285,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
 					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
@@ -522,7 +522,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 			{
@@ -1024,7 +1024,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -1306,7 +1306,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -2103,7 +2103,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.4", "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.4"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key1", "value1"},
 					}),
@@ -2113,7 +2113,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", "key1", "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key1", "value1updated"},
 					}),
@@ -2170,7 +2170,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 			{
@@ -2183,7 +2183,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 		},
@@ -2268,7 +2268,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, primaryGroupResourceName, names.AttrEngineVersion),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "2"),
@@ -2321,7 +2321,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, primaryGroupResourceName, names.AttrEngineVersion),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", strconv.Itoa(initialNumCacheClusters)),
@@ -2499,7 +2499,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 					testCheckRedisEngineVersionLatest(ctx, &version),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					func(s *terraform.State) error {
-						return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+						return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 					},
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "true"),
 				),
@@ -2553,7 +2553,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 			{
@@ -2610,7 +2610,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -2657,7 +2657,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 			{
@@ -2717,7 +2717,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -2871,7 +2871,7 @@ func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resou
 		testCheckRedisEngineVersionLatest(ctx, &version),
 		testCheckRedisParameterGroupDefault(ctx, &version, &parameterGroup),
 		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 		},
 		func(s *terraform.State) error {
 			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
@@ -2942,7 +2942,7 @@ func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName
 		testCheckRedisEngineVersionLatest(ctx, &version),
 		testCheckRedisParameterGroupClusterEnabledDefault(ctx, &version, &parameterGroup),
 		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 		},
 		func(s *terraform.State) error {
 			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)

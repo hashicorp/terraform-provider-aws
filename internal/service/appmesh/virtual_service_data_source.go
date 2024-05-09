@@ -28,11 +28,11 @@ func dataSourceVirtualService() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -75,8 +75,8 @@ func dataSourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(vs.VirtualServiceName))
 	arn := aws.StringValue(vs.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
 	meshOwner := aws.StringValue(vs.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)

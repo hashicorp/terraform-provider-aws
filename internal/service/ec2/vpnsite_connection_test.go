@@ -185,7 +185,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_bgp_asn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
@@ -282,7 +282,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_bgp_holdtime", "30"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
@@ -415,8 +415,8 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexache.MustCompile(`tgw-attach-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
+					resource.TestMatchResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, regexache.MustCompile(`tgw-attach-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 			},
 			{
@@ -1601,8 +1601,8 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayID(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test1", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test1", names.AttrID),
 				),
 			},
 			{
@@ -1616,8 +1616,8 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test2", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test2", names.AttrID),
 				),
 			},
 		},
@@ -1641,7 +1641,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", names.AttrID),
 				),
 			},
@@ -1656,7 +1656,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
 				),
 			},
@@ -1681,7 +1681,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
 				),
 			},
@@ -1696,7 +1696,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", names.AttrID),
 				),
 			},

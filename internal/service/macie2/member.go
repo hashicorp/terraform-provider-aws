@@ -34,7 +34,7 @@ func ResourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -102,7 +102,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
-	accountId := d.Get("account_id").(string)
+	accountId := d.Get(names.AttrAccountID).(string)
 	input := &macie2.CreateMemberInput{
 		Account: &macie2.AccountDetail{
 			AccountId: aws.String(accountId),
@@ -213,7 +213,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Macie Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", resp.AccountId)
+	d.Set(names.AttrAccountID, resp.AccountId)
 	d.Set("email", resp.Email)
 	d.Set("relationship_status", resp.RelationshipStatus)
 	d.Set("administrator_account_id", resp.AdministratorAccountId)

@@ -36,7 +36,7 @@ func TestAccRedshiftResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshift_cluster.test", "cluster_namespace_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_redshift_cluster.test", "cluster_namespace_arn"),
 				),
 			},
 			{

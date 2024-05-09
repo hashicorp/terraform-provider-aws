@@ -54,7 +54,7 @@ func resourceUsageLimit() *schema.Resource {
 				Default:      redshiftserverless.UsageLimitPeriodMonthly,
 				ValidateFunc: validation.StringInSlice(redshiftserverless.UsageLimitPeriod_Values(), false),
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -75,7 +75,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := redshiftserverless.CreateUsageLimitInput{
 		Amount:      aws.Int64(int64(d.Get("amount").(int))),
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
+		ResourceArn: aws.String(d.Get(names.AttrResourceARN).(string)),
 		UsageType:   aws.String(d.Get("usage_type").(string)),
 	}
 
@@ -117,7 +117,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("breach_action", out.BreachAction)
 	d.Set("period", out.Period)
 	d.Set("usage_type", out.UsageType)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("amount", out.Amount)
 
 	return diags

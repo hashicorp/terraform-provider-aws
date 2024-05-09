@@ -119,7 +119,7 @@ func DataSourceFirewall() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -136,7 +136,7 @@ func DataSourceFirewall() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -165,7 +165,7 @@ func DataSourceFirewall() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -318,8 +318,8 @@ func flattenDataSourceSyncStates(state map[string]*networkfirewall.SyncState) []
 	syncStates := make([]interface{}, 0, len(state))
 	for k, v := range state {
 		m := map[string]interface{}{
-			"availability_zone": k,
-			"attachment":        flattenDataSourceSyncStateAttachment(v.Attachment),
+			names.AttrAvailabilityZone: k,
+			"attachment":               flattenDataSourceSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}
@@ -333,9 +333,9 @@ func flattenDataSourceSyncStateAttachment(attach *networkfirewall.Attachment) []
 	}
 
 	m := map[string]interface{}{
-		"endpoint_id":    aws.StringValue(attach.EndpointId),
-		names.AttrStatus: aws.StringValue(attach.Status),
-		"subnet_id":      aws.StringValue(attach.SubnetId),
+		"endpoint_id":      aws.StringValue(attach.EndpointId),
+		names.AttrStatus:   aws.StringValue(attach.Status),
+		names.AttrSubnetID: aws.StringValue(attach.SubnetId),
 	}
 
 	return []interface{}{m}
@@ -345,7 +345,7 @@ func flattenDataSourceSubnetMappings(subnet []*networkfirewall.SubnetMapping) []
 	mappings := make([]interface{}, 0, len(subnet))
 	for _, s := range subnet {
 		m := map[string]interface{}{
-			"subnet_id": aws.StringValue(s.SubnetId),
+			names.AttrSubnetID: aws.StringValue(s.SubnetId),
 		}
 		mappings = append(mappings, m)
 	}

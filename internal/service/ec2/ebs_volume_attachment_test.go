@@ -246,7 +246,7 @@ func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["device_name"])
+		_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["device_name"])
 
 		return err
 	}
@@ -286,7 +286,7 @@ func testAccCheckVolumeAttachmentDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["device_name"])
+			_, err := tfec2.FindEBSVolumeAttachment(ctx, conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["device_name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -410,6 +410,6 @@ func testAccVolumeAttachmentImportStateIDFunc(resourceName string) resource.Impo
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s:%s:%s", rs.Primary.Attributes["device_name"], rs.Primary.Attributes["volume_id"], rs.Primary.Attributes["instance_id"]), nil
+		return fmt.Sprintf("%s:%s:%s", rs.Primary.Attributes["device_name"], rs.Primary.Attributes["volume_id"], rs.Primary.Attributes[names.AttrInstanceID]), nil
 	}
 }

@@ -24,152 +24,152 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"cidr_blocks":     []interface{}{"172.8.0.0/16", "10.0.0.0/16"},
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []interface{}{"172.8.0.0/16", "10.0.0.0/16"},
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"cidr_blocks":     []string{"172.8.0.0/16", "10.0.0.0/16"},
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []string{"172.8.0.0/16", "10.0.0.0/16"},
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"cidr_blocks":     []string{"172.8.0.0/16", "10.0.0.0/16"},
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []string{"172.8.0.0/16", "10.0.0.0/16"},
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 		},
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"cidr_blocks":     []string{"172.8.0.0/16", "10.0.0.0/16"},
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []string{"172.8.0.0/16", "10.0.0.0/16"},
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "10.0.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 		},
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16", "10.0.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "10.0.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "10.0.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 		},
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 		},
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16"},
 				},
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"192.168.0.0/16"},
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16"},
 				},
 				{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"192.168.0.0/16"},
 				},
 			},
 		},
@@ -177,18 +177,18 @@ func TestRulesMixedMatching(t *testing.T) {
 			local: []interface{}{},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "10.0.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "10.0.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "10.0.0.0/16"},
 				},
 			},
 		},
@@ -196,23 +196,23 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port": 80,
-					"to_port":   8000,
-					"protocol":  "TCP",
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "TCP",
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port": int64(80),
-					"to_port":   int64(8000),
-					"protocol":  "tcp",
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port": 80,
-					"to_port":   8000,
-					"protocol":  "tcp",
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
 				},
 			},
 		},
@@ -220,18 +220,18 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16"},
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"10.0.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"10.0.0.0/16"},
 				},
 			},
 			// Because this is the remote rule being saved, we need to check for int64
@@ -239,10 +239,10 @@ func TestRulesMixedMatching(t *testing.T) {
 			// care it's for the reflect.DeepEqual in this test
 			saves: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"10.0.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"10.0.0.0/16"},
 				},
 			},
 		},
@@ -250,26 +250,26 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16", "10.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16", "10.8.0.0/16", "192.168.0.0/16"},
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 			},
 		},
@@ -278,44 +278,44 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16"},
 				},
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"10.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"10.8.0.0/16"},
 				},
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"192.168.0.0/16"},
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16"},
 				},
 				{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"192.168.0.0/16"},
 				},
 			},
 		},
@@ -324,32 +324,32 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16", "10.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16", "10.8.0.0/16"},
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "192.168.0.0/16", "10.8.0.0/16", "206.8.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16", "10.8.0.0/16", "206.8.0.0/16"},
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "10.8.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "10.8.0.0/16"},
 				},
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"192.168.0.0/16", "206.8.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"192.168.0.0/16", "206.8.0.0/16"},
 				},
 			},
 		},
@@ -358,19 +358,19 @@ func TestRulesMixedMatching(t *testing.T) {
 			local: []interface{}{},
 			remote: []map[string]interface{}{
 				{
-					"from_port":       int64(22),
-					"to_port":         int64(22),
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
+					"from_port":              int64(22),
+					"to_port":                int64(22),
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
 					// we're saving the remote, so it will be int64 encoded
-					"from_port":       int64(22),
-					"to_port":         int64(22),
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
+					"from_port":              int64(22),
+					"to_port":                int64(22),
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
 				},
 			},
 		},
@@ -378,24 +378,24 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":       22,
-					"to_port":         22,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
+					"from_port":              22,
+					"to_port":                22,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876"}),
 				},
 				map[string]interface{}{
-					"from_port":       22,
-					"to_port":         22,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-4444"}),
+					"from_port":              22,
+					"to_port":                22,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"security_groups": schema.NewSet(
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					names.AttrSecurityGroups: schema.NewSet(
 						schema.HashString,
 						[]interface{}{
 							"sg-9876",
@@ -406,10 +406,10 @@ func TestRulesMixedMatching(t *testing.T) {
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port": 22,
-					"to_port":   22,
-					"protocol":  "tcp",
-					"security_groups": schema.NewSet(
+					"from_port":        22,
+					"to_port":          22,
+					names.AttrProtocol: "tcp",
+					names.AttrSecurityGroups: schema.NewSet(
 						schema.HashString,
 						[]interface{}{
 							"sg-9876",
@@ -417,10 +417,10 @@ func TestRulesMixedMatching(t *testing.T) {
 					),
 				},
 				{
-					"from_port": 22,
-					"to_port":   22,
-					"protocol":  "tcp",
-					"security_groups": schema.NewSet(
+					"from_port":        22,
+					"to_port":          22,
+					names.AttrProtocol: "tcp",
+					names.AttrSecurityGroups: schema.NewSet(
 						schema.HashString,
 						[]interface{}{
 							"sg-4444",
@@ -433,27 +433,27 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":       22,
-					"to_port":         22,
-					"protocol":        "tcp",
-					"self":            true,
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              22,
+					"to_port":                22,
+					names.AttrProtocol:       "tcp",
+					"self":                   true,
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 		},
@@ -461,52 +461,52 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port": 22,
-					"to_port":   22,
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        22,
+					"to_port":          22,
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 		},
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":       22,
-					"to_port":         22,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              22,
+					"to_port":                22,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port": int64(22),
-					"to_port":   int64(22),
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        int64(22),
+					"to_port":          int64(22),
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 		},
@@ -514,80 +514,80 @@ func TestRulesMixedMatching(t *testing.T) {
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16", "10.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16", "10.8.0.0/16", "192.168.0.0/16"},
 				},
 				map[string]interface{}{
-					"from_port":       80,
-					"to_port":         8000,
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              80,
+					"to_port":                8000,
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"cidr_blocks":     []string{"172.8.0.0/16", "192.168.0.0/16"},
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []string{"172.8.0.0/16", "192.168.0.0/16"},
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port":   int64(80),
-					"to_port":     int64(8000),
-					"protocol":    "tcp",
-					"cidr_blocks": []string{"172.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        int64(80),
+					"to_port":          int64(8000),
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []string{"172.8.0.0/16", "192.168.0.0/16"},
 				},
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 		},
 		{
 			local: []interface{}{
 				map[string]interface{}{
-					"from_port":   80,
-					"to_port":     8000,
-					"protocol":    "tcp",
-					"cidr_blocks": []interface{}{"172.8.0.0/16", "10.8.0.0/16", "192.168.0.0/16"},
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"cidr_blocks":      []interface{}{"172.8.0.0/16", "10.8.0.0/16", "192.168.0.0/16"},
 				},
 				map[string]interface{}{
-					"from_port": 80,
-					"to_port":   8000,
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 			},
 			remote: []map[string]interface{}{
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"cidr_blocks":     []string{"172.8.0.0/16", "192.168.0.0/16"},
-					"self":            true,
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []string{"172.8.0.0/16", "192.168.0.0/16"},
+					"self":                   true,
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 			saves: []map[string]interface{}{
 				{
-					"from_port": 80,
-					"to_port":   8000,
-					"protocol":  "tcp",
-					"self":      true,
+					"from_port":        80,
+					"to_port":          8000,
+					names.AttrProtocol: "tcp",
+					"self":             true,
 				},
 				{
-					"from_port":       int64(80),
-					"to_port":         int64(8000),
-					"protocol":        "tcp",
-					"cidr_blocks":     []string{"172.8.0.0/16", "192.168.0.0/16"},
-					"security_groups": schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
+					"from_port":              int64(80),
+					"to_port":                int64(8000),
+					names.AttrProtocol:       "tcp",
+					"cidr_blocks":            []string{"172.8.0.0/16", "192.168.0.0/16"},
+					names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{"sg-9876", "sg-4444"}),
 				},
 			},
 		},
@@ -627,16 +627,16 @@ func TestRulesMixedMatching(t *testing.T) {
 						numExpectedCidrs = len(s["cidr_blocks"].([]interface{}))
 					}
 				}
-				if _, ok := s["security_groups"]; ok {
-					numExpectedSGs = len(s["security_groups"].(*schema.Set).List())
+				if _, ok := s[names.AttrSecurityGroups]; ok {
+					numExpectedSGs = len(s[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
 				if _, ok := cs["cidr_blocks"]; ok {
 					numRemoteCidrs = len(cs["cidr_blocks"].([]string))
 				}
 
-				if _, ok := cs["security_groups"]; ok {
-					numRemoteSGs = len(cs["security_groups"].(*schema.Set).List())
+				if _, ok := cs[names.AttrSecurityGroups]; ok {
+					numRemoteSGs = len(cs[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
 				// skip early
@@ -684,9 +684,9 @@ func TestRulesMixedMatching(t *testing.T) {
 					cidrsMatch = true
 				}
 
-				if rawS, ok := s["security_groups"]; ok {
+				if rawS, ok := s[names.AttrSecurityGroups]; ok {
 					outSet := rawS.(*schema.Set)
-					if rawL, ok := cs["security_groups"]; ok {
+					if rawL, ok := cs[names.AttrSecurityGroups]; ok {
 						localSet := rawL.(*schema.Set)
 						if outSet.Equal(localSet) {
 							log.Printf("\nmatched sgs")

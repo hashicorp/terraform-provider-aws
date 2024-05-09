@@ -33,7 +33,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 				),
@@ -59,7 +59,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, licenseModel, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredOption),
 				),

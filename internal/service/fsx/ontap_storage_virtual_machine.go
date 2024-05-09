@@ -85,7 +85,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -306,7 +306,8 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
 	d.Set("uuid", storageVirtualMachine.UUID)
 
-	setTagsOut(ctx, storageVirtualMachine.Tags)
+	// SVM tags aren't set in the Describe response.
+	// setTagsOut(ctx, storageVirtualMachine.Tags)
 
 	return diags
 }
@@ -400,7 +401,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf["domain_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
 		out.DomainName = aws.String(v)
 	}
 
@@ -456,7 +457,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf["domain_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
 		out.DomainName = aws.String(v)
 	}
 
@@ -507,7 +508,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	if rs.DomainName != nil {
-		m["domain_name"] = aws.StringValue(rs.DomainName)
+		m[names.AttrDomainName] = aws.StringValue(rs.DomainName)
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {

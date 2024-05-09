@@ -35,7 +35,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -74,7 +74,7 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	name := d.Get(names.AttrName).(string)
@@ -116,7 +116,7 @@ func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("reading S3 Object Lambda Access Point Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("has_public_access_policy", status.IsPublic)
 	d.Set(names.AttrName, name)
 

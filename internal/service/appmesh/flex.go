@@ -818,7 +818,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				if vPort, ok := mHealthCheck[names.AttrPort].(int); ok && vPort > 0 {
 					healthCheck.Port = aws.Int64(int64(vPort))
 				}
-				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
+				if vProtocol, ok := mHealthCheck[names.AttrProtocol].(string); ok && vProtocol != "" {
 					healthCheck.Protocol = aws.String(vProtocol)
 				}
 				if vTimeoutMillis, ok := mHealthCheck["timeout_millis"].(int); ok && vTimeoutMillis > 0 {
@@ -862,7 +862,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				if vPort, ok := mPortMapping[names.AttrPort].(int); ok && vPort > 0 {
 					portMapping.Port = aws.Int64(int64(vPort))
 				}
-				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
+				if vProtocol, ok := mPortMapping[names.AttrProtocol].(string); ok && vProtocol != "" {
 					portMapping.Protocol = aws.String(vProtocol)
 				}
 
@@ -1153,7 +1153,7 @@ func expandVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterSpec {
 				if vPort, ok := mPortMapping[names.AttrPort].(int); ok && vPort > 0 {
 					listener.PortMapping.Port = aws.Int64(int64(vPort))
 				}
-				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
+				if vProtocol, ok := mPortMapping[names.AttrProtocol].(string); ok && vProtocol != "" {
 					listener.PortMapping.Protocol = aws.String(vProtocol)
 				}
 			}
@@ -1720,7 +1720,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 					"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
 					"path":                aws.StringValue(healthCheck.Path),
 					names.AttrPort:        int(aws.Int64Value(healthCheck.Port)),
-					"protocol":            aws.StringValue(healthCheck.Protocol),
+					names.AttrProtocol:    aws.StringValue(healthCheck.Protocol),
 					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
 					"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
 				}
@@ -1739,8 +1739,8 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 			if portMapping := listener.PortMapping; portMapping != nil {
 				mPortMapping := map[string]interface{}{
-					names.AttrPort: int(aws.Int64Value(portMapping.Port)),
-					"protocol":     aws.StringValue(portMapping.Protocol),
+					names.AttrPort:     int(aws.Int64Value(portMapping.Port)),
+					names.AttrProtocol: aws.StringValue(portMapping.Protocol),
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}
@@ -1931,8 +1931,8 @@ func flattenVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interface{} {
 			mListener := map[string]interface{}{}
 			if listener.PortMapping != nil {
 				mPortMapping := map[string]interface{}{
-					names.AttrPort: int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol":     aws.StringValue(listener.PortMapping.Protocol),
+					names.AttrPort:     int(aws.Int64Value(listener.PortMapping.Port)),
+					names.AttrProtocol: aws.StringValue(listener.PortMapping.Protocol),
 				}
 				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}

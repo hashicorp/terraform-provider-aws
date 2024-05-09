@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgent_basic(t *testing.T) {
+func TestAccBedrockAgentAgent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -49,7 +49,7 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgent_full(t *testing.T) {
+func TestAccBedrockAgentAgent_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -79,7 +79,7 @@ func TestAccBedrockAgent_full(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgent_update(t *testing.T) {
+func TestAccBedrockAgentAgent_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -127,7 +127,7 @@ func TestAccBedrockAgent_update(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgent_tags(t *testing.T) {
+func TestAccBedrockAgentAgent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -258,8 +258,8 @@ data "aws_iam_policy_document" "test_agent_permissions" {
 }
 
 resource "aws_iam_role_policy" "test_agent" {
+  role   = aws_iam_role.test_agent.id
   policy = data.aws_iam_policy_document.test_agent_permissions.json
-  role   = aws_iam_role.test.id
 }
 
 resource "aws_iam_role_policy_attachment" "test_agent_s3" {

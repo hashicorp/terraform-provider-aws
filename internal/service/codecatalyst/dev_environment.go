@@ -69,7 +69,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				Default:  15,
 				Optional: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.InstanceType](),
@@ -125,7 +125,7 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]interface{})[0].(map[string]interface{}))
-	instanceType := types.InstanceType(d.Get("instance_type").(string))
+	instanceType := types.InstanceType(d.Get(names.AttrInstanceType).(string))
 	in := &codecatalyst.CreateDevEnvironmentInput{
 		ProjectName:       aws.String(d.Get("project_name").(string)),
 		SpaceName:         aws.String(d.Get("space_name").(string)),
@@ -191,7 +191,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("alias", out.Alias)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set("instance_type", out.InstanceType)
+	d.Set(names.AttrInstanceType, out.InstanceType)
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 
@@ -222,8 +222,8 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		update = true
 	}
 
-	if d.HasChanges("instance_type") {
-		in.InstanceType = types.InstanceType(d.Get("instance_type").(string))
+	if d.HasChanges(names.AttrInstanceType) {
+		in.InstanceType = types.InstanceType(d.Get(names.AttrInstanceType).(string))
 		update = true
 	}
 	if !update {

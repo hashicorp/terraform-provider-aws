@@ -30,7 +30,7 @@ func DataSourceSigningJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,7 +167,7 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job completed at: %s", err)
 	}
 
-	if err := d.Set("created_at", aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedAt, aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job created at: %s", err)
 	}
 

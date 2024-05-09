@@ -61,7 +61,7 @@ func ResourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func ResourceListener() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsPortNumber,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -171,7 +171,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &vpclattice.CreateListenerInput{
 		Name:          aws.String(d.Get(names.AttrName).(string)),
 		DefaultAction: expandDefaultAction(d.Get("default_action").([]interface{})),
-		Protocol:      types.ListenerProtocol(d.Get("protocol").(string)),
+		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -235,11 +235,11 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("listener_id", out.Id)
 	d.Set(names.AttrName, out.Name)
-	d.Set("protocol", out.Protocol)
+	d.Set(names.AttrProtocol, out.Protocol)
 	d.Set(names.AttrPort, out.Port)
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_identifier", out.ServiceId)

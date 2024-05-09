@@ -374,7 +374,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"availability_zones": {
+												names.AttrAvailabilityZones: {
 													Type:     schema.TypeSet,
 													Required: true,
 													MinItems: 1,
@@ -1158,7 +1158,7 @@ func expandFastRestoreRule(cfg []interface{}) *dlm.FastRestoreRule {
 	}
 	m := cfg[0].(map[string]interface{})
 	rule := &dlm.FastRestoreRule{
-		AvailabilityZones: flex.ExpandStringSet(m["availability_zones"].(*schema.Set)),
+		AvailabilityZones: flex.ExpandStringSet(m[names.AttrAvailabilityZones].(*schema.Set)),
 	}
 
 	if v, ok := m["count"].(int); ok && v > 0 {
@@ -1181,7 +1181,7 @@ func flattenFastRestoreRule(rule *dlm.FastRestoreRule) []map[string]interface{} 
 	result["count"] = aws.Int64Value(rule.Count)
 	result["interval_unit"] = aws.StringValue(rule.IntervalUnit)
 	result["interval"] = aws.Int64Value(rule.Interval)
-	result["availability_zones"] = flex.FlattenStringSet(rule.AvailabilityZones)
+	result[names.AttrAvailabilityZones] = flex.FlattenStringSet(rule.AvailabilityZones)
 
 	return []map[string]interface{}{result}
 }

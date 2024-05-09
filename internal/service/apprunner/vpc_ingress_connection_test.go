@@ -41,7 +41,7 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.VpcIngressConnectionStatusAvailable)),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", appRunnerServiceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_id", vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ingress_vpc_configuration.0.vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),

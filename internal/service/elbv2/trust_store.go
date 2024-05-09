@@ -77,10 +77,10 @@ func ResourceTrustStore() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -100,7 +100,7 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &elbv2.CreateTrustStoreInput{
@@ -180,7 +180,7 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrARN, trustStore.TrustStoreArn)
 	d.Set(names.AttrName, trustStore.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(trustStore.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(trustStore.Name)))
 
 	return diags
 }

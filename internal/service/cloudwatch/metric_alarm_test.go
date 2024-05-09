@@ -489,7 +489,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.0.id", "m1"),
-					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckNoResourceAttr(resourceName, "metric_query.0.period"),
 				),
 			},

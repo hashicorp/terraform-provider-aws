@@ -39,7 +39,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceIdentity, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),

@@ -46,7 +46,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -211,7 +211,7 @@ func DataSourcePermissions() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -249,7 +249,7 @@ func DataSourcePermissions() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},

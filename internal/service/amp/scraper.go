@@ -150,7 +150,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"security_group_ids": schema.SetAttribute{
+									names.AttrSecurityGroupIDs: schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,

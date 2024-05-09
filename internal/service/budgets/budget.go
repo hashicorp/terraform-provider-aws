@@ -45,7 +45,7 @@ func ResourceBudget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -200,9 +200,9 @@ func ResourceBudget() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -304,10 +304,10 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
@@ -362,7 +362,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
@@ -388,7 +388,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrName, budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	if err := d.Set("planned_limit", convertPlannedBudgetLimitsToSet(budget.PlannedBudgetLimits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting planned_limit: %s", err)

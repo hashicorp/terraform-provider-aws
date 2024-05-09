@@ -38,7 +38,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
@@ -593,7 +593,7 @@ func TestAccVPCSubnet_availabilityZoneID(t *testing.T) {
 				Config: testAccVPCSubnetConfig_availabilityZoneID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
 				),
 			},

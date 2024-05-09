@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.52.3
+	github.com/aws/aws-sdk-go v1.52.4
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.0
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.15.0
@@ -142,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4
-	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.0
+	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.4

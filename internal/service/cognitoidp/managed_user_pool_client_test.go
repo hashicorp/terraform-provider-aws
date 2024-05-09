@@ -83,7 +83,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -148,7 +148,7 @@ func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -196,7 +196,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -212,7 +212,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -270,7 +270,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -286,7 +286,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -344,7 +344,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -360,7 +360,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -417,7 +417,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -436,7 +436,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -452,7 +452,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -513,7 +513,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -532,7 +532,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -568,7 +568,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -588,7 +588,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -646,7 +646,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -707,7 +707,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -749,7 +749,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -768,7 +768,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -784,7 +784,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -826,7 +826,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -847,7 +847,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -879,7 +879,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -895,7 +895,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -958,7 +958,7 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -1001,7 +1001,7 @@ func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{

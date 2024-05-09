@@ -47,7 +47,7 @@ func dataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -93,7 +93,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	output, err := findDomainByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -109,7 +109,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
-	d.Set("domain_name", output.DomainName)
+	d.Set(names.AttrDomainName, output.DomainName)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}

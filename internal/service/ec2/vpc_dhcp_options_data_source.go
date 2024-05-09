@@ -39,7 +39,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

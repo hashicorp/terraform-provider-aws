@@ -223,7 +223,7 @@ func dataSourceFunction() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

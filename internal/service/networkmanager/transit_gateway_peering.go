@@ -70,7 +70,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("edge_location", p.EdgeLocation)
 	d.Set("owner_account_id", p.OwnerAccountId)
 	d.Set("peering_type", p.PeeringType)
-	d.Set("resource_arn", p.ResourceArn)
+	d.Set(names.AttrResourceARN, p.ResourceArn)
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 

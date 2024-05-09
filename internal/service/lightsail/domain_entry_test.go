@@ -39,7 +39,7 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
@@ -79,7 +79,7 @@ func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
@@ -119,7 +119,7 @@ func TestAccLightsailDomainEntry_apex(t *testing.T) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
@@ -183,7 +183,7 @@ func TestAccLightsailDomainEntry_typeAAAA(t *testing.T) {
 				Config: testAccDomainEntryConfig_typeAAAA(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "::1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AAAA"),
@@ -298,6 +298,6 @@ func testAccDomainEntryStateLegacyIdFunc(resourceName string) resource.ImportSta
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["domain_name"], rs.Primary.Attributes[names.AttrType], rs.Primary.Attributes["target"]), nil
+		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes[names.AttrType], rs.Primary.Attributes["target"]), nil
 	}
 }

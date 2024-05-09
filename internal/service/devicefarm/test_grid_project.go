@@ -57,7 +57,7 @@ func ResourceTestGridProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -197,7 +197,7 @@ func expandTestGridProjectVPCConfig(l []interface{}) *devicefarm.TestGridVpcConf
 	config := &devicefarm.TestGridVpcConfig{
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 		SubnetIds:        flex.ExpandStringSet(m[names.AttrSubnetIDs].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 
 	return config
@@ -209,9 +209,9 @@ func flattenTestGridProjectVPCConfig(conf *devicefarm.TestGridVpcConfig) []inter
 	}
 
 	m := map[string]interface{}{
-		names.AttrVPCID:      aws.StringValue(conf.VpcId),
-		names.AttrSubnetIDs:  flex.FlattenStringSet(conf.SubnetIds),
-		"security_group_ids": flex.FlattenStringSet(conf.SecurityGroupIds),
+		names.AttrVPCID:            aws.StringValue(conf.VpcId),
+		names.AttrSubnetIDs:        flex.FlattenStringSet(conf.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringSet(conf.SecurityGroupIds),
 	}
 
 	return []interface{}{m}
