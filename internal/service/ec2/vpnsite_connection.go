@@ -1513,7 +1513,7 @@ func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{}
 		tfMap["outside_ip_address"] = aws.ToString(v)
 	}
 
-	tfMap[names.AttrStatus] = awstypes.TelemetryStatus(apiObject.Status)
+	tfMap[names.AttrStatus] = apiObject.Status
 
 	if v := apiObject.StatusMessage; v != nil {
 		tfMap["status_message"] = aws.ToString(v)

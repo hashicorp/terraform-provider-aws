@@ -74,7 +74,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.CreateVpnGatewayInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpnGateway),
-		Type:              awstypes.GatewayType(awstypes.GatewayTypeIpsec1),
+		Type:              awstypes.GatewayTypeIpsec1,
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
