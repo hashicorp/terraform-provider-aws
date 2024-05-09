@@ -37,7 +37,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,7 +128,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrAccountID, accountID)
 	d.Set("alias", alias)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_at", aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
 	d.Set(names.AttrName, accessPoint.Name)
