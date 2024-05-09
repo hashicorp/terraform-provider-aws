@@ -82,7 +82,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"secret_key": {
+												names.AttrSecretKey: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -1649,7 +1649,7 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *types.Connecto
 func expandAmplitudeConnectorProfileCredentials(m map[string]interface{}) *types.AmplitudeConnectorProfileCredentials {
 	credentials := &types.AmplitudeConnectorProfileCredentials{
 		ApiKey:    aws.String(m["api_key"].(string)),
-		SecretKey: aws.String(m["secret_key"].(string)),
+		SecretKey: aws.String(m[names.AttrSecretKey].(string)),
 	}
 
 	return credentials
