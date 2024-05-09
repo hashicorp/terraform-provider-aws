@@ -37,7 +37,7 @@ func testAccClassificationJob_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeOneTime),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_definitions.0.buckets.0", bucketName),
 				),
@@ -68,7 +68,7 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, namePrefix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, namePrefix),
 				),
 			},
 			{
