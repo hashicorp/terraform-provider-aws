@@ -33,7 +33,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Optional: true,
 				Default:  engineNeptune,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -134,7 +134,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -180,7 +180,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return aws.StringValue(v.Name)
 	}))
 	d.Set("engine", orderableDBInstance.Engine)
-	d.Set("engine_version", orderableDBInstance.EngineVersion)
+	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
 	d.Set("license_model", orderableDBInstance.LicenseModel)
 	d.Set("max_iops_per_db_instance", orderableDBInstance.MaxIopsPerDbInstance)
 	d.Set("max_iops_per_gib", orderableDBInstance.MaxIopsPerGib)
