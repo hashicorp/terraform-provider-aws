@@ -55,7 +55,7 @@ func DataSourceResponsePlan() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeSet,
 													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
