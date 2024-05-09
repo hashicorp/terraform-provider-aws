@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -94,7 +95,7 @@ func resourceInstanceGroup() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -120,12 +121,12 @@ func resourceInstanceGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -134,7 +135,7 @@ func resourceInstanceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,8 +151,8 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceType:     aws.String(d.Get("instance_type").(string)),
-		Name:             aws.String(d.Get("name").(string)),
+		InstanceType:     aws.String(d.Get(names.AttrInstanceType).(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("autoscaling_policy"); ok {
@@ -267,12 +268,12 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("ebs_optimized", ig.EbsOptimized)
 	d.Set("instance_count", ig.RequestedInstanceCount)
-	d.Set("instance_type", ig.InstanceType)
-	d.Set("name", ig.Name)
+	d.Set(names.AttrInstanceType, ig.InstanceType)
+	d.Set(names.AttrName, ig.Name)
 	d.Set("running_instance_count", ig.RunningInstanceCount)
 
 	if ig.Status != nil {
-		d.Set("status", ig.Status.State)
+		d.Set(names.AttrStatus, ig.Status.State)
 	}
 
 	return diags
@@ -425,7 +426,7 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 			ebs := &emr.EbsBlockDeviceConfig{}
 			volumeSpec := &emr.VolumeSpecification{
 				SizeInGB:   aws.Int64(int64(conf["size"].(int))),
-				VolumeType: aws.String(conf["type"].(string)),
+				VolumeType: aws.String(conf[names.AttrType].(string)),
 			}
 			if v, ok := conf["iops"].(int); ok && v != 0 {
 				volumeSpec.Iops = aws.Int64(int64(v))

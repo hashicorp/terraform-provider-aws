@@ -64,7 +64,7 @@ func ResourceAMI() *schema.Resource {
 				Default:      ec2.ArchitectureValuesX8664,
 				ValidateFunc: validation.StringInSlice(ec2.ArchitectureValues_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +81,7 @@ func ResourceAMI() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -97,7 +97,7 @@ func ResourceAMI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -225,12 +225,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -295,10 +295,10 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ec2.RegisterImageInput{
 		Architecture:       aws.String(d.Get("architecture").(string)),
-		Description:        aws.String(d.Get("description").(string)),
+		Description:        aws.String(d.Get(names.AttrDescription).(string)),
 		EnaSupport:         aws.Bool(d.Get("ena_support").(bool)),
 		ImageLocation:      aws.String(d.Get("image_location").(string)),
 		Name:               aws.String(name),
@@ -424,9 +424,9 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
-	d.Set("arn", imageArn)
+	d.Set(names.AttrARN, imageArn)
 	d.Set("boot_mode", image.BootMode)
-	d.Set("description", image.Description)
+	d.Set(names.AttrDescription, image.Description)
 	d.Set("deprecation_time", image.DeprecationTime)
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
@@ -435,8 +435,8 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
-	d.Set("name", image.Name)
-	d.Set("owner_id", image.OwnerId)
+	d.Set(names.AttrName, image.Name)
+	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform_details", image.PlatformDetails)
 	d.Set("platform", image.Platform)
 	d.Set("public", image.Public)
@@ -465,8 +465,8 @@ func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange("description") {
-		err := updateDescription(ctx, conn, d.Id(), d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		err := updateDescription(ctx, conn, d.Id(), d.Get(names.AttrDescription).(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
 		}
@@ -610,7 +610,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		Ebs: &ec2.EbsBlockDevice{},
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -686,7 +686,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Ebs.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = aws.BoolValue(v)
+		tfMap[names.AttrDeleteOnTermination] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.DeviceName; v != nil {

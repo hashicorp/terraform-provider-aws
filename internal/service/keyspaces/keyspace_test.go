@@ -38,8 +38,8 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -129,7 +129,7 @@ func testAccCheckKeyspaceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -159,7 +159,7 @@ func testAccCheckKeyspaceExists(ctx context.Context, n string) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
-		_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes["name"])
+		_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

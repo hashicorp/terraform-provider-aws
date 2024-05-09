@@ -353,7 +353,7 @@ func functionURLParseResourceID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]qQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]sQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
 }
 
 func expandCors(tfMap map[string]interface{}) *awstypes.Cors {

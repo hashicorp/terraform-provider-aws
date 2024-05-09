@@ -36,7 +36,7 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "application_name", applicationResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_name", applicationResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "application_version_id", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_creation_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),

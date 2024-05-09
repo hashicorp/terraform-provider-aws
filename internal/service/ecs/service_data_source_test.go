@@ -27,13 +27,13 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_type", dataSourceName, "launch_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "service_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, "service_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},

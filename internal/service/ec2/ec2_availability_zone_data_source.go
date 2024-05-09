@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_availability_zone")
@@ -36,7 +37,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -65,7 +66,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -97,13 +98,13 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.ZoneIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.ZoneNames = aws.StringSlice([]string{v.(string)})
 	}
 
 	input.Filters = newAttributeFilterList(
 		map[string]string{
-			"state": d.Get("state").(string),
+			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
@@ -132,14 +133,14 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(az.ZoneName))
 	d.Set("group_name", az.GroupName)
-	d.Set("name", az.ZoneName)
+	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)
 	d.Set("opt_in_status", az.OptInStatus)
 	d.Set("parent_zone_id", az.ParentZoneId)
 	d.Set("parent_zone_name", az.ParentZoneName)
 	d.Set("region", az.RegionName)
-	d.Set("state", az.State)
+	d.Set(names.AttrState, az.State)
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)
 

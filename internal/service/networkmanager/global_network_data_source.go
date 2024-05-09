@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_global_network")
@@ -19,11 +20,11 @@ func DataSourceGlobalNetwork() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGlobalNetworkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,7 +32,7 @@ func DataSourceGlobalNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -50,11 +51,11 @@ func dataSourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(globalNetworkID)
-	d.Set("arn", globalNetwork.GlobalNetworkArn)
-	d.Set("description", globalNetwork.Description)
+	d.Set(names.AttrARN, globalNetwork.GlobalNetworkArn)
+	d.Set(names.AttrDescription, globalNetwork.Description)
 	d.Set("global_network_id", globalNetwork.GlobalNetworkId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, globalNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

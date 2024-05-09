@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_core_network_policy_document")
@@ -44,7 +45,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"or",
 							}, false),
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -60,7 +61,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -83,11 +84,11 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											"begins-with",
 										}, false),
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -209,13 +210,13 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"must begin with a letter and contain only alphanumeric characters"),
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 								"must begin with a letter and contain only alphanumeric characters"),
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -245,7 +246,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -301,7 +302,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2021.12",
@@ -316,7 +317,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	mergedDoc := &CoreNetworkPolicyDoc{
-		Version: d.Get("version").(string),
+		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	// CoreNetworkConfiguration
@@ -432,7 +433,7 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 		policy.RuleNumber = rule
 		ruleMap[ruleStr] = struct{}{}
 
-		if desc, ok := cfgPol["description"]; ok {
+		if desc, ok := cfgPol[names.AttrDescription]; ok {
 			policy.Description = desc.(string)
 		}
 		if cL, ok := cfgPol["condition_logic"]; ok {
@@ -465,24 +466,24 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 		cfgCond := condI.(map[string]interface{})
 		condition := &CoreNetworkAttachmentPolicyCondition{}
 		k := map[string]bool{
-			"operator": false,
-			"key":      false,
-			"value":    false,
+			"operator":      false,
+			names.AttrKey:   false,
+			names.AttrValue: false,
 		}
 
-		t := cfgCond["type"].(string)
+		t := cfgCond[names.AttrType].(string)
 		condition.Type = t
 
 		if o := cfgCond["operator"]; o != "" {
 			k["operator"] = true
 			condition.Operator = o.(string)
 		}
-		if key := cfgCond["key"]; key != "" {
-			k["key"] = true
+		if key := cfgCond[names.AttrKey]; key != "" {
+			k[names.AttrKey] = true
 			condition.Key = key.(string)
 		}
-		if v := cfgCond["value"]; v != "" {
-			k["value"] = true
+		if v := cfgCond[names.AttrValue]; v != "" {
+			k[names.AttrValue] = true
 			condition.Value = v.(string)
 		}
 
@@ -494,22 +495,22 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "tag-exists" {
-			if !k["key"] || k["operator"] || k["value"] {
+			if !k[names.AttrKey] || k["operator"] || k[names.AttrValue] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", strconv.Itoa(i))
 			}
 		}
 		if t == "tag-value" {
-			if !k["key"] || !k["operator"] || !k["value"] {
+			if !k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
 			}
 		}
 		if t == "region" || t == "resource-id" || t == "account-id" {
-			if k["key"] || !k["operator"] || !k["value"] {
+			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
 			}
 		}
 		if t == "attachment-type" {
-			if k["key"] || !k["value"] || cfgCond["operator"].(string) != "equals" {
+			if k[names.AttrKey] || !k[names.AttrValue] || cfgCond["operator"].(string) != "equals" {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", strconv.Itoa(i))
 			}
 		}
@@ -551,7 +552,7 @@ func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetw
 		cfgSgmt := sgmtI.(map[string]interface{})
 		sgmt := &CoreNetworkPolicySegment{}
 
-		if name, ok := cfgSgmt["name"]; ok {
+		if name, ok := cfgSgmt[names.AttrName]; ok {
 			if _, ok := nameMap[name.(string)]; ok {
 				return nil, fmt.Errorf("duplicate Name (%s). Remove the Name or ensure the Name is unique.", name.(string))
 			}
@@ -560,7 +561,7 @@ func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetw
 				nameMap[sgmt.Name] = struct{}{}
 			}
 		}
-		if description, ok := cfgSgmt["description"]; ok {
+		if description, ok := cfgSgmt[names.AttrDescription]; ok {
 			sgmt.Description = description.(string)
 		}
 		if actions := cfgSgmt["allow_filter"].(*schema.Set).List(); len(actions) > 0 {

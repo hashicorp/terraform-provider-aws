@@ -40,7 +40,7 @@ func TestAccRDSEventSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -96,7 +96,7 @@ func TestAccRDSEventSubscription_Name_generated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -125,7 +125,7 @@ func TestAccRDSEventSubscription_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -210,7 +210,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "maintenance"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
@@ -232,7 +232,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
@@ -250,7 +250,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),

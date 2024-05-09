@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func gaugeChartVisualSchema() *schema.Schema {
@@ -76,11 +77,11 @@ func gaugeChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"max": {
+																names.AttrMax: {
 																	Type:     schema.TypeFloat,
 																	Optional: true,
 																},
-																"min": {
+																names.AttrMin: {
 																	Type:     schema.TypeFloat,
 																	Optional: true,
 																},
@@ -429,10 +430,10 @@ func expandArcAxisDisplayRange(tfList []interface{}) *quicksight.ArcAxisDisplayR
 
 	config := &quicksight.ArcAxisDisplayRange{}
 
-	if v, ok := tfMap["max"].(float64); ok {
+	if v, ok := tfMap[names.AttrMax].(float64); ok {
 		config.Max = aws.Float64(v)
 	}
-	if v, ok := tfMap["min"].(float64); ok {
+	if v, ok := tfMap[names.AttrMin].(float64); ok {
 		config.Min = aws.Float64(v)
 	}
 
@@ -571,10 +572,10 @@ func flattenArcAxisDisplayRange(apiObject *quicksight.ArcAxisDisplayRange) []int
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Max != nil {
-		tfMap["max"] = aws.Float64Value(apiObject.Max)
+		tfMap[names.AttrMax] = aws.Float64Value(apiObject.Max)
 	}
 	if apiObject.Min != nil {
-		tfMap["min"] = aws.Float64Value(apiObject.Min)
+		tfMap[names.AttrMin] = aws.Float64Value(apiObject.Min)
 	}
 
 	return []interface{}{tfMap}

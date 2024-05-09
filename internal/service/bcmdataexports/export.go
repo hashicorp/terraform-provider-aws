@@ -166,7 +166,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":              framework.IDAttribute(),
+			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -178,13 +178,13 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -204,7 +204,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 			}),

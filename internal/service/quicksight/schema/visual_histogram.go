@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func histogramVisualSchema() *schema.Schema {
@@ -41,7 +42,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"value": {
+													names.AttrValue: {
 														Type:         schema.TypeInt,
 														Optional:     true,
 														ValidateFunc: validation.IntAtLeast(0),
@@ -61,7 +62,7 @@ func histogramVisualSchema() *schema.Schema {
 														Optional:     true,
 														ValidateFunc: validation.IntBetween(0, 1000),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:         schema.TypeFloat,
 														Optional:     true,
 														ValidateFunc: validation.IntAtLeast(0),
@@ -263,7 +264,7 @@ func expandBinCountOptions(tfList []interface{}) *quicksight.BinCountOptions {
 
 	options := &quicksight.BinCountOptions{}
 
-	if v, ok := tfMap["value"].(int); ok {
+	if v, ok := tfMap[names.AttrValue].(int); ok {
 		options.Value = aws.Int64(int64(v))
 	}
 
@@ -285,7 +286,7 @@ func expandBinWidthOptions(tfList []interface{}) *quicksight.BinWidthOptions {
 	if v, ok := tfMap["bin_count_limit"].(int); ok {
 		options.BinCountLimit = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		options.Value = aws.Float64(v)
 	}
 
@@ -379,7 +380,7 @@ func flattenBinCountOptions(apiObject *quicksight.BinCountOptions) []interface{}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Int64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Int64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -395,7 +396,7 @@ func flattenBinWidthOptions(apiObject *quicksight.BinWidthOptions) []interface{}
 		tfMap["bin_count_limit"] = aws.Int64Value(apiObject.BinCountLimit)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}

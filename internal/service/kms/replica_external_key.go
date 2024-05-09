@@ -45,7 +45,7 @@ func resourceReplicaExternalKey() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,12 +60,12 @@ func resourceReplicaExternalKey() *schema.Resource {
 				Default:      30,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -92,7 +92,7 @@ func resourceReplicaExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -137,11 +137,11 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 		input.BypassPolicyLockoutSafetyCheck = v.(bool)
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		input.Policy = aws.String(v.(string))
 	}
 
@@ -181,7 +181,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 
 		// The key can only be disabled if key material has been imported, else:
 		// "KMSInvalidStateException: arn:aws:kms:us-west-2:123456789012:key/47e3edc1-945f-413b-88b1-e7341c2d89f7 is pending import."
-		if enabled := d.Get("enabled").(bool); !enabled {
+		if enabled := d.Get(names.AttrEnabled).(bool); !enabled {
 			if err := updateKeyEnabled(ctx, conn, "KMS Replica External Key", d.Id(), enabled); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -189,7 +189,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		if err := waitKeyPolicyPropagated(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica External Key (%s) policy update: %s", d.Id(), err)
 		}
@@ -234,21 +234,21 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "KMS External Replica Key (%s) is not a multi-Region replica key", d.Id())
 	}
 
-	d.Set("arn", key.metadata.Arn)
-	d.Set("description", key.metadata.Description)
-	d.Set("enabled", key.metadata.Enabled)
+	d.Set(names.AttrARN, key.metadata.Arn)
+	d.Set(names.AttrDescription, key.metadata.Description)
+	d.Set(names.AttrEnabled, key.metadata.Enabled)
 	d.Set("expiration_model", key.metadata.ExpirationModel)
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), key.policy)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 	if key.metadata.ValidTo != nil {
@@ -268,21 +268,21 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), awstypes.KeyState(d.Get("key_state").(string)); hasChange && enabled && state != awstypes.KeyStatePendingImport {
+	if hasChange, enabled, state := d.HasChange(names.AttrEnabled), d.Get(names.AttrEnabled).(bool), awstypes.KeyState(d.Get("key_state").(string)); hasChange && enabled && state != awstypes.KeyStatePendingImport {
 		// Enable before any attributes are modified.
 		if err := updateKeyEnabled(ctx, conn, "KMS Replica External Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("description") {
-		if err := updateKeyDescription(ctx, conn, "KMS Replica External Key", d.Id(), d.Get("description").(string)); err != nil {
+	if d.HasChange(names.AttrDescription) {
+		if err := updateKeyDescription(ctx, conn, "KMS Replica External Key", d.Id(), d.Get(names.AttrDescription).(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("policy") {
-		if err := updateKeyPolicy(ctx, conn, "KMS Replica External Key", d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+	if d.HasChange(names.AttrPolicy) {
+		if err := updateKeyPolicy(ctx, conn, "KMS Replica External Key", d.Id(), d.Get(names.AttrPolicy).(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -303,7 +303,7 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), awstypes.KeyState(d.Get("key_state").(string)); hasChange && !enabled && state != awstypes.KeyStatePendingImport {
+	if hasChange, enabled, state := d.HasChange(names.AttrEnabled), d.Get(names.AttrEnabled).(bool), awstypes.KeyState(d.Get("key_state").(string)); hasChange && !enabled && state != awstypes.KeyStatePendingImport {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
 		if err := updateKeyEnabled(ctx, conn, "KMS Replica External Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

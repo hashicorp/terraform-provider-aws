@@ -36,7 +36,7 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 }`, // lintignore:AWSAT005
 			valid: true,
 		},
-		"account_id": {
+		names.AttrAccountID: {
 			json: `{
   "Statement":[
     {
@@ -245,7 +245,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 			value: "arn:aws:iam::123456789012:root", // lintignore:AWSAT005
 			valid: true,
 		},
-		"account_id": {
+		names.AttrAccountID: {
 			value: "123456789012",
 			valid: true,
 		},

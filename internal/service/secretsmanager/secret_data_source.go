@@ -30,7 +30,7 @@ func dataSourceSecret() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +82,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := aws.ToString(secret.ARN)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", aws.String(secret.CreatedDate.Format(time.RFC3339)))
+	d.Set(names.AttrCreatedDate, aws.String(secret.CreatedDate.Format(time.RFC3339)))
 	d.Set(names.AttrDescription, secret.Description)
 	d.Set(names.AttrKMSKeyID, secret.KmsKeyId)
 	d.Set("last_changed_date", aws.String(secret.LastChangedDate.Format(time.RFC3339)))

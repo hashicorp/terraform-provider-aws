@@ -38,7 +38,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -91,7 +91,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -136,7 +136,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -186,12 +186,12 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"instance_tags": tftags.TagsSchemaComputed(),
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -252,7 +252,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -313,7 +313,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -329,7 +329,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -358,7 +358,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -369,11 +369,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -386,7 +386,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -419,7 +419,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		input.InstanceIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -450,7 +450,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }
@@ -469,7 +469,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
 	d.Set("placement_group", instance.Placement.GroupName)
 	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	d.Set("tenancy", instance.Placement.Tenancy)
@@ -477,7 +477,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 
 	d.Set("ami", instance.ImageId)
-	d.Set("instance_type", instanceType)
+	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
@@ -501,8 +501,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set("subnet_id", ni.SubnetId)
-				d.Set("network_interface_id", ni.NetworkInterfaceId)
+				d.Set(names.AttrSubnetID, ni.SubnetId)
+				d.Set(names.AttrNetworkInterfaceID, ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 
 				secondaryIPs := make([]string, 0, len(ni.PrivateIpAddresses))
@@ -525,8 +525,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else {
-		d.Set("subnet_id", instance.SubnetId)
-		d.Set("network_interface_id", "")
+		d.Set(names.AttrSubnetID, instance.SubnetId)
+		d.Set(names.AttrNetworkInterfaceID, "")
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)
@@ -536,11 +536,11 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	if instance.Monitoring != nil {
 		monitoringState := aws.StringValue(instance.Monitoring.State)
-		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
+		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	if err := d.Set("tags", KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("setting tags: %w", err)
 	}
 

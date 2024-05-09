@@ -36,7 +36,7 @@ func (d *dataSourceCallerIdentity) Metadata(_ context.Context, request datasourc
 func (d *dataSourceCallerIdentity) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrARN: schema.StringAttribute{

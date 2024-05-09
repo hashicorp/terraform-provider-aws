@@ -244,7 +244,7 @@ func ResourceCanary() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
@@ -737,9 +737,9 @@ func flattenCanaryVPCConfig(canaryVpcOutput *awstypes.VpcConfigOutput) []interfa
 	}
 
 	m := map[string]interface{}{
-		names.AttrSubnetIDs:  flex.FlattenStringValueSet(canaryVpcOutput.SubnetIds),
-		"security_group_ids": flex.FlattenStringValueSet(canaryVpcOutput.SecurityGroupIds),
-		names.AttrVPCID:      aws.ToString(canaryVpcOutput.VpcId),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(canaryVpcOutput.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(canaryVpcOutput.SecurityGroupIds),
+		names.AttrVPCID:            aws.ToString(canaryVpcOutput.VpcId),
 	}
 
 	return []interface{}{m}
@@ -754,7 +754,7 @@ func expandCanaryVPCConfig(l []interface{}) *awstypes.VpcConfigInput {
 
 	codeConfig := &awstypes.VpcConfigInput{
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 
 	return codeConfig

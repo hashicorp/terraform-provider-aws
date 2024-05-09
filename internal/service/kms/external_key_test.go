@@ -38,16 +38,16 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 				Config: testAccExternalKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "expiration_model", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "key_material_base64"),
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
 				),
@@ -176,7 +176,7 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 				Config: testAccExternalKeyConfig_description(rName + "-1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "description", rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-1"),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					testAccCheckExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, "description", rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-2"),
 				),
 			},
 		},
@@ -216,7 +216,7 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 				Config: testAccExternalKeyConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -234,7 +234,7 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					testAccCheckExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 			{
@@ -242,7 +242,7 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key3),
 					testAccCheckExternalKeyNotRecreated(&key2, &key3),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 		},

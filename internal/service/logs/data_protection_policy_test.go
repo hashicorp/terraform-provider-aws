@@ -35,7 +35,7 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
 				Config: testAccDataProtectionPolicy_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
 					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", fmt.Sprintf(`
 {

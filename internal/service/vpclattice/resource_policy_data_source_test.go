@@ -34,7 +34,7 @@ func TestAccVPCLatticeResourcePolicyDataSource_basic(t *testing.T) {
 				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrPolicy, regexache.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", "aws_vpclattice_service_network.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, "aws_vpclattice_service_network.test", names.AttrARN),
 				),
 			},
 		},

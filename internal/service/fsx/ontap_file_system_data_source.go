@@ -23,7 +23,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 		ReadWithoutTimeout: dataSourceONTAPFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,11 +109,11 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,7 +122,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -159,7 +159,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -175,7 +175,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	filesystem, err := findONTAPFileSystemByID(ctx, conn, id)
 
 	if err != nil {
@@ -185,7 +185,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	ontapConfig := filesystem.OntapConfiguration
 
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
-	d.Set("arn", filesystem.ResourceARN)
+	d.Set(names.AttrARN, filesystem.ResourceARN)
 	d.Set("automatic_backup_retention_days", ontapConfig.AutomaticBackupRetentionDays)
 	d.Set("daily_automatic_backup_start_time", ontapConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", ontapConfig.DeploymentType)
@@ -199,14 +199,14 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	haPairs := aws.Int64Value(ontapConfig.HAPairs)
 	d.Set("ha_pairs", haPairs)
-	d.Set("kms_key_id", filesystem.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set("owner_id", filesystem.OwnerId)
+	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
 	d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
-	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	if aws.StringValue(ontapConfig.DeploymentType) == fsx.OntapDeploymentTypeSingleAz2 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
@@ -214,7 +214,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	}
-	d.Set("vpc_id", filesystem.VpcId)
+	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 
 	setTagsOut(ctx, filesystem.Tags)

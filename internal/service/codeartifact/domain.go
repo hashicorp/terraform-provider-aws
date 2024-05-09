@@ -40,7 +40,7 @@ func resourceDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,7 +132,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", domain.Arn)
+	d.Set(names.AttrARN, domain.Arn)
 	d.Set("asset_size_bytes", strconv.FormatInt(domain.AssetSizeBytes, 10))
 	d.Set("created_time", domain.CreatedTime.Format(time.RFC3339))
 	d.Set("domain", domain.Name)

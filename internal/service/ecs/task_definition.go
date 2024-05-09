@@ -42,7 +42,7 @@ func ResourceTaskDefinition() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("arn", d.Id())
+				d.Set(names.AttrARN, d.Id())
 
 				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
 				resARN, err := arn.Parse(d.Id())
@@ -66,7 +66,7 @@ func ResourceTaskDefinition() *schema.Resource {
 		MigrateState:  resourceTaskDefinitionMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							ForceNew: true,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
@@ -216,7 +216,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Default:      ecs.ProxyConfigurationTypeAppmesh,
 							Optional:     true,
@@ -430,7 +430,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -545,7 +545,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
-	d.Set("arn", taskDefinition.TaskDefinitionArn)
+	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -569,7 +569,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	trackedTaskDefinition := d.Get("arn").(string)
+	trackedTaskDefinition := d.Get(names.AttrARN).(string)
 	if _, ok := d.GetOk("track_latest"); ok {
 		trackedTaskDefinition = d.Get("family").(string)
 	}
@@ -605,7 +605,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
-	d.Set("arn", taskDefinition.TaskDefinitionArn)
+	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
@@ -686,7 +686,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	_, err := conn.DeregisterTaskDefinitionWithContext(ctx, &ecs.DeregisterTaskDefinitionInput{
-		TaskDefinition: aws.String(d.Get("arn").(string)),
+		TaskDefinition: aws.String(d.Get(names.AttrARN).(string)),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Definition (%s): %s", d.Id(), err)
@@ -698,7 +698,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
 
 	if v, ok := m["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -761,7 +761,7 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["type"] = aws.StringValue(pc.Type)
+		c[names.AttrType] = aws.StringValue(pc.Type)
 		c["expression"] = aws.StringValue(pc.Expression)
 		results = append(results, c)
 	}
@@ -808,7 +808,7 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 
 	config := make(map[string]interface{})
 	config["container_name"] = aws.StringValue(pc.ContainerName)
-	config["type"] = aws.StringValue(pc.Type)
+	config[names.AttrType] = aws.StringValue(pc.Type)
 	config["properties"] = meshProperties
 
 	return []map[string]interface{}{
@@ -847,7 +847,7 @@ func expandTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs
 	var pc []*ecs.TaskDefinitionPlacementConstraint
 	for _, raw := range constraints {
 		p := raw.(map[string]interface{})
-		t := p["type"].(string)
+		t := p[names.AttrType].(string)
 		e := p["expression"].(string)
 		if err := validPlacementConstraint(t, e); err != nil {
 			return nil, err
@@ -898,7 +898,7 @@ func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.Pro
 
 	ecsProxyConfig := &ecs.ProxyConfiguration{
 		ContainerName: aws.String(configMap["container_name"].(string)),
-		Type:          aws.String(configMap["type"].(string)),
+		Type:          aws.String(configMap[names.AttrType].(string)),
 		Properties:    properties,
 	}
 
@@ -914,7 +914,7 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 		data := lRaw.(map[string]interface{})
 
 		l := &ecs.Volume{
-			Name: aws.String(data["name"].(string)),
+			Name: aws.String(data[names.AttrName].(string)),
 		}
 
 		hostPath := data["host_path"].(string)
@@ -1049,7 +1049,7 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, volume := range list {
 		l := map[string]interface{}{
-			"name": aws.StringValue(volume.Name),
+			names.AttrName: aws.StringValue(volume.Name),
 		}
 
 		if volume.Host != nil && volume.Host.SourcePath != nil {

@@ -49,10 +49,10 @@ func resourceRolePolicy() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validRolePolicyName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -90,7 +90,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	roleName := d.Get("role").(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
@@ -151,7 +151,7 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrName, policyName)
-	d.Set("name_prefix", create.NamePrefixFromName(policyName))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
 	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("role", roleName)
 

@@ -80,7 +80,7 @@ func testAccSecretsDataSourceEncrypt(ctx context.Context, key *awstypes.KeyMetad
 			KeyId:     key.Arn,
 			Plaintext: []byte(plaintext),
 			EncryptionContext: map[string]string{
-				"name": "value",
+				names.AttrName: names.AttrValue,
 			},
 		}
 

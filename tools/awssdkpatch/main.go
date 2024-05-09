@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	out     string
-	service string
+	importalias string
+	out         string
+	service     string
 
 	//go:embed patch.tmpl
 	patchTemplate string
@@ -31,6 +32,7 @@ type TemplateData struct {
 	GoV1Package        string
 	GoV1ClientTypeName string
 	GoV2Package        string
+	ImportAlias        string
 	ProviderPackage    string
 	InputOutputTypes   []string
 	ContextFunctions   []string
@@ -45,6 +47,7 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags]\n\nFlags:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
+	flag.StringVar(&importalias, "importalias", "", "alias that the service package is imported as (optional)")
 	flag.StringVar(&out, "out", "awssdk.patch", "output file (optional)")
 	flag.StringVar(&service, "service", "", "service to migrate (required)")
 	flag.Parse()
@@ -109,7 +112,12 @@ func getPackageData(sd data.ServiceRecord) (TemplateData, error) {
 		GoV1Package:        goV1Package,
 		GoV1ClientTypeName: sd.GoV1ClientTypeName(),
 		GoV2Package:        sd.GoV2Package(),
+		ImportAlias:        importalias,
 		ProviderPackage:    providerPackage,
+	}
+
+	if importalias == "" {
+		td.ImportAlias = td.GoV2Package
 	}
 
 	config := &packages.Config{

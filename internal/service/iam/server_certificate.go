@@ -71,10 +71,10 @@ func resourceServerCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -112,7 +112,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
@@ -189,7 +189,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("expiration", nil)
 	}
 	d.Set(names.AttrName, metadata.ServerCertificateName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(metadata.ServerCertificateName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(metadata.ServerCertificateName)))
 	d.Set("path", metadata.Path)
 	if metadata.UploadDate != nil {
 		d.Set("upload_date", aws.ToTime(metadata.UploadDate).Format(time.RFC3339))

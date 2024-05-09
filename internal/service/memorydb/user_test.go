@@ -34,7 +34,7 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "user/"+rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "user/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
@@ -71,7 +71,7 @@ func TestAccMemoryDBUser_authenticationModeIAM(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "user/"+rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "user/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),

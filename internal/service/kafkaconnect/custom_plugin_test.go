@@ -34,17 +34,17 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "ZIP"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.bucket_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.file_key"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.object_version", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 				),
 			},
 			{
@@ -94,7 +94,7 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 				Config: testAccCustomPluginConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
 				),
 			},
 			{

@@ -51,12 +51,12 @@ func testAccResourceLFTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
+				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
 				),
 			},
 		},
@@ -83,11 +83,11 @@ func testAccResourceLFTag_table(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_table(rName, []string{"value"}, "value"),
+				Config: testAccResourceLFTagConfig_table(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
 				),
 			},
 		},
@@ -114,11 +114,11 @@ func testAccResourceLFTag_tableWithColumns(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_tableWithColumns(rName, []string{"value"}, "value"),
+				Config: testAccResourceLFTagConfig_tableWithColumns(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
 				),
 			},
 		},
@@ -145,7 +145,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
+				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsDisappearsStateFunc),

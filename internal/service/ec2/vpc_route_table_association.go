@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route_table_association")
@@ -42,17 +43,17 @@ func ResourceRouteTableAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"subnet_id", "gateway_id"},
+				ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
 			},
 			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"subnet_id", "gateway_id"},
+				ExactlyOneOf: []string{names.AttrSubnetID, "gateway_id"},
 			},
 		},
 	}
@@ -71,7 +72,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 		input.GatewayId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -117,7 +118,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("gateway_id", association.GatewayId)
 	d.Set("route_table_id", association.RouteTableId)
-	d.Set("subnet_id", association.SubnetId)
+	d.Set(names.AttrSubnetID, association.SubnetId)
 
 	return diags
 }
@@ -191,7 +192,7 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 
 	for _, association := range routeTable.Associations {
 		if aws.StringValue(association.SubnetId) == targetID {
-			d.Set("subnet_id", targetID)
+			d.Set(names.AttrSubnetID, targetID)
 			associationID = aws.StringValue(association.RouteTableAssociationId)
 
 			break

@@ -33,7 +33,7 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
@@ -147,7 +147,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 				Config: testAccStorageLensConfigurationConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
@@ -197,7 +197,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 				Config: testAccStorageLensConfigurationConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
@@ -253,7 +253,7 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 				Config: testAccStorageLensConfigurationConfig_advancedMetrics(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
@@ -295,7 +295,7 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 				Config: testAccStorageLensConfigurationConfig_freeMetrics(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),

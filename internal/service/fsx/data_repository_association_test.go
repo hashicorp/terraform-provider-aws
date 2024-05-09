@@ -46,7 +46,7 @@ func TestAccFSxDataRepositoryAssociation_basic(t *testing.T) {
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(rName, rName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`association/fs-.+/dra-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`association/fs-.+/dra-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "batch_import_meta_data_on_create", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_path", bucketPath),
 					resource.TestMatchResourceAttr(resourceName, "file_system_id", regexache.MustCompile(`fs-.+`)),

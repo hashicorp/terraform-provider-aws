@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_key_group", name="Key Group")
@@ -46,7 +47,7 @@ func resourceKeyGroup() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,7 +59,7 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.KeyGroupConfig{
 		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
 		Name:  aws.String(name),
@@ -103,7 +104,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("comment", keyGroupConfig.Comment)
 	d.Set("etag", output.ETag)
 	d.Set("items", keyGroupConfig.Items)
-	d.Set("name", keyGroupConfig.Name)
+	d.Set(names.AttrName, keyGroupConfig.Name)
 
 	return diags
 }
@@ -114,7 +115,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	apiObject := &awstypes.KeyGroupConfig{
 		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
-		Name:  aws.String(d.Get("name").(string)),
+		Name:  aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {

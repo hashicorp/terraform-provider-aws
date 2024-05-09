@@ -36,7 +36,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "external_ids.#", resourceName, "external_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", dataSourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name.0", resourceName, "name.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "nickname", resourceName, "nickname"),

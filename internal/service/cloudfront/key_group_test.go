@@ -35,9 +35,9 @@ func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 					testAccCheckKeyGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", "test key group"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "etag"),
-					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "id"),
+					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", names.AttrID),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "name", rName),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrName, rName),
 				),
 			},
 			{

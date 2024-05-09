@@ -36,10 +36,10 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "resource.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -54,7 +54,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),

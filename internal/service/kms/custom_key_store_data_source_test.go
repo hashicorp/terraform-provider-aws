@@ -34,7 +34,7 @@ func testAccCustomKeyStoreDataSource_basic(t *testing.T) {
 				Config: testAccCustomKeyStoreDataSourceConfig_basic(rName, clusterID, trustAnchorCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cloud_hsm_cluster_id", resourceName, "cloud_hsm_cluster_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "custom_key_store_name", resourceName, "custom_key_store_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "trust_anchor_certificate", resourceName, "trust_anchor_certificate"),
 				),

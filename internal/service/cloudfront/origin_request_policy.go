@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_origin_request_policy", name="Origin Request Policy")
@@ -97,7 +98,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -137,7 +138,7 @@ func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.OriginRequestPolicyConfig{
 		Name: aws.String(name),
 	}
@@ -206,7 +207,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("headers_config", nil)
 	}
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
 		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
@@ -227,7 +228,7 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	// "When you update an origin request policy configuration, all the fields are updated with the values provided in the request. You cannot update some fields independent of others."
 	//
 	apiObject := &awstypes.OriginRequestPolicyConfig{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {

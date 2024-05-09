@@ -54,10 +54,10 @@ func resourceSubnetGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validSubnetGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -91,7 +91,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		DBSubnetGroupName:        aws.String(name),
@@ -128,7 +128,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, v.DBSubnetGroupArn)
 	d.Set(names.AttrDescription, v.DBSubnetGroupDescription)
 	d.Set(names.AttrName, v.DBSubnetGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(v.DBSubnetGroupName)))
 	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(v.Subnets, func(v types.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
 	}))

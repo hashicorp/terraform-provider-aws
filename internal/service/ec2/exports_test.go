@@ -31,6 +31,7 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                       = customFiltersSchema
+	FindEBSVolumeAttachment                   = findVolumeAttachment
 	FindEIPByAllocationID                     = findEIPByAllocationID
 	FindEIPByAssociationID                    = findEIPByAssociationID
 	FindEIPDomainNameAttributeByAllocationID  = findEIPDomainNameAttributeByAllocationID
@@ -39,12 +40,15 @@ var (
 	FindKeyPairByName                         = findKeyPairByName
 	FindNetworkACLByIDV2                      = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                = findNetworkInterfaceByIDV2
+	FindVolumeAttachmentInstanceByID          = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses = flattenNetworkInterfacePrivateIPAddresses
 	NewAttributeFilterList                    = newAttributeFilterList
+	NewAttributeFilterListV2                  = newAttributeFilterListV2
 	NewCustomFilterList                       = newCustomFilterList
 	NewTagFilterList                          = newTagFilterList
 	ProtocolForValue                          = protocolForValue
 	StopInstance                              = stopInstance
+	StopEBSVolumeAttachmentInstance           = stopVolumeAttachmentInstance
 	UpdateTags                                = updateTags
 	UpdateTagsV2                              = updateTagsV2
 )

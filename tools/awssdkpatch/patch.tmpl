@@ -59,18 +59,18 @@ var x expression
 
 # Step 2: Convert AWS SDK v1 (service) to v2
 @@
-var x identifier
+var {{ .ImportAlias }}, x identifier
 @@
--import "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-+import "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-{{ .GoV1Package }}.x
+-import {{ .ImportAlias }} "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
++import {{ .ImportAlias }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+{{ .ImportAlias }}.x
 
 # 2a: Most types are in the service's types package so do a simple mass-substitution
 # to get most things right
 @@
 var x identifier
 @@
--{{ .GoV1Package }}.x
+-{{ .ImportAlias }}.x
 +awstypes.x
 
 @@
@@ -82,7 +82,7 @@ awstypes.x
 @@
 @@
 -awstypes.{{ .GoV1ClientTypeName }}
-+{{ .GoV2Package }}.Client
++{{ .ImportAlias }}.Client
 
 @@
 @@
@@ -91,12 +91,12 @@ awstypes.x
 
 # 2b: Types used for passing Input and Outputs to a service's CRUD operations
 # remain in the main service package, so 'unconvert' these from 2a above
-{{ $goV2Package := .GoV2Package }}
+{{ $importAlias := .ImportAlias }}
 {{ range $typeName := .InputOutputTypes }}
 @@
 @@
 -awstypes.{{ $typeName }}
-+{{ $goV2Package }}.{{ $typeName }}
++{{ $importAlias }}.{{ $typeName }}
 {{ end }}
 
 {{ range $funcName := .ContextFunctions }}

@@ -37,11 +37,11 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "value"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrValue),
 				),
 			},
 			{

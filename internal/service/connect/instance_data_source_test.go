@@ -26,7 +26,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_management_type", dataSourceName, "identity_management_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_alias", dataSourceName, "instance_alias"),
@@ -37,14 +37,14 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "auto_resolve_best_voices_enabled", dataSourceName, "auto_resolve_best_voices_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
 				),
 			},
 			{
 				Config: testAccInstanceDataSourceConfig_alias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_management_type", dataSourceName, "identity_management_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_alias", dataSourceName, "instance_alias"),
@@ -55,7 +55,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "auto_resolve_best_voices_enabled", dataSourceName, "auto_resolve_best_voices_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
 				),
 			},

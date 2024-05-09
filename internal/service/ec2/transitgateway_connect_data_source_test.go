@@ -33,10 +33,10 @@ func testAccTransitGatewayConnectDataSource_Filter(t *testing.T, semaphore tfsyn
 			{
 				Config: testAccTransitGatewayConnectDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrProtocol, resourceName, names.AttrProtocol),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transport_attachment_id", resourceName, "transport_attachment_id"),
 				),
 			},
@@ -63,10 +63,10 @@ func testAccTransitGatewayConnectDataSource_ID(t *testing.T, semaphore tfsync.Se
 			{
 				Config: testAccTransitGatewayConnectDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "protocol", resourceName, "protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrProtocol, resourceName, names.AttrProtocol),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_connect_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transport_attachment_id", resourceName, "transport_attachment_id"),
 				),
 			},

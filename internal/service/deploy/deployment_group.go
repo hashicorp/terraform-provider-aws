@@ -78,7 +78,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -95,7 +95,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -230,16 +230,16 @@ func resourceDeploymentGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -256,16 +256,16 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.EC2TagFilterType](),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -305,7 +305,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -317,7 +317,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -355,7 +355,7 @@ func resourceDeploymentGroup() *schema.Resource {
 										MaxItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.NoZeroValues,
@@ -391,16 +391,16 @@ func resourceDeploymentGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.TagFilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -572,7 +572,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("auto_rollback_configuration", flattenAutoRollbackConfiguration(group.AutoRollbackConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_rollback_configuration: %s", err)
 	}
@@ -617,7 +617,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// required fields
 		applicationName := d.Get("app_name").(string)
 		serviceRoleArn := d.Get("service_role_arn").(string)
@@ -794,13 +794,13 @@ func expandTagFilters(configured []interface{}) []types.TagFilter {
 		var filter types.TagFilter
 		m := raw.(map[string]interface{})
 
-		if v, ok := m["key"]; ok {
+		if v, ok := m[names.AttrKey]; ok {
 			filter.Key = aws.String(v.(string))
 		}
-		if v, ok := m["type"]; ok {
+		if v, ok := m[names.AttrType]; ok {
 			filter.Type = types.TagFilterType(v.(string))
 		}
-		if v, ok := m["value"]; ok {
+		if v, ok := m[names.AttrValue]; ok {
 			filter.Value = aws.String(v.(string))
 		}
 
@@ -816,9 +816,9 @@ func expandEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
 		var filter types.EC2TagFilter
 		m := raw.(map[string]interface{})
 
-		filter.Key = aws.String(m["key"].(string))
-		filter.Type = types.EC2TagFilterType(m["type"].(string))
-		filter.Value = aws.String(m["value"].(string))
+		filter.Key = aws.String(m[names.AttrKey].(string))
+		filter.Type = types.EC2TagFilterType(m[names.AttrType].(string))
+		filter.Value = aws.String(m[names.AttrValue].(string))
 
 		filters = append(filters, filter)
 	}
@@ -857,7 +857,7 @@ func expandAutoRollbackConfiguration(configured []interface{}) *types.AutoRollba
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
-		result.Enabled = config["enabled"].(bool)
+		result.Enabled = config[names.AttrEnabled].(bool)
 		result.Events = flex.ExpandStringyValueSet[types.AutoRollbackEvent](config["events"].(*schema.Set))
 	} else { // delete the configuration
 		result.Enabled = false
@@ -872,10 +872,10 @@ func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguratio
 
 	if len(configured) == 1 {
 		config := configured[0].(map[string]interface{})
-		names := flex.ExpandStringSet(config["alarms"].(*schema.Set))
-		alarms := make([]types.Alarm, 0, len(names))
+		n := flex.ExpandStringSet(config["alarms"].(*schema.Set))
+		alarms := make([]types.Alarm, 0, len(n))
 
-		for _, name := range names {
+		for _, name := range n {
 			alarm := types.Alarm{
 				Name: name,
 			}
@@ -883,7 +883,7 @@ func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguratio
 		}
 
 		result.Alarms = alarms
-		result.Enabled = config["enabled"].(bool)
+		result.Enabled = config[names.AttrEnabled].(bool)
 		result.IgnorePollAlarmFailure = config["ignore_poll_alarm_failure"].(bool)
 	} else { // delete the configuration
 		result.Alarms = make([]types.Alarm, 0)
@@ -926,7 +926,7 @@ func expandELBInfos(l []interface{}) []types.ELBInfo {
 		m := mRaw.(map[string]interface{})
 
 		elbInfo := types.ELBInfo{
-			Name: aws.String(m["name"].(string)),
+			Name: aws.String(m[names.AttrName].(string)),
 		}
 
 		elbInfos = append(elbInfos, elbInfo)
@@ -946,7 +946,7 @@ func expandTargetGroupInfos(l []interface{}) []types.TargetGroupInfo {
 		m := mRaw.(map[string]interface{})
 
 		targetGroupInfo := types.TargetGroupInfo{
-			Name: aws.String(m["name"].(string)),
+			Name: aws.String(m[names.AttrName].(string)),
 		}
 
 		targetGroupInfos = append(targetGroupInfos, targetGroupInfo)
@@ -1096,13 +1096,13 @@ func flattenEC2TagFilters(list []types.EC2TagFilter) []map[string]interface{} {
 	for _, tf := range list {
 		l := make(map[string]interface{})
 		if v := tf.Key; aws.ToString(v) != "" {
-			l["key"] = aws.ToString(v)
+			l[names.AttrKey] = aws.ToString(v)
 		}
 		if v := tf.Value; aws.ToString(v) != "" {
-			l["value"] = aws.ToString(v)
+			l[names.AttrValue] = aws.ToString(v)
 		}
 		if v := tf.Type; v != "" {
-			l["type"] = string(v)
+			l[names.AttrType] = string(v)
 		}
 		result = append(result, l)
 	}
@@ -1114,13 +1114,13 @@ func flattenTagFilters(list []types.TagFilter) []map[string]string {
 	for _, tf := range list {
 		l := make(map[string]string)
 		if v := tf.Key; aws.ToString(v) != "" {
-			l["key"] = aws.ToString(v)
+			l[names.AttrKey] = aws.ToString(v)
 		}
 		if v := tf.Value; aws.ToString(v) != "" {
-			l["value"] = aws.ToString(v)
+			l[names.AttrValue] = aws.ToString(v)
 		}
 		if v := tf.Type; string(v) != "" {
-			l["type"] = string(v)
+			l[names.AttrType] = string(v)
 		}
 		result = append(result, l)
 	}
@@ -1167,7 +1167,7 @@ func flattenAutoRollbackConfiguration(config *types.AutoRollbackConfiguration) [
 	// otherwise empty configurations will be created
 	if config != nil && (config.Enabled || len(config.Events) > 0) {
 		item := make(map[string]interface{})
-		item["enabled"] = config.Enabled
+		item[names.AttrEnabled] = config.Enabled
 		item["events"] = config.Events
 		result = append(result, item)
 	}
@@ -1181,14 +1181,14 @@ func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]in
 	// only create configurations that are enabled or temporarily disabled (retaining alarms)
 	// otherwise empty configurations will be created
 	if config != nil && (config.Enabled || len(config.Alarms) > 0) {
-		names := make([]*string, 0, len(config.Alarms))
+		n := make([]*string, 0, len(config.Alarms))
 		for _, alarm := range config.Alarms {
-			names = append(names, alarm.Name)
+			n = append(n, alarm.Name)
 		}
 
 		item := make(map[string]interface{})
-		item["alarms"] = flex.FlattenStringSet(names)
-		item["enabled"] = config.Enabled
+		item["alarms"] = flex.FlattenStringSet(n)
+		item[names.AttrEnabled] = config.Enabled
 		item["ignore_poll_alarm_failure"] = config.IgnorePollAlarmFailure
 
 		result = append(result, item)
@@ -1217,7 +1217,7 @@ func flattenELBInfos(elbInfos []types.ELBInfo) []interface{} {
 
 	for _, elbInfo := range elbInfos {
 		m := map[string]interface{}{
-			"name": aws.ToString(elbInfo.Name),
+			names.AttrName: aws.ToString(elbInfo.Name),
 		}
 
 		l = append(l, m)
@@ -1231,7 +1231,7 @@ func flattenTargetGroupInfos(targetGroupInfos []types.TargetGroupInfo) []interfa
 
 	for _, targetGroupInfo := range targetGroupInfos {
 		m := map[string]interface{}{
-			"name": aws.ToString(targetGroupInfo.Name),
+			names.AttrName: aws.ToString(targetGroupInfo.Name),
 		}
 
 		l = append(l, m)

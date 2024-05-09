@@ -41,9 +41,9 @@ func TestAccDSTrust_basic(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^t-\w{10}`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", domainNameOther),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "trust_direction", string(awstypes.TrustDirectionTwoWay)),
@@ -458,7 +458,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 				Config: testAccTrustConfig_deleteAssociatedConditionalForwarder(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^t-\w{10}`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "true"),
 				),

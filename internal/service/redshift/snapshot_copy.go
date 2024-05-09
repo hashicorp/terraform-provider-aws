@@ -46,7 +46,7 @@ func (r *resourceSnapshotCopy) Metadata(_ context.Context, req resource.Metadata
 func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"cluster_identifier": schema.StringAttribute{
+			names.AttrClusterIdentifier: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -214,7 +214,7 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 
 func (r *resourceSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
 }
 
 func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.ClusterSnapshotCopyStatus, error) {

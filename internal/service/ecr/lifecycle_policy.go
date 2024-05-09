@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_lifecycle_policy", name="Lifecycle Policy")
@@ -38,7 +39,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -70,7 +71,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -112,7 +113,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 	output := outputRaw.(*ecr.GetLifecyclePolicyOutput)
 
-	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get("policy").(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
+	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else if !equivalent {
 		policyToSet, err := structure.NormalizeJsonString(aws.ToString(output.LifecyclePolicyText))
@@ -120,7 +121,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	}
 
 	d.Set("registry_id", output.RegistryId)

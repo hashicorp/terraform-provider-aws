@@ -44,7 +44,7 @@ func resourcePolicy() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func resourcePolicy() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -114,7 +114,7 @@ func resourcePolicy() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -198,7 +198,7 @@ func resourcePolicy() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -256,10 +256,10 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := aws.ToString(output.PolicyArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	policy := output.Policy
 	d.Set("delete_unused_fm_managed_resources", policy.DeleteUnusedFMManagedResources)
-	d.Set("description", policy.PolicyDescription)
+	d.Set(names.AttrDescription, policy.PolicyDescription)
 	if err := d.Set("exclude_map", flattenPolicyMap(policy.ExcludeMap)); err != nil {
 		sdkdiag.AppendErrorf(diags, "setting exclude_map: %s", err)
 	}
@@ -267,7 +267,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("include_map", flattenPolicyMap(policy.IncludeMap)); err != nil {
 		sdkdiag.AppendErrorf(diags, "setting include_map: %s", err)
 	}
-	d.Set("name", policy.PolicyName)
+	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("policy_update_token", policy.PolicyUpdateToken)
 	d.Set("remediation_enabled", policy.RemediationEnabled)
 	if err := d.Set("resource_tags", flattenResourceTags(policy.ResourceTags)); err != nil {
@@ -276,7 +276,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("resource_type", policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
 	securityServicePolicy := []map[string]interface{}{{
-		"type":                 string(policy.SecurityServicePolicyData.Type),
+		names.AttrType:         string(policy.SecurityServicePolicyData.Type),
 		"managed_service_data": aws.ToString(policy.SecurityServicePolicyData.ManagedServiceData),
 		"policy_option":        flattenPolicyOption(policy.SecurityServicePolicyData.PolicyOption),
 	}}
@@ -291,7 +291,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fms.PutPolicyInput{
 			Policy: expandPolicy(d),
 		}
@@ -371,8 +371,8 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		ExcludeMap:                     expandPolicyMap(d.Get("exclude_map").([]interface{})),
 		ExcludeResourceTags:            d.Get("exclude_resource_tags").(bool),
 		IncludeMap:                     expandPolicyMap(d.Get("include_map").([]interface{})),
-		PolicyDescription:              aws.String(d.Get("description").(string)),
-		PolicyName:                     aws.String(d.Get("name").(string)),
+		PolicyDescription:              aws.String(d.Get(names.AttrDescription).(string)),
+		PolicyName:                     aws.String(d.Get(names.AttrName).(string)),
 		RemediationEnabled:             d.Get("remediation_enabled").(bool),
 		ResourceType:                   resourceType,
 		ResourceTypeList:               flex.ExpandStringValueSet(d.Get("resource_type_list").(*schema.Set)),
@@ -395,7 +395,7 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 	tfMap := d.Get("security_service_policy_data").([]interface{})[0].(map[string]interface{})
 	apiObject.SecurityServicePolicyData = &awstypes.SecurityServicePolicyData{
 		ManagedServiceData: aws.String(tfMap["managed_service_data"].(string)),
-		Type:               awstypes.SecurityServiceType(tfMap["type"].(string)),
+		Type:               awstypes.SecurityServiceType(tfMap[names.AttrType].(string)),
 	}
 
 	if v, ok := tfMap["policy_option"].([]interface{}); ok && len(v) > 0 && v[0] != nil {

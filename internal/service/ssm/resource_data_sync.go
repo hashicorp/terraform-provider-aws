@@ -49,7 +49,7 @@ func ResourceResourceDataSync() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -180,7 +180,7 @@ func FindResourceDataSyncItem(ctx context.Context, conn *ssm.SSM, name string) (
 
 func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
 	result := make(map[string]interface{})
-	result["bucket_name"] = aws.StringValue(dest.BucketName)
+	result[names.AttrBucketName] = aws.StringValue(dest.BucketName)
 	result["region"] = aws.StringValue(dest.Region)
 	result["sync_format"] = aws.StringValue(dest.SyncFormat)
 	if dest.AWSKMSKeyARN != nil {
@@ -195,7 +195,7 @@ func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destinatio
 func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDataSyncS3Destination {
 	raw := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
 	s3dest := &ssm.ResourceDataSyncS3Destination{
-		BucketName: aws.String(raw["bucket_name"].(string)),
+		BucketName: aws.String(raw[names.AttrBucketName].(string)),
 		Region:     aws.String(raw["region"].(string)),
 		SyncFormat: aws.String(raw["sync_format"].(string)),
 	}

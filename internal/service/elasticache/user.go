@@ -54,7 +54,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func resourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.InputAuthenticationType_Values(), false),
@@ -203,12 +203,12 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("access_string", user.AccessString)
-	d.Set("arn", user.ARN)
+	d.Set(names.AttrARN, user.ARN)
 	if v := user.Authentication; v != nil {
 		tfMap := map[string]interface{}{
 			"password_count": aws.Int64Value(v.PasswordCount),
 			"passwords":      d.Get("authentication_mode.0.passwords"),
-			"type":           aws.StringValue(v.Type),
+			names.AttrType:   aws.StringValue(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
@@ -228,7 +228,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyUserInput{
 			UserId: aws.String(d.Id()),
 		}
@@ -423,7 +423,7 @@ func expandAuthenticationMode(tfMap map[string]interface{}) *elasticache.Authent
 		apiObject.Passwords = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 

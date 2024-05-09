@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_internet_gateway")
@@ -29,7 +30,7 @@ func DataSourceInternetGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,11 +39,11 @@ func DataSourceInternetGateway() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -55,11 +56,11 @@ func DataSourceInternetGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -70,7 +71,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
-	tags, tagsOk := d.GetOk("tags")
+	tags, tagsOk := d.GetOk(names.AttrTags)
 	filter, filterOk := d.GetOk("filter")
 
 	if !internetGatewayIdOk && !filterOk && !tagsOk {
@@ -104,16 +105,16 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	if err := d.Set("attachments", flattenInternetGatewayAttachments(igw.Attachments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attachments: %s", err)
 	}
 
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrOwnerID, ownerID)
 
-	if err := d.Set("tags", KeyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -124,8 +125,8 @@ func flattenInternetGatewayAttachments(igwAttachments []*ec2.InternetGatewayAtta
 	attachments := make([]map[string]interface{}, 0, len(igwAttachments))
 	for _, a := range igwAttachments {
 		m := make(map[string]interface{})
-		m["state"] = aws.StringValue(a.State)
-		m["vpc_id"] = aws.StringValue(a.VpcId)
+		m[names.AttrState] = aws.StringValue(a.State)
+		m[names.AttrVPCID] = aws.StringValue(a.VpcId)
 		attachments = append(attachments, m)
 	}
 

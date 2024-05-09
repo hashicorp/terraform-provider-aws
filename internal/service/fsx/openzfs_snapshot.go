@@ -48,7 +48,7 @@ func resourceOpenZFSSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +56,7 @@ func resourceOpenZFSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 203),
@@ -83,7 +83,7 @@ func resourceOpenZFSSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := &fsx.CreateSnapshotInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(d.Get(names.AttrName).(string)),
 		Tags:               getTagsIn(ctx),
 		VolumeId:           aws.String(d.Get("volume_id").(string)),
 	}
@@ -119,9 +119,9 @@ func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", snapshot.ResourceARN)
+	d.Set(names.AttrARN, snapshot.ResourceARN)
 	d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339))
-	d.Set("name", snapshot.Name)
+	d.Set(names.AttrName, snapshot.Name)
 	d.Set("volume_id", snapshot.VolumeId)
 
 	// Snapshot tags aren't set in the Describe response.
@@ -134,14 +134,14 @@ func resourceOpenZFSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateSnapshotInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			SnapshotId:         aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		_, err := conn.UpdateSnapshotWithContext(ctx, input)

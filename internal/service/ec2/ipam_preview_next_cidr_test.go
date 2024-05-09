@@ -27,8 +27,8 @@ func TestAccIPAMPreviewNextCIDR_ipv4Basic(t *testing.T) {
 				Config: testAccIPAMPreviewNextCIDRConfig_ipv4Basic(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "cidr"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 				),
 			},
@@ -52,8 +52,8 @@ func TestAccIPAMPreviewNextCIDR_ipv4Allocated(t *testing.T) {
 				Config: testAccIPAMPreviewNextCIDRConfig_ipv4Basic(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cidr", allocatedCidr),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 				),
 			},
@@ -62,8 +62,8 @@ func TestAccIPAMPreviewNextCIDR_ipv4Allocated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// cidr should not change even after allocation
 					resource.TestCheckResourceAttr(resourceName, "cidr", allocatedCidr),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 				),
 			},
@@ -90,8 +90,8 @@ func TestAccIPAMPreviewNextCIDR_ipv4DisallowedCIDR(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 				),
 			},

@@ -58,7 +58,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Computed: true,
 			},
 			// Poor API naming: this accepts the IP address of the network interface
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -127,7 +127,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		GatewayARN:         aws.String(d.Get("gateway_arn").(string)),
-		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
+		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
 		Tags:               getTagsIn(ctx),
@@ -204,7 +204,7 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	if volume.VolumeiSCSIAttributes != nil {
 		d.Set("chap_enabled", volume.VolumeiSCSIAttributes.ChapEnabled)
 		d.Set("lun_number", volume.VolumeiSCSIAttributes.LunNumber)
-		d.Set("network_interface_id", volume.VolumeiSCSIAttributes.NetworkInterfaceId)
+		d.Set(names.AttrNetworkInterfaceID, volume.VolumeiSCSIAttributes.NetworkInterfaceId)
 		d.Set("network_interface_port", volume.VolumeiSCSIAttributes.NetworkInterfacePort)
 
 		targetARN := aws.StringValue(volume.VolumeiSCSIAttributes.TargetARN)

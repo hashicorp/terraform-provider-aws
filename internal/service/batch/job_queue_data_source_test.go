@@ -27,12 +27,12 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 			{
 				Config: testAccJobQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
@@ -54,12 +54,12 @@ func TestAccBatchJobQueueDataSource_schedulingPolicy(t *testing.T) {
 			{
 				Config: testAccJobQueueDataSourceConfig_schedulingPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},

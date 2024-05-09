@@ -32,7 +32,7 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_arn(domain),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_chain", resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_authority_arn", resourceName, "certificate_authority_arn"),

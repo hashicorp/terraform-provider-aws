@@ -26,7 +26,7 @@ func DataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -54,7 +54,7 @@ func DataSourceRule() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"domain_name", names.AttrName, "resolver_endpoint_id", "rule_type"},
+				ConflictsWith: []string{names.AttrDomainName, names.AttrName, "resolver_endpoint_id", "rule_type"},
 			},
 			"rule_type": {
 				Type:          schema.TypeString,
@@ -88,7 +88,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		input := &route53resolver.ListResolverRulesInput{
 			Filters: buildAttributeFilterList(map[string]string{
-				"DOMAIN_NAME":          d.Get("domain_name").(string),
+				"DOMAIN_NAME":          d.Get(names.AttrDomainName).(string),
 				"NAME":                 d.Get(names.AttrName).(string),
 				"RESOLVER_ENDPOINT_ID": d.Get("resolver_endpoint_id").(string),
 				"TYPE":                 d.Get("rule_type").(string),
@@ -119,7 +119,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
+	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.StringValue(rule.DomainName)))
 	d.Set(names.AttrName, rule.Name)
 	d.Set(names.AttrOwnerID, rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)

@@ -44,7 +44,7 @@ func resourcePool() *schema.Resource {
 				ValidateFunc: validIdentityPoolName,
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,7 +192,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("identity_pool_name", ip.IdentityPoolName)
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
@@ -224,7 +224,7 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		params := &cognitoidentity.UpdateIdentityPoolInput{
 			IdentityPoolId:                 aws.String(d.Id()),
 			AllowUnauthenticatedIdentities: d.Get("allow_unauthenticated_identities").(bool),

@@ -101,9 +101,9 @@ var (
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name_prefix"},
+			ConflictsWith: []string{names.AttrNamePrefix},
 		},
-		"name_prefix": {
+		names.AttrNamePrefix: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
@@ -299,9 +299,9 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrName, name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
 	} else {
-		d.Set("name_prefix", create.NamePrefixFromName(name))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
 	d.Set("url", d.Id())
 
@@ -387,7 +387,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 }
 
 func queueName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}

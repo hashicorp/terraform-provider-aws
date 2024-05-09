@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmediapackage "github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMediaPackageChannel_basic(t *testing.T) {
@@ -40,7 +41,7 @@ func TestAccMediaPackageChannel_basic(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediapackage", regexache.MustCompile(`channels/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediapackage", regexache.MustCompile(`channels/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.password", regexache.MustCompile("^[0-9a-f]*$")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.url", regexache.MustCompile("^https://")),
 					resource.TestMatchResourceAttr(resourceName, "hls_ingest.0.ingest_endpoints.0.username", regexache.MustCompile("^[0-9a-f]*$")),
@@ -77,7 +78,7 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 				Config: testAccChannelConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -89,7 +90,7 @@ func TestAccMediaPackageChannel_description(t *testing.T) {
 				Config: testAccChannelConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},

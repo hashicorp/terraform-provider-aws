@@ -37,13 +37,13 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", "false"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "file_system_id"),
 					resource.TestCheckResourceAttr(resourceName, "junction_path", fmt.Sprintf("/%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "ontap_volume_type", "RW"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_style", ""),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
@@ -191,7 +191,7 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_junctionPath(rName, jPath1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "junction_path", jPath1),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "junction_path", jPath2),
 				),
 			},
@@ -231,7 +231,7 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -245,7 +245,7 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -297,7 +297,7 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_securityStyle(rName, "UNIX"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_style", "UNIX"),
 				),
 			},
@@ -312,7 +312,7 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_style", "NTFS"),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume3),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_style", "MIXED"),
 				),
 			},
@@ -349,7 +349,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_size(rName, size1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(size1)),
 				),
 			},
@@ -364,7 +364,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(size2)),
 				),
 			},
@@ -373,7 +373,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeRecreated(&volume2, &volume3),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", fmt.Sprint(size3)),
 				),
 			},
@@ -382,7 +382,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume4),
 					testAccCheckONTAPVolumeNotRecreated(&volume3, &volume4),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", fmt.Sprint(size4)),
 				),
 			},
@@ -486,7 +486,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_snapshotPolicy(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy1)),
 				),
 			},
@@ -501,7 +501,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy2)),
 				),
 			},
@@ -525,7 +525,7 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_storageEfficiency(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", "true"),
 				),
 			},
@@ -540,7 +540,7 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", "false"),
 				),
 			},
@@ -613,7 +613,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_tieringPolicyNoCooling(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "NONE"),
 				),
 			},
@@ -628,7 +628,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "SNAPSHOT_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", "10"),
 				),
@@ -638,7 +638,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume3),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", "60"),
 				),
@@ -648,7 +648,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume4),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume4),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "ALL"),
 				),
 			},

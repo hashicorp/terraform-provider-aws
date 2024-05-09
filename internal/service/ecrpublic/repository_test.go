@@ -39,7 +39,7 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
 				),
 			},
 			{
@@ -330,7 +330,7 @@ func TestAccECRPublicRepository_Basic_forceDestroy(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
 				),
 			},
 			{

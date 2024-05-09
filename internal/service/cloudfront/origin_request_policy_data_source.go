@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_origin_request_policy", name="Origin Request Policy")
@@ -78,15 +79,15 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			"id": {
+			names.AttrID: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
 			"query_strings_config": {
 				Type:     schema.TypeList,
@@ -123,10 +124,10 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 
 	var originRequestPolicyID string
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		originRequestPolicyID = v.(string)
 	} else {
-		name := d.Get("name").(string)
+		name := d.Get(names.AttrName).(string)
 		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
 		err := listOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
@@ -179,7 +180,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		d.Set("headers_config", nil)
 	}
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
 		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)

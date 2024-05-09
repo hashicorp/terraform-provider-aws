@@ -42,7 +42,7 @@ func resourceMonitor() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func resourceMonitor() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -118,7 +118,7 @@ func resourceMonitor() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  types.MonitorConfigStateActive,
@@ -187,7 +187,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		if v := types.MonitorConfigState(v.(string)); v != types.MonitorConfigStateActive {
 			input := &internetmonitor.UpdateMonitorInput{
 				ClientToken: aws.String(id.UniqueId()),
@@ -226,7 +226,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Internet Monitor Monitor (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", monitor.MonitorArn)
+	d.Set(names.AttrARN, monitor.MonitorArn)
 	if err := d.Set("health_events_config", flattenHealthEventsConfig(monitor.HealthEventsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_events_config: %s", err)
 	}
@@ -236,7 +236,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("monitor_name", monitor.MonitorName)
 	d.Set("max_city_networks_to_monitor", monitor.MaxCityNetworksToMonitor)
 	d.Set("resources", flex.FlattenStringValueSet(monitor.Resources))
-	d.Set("status", monitor.Status)
+	d.Set(names.AttrStatus, monitor.Status)
 	d.Set("traffic_percentage_to_monitor", monitor.TrafficPercentageToMonitor)
 
 	setTagsOut(ctx, monitor.Tags)
@@ -248,7 +248,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InternetMonitorClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &internetmonitor.UpdateMonitorInput{
 			ClientToken: aws.String(id.UniqueId()),
 			MonitorName: aws.String(d.Id()),
@@ -277,8 +277,8 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		status := types.MonitorConfigState(d.Get("status").(string))
-		if d.HasChange("status") {
+		status := types.MonitorConfigState(d.Get(names.AttrStatus).(string))
+		if d.HasChange(names.AttrStatus) {
 			input.Status = status
 		}
 
@@ -451,7 +451,7 @@ func expandS3Config(tfList []interface{}) *types.S3Config {
 	tfMap := tfList[0].(map[string]interface{})
 	apiObject := &types.S3Config{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -497,7 +497,7 @@ func flattenS3Config(apiObject *types.S3Config) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"bucket_name":         aws.ToString(apiObject.BucketName),
+		names.AttrBucketName:  aws.ToString(apiObject.BucketName),
 		"log_delivery_status": string(apiObject.LogDeliveryStatus),
 	}
 

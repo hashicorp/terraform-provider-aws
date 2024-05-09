@@ -87,7 +87,7 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -122,7 +122,7 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
 	d.Set(names.AttrVPCID, dbProxy.VpcId)
-	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 
 	return diags

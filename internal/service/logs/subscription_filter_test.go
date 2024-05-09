@@ -37,11 +37,11 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 					resource.TestCheckResourceAttr(resourceName, "filter_pattern", "logtype test"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", firehoseResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -169,7 +169,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisStream(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", kinesisStream, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", kinesisStream, names.AttrARN),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_roleARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName1, names.AttrARN),
 				),
 			},
 			{
@@ -249,7 +249,7 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_roleARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName2, names.AttrARN),
 				),
 			},
 		},
@@ -265,7 +265,7 @@ func testAccCheckSubscriptionFilterDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
+			_, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -291,7 +291,7 @@ func testAccCheckSubscriptionFilterExists(ctx context.Context, n string, v *type
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
+		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -311,7 +311,7 @@ func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.Im
 		}
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
-		filterNamePrefix := rs.Primary.Attributes["name"]
+		filterNamePrefix := rs.Primary.Attributes[names.AttrName]
 		stateID := fmt.Sprintf("%s|%s", logGroupName, filterNamePrefix)
 
 		return stateID, nil

@@ -51,8 +51,8 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
 				),
 			},
@@ -150,8 +150,8 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
 				),
 			},
@@ -160,8 +160,8 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
 				),
 			},
@@ -170,8 +170,8 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
 				),
 			},

@@ -30,6 +30,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_grant", name="Grant")
@@ -107,7 +108,7 @@ func resourceGrant() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -164,7 +165,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.GrantTokens = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -223,7 +224,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("key_id", keyID)
 	if aws.ToString(grant.Name) != "" {
-		d.Set("name", grant.Name)
+		d.Set(names.AttrName, grant.Name)
 	}
 	d.Set("operations", grant.Operations)
 	if grant.RetiringPrincipal != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check

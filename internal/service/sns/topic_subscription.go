@@ -91,7 +91,7 @@ var (
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"protocol": {
+		names.AttrProtocol: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -146,7 +146,7 @@ var (
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
 		names.AttrOwnerID:                subscriptionAttributeNameOwner,
 		"pending_confirmation":           subscriptionAttributeNamePendingConfirmation,
-		"protocol":                       subscriptionAttributeNameProtocol,
+		names.AttrProtocol:               subscriptionAttributeNameProtocol,
 		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
 		"replay_policy":                  subscriptionAttributeNameReplayPolicy,
@@ -186,7 +186,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	delete(attributes, subscriptionAttributeNameProtocol)
 	delete(attributes, subscriptionAttributeNameTopicARN)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	input := &sns.SubscribeInput{
 		Attributes:            attributes,
 		Endpoint:              aws.String(d.Get("endpoint").(string)),

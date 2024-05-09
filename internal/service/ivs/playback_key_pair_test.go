@@ -53,7 +53,7 @@ func testAccPlaybackKeyPair_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexache.MustCompile(`playback-key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`playback-key/.+`)),
 				),
 			},
 			{
@@ -92,7 +92,7 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v2),
 					testAccCheckPlaybackKeyPairRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

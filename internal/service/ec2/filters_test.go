@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestNewAttributeFilterList(t *testing.T) {
@@ -126,12 +127,12 @@ func TestNewCustomFilterList(t *testing.T) {
 	}
 
 	filters.Add(map[string]interface{}{
-		"name":   "foo",
-		"values": valuesSet("bar", "baz"),
+		names.AttrName: "foo",
+		"values":       valuesSet("bar", "baz"),
 	})
 	filters.Add(map[string]interface{}{
-		"name":   "pizza",
-		"values": valuesSet("cheese"),
+		names.AttrName: "pizza",
+		"values":       valuesSet("cheese"),
 	})
 
 	expected := []*ec2.Filter{

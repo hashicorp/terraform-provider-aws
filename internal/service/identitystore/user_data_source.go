@@ -60,7 +60,7 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -80,7 +80,7 @@ func DataSourceUser() *schema.Resource {
 							ExactlyOneOf: []string{"alternate_identifier.0.external_id", "alternate_identifier.0.unique_attribute"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -126,11 +126,11 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,7 +142,7 @@ func DataSourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -185,7 +185,7 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -230,11 +230,11 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -351,7 +351,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
-		if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
+		if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
 			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 		}
 
@@ -429,7 +429,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
-	if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
+	if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 

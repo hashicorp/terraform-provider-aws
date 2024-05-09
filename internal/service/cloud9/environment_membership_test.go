@@ -37,8 +37,8 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "permissions", "read-only"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", names.AttrID),
 				),
 			},
 			{
@@ -51,8 +51,8 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "permissions", "read-write"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", names.AttrID),
 				),
 			},
 		},

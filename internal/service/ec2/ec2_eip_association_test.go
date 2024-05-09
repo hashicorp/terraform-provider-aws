@@ -142,7 +142,7 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 				),
 			},
 			{

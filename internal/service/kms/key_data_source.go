@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kms_key", name="Key")
@@ -22,7 +23,7 @@ func dataSourceKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKeyRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,11 +51,11 @@ func dataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -106,7 +107,7 @@ func dataSourceKey() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"arn": {
+									names.AttrARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -122,7 +123,7 @@ func dataSourceKey() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"arn": {
+									names.AttrARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -153,7 +154,7 @@ func dataSourceKey() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -184,7 +185,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(aws.ToString(output.KeyId))
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("aws_account_id", output.AWSAccountId)
 	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
 	d.Set("creation_date", aws.ToTime(output.CreationDate).Format(time.RFC3339))
@@ -193,8 +194,8 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if output.DeletionDate != nil {
 		d.Set("deletion_date", aws.ToTime(output.DeletionDate).Format(time.RFC3339))
 	}
-	d.Set("description", output.Description)
-	d.Set("enabled", output.Enabled)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("expiration_model", output.ExpirationModel)
 	d.Set("key_manager", output.KeyManager)
 	d.Set("key_spec", output.KeySpec)
@@ -252,7 +253,7 @@ func flattenMultiRegionKey(apiObject *awstypes.MultiRegionKey) map[string]interf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -284,7 +285,7 @@ func flattenXksKeyConfigurationType(apiObject *awstypes.XksKeyConfigurationType)
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	return tfMap

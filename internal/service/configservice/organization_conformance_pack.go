@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_conformance_pack", name="Organization Conformance Pack")
@@ -46,7 +47,7 @@ func resourceOrganizationConformancePack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +90,7 @@ func resourceOrganizationConformancePack() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -127,7 +128,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(name),
 	}
@@ -189,14 +190,14 @@ func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Organization Conformance Pack (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", pack.OrganizationConformancePackArn)
+	d.Set(names.AttrARN, pack.OrganizationConformancePackArn)
 	d.Set("delivery_s3_bucket", pack.DeliveryS3Bucket)
 	d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix)
 	d.Set("excluded_accounts", pack.ExcludedAccounts)
 	if err = d.Set("input_parameter", flattenConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting input_parameter: %s", err)
 	}
-	d.Set("name", pack.OrganizationConformancePackName)
+	d.Set(names.AttrName, pack.OrganizationConformancePackName)
 
 	return diags
 }

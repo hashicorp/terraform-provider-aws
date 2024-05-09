@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elasticache_replication_group", name="Replication Group")
@@ -23,7 +24,7 @@ func dataSourceReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationGroupRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +40,7 @@ func dataSourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +89,7 @@ func dataSourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -134,8 +135,8 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
-	d.Set("description", rg.Description)
-	d.Set("arn", rg.ARN)
+	d.Set(names.AttrDescription, rg.Description)
+	d.Set(names.AttrARN, rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
 	if rg.AutomaticFailover != nil {
@@ -159,14 +160,14 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if rg.ConfigurationEndpoint != nil {
-		d.Set("port", rg.ConfigurationEndpoint.Port)
+		d.Set(names.AttrPort, rg.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rg.ConfigurationEndpoint.Address)
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
 			return sdkdiag.AppendErrorf(diags, "ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
 		}
-		d.Set("port", rg.NodeGroups[0].PrimaryEndpoint.Port)
+		d.Set(names.AttrPort, rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
 		d.Set("reader_endpoint_address", rg.NodeGroups[0].ReaderEndpoint.Address)
 	}

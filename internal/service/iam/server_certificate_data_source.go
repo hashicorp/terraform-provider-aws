@@ -32,11 +32,11 @@ func dataSourceServerCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
 
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrName},
@@ -106,7 +106,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	var matcher = func(cert awstypes.ServerCertificateMetadata) bool {
-		return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), d.Get("name_prefix").(string))
+		return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), d.Get(names.AttrNamePrefix).(string))
 	}
 	if v, ok := d.GetOk(names.AttrName); ok {
 		matcher = func(cert awstypes.ServerCertificateMetadata) bool {

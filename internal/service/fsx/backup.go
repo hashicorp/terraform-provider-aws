@@ -44,7 +44,7 @@ func resourceBackup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,17 +53,17 @@ func resourceBackup() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,13 +136,13 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading FSx Backup (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", backup.ResourceARN)
+	d.Set(names.AttrARN, backup.ResourceARN)
 	if backup.FileSystem != nil {
 		d.Set("file_system_id", backup.FileSystem.FileSystemId)
 	}
-	d.Set("kms_key_id", backup.KmsKeyId)
-	d.Set("owner_id", backup.OwnerId)
-	d.Set("type", backup.Type)
+	d.Set(names.AttrKMSKeyID, backup.KmsKeyId)
+	d.Set(names.AttrOwnerID, backup.OwnerId)
+	d.Set(names.AttrType, backup.Type)
 	if backup.Volume != nil {
 		d.Set("volume_id", backup.Volume.VolumeId)
 	}

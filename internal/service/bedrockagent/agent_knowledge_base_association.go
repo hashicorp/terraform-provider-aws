@@ -65,7 +65,7 @@ func (r *agentKnowledgeBaseAssociationResource) Schema(ctx context.Context, requ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),

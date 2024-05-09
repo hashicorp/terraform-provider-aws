@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
@@ -56,7 +57,7 @@ func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState ma
 	if err != nil {
 		return rawState, err
 	}
-	rawState["id"] = id
+	rawState[names.AttrID] = id
 
 	return rawState, nil
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_code_signing_config", name="Code Signing Config")
@@ -55,7 +56,7 @@ func resourceCodeSigningConfig() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +64,7 @@ func resourceCodeSigningConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -97,7 +98,7 @@ func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData
 
 	input := &lambda.CreateCodeSigningConfigInput{
 		AllowedPublishers: expandAllowedPublishers(d.Get("allowed_publishers").([]interface{})),
-		Description:       aws.String(d.Get("description").(string)),
+		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
 	if v, ok := d.GetOk("policies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -137,9 +138,9 @@ func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("allowed_publishers", flattenAllowedPublishers(output.AllowedPublishers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting allowed_publishers: %s", err)
 	}
-	d.Set("arn", output.CodeSigningConfigArn)
+	d.Set(names.AttrARN, output.CodeSigningConfigArn)
 	d.Set("config_id", output.CodeSigningConfigId)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("last_modified", output.LastModified)
 	if err := d.Set("policies", flattenCodeSigningPolicies(output.CodeSigningPolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policies: %s", err)
@@ -160,8 +161,8 @@ func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData
 		input.AllowedPublishers = expandAllowedPublishers(d.Get("allowed_publishers").([]interface{}))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("policies") {

@@ -38,7 +38,7 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -54,7 +54,7 @@ func ResourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -93,7 +93,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		IdentityStoreId: aws.String(identityStoreId),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -137,7 +137,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("display_name", out.DisplayName)
 	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
@@ -159,10 +159,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		Operations:      nil,
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("description"),
-			AttributeValue: document.NewLazyDocument(d.Get("description").(string)),
+			AttributePath:  aws.String(names.AttrDescription),
+			AttributeValue: document.NewLazyDocument(d.Get(names.AttrDescription).(string)),
 		})
 	}
 

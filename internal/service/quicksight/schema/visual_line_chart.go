@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func lineChartVisualSchema() *schema.Schema {
@@ -114,7 +115,7 @@ func lineChartVisualSchema() *schema.Schema {
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"date": stringSchema(true, verify.ValidUTCTimestamp),
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
 																},
@@ -130,7 +131,7 @@ func lineChartVisualSchema() *schema.Schema {
 															Schema: map[string]*schema.Schema{
 																"end_date":   stringSchema(true, verify.ValidUTCTimestamp),
 																"start_date": stringSchema(true, verify.ValidUTCTimestamp),
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeFloat,
 																	Required: true,
 																},
@@ -271,7 +272,7 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"type":                   stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
+							names.AttrType:           stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
 							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -372,7 +373,7 @@ func expandLineChartConfiguration(tfList []interface{}) *quicksight.LineChartCon
 
 	config := &quicksight.LineChartConfiguration{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		config.Type = aws.String(v)
 	}
 	if v, ok := tfMap["contribution_analysis_defaults"].([]interface{}); ok && len(v) > 0 {
@@ -704,7 +705,7 @@ func expandWhatIfPointScenario(tfList []interface{}) *quicksight.WhatIfPointScen
 		scenario.Date = aws.Time(t)
 	}
 
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		scenario.Value = aws.Float64(v)
 	}
 
@@ -731,7 +732,7 @@ func expandWhatIfRangeScenario(tfList []interface{}) *quicksight.WhatIfRangeScen
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
 		scenario.StartDate = aws.Time(t)
 	}
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		scenario.Value = aws.Float64(v)
 	}
 
@@ -992,7 +993,7 @@ func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration)
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 	if apiObject.VisualPalette != nil {
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
@@ -1184,7 +1185,7 @@ func flattenWhatIfPointScenario(apiObject *quicksight.WhatIfPointScenario) []int
 		tfMap["date"] = aws.TimeValue(apiObject.Date).Format(time.RFC3339)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -1203,7 +1204,7 @@ func flattenWhatIfRangeScenario(apiObject *quicksight.WhatIfRangeScenario) []int
 		tfMap["start_date"] = aws.TimeValue(apiObject.StartDate).Format(time.RFC3339)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}

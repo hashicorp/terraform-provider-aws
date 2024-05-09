@@ -42,7 +42,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func ResourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(memorydb.InputAuthenticationType_Values(), false),
@@ -137,13 +137,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("access_string", user.AccessString)
-	d.Set("arn", user.ARN)
+	d.Set(names.AttrARN, user.ARN)
 
 	if v := user.Authentication; v != nil {
 		authenticationMode := map[string]interface{}{
 			"passwords":      d.Get("authentication_mode.0.passwords"),
 			"password_count": aws.Int64Value(v.PasswordCount),
-			"type":           aws.StringValue(v.Type),
+			names.AttrType:   aws.StringValue(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
@@ -162,7 +162,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &memorydb.UpdateUserInput{
 			UserName: aws.String(d.Id()),
 		}
@@ -225,7 +225,7 @@ func expandAuthenticationMode(tfMap map[string]interface{}) *memorydb.Authentica
 		apiObject.Passwords = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 

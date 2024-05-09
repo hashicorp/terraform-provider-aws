@@ -38,7 +38,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -107,7 +107,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_optionals(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "2"),
@@ -135,7 +135,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),

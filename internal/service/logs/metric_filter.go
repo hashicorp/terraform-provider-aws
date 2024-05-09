@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_metric_filter")
@@ -61,7 +62,7 @@ func resourceMetricFilter() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validLogMetricFilterTransformationName,
@@ -77,7 +78,7 @@ func resourceMetricFilter() *schema.Resource {
 							Default:          types.StandardUnitNone,
 							ValidateDiagFunc: enum.Validate[types.StandardUnit](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 100),
@@ -85,7 +86,7 @@ func resourceMetricFilter() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -112,7 +113,7 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	logGroupName := d.Get("log_group_name").(string)
 	input := &cloudwatchlogs.PutMetricFilterInput{
 		FilterName:            aws.String(name),
@@ -162,7 +163,7 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting metric_transformation: %s", err)
 	}
-	d.Set("name", mf.FilterName)
+	d.Set(names.AttrName, mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
 
 	return diags
@@ -205,7 +206,7 @@ func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	logGroupName := idParts[0]
 	name := idParts[1]
 	d.Set("log_group_name", logGroupName)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.SetId(name)
 	return []*schema.ResourceData{d}, nil
 }
@@ -258,7 +259,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTrans
 		apiObject.Dimensions = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.MetricName = aws.String(v)
 	}
 
@@ -270,7 +271,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTrans
 		apiObject.Unit = types.StandardUnit(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.MetricValue = aws.String(v)
 	}
 
@@ -317,7 +318,7 @@ func flattenMetricTransformation(apiObject types.MetricTransformation) map[strin
 	}
 
 	if v := apiObject.MetricName; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricNamespace; v != nil {
@@ -325,7 +326,7 @@ func flattenMetricTransformation(apiObject types.MetricTransformation) map[strin
 	}
 
 	if v := apiObject.MetricValue; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap

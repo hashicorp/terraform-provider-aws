@@ -350,7 +350,7 @@ func ResourceDataSource() *schema.Resource {
 											Required:     true,
 											ValidateFunc: validation.NoZeroValues,
 										},
-										"instance_id": {
+										names.AttrInstanceID: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.NoZeroValues,
@@ -1082,7 +1082,7 @@ func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourcePara
 			if v, ok := m["database"].(string); ok && v != "" {
 				ps.Database = aws.String(v)
 			}
-			if v, ok := m["instance_id"].(string); ok && v != "" {
+			if v, ok := m[names.AttrInstanceID].(string); ok && v != "" {
 				ps.InstanceId = aws.String(v)
 			}
 
@@ -1422,8 +1422,8 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 		params = append(params, map[string]interface{}{
 			"rds": []interface{}{
 				map[string]interface{}{
-					"database":    parameters.RdsParameters.Database,
-					"instance_id": parameters.RdsParameters.InstanceId,
+					"database":           parameters.RdsParameters.Database,
+					names.AttrInstanceID: parameters.RdsParameters.InstanceId,
 				},
 			},
 		})

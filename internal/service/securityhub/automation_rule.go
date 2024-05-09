@@ -205,7 +205,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"compliance_security_control_id":     stringFilterSchemaFramework(ctx),
 						"compliance_status":                  stringFilterSchemaFramework(ctx),
 						"confidence":                         numberFilterSchemaFramework(ctx),
-						"created_at":                         dateFilterSchemaFramework(ctx),
+						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx),
 						"criticality":                        numberFilterSchemaFramework(ctx),
 						names.AttrDescription:                stringFilterSchemaFramework(ctx),
 						"first_observed_at":                  dateFilterSchemaFramework(ctx),

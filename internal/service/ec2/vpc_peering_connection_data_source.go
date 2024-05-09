@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_peering_connection")
@@ -50,7 +51,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				},
 			},
 			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -67,7 +68,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -126,13 +127,13 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -148,15 +149,15 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.VpcPeeringConnectionIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	input.Filters = newAttributeFilterList(
 		map[string]string{
-			"status-code":                   d.Get("status").(string),
-			"requester-vpc-info.vpc-id":     d.Get("vpc_id").(string),
-			"requester-vpc-info.owner-id":   d.Get("owner_id").(string),
+			"status-code":                   d.Get(names.AttrStatus).(string),
+			"requester-vpc-info.vpc-id":     d.Get(names.AttrVPCID).(string),
+			"requester-vpc-info.owner-id":   d.Get(names.AttrOwnerID).(string),
 			"requester-vpc-info.cidr-block": d.Get("cidr_block").(string),
 			"accepter-vpc-info.vpc-id":      d.Get("peer_vpc_id").(string),
 			"accepter-vpc-info.owner-id":    d.Get("peer_owner_id").(string),
@@ -164,7 +165,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		},
 	)
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
@@ -185,9 +186,9 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId))
-	d.Set("status", vpcPeeringConnection.Status.Code)
-	d.Set("vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)
-	d.Set("owner_id", vpcPeeringConnection.RequesterVpcInfo.OwnerId)
+	d.Set(names.AttrStatus, vpcPeeringConnection.Status.Code)
+	d.Set(names.AttrVPCID, vpcPeeringConnection.RequesterVpcInfo.VpcId)
+	d.Set(names.AttrOwnerID, vpcPeeringConnection.RequesterVpcInfo.OwnerId)
 	d.Set("cidr_block", vpcPeeringConnection.RequesterVpcInfo.CidrBlock)
 
 	cidrBlockSet := []interface{}{}
@@ -237,7 +238,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("peer_region", vpcPeeringConnection.AccepterVpcInfo.Region)
 
-	if err := d.Set("tags", KeyValueTags(ctx, vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

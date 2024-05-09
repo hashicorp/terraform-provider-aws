@@ -58,7 +58,7 @@ func resourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -233,7 +233,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	address := outputRaw.(*types.Address)
 	allocationID := aws.ToString(address.AllocationId)
 	d.Set("allocation_id", allocationID)
-	d.Set("arn", eipARN(meta.(*conns.AWSClient), allocationID))
+	d.Set(names.AttrARN, eipARN(meta.(*conns.AWSClient), allocationID))
 	d.Set("association_id", address.AssociationId)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)

@@ -9,17 +9,18 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // aws_autoscaling_group resource's Schema @v5.11.0 minus validators.
 func resourceGroupV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -95,7 +96,7 @@ func resourceGroupV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -107,7 +108,7 @@ func resourceGroupV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -182,17 +183,17 @@ func resourceGroupV0() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -302,7 +303,7 @@ func resourceGroupV0() *schema.Resource {
 													Optional: true,
 													Computed: true,
 												},
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
 													Optional: true,
 													Default:  "$Default",
@@ -327,11 +328,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
@@ -358,11 +359,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
@@ -392,11 +393,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
@@ -444,11 +445,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																		},
@@ -461,11 +462,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
@@ -478,11 +479,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																		},
@@ -495,11 +496,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
@@ -524,11 +525,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeFloat,
 																			Optional: true,
 																		},
@@ -541,11 +542,11 @@ func resourceGroupV0() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:     schema.TypeInt,
 																			Optional: true,
 																		},
@@ -555,7 +556,7 @@ func resourceGroupV0() *schema.Resource {
 														},
 													},
 												},
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -576,7 +577,7 @@ func resourceGroupV0() *schema.Resource {
 																Optional: true,
 																Computed: true,
 															},
-															"version": {
+															names.AttrVersion: {
 																Type:     schema.TypeString,
 																Optional: true,
 																Default:  "$Default",
@@ -597,13 +598,13 @@ func resourceGroupV0() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -637,7 +638,7 @@ func resourceGroupV0() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -645,7 +646,7 @@ func resourceGroupV0() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -673,7 +674,7 @@ func resourceGroupV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

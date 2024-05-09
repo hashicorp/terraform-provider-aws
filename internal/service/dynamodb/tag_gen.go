@@ -28,7 +28,7 @@ func resourceTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,11 +50,11 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	identifier := d.Get("resource_arn").(string)
+	identifier := d.Get(names.AttrResourceARN).(string)
 	key := d.Get(names.AttrKey).(string)
 	value := d.Get(names.AttrValue).(string)
 
-	if err := updateTagsV2(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
+	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", names.DynamoDB, identifier, key, err)
 	}
 
@@ -84,7 +84,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", names.DynamoDB, identifier, key, err)
 	}
 
-	d.Set("resource_arn", identifier)
+	d.Set(names.AttrResourceARN, identifier)
 	d.Set(names.AttrKey, key)
 	d.Set(names.AttrValue, value)
 
@@ -100,7 +100,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTagsV2(ctx, conn, identifier, nil, map[string]string{key: d.Get(names.AttrValue).(string)}); err != nil {
+	if err := updateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get(names.AttrValue).(string)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating %s resource (%s) tag (%s): %s", names.DynamoDB, identifier, key, err)
 	}
 
@@ -116,7 +116,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTagsV2(ctx, conn, identifier, map[string]string{key: d.Get(names.AttrValue).(string)}, nil); err != nil {
+	if err := updateTags(ctx, conn, identifier, map[string]string{key: d.Get(names.AttrValue).(string)}, nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting %s resource (%s) tag (%s): %s", names.DynamoDB, identifier, key, err)
 	}
 

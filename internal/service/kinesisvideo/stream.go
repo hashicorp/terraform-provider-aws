@@ -44,12 +44,12 @@ func ResourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -71,7 +71,7 @@ func ResourceStream() *schema.Resource {
 				),
 			},
 
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,7 +88,7 @@ func ResourceStream() *schema.Resource {
 				Computed: true,
 			},
 
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	input := &kinesisvideo.CreateStreamInput{
-		StreamName:           aws.String(d.Get("name").(string)),
+		StreamName:           aws.String(d.Get(names.AttrName).(string)),
 		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -113,7 +113,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.DeviceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -163,16 +163,16 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "describing Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", resp.StreamInfo.StreamName)
+	d.Set(names.AttrName, resp.StreamInfo.StreamName)
 	d.Set("data_retention_in_hours", resp.StreamInfo.DataRetentionInHours)
 	d.Set("device_name", resp.StreamInfo.DeviceName)
-	d.Set("kms_key_id", resp.StreamInfo.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, resp.StreamInfo.KmsKeyId)
 	d.Set("media_type", resp.StreamInfo.MediaType)
-	d.Set("arn", resp.StreamInfo.StreamARN)
+	d.Set(names.AttrARN, resp.StreamInfo.StreamARN)
 	if err := d.Set("creation_time", resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
-	d.Set("version", resp.StreamInfo.Version)
+	d.Set(names.AttrVersion, resp.StreamInfo.Version)
 
 	return diags
 }
@@ -183,7 +183,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get("version").(string)),
+		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 	}
 
 	if v, ok := d.GetOk("device_name"); ok {
@@ -220,7 +220,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if _, err := conn.DeleteStreamWithContext(ctx, &kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get("version").(string)),
+		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 	}); err != nil {
 		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
 			return diags

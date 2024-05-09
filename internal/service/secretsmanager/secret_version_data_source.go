@@ -26,7 +26,7 @@ func dataSourceSecretVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(id)
 	d.Set(names.AttrARN, output.ARN)
-	d.Set("created_date", aws.String(output.CreatedDate.Format(time.RFC3339)))
+	d.Set(names.AttrCreatedDate, aws.String(output.CreatedDate.Format(time.RFC3339)))
 	d.Set("secret_id", secretID)
 	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)

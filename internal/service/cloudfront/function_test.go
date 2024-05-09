@@ -46,14 +46,14 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("function/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 					resource.TestCheckResourceAttr(resourceName, "runtime", "cloudfront-js-1.0"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", ""),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
 				),
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccCloudFrontFunction_publish(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "live_stage_etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 		},
@@ -153,14 +153,14 @@ func TestAccCloudFrontFunction_associated(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					// After creation the function will be in UNASSOCIATED status.
 					// Apply the same configuration and it will move to DEPLOYED status.
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_associated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 				),
 			},
 			{
@@ -233,7 +233,7 @@ func TestAccCloudFrontFunction_UpdateCodeAndPublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNPUBLISHED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNPUBLISHED"),
 				),
 			},
 			{
@@ -242,7 +242,7 @@ func TestAccCloudFrontFunction_UpdateCodeAndPublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "etag", "E3UN6WX5RRO2AG"),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "UNASSOCIATED"),
 				),
 			},
 			{
@@ -307,7 +307,7 @@ func TestAccCloudFrontFunction_KeyValueStoreAssociations(t *testing.T) {
 				Config: testAccFunctionConfig_KeyValueStoreAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", names.AttrARN),
 				),
 			},
 			{
@@ -320,14 +320,14 @@ func TestAccCloudFrontFunction_KeyValueStoreAssociations(t *testing.T) {
 				Config: testAccFunctionConfig_KeyValueStoreAssociationCodeUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", names.AttrARN),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_KeyValueStoreAssociationUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test2", names.AttrARN),
 				),
 			},
 		},

@@ -36,7 +36,7 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("^{\"Id\":\"default\".+"))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("^{\"Id\":\"default\".+"))),
 			},
 			{
 				ResourceName:      resourceName,
@@ -47,8 +47,8 @@ func TestAccBackupVaultPolicy_basic(t *testing.T) {
 				Config: testAccVaultPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("^{\"Id\":\"default\".+")),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("backup:ListRecoveryPointsByBackupVault")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("^{\"Id\":\"default\".+")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("backup:ListRecoveryPointsByBackupVault")),
 				),
 			},
 		},
@@ -71,7 +71,7 @@ func TestAccBackupVaultPolicy_eventualConsistency(t *testing.T) {
 				Config: testAccVaultPolicyConfig_eventualConsistency(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("^{\"Id\":\"default\".+"))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("^{\"Id\":\"default\".+"))),
 			},
 		},
 	})
@@ -142,7 +142,7 @@ func TestAccBackupVaultPolicy_ignoreEquivalent(t *testing.T) {
 				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("\"Version\":\"2012-10-17\""))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("\"Version\":\"2012-10-17\""))),
 			},
 			{
 				Config:   testAccVaultPolicyConfig_newOrder(rName),
