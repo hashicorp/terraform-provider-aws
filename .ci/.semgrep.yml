@@ -1025,3 +1025,13 @@ rules:
       - pattern: '"instance_id"'
     severity: ERROR
     fix: "names.AttrInstanceID"
+  - id: literal-vpc_security_group_ids-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrVPCSecurityGroupIDs` for the string literal "vpc_security_group_ids"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"vpc_security_group_ids"'
+    severity: ERROR
+    fix: "names.AttrVPCSecurityGroupIDs"
