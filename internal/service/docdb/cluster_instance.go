@@ -70,7 +70,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -192,7 +192,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	).Generate()
 	input := &docdb.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
+		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(identifier),
 		Engine:                  aws.String(d.Get("engine").(string)),
@@ -264,7 +264,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
-	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	if db.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
