@@ -72,7 +72,7 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -195,7 +195,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
+	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set("iops", snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)

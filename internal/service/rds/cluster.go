@@ -226,7 +226,7 @@ func ResourceCluster() *schema.Resource {
 				Default:      EngineModeProvisioned,
 				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -639,7 +639,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -765,7 +765,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -1027,7 +1027,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -1371,15 +1371,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		// This can happen when updates are deferred (apply_immediately = false), and
 		// multiple applies occur before the maintenance window. In this case,
 		// continue sending the desired engine_version as part of the modify request.
-		if d.Get("engine_version").(string) != d.Get("engine_version_actual").(string) {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.Get(names.AttrEngineVersion).(string) != d.Get("engine_version_actual").(string) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		if d.HasChange("iam_database_authentication_enabled") {
@@ -1669,7 +1669,7 @@ func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, rol
 }
 
 func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
-	oldVersion := d.Get("engine_version").(string)
+	oldVersion := d.Get(names.AttrEngineVersion).(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {

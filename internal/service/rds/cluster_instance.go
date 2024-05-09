@@ -117,7 +117,7 @@ func ResourceClusterInstance() *schema.Resource {
 					validation.StringInSlice(ClusterInstanceEngine_Values(), false),
 				),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -275,7 +275,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.CustomIamInstanceProfile = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -552,7 +552,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
-	oldVersion := d.Get("engine_version").(string)
+	oldVersion := d.Get(names.AttrEngineVersion).(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {

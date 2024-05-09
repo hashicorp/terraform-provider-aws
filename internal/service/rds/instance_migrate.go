@@ -58,7 +58,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -565,7 +565,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

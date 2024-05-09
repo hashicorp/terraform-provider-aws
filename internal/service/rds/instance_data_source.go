@@ -96,7 +96,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -274,7 +274,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(instance.EnabledCloudwatchLogsExports))
 	d.Set("engine", instance.Engine)
-	d.Set("engine_version", instance.EngineVersion)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set("iops", instance.Iops)
 	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
 	d.Set("license_model", instance.LicenseModel)
