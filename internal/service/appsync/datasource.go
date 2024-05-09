@@ -76,7 +76,7 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -107,7 +107,7 @@ func ResourceDataSource() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -202,7 +202,7 @@ func ResourceDataSource() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -241,7 +241,7 @@ func ResourceDataSource() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -524,7 +524,7 @@ func expandDynamoDBDataSourceConfig(l []interface{}, currentRegion string) *apps
 		TableName: aws.String(configured["table_name"].(string)),
 	}
 
-	if v, ok := configured["region"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
 		result.AwsRegion = aws.String(v.(string))
 	}
 
@@ -573,8 +573,8 @@ func flattenDynamoDBDataSourceConfig(config *appsync.DynamodbDataSourceConfig) [
 	}
 
 	result := map[string]interface{}{
-		"region":     aws.StringValue(config.AwsRegion),
-		"table_name": aws.StringValue(config.TableName),
+		names.AttrRegion: aws.StringValue(config.AwsRegion),
+		"table_name":     aws.StringValue(config.TableName),
 	}
 
 	if config.UseCallerCredentials != nil {
@@ -626,7 +626,7 @@ func expandElasticsearchDataSourceConfig(l []interface{}, currentRegion string) 
 		Endpoint:  aws.String(configured["endpoint"].(string)),
 	}
 
-	if v, ok := configured["region"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
 		result.AwsRegion = aws.String(v.(string))
 	}
 
@@ -645,7 +645,7 @@ func expandOpenSearchServiceDataSourceConfig(l []interface{}, currentRegion stri
 		Endpoint:  aws.String(configured["endpoint"].(string)),
 	}
 
-	if v, ok := configured["region"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
 		result.AwsRegion = aws.String(v.(string))
 	}
 
@@ -658,8 +658,8 @@ func flattenElasticsearchDataSourceConfig(config *appsync.ElasticsearchDataSourc
 	}
 
 	result := map[string]interface{}{
-		"endpoint": aws.StringValue(config.Endpoint),
-		"region":   aws.StringValue(config.AwsRegion),
+		"endpoint":       aws.StringValue(config.Endpoint),
+		names.AttrRegion: aws.StringValue(config.AwsRegion),
 	}
 
 	return []map[string]interface{}{result}
@@ -671,8 +671,8 @@ func flattenOpenSearchServiceDataSourceConfig(config *appsync.OpenSearchServiceD
 	}
 
 	result := map[string]interface{}{
-		"endpoint": aws.StringValue(config.Endpoint),
-		"region":   aws.StringValue(config.AwsRegion),
+		"endpoint":       aws.StringValue(config.Endpoint),
+		names.AttrRegion: aws.StringValue(config.AwsRegion),
 	}
 
 	return []map[string]interface{}{result}
@@ -870,7 +870,7 @@ func testAccDataSourceConfig_expandRDSHTTPEndpoint(l []interface{}, currentRegio
 		AwsRegion: aws.String(currentRegion),
 	}
 
-	if v, ok := configured["region"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
 		result.AwsRegion = aws.String(v.(string))
 	}
 
@@ -901,7 +901,7 @@ func flattenRDSHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[s
 	result := map[string]interface{}{}
 
 	if config.AwsRegion != nil {
-		result["region"] = aws.StringValue(config.AwsRegion)
+		result[names.AttrRegion] = aws.StringValue(config.AwsRegion)
 	}
 
 	if config.AwsSecretStoreArn != nil {
