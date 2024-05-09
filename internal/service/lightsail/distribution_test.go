@@ -91,7 +91,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.behavior", "cache"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.region_name"),

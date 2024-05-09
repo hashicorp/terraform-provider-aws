@@ -47,7 +47,7 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`Certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 					// When using a .test domain, Domain Validation Records are not returned
@@ -114,11 +114,11 @@ func TestAccLightsailCertificate_DomainValidationOptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          domainName,
+						names.AttrDomainName:   domainName,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          subjectAlternativeName,
+						names.AttrDomainName:   subjectAlternativeName,
 						"resource_record_type": "CNAME",
 					}),
 				),
