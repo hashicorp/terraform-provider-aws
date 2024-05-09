@@ -398,7 +398,7 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -542,7 +542,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+	if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 		inputR.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		inputC.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
@@ -715,7 +715,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("snapshot_copy", flattenSnapshotCopy(rsc.ClusterSnapshotCopyStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_copy: %s", err)
 	}
-	d.Set("vpc_security_group_ids", tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)
 	}))
 
@@ -821,8 +821,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
 		}
 
 		_, err := conn.ModifyClusterWithContext(ctx, input)
