@@ -559,7 +559,7 @@ func UserAttributeKeyMatchesStandardAttribute(input string) bool {
 		"phone_number_verified",
 		"picture",
 		"preferred_username",
-		"profile",
+		names.AttrProfile,
 		"sub",
 		"updated_at",
 		"website",
