@@ -149,7 +149,7 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*route53resolver_sdkv1.Route53Resolver, error) {
 	sess := config["session"].(*session_sdkv1.Session)
 
-	return route53resolver_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return route53resolver_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
