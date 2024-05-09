@@ -52,7 +52,7 @@ func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", tgwResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, tgwResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_arn", tgwResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_peering_attachment_id"),

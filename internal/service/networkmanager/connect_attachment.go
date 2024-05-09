@@ -103,7 +103,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -232,7 +232,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("options", nil)
 	}
 	d.Set("owner_account_id", a.OwnerAccountId)
-	d.Set("resource_arn", a.ResourceArn)
+	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set(names.AttrState, a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
