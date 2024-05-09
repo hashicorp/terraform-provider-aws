@@ -469,8 +469,8 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 						t.Fatalf("making out-of-band change: %s", err)
 					}
 				},
-				Config:   testAccTableItemConfig_map(tableName, names.AttrKey, newItem),
-				PlanOnly: true,
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
