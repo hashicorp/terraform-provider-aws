@@ -112,7 +112,7 @@ func ResourceTargetGroup() *schema.Resource {
 										Computed:     true,
 										ValidateFunc: validation.IsPortNumber,
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										Computed:         true,
@@ -158,7 +158,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -431,7 +431,7 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	tfMap := map[string]interface{}{
 		"ip_address_type":                apiObject.IpAddressType,
 		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
-		"protocol":                       apiObject.Protocol,
+		names.AttrProtocol:               apiObject.Protocol,
 		"protocol_version":               apiObject.ProtocolVersion,
 	}
 
@@ -456,7 +456,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"protocol":         apiObject.Protocol,
+		names.AttrProtocol: apiObject.Protocol,
 		"protocol_version": apiObject.ProtocolVersion,
 	}
 
@@ -530,7 +530,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
@@ -576,7 +576,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
