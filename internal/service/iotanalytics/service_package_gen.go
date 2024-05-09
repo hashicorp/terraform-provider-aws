@@ -39,7 +39,7 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*iotanalytics_sdkv1.IoTAnalytics, error) {
 	sess := config["session"].(*session_sdkv1.Session)
 
-	return iotanalytics_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return iotanalytics_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
