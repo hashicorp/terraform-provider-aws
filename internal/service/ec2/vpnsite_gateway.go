@@ -141,7 +141,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	setTagsOut(ctx, vpnGateway.Tags)
+	setTagsOutV2(ctx, vpnGateway.Tags)
 
 	return diags
 }

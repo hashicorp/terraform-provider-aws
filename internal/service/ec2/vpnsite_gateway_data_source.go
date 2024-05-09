@@ -136,7 +136,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrAvailabilityZone, vgw.AvailabilityZone)
 	d.Set(names.AttrState, vgw.State)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

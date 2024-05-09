@@ -114,7 +114,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("ip_address", cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
