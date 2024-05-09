@@ -378,7 +378,7 @@ vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,,,x,,,,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,,,x,,,,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,,,x,,,,,,Part of EC2
-wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,1,,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,,
+wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,,2,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,Scope: awstypes.ScopeRegional,
 waf,waf,waf,waf,,waf,,,WAF,WAF,,1,,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
 waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,1,,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,,,,No SDK support

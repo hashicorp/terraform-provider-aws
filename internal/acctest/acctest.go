@@ -31,13 +31,14 @@ import (
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1262,12 +1263,12 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
 	}
 
-	conn := Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 	input := &wafv2.ListWebACLsInput{
-		Scope: aws.String(wafv2.ScopeCloudfront),
+		Scope: wafv2types.ScopeCloudfront,
 	}
 
-	_, err := conn.ListWebACLsWithContext(ctx, input)
+	_, err := conn.ListWebACLs(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
