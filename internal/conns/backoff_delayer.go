@@ -39,10 +39,10 @@ func (c *v1CompatibleBackoff) BackoffDelay(attempt int, err error) (time.Duratio
 	if actualRetryCount < 63-attempt {
 		delay = time.Duration(1<<uint64(attempt)) * getJitterDelay(minDelay)
 		if delay > maxDelay {
-			delay = getJitterDelay(maxDelay / 2)
+			delay = getJitterDelay(maxDelay / 2) //nolint:mnd
 		}
 	} else {
-		delay = getJitterDelay(maxDelay / 2)
+		delay = getJitterDelay(maxDelay / 2) //nolint:mnd
 	}
 
 	return delay, nil
