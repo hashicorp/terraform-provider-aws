@@ -60,7 +60,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "child_directed", "false"),
 					resource.TestCheckNoResourceAttr(rName, "clarification_prompt"),
 					resource.TestCheckResourceAttr(rName, "create_version", "false"),
-					acctest.CheckResourceAttrRFC3339(rName, "created_date"),
+					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
 					resource.TestCheckResourceAttr(rName, "detect_sentiment", "false"),
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", "false"),

@@ -37,7 +37,7 @@ func TestAccLexModelsBotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "child_directed", resourceName, "child_directed"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreatedDate, resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "detect_sentiment", resourceName, "detect_sentiment"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_model_improvements", resourceName, "enable_model_improvements"),
