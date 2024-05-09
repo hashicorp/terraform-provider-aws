@@ -965,3 +965,13 @@ rules:
       - pattern: '"engine_version"'
     severity: ERROR
     fix: "names.AttrEngineVersion"
+  - id: literal-domain_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDomainName` for the string literal "domain_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"domain_name"'
+    severity: ERROR
+    fix: "names.AttrDomainName"
