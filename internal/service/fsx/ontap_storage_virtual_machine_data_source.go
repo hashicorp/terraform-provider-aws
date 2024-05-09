@@ -74,7 +74,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -225,7 +225,7 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	}
 	d.Set(names.AttrARN, svm.ResourceARN)
 	d.Set("creation_time", svm.CreationTime.Format(time.RFC3339))
-	if err := d.Set("endpoints", flattenSvmEndpoints(svm.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenSvmEndpoints(svm.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("file_system_id", svm.FileSystemId)

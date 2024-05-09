@@ -97,7 +97,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{

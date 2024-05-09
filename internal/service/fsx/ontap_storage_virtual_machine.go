@@ -121,7 +121,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -295,7 +295,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
 	d.Set(names.AttrARN, storageVirtualMachine.ResourceARN)
-	if err := d.Set("endpoints", flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
