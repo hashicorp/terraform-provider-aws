@@ -70,6 +70,7 @@ This data source exports the following attributes in addition to the arguments a
 * [invite_message_template](#invite-message-template) - Templates for invitation messages.
 
 ### invite message template
+
 * `email_message` - Email message content.
 * `email_subject` - Email message subject.
 * `sms_message` - SMS message content.
@@ -90,7 +91,6 @@ This data source exports the following attributes in addition to the arguments a
 ### lambda config
 
 * [custom_email_sender](#lambda-function) - Configuration for a custom email sender Lambda function.
-
 * [custom_sms_sender](#lambda-function) - Configuration for a custom SMS sender Lambda function
 * [pre_token_generation_config](#lambda-function) - Configuration for a Lambda function that executes before token generation.
 
