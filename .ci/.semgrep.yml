@@ -1075,3 +1075,13 @@ rules:
       - pattern: '"created_date"'
     severity: ERROR
     fix: "names.AttrCreatedDate"
+  - id: literal-cluster_identifier-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrClusterIdentifier` for the string literal "cluster_identifier"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cluster_identifier"'
+    severity: ERROR
+    fix: "names.AttrClusterIdentifier"
