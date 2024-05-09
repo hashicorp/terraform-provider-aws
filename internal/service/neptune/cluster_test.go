@@ -59,7 +59,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
@@ -136,7 +136,7 @@ func TestAccNeptuneCluster_identifierGenerated(t *testing.T) {
 				Config: testAccClusterConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "cluster_identifier", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrClusterIdentifier, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-"),
 				),
 			},
@@ -160,7 +160,7 @@ func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
 				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "cluster_identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrClusterIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -637,7 +637,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
