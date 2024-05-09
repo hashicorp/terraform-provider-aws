@@ -44,7 +44,7 @@ func resourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)
 	d.Set(names.AttrEnabled, apiKey.Enabled)
