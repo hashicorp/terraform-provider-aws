@@ -36,7 +36,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -183,7 +183,7 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 	resourceType := d.Get("resource_type").(string)
 
 	input := &connect.AssociateInstanceStorageConfigInput{
@@ -242,7 +242,7 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 	storageConfig := resp.StorageConfig
 
 	d.Set("association_id", storageConfig.AssociationId)
-	d.Set("instance_id", instanceId)
+	d.Set(names.AttrInstanceID, instanceId)
 	d.Set("resource_type", resourceType)
 
 	if err := d.Set("storage_config", flattenStorageConfig(storageConfig)); err != nil {

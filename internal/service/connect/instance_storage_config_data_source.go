@@ -27,7 +27,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -147,7 +147,7 @@ func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	associationId := d.Get("association_id").(string)
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 	resourceType := d.Get("resource_type").(string)
 
 	input := &connect.DescribeInstanceStorageConfigInput{

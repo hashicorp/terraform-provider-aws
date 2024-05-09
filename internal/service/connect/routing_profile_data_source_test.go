@@ -33,7 +33,7 @@ func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_outbound_queue_id", resourceName, "default_outbound_queue_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "media_concurrencies.#", resourceName, "media_concurrencies.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "VOICE",
@@ -86,7 +86,7 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "default_outbound_queue_id", resourceName, "default_outbound_queue_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "media_concurrencies.#", resourceName, "media_concurrencies.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "VOICE",

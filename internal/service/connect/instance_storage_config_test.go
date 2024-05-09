@@ -39,7 +39,7 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeChatTranscripts),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
