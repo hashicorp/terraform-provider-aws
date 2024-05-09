@@ -141,7 +141,7 @@ func testAccCheckIdcApplicationDestroy(ctx context.Context) resource.TestCheckFu
 			if rs.Type != "aws_redshift_idc_application" {
 				continue
 			}
-			_, err := tfredshift.FindIDCApplicationByArn(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -171,7 +171,7 @@ func testAccCheckIdcApplicationExists(ctx context.Context, name string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		_, err := tfredshift.FindIDCApplicationByArn(ctx, conn, rs.Primary.ID)
+		_, err := tfredshift.FindIDCApplicationByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

@@ -563,7 +563,7 @@ func findResourcePolicy(ctx context.Context, conn *redshift.Client, input *redsh
 	return output.ResourcePolicy, nil
 }
 
-func findIDCApplicationByArn(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.RedshiftIdcApplication, error) {
+func findIDCApplicationByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.RedshiftIdcApplication, error) {
 	input := &redshift.DescribeRedshiftIdcApplicationsInput{
 		RedshiftIdcApplicationArn: aws.String(arn),
 	}
