@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.1
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.4
