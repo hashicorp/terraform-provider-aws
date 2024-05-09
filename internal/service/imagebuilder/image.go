@@ -165,7 +165,7 @@ func ResourceImage() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -460,7 +460,7 @@ func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap[names.AttrAccountID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {
