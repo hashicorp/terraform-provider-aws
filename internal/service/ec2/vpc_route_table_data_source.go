@@ -31,7 +31,7 @@ func DataSourceRouteTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -152,7 +152,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -190,7 +190,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	req := &ec2.DescribeRouteTablesInput{}
 	vpcId, vpcIdOk := d.GetOk(names.AttrVPCID)
-	subnetId, subnetIdOk := d.GetOk("subnet_id")
+	subnetId, subnetIdOk := d.GetOk(names.AttrSubnetID)
 	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
 	rtbId, rtbOk := d.GetOk("route_table_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
@@ -349,7 +349,7 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 		m["route_table_association_id"] = aws.StringValue(a.RouteTableAssociationId)
 		// GH[11134]
 		if a.SubnetId != nil {
-			m["subnet_id"] = aws.StringValue(a.SubnetId)
+			m[names.AttrSubnetID] = aws.StringValue(a.SubnetId)
 		}
 		if a.GatewayId != nil {
 			m["gateway_id"] = aws.StringValue(a.GatewayId)

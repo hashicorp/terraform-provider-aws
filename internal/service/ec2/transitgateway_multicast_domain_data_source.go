@@ -37,7 +37,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -214,7 +214,7 @@ func flattenTransitGatewayMulticastDomainAssociation(apiObject *ec2.TransitGatew
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Subnet.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TransitGatewayAttachmentId; v != nil {

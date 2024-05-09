@@ -44,6 +44,7 @@ const (
 	AttrSecurityGroups             = "security_groups"
 	AttrState                      = "state"
 	AttrStatus                     = "status"
+	AttrSubnetID                   = "subnet_id"
 	AttrSubnetIDs                  = "subnet_ids"
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"

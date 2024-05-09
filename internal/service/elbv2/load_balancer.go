@@ -284,7 +284,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1045,8 +1045,8 @@ func flattenSubnetsFromAvailabilityZones(apiObjects []*elbv2.AvailabilityZone) [
 func flattenSubnetMappingsFromAvailabilityZones(apiObjects []*elbv2.AvailabilityZone) []map[string]interface{} {
 	return tfslices.ApplyToAll(apiObjects, func(apiObject *elbv2.AvailabilityZone) map[string]interface{} {
 		tfMap := map[string]interface{}{
-			"outpost_id": aws.StringValue(apiObject.OutpostId),
-			"subnet_id":  aws.StringValue(apiObject.SubnetId),
+			"outpost_id":       aws.StringValue(apiObject.OutpostId),
+			names.AttrSubnetID: aws.StringValue(apiObject.SubnetId),
 		}
 		if apiObjects := apiObject.LoadBalancerAddresses; len(apiObjects) > 0 {
 			apiObject := apiObjects[0]
@@ -1362,7 +1362,7 @@ func expandSubnetMapping(tfMap map[string]interface{}) *elbv2.SubnetMapping {
 		apiObject.PrivateIPv4Address = aws.String(v)
 	}
 
-	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
 	}
 

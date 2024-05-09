@@ -272,7 +272,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -537,7 +537,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ssh_key_name", instance.SshKeyName)
 	d.Set("stack_id", instance.StackId)
 	d.Set(names.AttrStatus, instance.Status)
-	d.Set("subnet_id", instance.SubnetId)
+	d.Set(names.AttrSubnetID, instance.SubnetId)
 	d.Set("tenancy", instance.Tenancy)
 	d.Set("virtualization_type", instance.VirtualizationType)
 
@@ -617,7 +617,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		req.SshKeyName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		req.SubnetId = aws.String(v.(string))
 	}
 

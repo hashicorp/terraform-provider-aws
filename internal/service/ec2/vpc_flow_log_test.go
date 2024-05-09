@@ -113,7 +113,7 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
 				),
 			},

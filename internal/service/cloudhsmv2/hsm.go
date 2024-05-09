@@ -45,7 +45,7 @@ func resourceHSM() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrAvailabilityZone, "subnet_id"},
+				ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
 			},
 			"cluster_id": {
 				Type:     schema.TypeString,
@@ -70,12 +70,12 @@ func resourceHSM() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrAvailabilityZone, "subnet_id"},
+				ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
 			},
 		},
 	}
@@ -99,7 +99,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 			return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): %s", clusterID, err)
 		}
 
-		subnetID := d.Get("subnet_id").(string)
+		subnetID := d.Get(names.AttrSubnetID).(string)
 		for az, sn := range cluster.SubnetMapping {
 			if sn == subnetID {
 				input.AvailabilityZone = aws.String(az)
@@ -153,7 +153,7 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("hsm_id", hsm.HsmId)
 	d.Set("hsm_state", hsm.State)
 	d.Set("ip_address", hsm.EniIp)
-	d.Set("subnet_id", hsm.SubnetId)
+	d.Set(names.AttrSubnetID, hsm.SubnetId)
 
 	return diags
 }

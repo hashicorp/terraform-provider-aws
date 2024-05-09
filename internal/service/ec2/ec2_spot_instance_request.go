@@ -325,7 +325,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set("subnet_id", ni.SubnetId)
+				d.Set(names.AttrSubnetID, ni.SubnetId)
 				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
@@ -336,7 +336,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 			}
 		}
 	} else {
-		d.Set("subnet_id", instance.SubnetId)
+		d.Set(names.AttrSubnetID, instance.SubnetId)
 		d.Set("primary_network_interface_id", "")
 	}
 

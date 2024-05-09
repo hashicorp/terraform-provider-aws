@@ -97,7 +97,7 @@ func ResourceNATGateway() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"secondary_private_ip_address_count"},
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -147,7 +147,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -207,7 +207,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("secondary_allocation_ids", secondaryAllocationIDs)
 	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
-	d.Set("subnet_id", ng.SubnetId)
+	d.Set(names.AttrSubnetID, ng.SubnetId)
 
 	setTagsOut(ctx, ng.Tags)
 

@@ -324,7 +324,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -732,7 +732,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"subnet_id": {
+									names.AttrSubnetID: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -1292,7 +1292,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 		opts.TagSpecifications = tagsSpec
 	}
 
-	subnetId, hasSubnetId := d["subnet_id"]
+	subnetId, hasSubnetId := d[names.AttrSubnetID]
 	if hasSubnetId {
 		opts.SubnetId = aws.String(subnetId.(string))
 	}
@@ -1554,7 +1554,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *ec2.LaunchTemp
 		apiObject.SpotPrice = aws.String(v)
 	}
 
-	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
 	}
 
@@ -1924,13 +1924,13 @@ func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, r
 	}
 
 	if l.SubnetId != nil {
-		m["subnet_id"] = aws.StringValue(l.SubnetId)
+		m[names.AttrSubnetID] = aws.StringValue(l.SubnetId)
 	}
 
 	securityGroupIds := &schema.Set{F: schema.HashString}
 	if len(l.NetworkInterfaces) > 0 {
 		m["associate_public_ip_address"] = aws.BoolValue(l.NetworkInterfaces[0].AssociatePublicIpAddress)
-		m["subnet_id"] = aws.StringValue(l.NetworkInterfaces[0].SubnetId)
+		m[names.AttrSubnetID] = aws.StringValue(l.NetworkInterfaces[0].SubnetId)
 
 		for _, group := range l.NetworkInterfaces[0].Groups {
 			securityGroupIds.Add(aws.StringValue(group))
@@ -2096,7 +2096,7 @@ func hashLaunchSpecification(v interface{}) int {
 	if v, ok := m[names.AttrAvailabilityZone].(string); ok && v != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if v, ok := m["subnet_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrSubnetID].(string); ok && v != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType].(string)))
@@ -2202,7 +2202,7 @@ func flattenLaunchTemplateOverrides(apiObject *ec2.LaunchTemplateOverrides) map[
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {

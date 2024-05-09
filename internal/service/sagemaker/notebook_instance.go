@@ -142,7 +142,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -208,7 +208,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.RootAccess = aws.String(v.(string))
 	}
 
-	if s, ok := d.GetOk("subnet_id"); ok {
+	if s, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(s.(string))
 	}
 
@@ -262,7 +262,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrRoleARN, notebookInstance.RoleArn)
 	d.Set("root_access", notebookInstance.RootAccess)
 	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(notebookInstance.SecurityGroups))
-	d.Set("subnet_id", notebookInstance.SubnetId)
+	d.Set(names.AttrSubnetID, notebookInstance.SubnetId)
 	d.Set("url", notebookInstance.Url)
 	d.Set("volume_size", notebookInstance.VolumeSizeInGB)
 

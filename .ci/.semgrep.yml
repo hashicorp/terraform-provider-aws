@@ -1145,3 +1145,13 @@ rules:
       - pattern: '"protocol"'
     severity: ERROR
     fix: "names.AttrProtocol"
+  - id: literal-subnet_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSubnetID` for the string literal "subnet_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"subnet_id"'
+    severity: ERROR
+    fix: "names.AttrSubnetID"

@@ -41,7 +41,7 @@ func testAccHSM_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexache.MustCompile(`^hsm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_state", string(types.HsmStateActive)),
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test.0", names.AttrID),
 				),
 			},
 			{
