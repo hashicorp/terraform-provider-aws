@@ -156,7 +156,7 @@ func TestAccRedshiftLogging_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket_name", bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucketName, bucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(types.LogDestinationTypeS3)),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "testprefix/"),
 				),

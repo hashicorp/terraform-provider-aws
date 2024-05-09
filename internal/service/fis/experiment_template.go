@@ -158,7 +158,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -587,7 +587,7 @@ func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentT
 	raw := l[0].(map[string]interface{})
 
 	config := types.ExperimentTemplateS3LogConfigurationInput{
-		BucketName: aws.String(raw["bucket_name"].(string)),
+		BucketName: aws.String(raw[names.AttrBucketName].(string)),
 	}
 	if v, ok := raw["prefix"].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
@@ -907,7 +907,7 @@ func flattenS3Configuration(configured *types.ExperimentTemplateS3LogConfigurati
 
 	dataResources := make([]map[string]interface{}, 1)
 	dataResources[0] = make(map[string]interface{})
-	dataResources[0]["bucket_name"] = configured.BucketName
+	dataResources[0][names.AttrBucketName] = configured.BucketName
 	if aws.ToString(configured.Prefix) != "" {
 		dataResources[0]["prefix"] = configured.Prefix
 	}

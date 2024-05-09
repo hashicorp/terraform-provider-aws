@@ -42,7 +42,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket_name": {
+			names.AttrBucketName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -70,26 +70,26 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.CreateBucketAccessKeyInput{
-		BucketName: aws.String(d.Get("bucket_name").(string)),
+		BucketName: aws.String(d.Get(names.AttrBucketName).(string)),
 	}
 
 	out, err := conn.CreateBucketAccessKey(ctx, &in)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateBucketAccessKey), ResBucketAccessKey, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateBucketAccessKey), ResBucketAccessKey, d.Get(names.AttrBucketName).(string), err)
 	}
 
-	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string))
+	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get(names.AttrBucketName).(string))
 
 	if diag != nil {
 		return diag
 	}
 
-	idParts := []string{d.Get("bucket_name").(string), *out.AccessKey.AccessKeyId}
+	idParts := []string{d.Get(names.AttrBucketName).(string), *out.AccessKey.AccessKeyId}
 	id, err := flex.FlattenResourceId(idParts, BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketAccessKey, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketAccessKey, d.Get(names.AttrBucketName).(string), err)
 	}
 
 	d.SetId(id)
@@ -116,7 +116,7 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("access_key_id", out.AccessKeyId)
-	d.Set("bucket_name", d.Get("bucket_name").(string))
+	d.Set(names.AttrBucketName, d.Get(names.AttrBucketName).(string))
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrStatus, out.Status)
 

@@ -588,7 +588,7 @@ func ResourceInstance() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -969,7 +969,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			S3BucketName:            aws.String(tfMap["bucket_name"].(string)),
+			S3BucketName:            aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:                aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),

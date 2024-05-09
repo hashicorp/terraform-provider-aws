@@ -410,7 +410,7 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -721,7 +721,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			S3BucketName:        aws.String(tfMap["bucket_name"].(string)),
+			S3BucketName:        aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),

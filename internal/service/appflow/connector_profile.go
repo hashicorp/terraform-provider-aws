@@ -1094,7 +1094,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1300,7 +1300,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -2065,7 +2065,7 @@ func expandMarketoConnectorProfileProperties(m map[string]interface{}) *types.Ma
 
 func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.RedshiftConnectorProfileProperties {
 	properties := &types.RedshiftConnectorProfileProperties{
-		BucketName:        aws.String(m["bucket_name"].(string)),
+		BucketName:        aws.String(m[names.AttrBucketName].(string)),
 		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
 		RoleArn:           aws.String(m[names.AttrRoleARN].(string)),
 		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
@@ -2149,7 +2149,7 @@ func expandSlackConnectorProfileProperties(m map[string]interface{}) *types.Slac
 
 func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.SnowflakeConnectorProfileProperties {
 	properties := &types.SnowflakeConnectorProfileProperties{
-		BucketName: aws.String(m["bucket_name"].(string)),
+		BucketName: aws.String(m[names.AttrBucketName].(string)),
 		Stage:      aws.String(m["stage"].(string)),
 		Warehouse:  aws.String(m["warehouse"].(string)),
 	}
@@ -2294,7 +2294,7 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["bucket_name"] = aws.ToString(properties.BucketName)
+	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
 		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
@@ -2366,7 +2366,7 @@ func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConne
 		m["account_name"] = aws.ToString(properties.AccountName)
 	}
 
-	m["bucket_name"] = aws.ToString(properties.BucketName)
+	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
 		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)

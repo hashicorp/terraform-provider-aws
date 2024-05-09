@@ -1005,3 +1005,13 @@ rules:
       - pattern: '"database_name"'
     severity: ERROR
     fix: "names.AttrDatabaseName"
+  - id: literal-bucket_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrBucketName` for the string literal "bucket_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"bucket_name"'
+    severity: ERROR
+    fix: "names.AttrBucketName"
