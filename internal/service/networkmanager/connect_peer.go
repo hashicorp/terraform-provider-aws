@@ -111,7 +111,7 @@ func ResourceConnectPeer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -410,7 +410,7 @@ func flattenPeerConfiguration(apiObject *networkmanager.ConnectPeerConfiguration
 		confMap["peer_address"] = aws.StringValue(v)
 	}
 	if v := apiObject.Protocol; v != nil {
-		confMap["protocol"] = aws.StringValue(v)
+		confMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	return confMap

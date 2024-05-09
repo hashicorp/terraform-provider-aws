@@ -160,7 +160,7 @@ var (
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:      schema.TypeString,
 				Required:  true,
 				StateFunc: ProtocolStateFunc,
@@ -583,7 +583,7 @@ func SecurityGroupRuleHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
-	p := protocolForValue(m["protocol"].(string))
+	p := protocolForValue(m[names.AttrProtocol].(string))
 	buf.WriteString(fmt.Sprintf("%s-", p))
 	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
 
@@ -825,7 +825,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 		var perm ec2.IpPermission
 		m := mRaw.(map[string]interface{})
 
-		perm.IpProtocol = aws.String(protocolForValue(m["protocol"].(string)))
+		perm.IpProtocol = aws.String(protocolForValue(m[names.AttrProtocol].(string)))
 
 		if protocol, fromPort, toPort := aws.StringValue(perm.IpProtocol), m["from_port"].(int), m["to_port"].(int); protocol != "-1" {
 			perm.FromPort = aws.Int64(int64(fromPort))
@@ -978,7 +978,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 		// matching against self is required to detect rules that only include self
 		// as the rule. SecurityGroupIPPermGather parses the group out
 		// and replaces it with self if it's ID is found
-		localHash := idHash(rType, l["protocol"].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
+		localHash := idHash(rType, l[names.AttrProtocol].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
 
 		// loop remote rules, looking for a matching hash
 		for _, r := range remote {
@@ -989,7 +989,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 
 			// hash this remote rule and compare it for a match consideration with the
 			// local rule we're examining
-			rHash := idHash(rType, r["protocol"].(string), r["to_port"].(int64), r["from_port"].(int64), remoteSelfVal)
+			rHash := idHash(rType, r[names.AttrProtocol].(string), r["to_port"].(int64), r["from_port"].(int64), remoteSelfVal)
 			if rHash == localHash {
 				var numExpectedCidrs, numExpectedIpv6Cidrs, numExpectedPrefixLists, numExpectedSGs, numRemoteCidrs, numRemoteIpv6Cidrs, numRemotePrefixLists, numRemoteSGs int
 				var matchingCidrs []string
@@ -1274,7 +1274,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 // Duplicate ingress/egress block structure and fill out all
 // the required fields
 func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
-	var keys_to_copy = []string{names.AttrDescription, "from_port", "to_port", "protocol"}
+	var keys_to_copy = []string{names.AttrDescription, "from_port", "to_port", names.AttrProtocol}
 
 	dst := make(map[string]interface{})
 	for _, key := range keys_to_copy {
@@ -1306,7 +1306,7 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 	for _, rule := range rules {
 		r := rule.(map[string]interface{})
 
-		ruleHash := idCollapseHash(ruleset, r["protocol"].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r[names.AttrDescription].(string))
+		ruleHash := idCollapseHash(ruleset, r[names.AttrProtocol].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r[names.AttrDescription].(string))
 
 		if _, ok := collapsed[ruleHash]; ok {
 			if v, ok := r["self"]; ok && v.(bool) {
@@ -1527,7 +1527,7 @@ func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.
 		rule = make(map[string]interface{})
 		ruleMap[k] = rule
 	}
-	rule["protocol"] = aws.StringValue(perm.IpProtocol)
+	rule[names.AttrProtocol] = aws.StringValue(perm.IpProtocol)
 	rule["from_port"] = fromPort
 	rule["to_port"] = toPort
 	if desc != "" {

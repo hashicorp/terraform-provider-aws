@@ -1135,3 +1135,13 @@ rules:
       - pattern: '"auto_minor_version_upgrade"'
     severity: ERROR
     fix: "names.AttrAutoMinorVersionUpgrade"
+  - id: literal-protocol-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrProtocol` for the string literal "protocol"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"protocol"'
+    severity: ERROR
+    fix: "names.AttrProtocol"

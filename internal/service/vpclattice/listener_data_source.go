@@ -99,7 +99,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("listener_id", out.Id)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrPort, out.Port)
-	d.Set("protocol", out.Protocol)
+	d.Set(names.AttrProtocol, out.Protocol)
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_id", out.ServiceId)
 
