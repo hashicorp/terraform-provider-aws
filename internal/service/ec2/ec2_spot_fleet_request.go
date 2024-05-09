@@ -137,7 +137,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  true,
@@ -272,7 +272,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 								// Termination flag on the block device mapping entry for the root
 								// device volume." - bit.ly/ec2bdmap
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  true,
@@ -1341,7 +1341,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
@@ -1398,7 +1398,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
 			if v, ok := bd["encrypted"].(bool); ok && v {
@@ -1976,7 +1976,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.DeleteOnTermination != nil {
-				m["delete_on_termination"] = aws.BoolValue(ebs.DeleteOnTermination)
+				m[names.AttrDeleteOnTermination] = aws.BoolValue(ebs.DeleteOnTermination)
 			}
 
 			if ebs.SnapshotId != nil {
@@ -2041,7 +2041,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			if aws.StringValue(val.DeviceName) == aws.StringValue(rootDevName) {
 				m := make(map[string]interface{})
 				if val.Ebs.DeleteOnTermination != nil {
-					m["delete_on_termination"] = aws.BoolValue(val.Ebs.DeleteOnTermination)
+					m[names.AttrDeleteOnTermination] = aws.BoolValue(val.Ebs.DeleteOnTermination)
 				}
 
 				if val.Ebs.Encrypted != nil {
