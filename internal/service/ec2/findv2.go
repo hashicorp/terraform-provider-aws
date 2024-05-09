@@ -447,3 +447,221 @@ func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 
 	return tfresource.AssertSingleValueResult(output)
 }
+
+func FindVPNConnectionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConnection, error) {
+	input := &ec2.DescribeVpnConnectionsInput{
+		VpnConnectionIds: []string{id},
+	}
+
+	output, err := FindVPNConnection(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VpnStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VpnConnectionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVPNConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConnectionsInput) ([]awstypes.VpnConnection, error) {
+	output, err := conn.DescribeVpnConnections(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.VpnConnections, nil
+}
+
+func FindVPNConnection(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConnectionsInput) (*awstypes.VpnConnection, error) {
+	output, err := FindVPNConnections(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*awstypes.VpnStaticRoute, error) {
+	input := &ec2.DescribeVpnConnectionsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"route.destination-cidr-block": cidrBlock,
+			"vpn-connection-id":            vpnConnectionID,
+		}),
+	}
+
+	output, err := FindVPNConnection(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.Routes {
+		if aws.ToString(v.DestinationCidrBlock) == cidrBlock && v.State != awstypes.VpnStateDeleted {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("EC2 VPN Connection (%s) Route (%s) not found", vpnConnectionID, cidrBlock),
+	}
+}
+
+// FindVPNGatewayRoutePropagationExists returns NotFoundError if no route propagation for the specified VPN gateway is found.
+func FindVPNGatewayRoutePropagationExists(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
+	routeTable, err := FindRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range routeTable.PropagatingVgws {
+		if aws.ToString(v.GatewayId) == gatewayID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("Route Table (%s) VPN Gateway (%s) route propagation not found", routeTableID, gatewayID),
+	}
+}
+
+func FindVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*awstypes.VpcAttachment, error) {
+	vpnGateway, err := FindVPNGatewayByID(ctx, conn, vpnGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, vpcAttachment := range vpnGateway.VpcAttachments {
+		if aws.ToString(vpcAttachment.VpcId) == vpcID {
+			if state := vpcAttachment.State; state == awstypes.AttachmentStatusDetached {
+				return nil, &retry.NotFoundError{
+					Message:     string(state),
+					LastRequest: vpcID,
+				}
+			}
+
+			return &vpcAttachment, nil
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(vpcID)
+}
+
+func FindVPNGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnGateway, error) {
+	input := &ec2.DescribeVpnGatewaysInput{
+		VpnGatewayIds: []string{id},
+	}
+
+	output, err := FindVPNGateway(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VpnStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VpnGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVPNGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) (*awstypes.VpnGateway, error) {
+	output, err := FindVPNGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVPNGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) ([]awstypes.VpnGateway, error) {
+	output, err := conn.DescribeVpnGateways(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VpnGateways, nil
+}
+
+// FindRouteTableByID returns the route table corresponding to the specified identifier.
+// Returns NotFoundError if no route table is found.
+func FindRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		RouteTableIds: []string{routeTableID},
+	}
+
+	return FindRouteTableV2(ctx, conn, input)
+}
+
+func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
+	output, err := FindRouteTablesV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
+	output, err := conn.DescribeRouteTables(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.RouteTables, nil
+}
