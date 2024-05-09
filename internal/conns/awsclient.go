@@ -19,7 +19,6 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
@@ -62,16 +61,6 @@ func (c *AWSClient) CredentialsProvider(context.Context) aws_sdkv2.CredentialsPr
 
 func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
-}
-
-// DynamoDBConnForRegion returns an AWS SDK For Go v1 DynamoDB API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) DynamoDBConnForRegion(ctx context.Context, region string) *dynamodb_sdkv1.DynamoDB {
-	if region == c.Region {
-		return c.DynamoDBConn(ctx)
-	}
-	return dynamodb_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
 // DSConnForRegion returns an AWS SDK For Go v1 DS API client for the specified AWS Region.

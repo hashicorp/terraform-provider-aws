@@ -126,7 +126,7 @@ docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocumentDB,
 docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,,,DocDB Elastic,ListClusters,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,x,,,,,drs,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,
-dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
+dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,x,,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
 dax,dax,dax,dax,,dax,,,DAX,DAX,,,2,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,,,DAX,DescribeClusters,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,x,,,,,DynamoDB Streams,,,
 ,,,,,ec2ebs,ec2,,EC2EBS,,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,,,x,,,,,,Part of EC2
@@ -378,7 +378,7 @@ vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,,,x,,,,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,,,x,,,,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,,,x,,,,,,Part of EC2
-wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,1,,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,,
+wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,,2,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,Scope: awstypes.ScopeRegional,
 waf,waf,waf,waf,,waf,,,WAF,WAF,,1,,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
 waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,1,,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,,,,No SDK support

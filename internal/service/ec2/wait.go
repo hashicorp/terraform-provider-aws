@@ -1368,10 +1368,10 @@ func WaitTransitGatewayVPCAttachmentUpdated(ctx context.Context, conn *ec2.EC2, 
 	return nil, err
 }
 
-func WaitVolumeCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
+func WaitVolumeCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.VolumeStateCreating},
-		Target:     []string{ec2.VolumeStateAvailable},
+		Pending:    enum.Slice(awstypes.VolumeStateCreating),
+		Target:     enum.Slice(awstypes.VolumeStateAvailable),
 		Refresh:    StatusVolumeState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -1380,14 +1380,14 @@ func WaitVolumeCreated(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Volume); ok {
+	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaitVolumeDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
+func WaitVolumeDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.VolumeStateDeleting},
 		Target:     []string{},
@@ -1399,17 +1399,17 @@ func WaitVolumeDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Volume); ok {
+	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaitVolumeUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
+func WaitVolumeUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Volume, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.VolumeStateCreating, ec2.VolumeModificationStateModifying},
-		Target:     []string{ec2.VolumeStateAvailable, ec2.VolumeStateInUse},
+		Pending:    enum.Slice(awstypes.VolumeStateCreating, awstypes.VolumeState(awstypes.VolumeModificationStateModifying)),
+		Target:     enum.Slice(awstypes.VolumeStateAvailable, awstypes.VolumeStateInUse),
 		Refresh:    StatusVolumeState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -1418,7 +1418,7 @@ func WaitVolumeUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Volume); ok {
+	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		return output, err
 	}
 
@@ -1429,25 +1429,6 @@ func WaitVolumeAttachmentCreated(ctx context.Context, conn *ec2.EC2, volumeID, i
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.VolumeAttachmentStateAttaching},
 		Target:     []string{ec2.VolumeAttachmentStateAttached},
-		Refresh:    StatusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.VolumeAttachment); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string, timeout time.Duration) (*ec2.VolumeAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.VolumeAttachmentStateDetaching},
-		Target:     []string{},
 		Refresh:    StatusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -2558,7 +2539,7 @@ func WaitVPCEndpointRouteTableAssociationReady(ctx context.Context, conn *ec2.EC
 	return err
 }
 
-func WaitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.SnapshotTaskDetail, error) {
+func WaitEBSSnapshotImportComplete(ctx context.Context, conn *ec2_sdkv2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			EBSSnapshotImportStateActive,
@@ -2575,7 +2556,7 @@ func WaitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.EC2, importTas
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.SnapshotTaskDetail); ok {
+	if output, ok := outputRaw.(*awstypes.SnapshotTaskDetail); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 
 		return output, err
@@ -2607,10 +2588,10 @@ const (
 	ebsSnapshotArchivedTimeout = 60 * time.Minute
 )
 
-func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SnapshotTierStatus, error) { //nolint:unparam
+func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.SnapshotTierStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{TargetStorageTierStandard},
-		Target:  []string{ec2.TargetStorageTierArchive},
+		Pending: enum.Slice(TargetStorageTierStandard),
+		Target:  enum.Slice(awstypes.TargetStorageTierArchive),
 		Refresh: StatusSnapshotStorageTier(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
@@ -2618,8 +2599,8 @@ func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2.EC2, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.SnapshotTierStatus); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
+	if output, ok := outputRaw.(*awstypes.SnapshotTierStatus); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
 
 		return output, err
 	}

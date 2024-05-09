@@ -415,6 +415,39 @@ func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx contex
 	return findNetworkInterfacesV2(ctx, conn, input)
 }
 
+func findEBSVolumesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) ([]awstypes.Volume, error) {
+	var output []awstypes.Volume
+
+	pages := ec2.NewDescribeVolumesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.Volumes...)
+	}
+
+	return output, nil
+}
+
+func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) (*awstypes.Volume, error) {
+	output, err := findEBSVolumesV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func FindClientVPNEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnEndpointsInput) (*awstypes.ClientVpnEndpoint, error) {
 	output, err := FindClientVPNEndpoints(ctx, conn, input)
 
