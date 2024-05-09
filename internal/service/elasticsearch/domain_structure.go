@@ -62,7 +62,9 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *elasticsearch.AutoTune
 	options.DesiredState = autoTuneOptionsInput.DesiredState
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
 
-	options.RollbackOnDisable = aws.String(tfMap["rollback_on_disable"].(string))
+	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
+		options.RollbackOnDisable = aws.String(v)
+	}
 
 	return options
 }
