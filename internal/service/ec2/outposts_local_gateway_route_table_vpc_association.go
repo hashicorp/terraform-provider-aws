@@ -46,7 +46,7 @@ func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,7 +62,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),
 		TagSpecifications:        getTagSpecificationsIn(ctx, ec2.ResourceTypeLocalGatewayRouteTableVpcAssociation),
-		VpcId:                    aws.String(d.Get("vpc_id").(string)),
+		VpcId:                    aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	output, err := conn.CreateLocalGatewayRouteTableVpcAssociationWithContext(ctx, req)
@@ -107,7 +107,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *sc
 
 	setTagsOut(ctx, association.Tags)
 
-	d.Set("vpc_id", association.VpcId)
+	d.Set(names.AttrVPCID, association.VpcId)
 
 	return diags
 }

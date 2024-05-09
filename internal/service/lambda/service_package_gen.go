@@ -84,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{

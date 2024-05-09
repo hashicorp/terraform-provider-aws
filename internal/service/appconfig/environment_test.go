@@ -38,12 +38,12 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}`)),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -101,7 +101,7 @@ func TestAccAppConfigEnvironment_updateName(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 				Config: testAccEnvironmentConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 				Config: testAccEnvironmentConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -176,10 +176,10 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 				Config: testAccEnvironmentConfig_monitors(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -192,12 +192,12 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 				Config: testAccEnvironmentConfig_monitors(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.1", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.1", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

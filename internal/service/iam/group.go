@@ -36,7 +36,7 @@ func resourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func resourceGroup() *schema.Resource {
 
 		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			if d.HasChanges(names.AttrName, "path") {
-				return d.SetNewComputed("arn")
+				return d.SetNewComputed(names.AttrARN)
 			}
 
 			return nil
@@ -114,7 +114,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", group.Arn)
+	d.Set(names.AttrARN, group.Arn)
 	d.Set(names.AttrName, group.GroupName)
 	d.Set("path", group.Path)
 	d.Set("unique_id", group.GroupId)

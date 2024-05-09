@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAssociationRuleMigrateState(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAssociationRuleMigrateState(t *testing.T) {
 			Attributes: map[string]string{
 				"association_id": "fb03b7e6-4a21-4012-965f-91a38cfeec72",
 				"instance_id":    "i-0381b34d460caf6ef",
-				"name":           "test_document_association-dev",
+				names.AttrName:   "test_document_association-dev",
 			},
 			Expected: "fb03b7e6-4a21-4012-965f-91a38cfeec72",
 		},

@@ -40,7 +40,7 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
 					//This is a rds arn
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
@@ -228,7 +228,7 @@ func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceDBIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -258,7 +258,7 @@ func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *tes
 				Config: testAccGlobalClusterConfig_sourceDBIdentifierStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
 			{

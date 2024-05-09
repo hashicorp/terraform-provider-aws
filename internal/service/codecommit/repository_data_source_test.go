@@ -27,7 +27,7 @@ func TestAccCodeCommitRepositoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRepositoryDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "clone_url_http", resourceName, "clone_url_http"),
 					resource.TestCheckResourceAttrPair(datasourceName, "clone_url_ssh", resourceName, "clone_url_ssh"),
 					resource.TestCheckResourceAttrPair(datasourceName, "repository_name", resourceName, "repository_name"),

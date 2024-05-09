@@ -36,7 +36,7 @@ func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 				Config: testAccTapePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "NONE"),
@@ -68,7 +68,7 @@ func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 				Config: testAccTapePoolConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "GOVERNANCE"),

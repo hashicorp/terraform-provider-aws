@@ -44,8 +44,8 @@ func TestAccFinSpaceKxScalingGroup_basic(t *testing.T) {
 				Config: testAccKxScalingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxScalingGroupStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxScalingGroupStatusActive)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 				Config: testAccKxScalingGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -125,7 +125,7 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 				Config: testAccKxScalingGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -135,7 +135,7 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 				Config: testAccKxScalingGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

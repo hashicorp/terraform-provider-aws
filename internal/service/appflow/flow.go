@@ -1346,7 +1346,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appflow.UpdateFlowInput{
 			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
 			FlowName:                  aws.String(d.Get(names.AttrName).(string)),

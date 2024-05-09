@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_budgets_budget_action")
@@ -88,7 +89,7 @@ func ResourceBudgetAction() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.ApprovalModel](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -195,7 +196,7 @@ func ResourceBudgetAction() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -298,14 +299,14 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_name", budgetName)
 	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
 	}
 	d.Set("execution_role_arn", output.ExecutionRoleArn)
 	d.Set("notification_type", output.NotificationType)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subscriber: %s", err)
 	}

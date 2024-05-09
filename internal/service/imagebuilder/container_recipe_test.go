@@ -36,26 +36,26 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexache.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
 					resource.TestCheckResourceAttr(resourceName, "component.#", "1"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "component.0.component_arn", "imagebuilder", "aws", "component/update-linux/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "container_type", "DOCKER"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-x86-2/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_repository.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_repository.0.repository_name", "aws_ecr_repository.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_repository.0.repository_name", "aws_ecr_repository.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_repository.0.service", "ECR"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "working_directory", ""),
 				),
 			},
@@ -167,7 +167,7 @@ func TestAccImageBuilderContainerRecipe_description(t *testing.T) {
 				Config: testAccContainerRecipeConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
@@ -345,7 +345,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -376,7 +376,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.snapshot_id", ebsSnapshotResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.snapshot_id", ebsSnapshotResourceName, names.AttrID),
 				),
 			},
 			{
@@ -553,7 +553,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_Image(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.image", imageDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.image", imageDataSourceName, names.AttrID),
 				),
 			},
 			{
@@ -581,7 +581,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 				Config: testAccContainerRecipeConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{

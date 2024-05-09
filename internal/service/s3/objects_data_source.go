@@ -26,7 +26,7 @@ func dataSourceObjects() *schema.Resource {
 		ReadWithoutTimeout: dataSourceObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -89,7 +89,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}

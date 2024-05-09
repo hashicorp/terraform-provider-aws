@@ -38,7 +38,7 @@ func TestAccChimeSDKVoiceSipRule_basic(t *testing.T) {
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
 					resource.TestCheckResourceAttr(resourceName, "target_applications.#", "1"),
@@ -103,7 +103,7 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 				Config: testAccSipRuleConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "trigger_type", "RequestUriHostname"),
 					resource.TestCheckResourceAttrSet(resourceName, "trigger_value"),
 					resource.TestCheckResourceAttr(resourceName, "target_applications.#", "1"),
@@ -116,7 +116,7 @@ func TestAccChimeSDKVoiceSipRule_update(t *testing.T) {
 				Config: testAccSipRuleConfig_update(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
 				),
 			},

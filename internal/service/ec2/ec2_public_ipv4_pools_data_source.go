@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_public_ipv4_pools")
@@ -27,7 +28,7 @@ func DataSourcePublicIPv4Pools() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -39,7 +40,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 	input := &ec2.DescribePublicIpv4PoolsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(

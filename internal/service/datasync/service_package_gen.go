@@ -33,7 +33,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_agent",
 			Name:     "Agent",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_azure_blob",
 			Name:     "Location Microsoft Azure Blob Storage",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_efs",
 			Name:     "Location EFS",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_fsx_lustre_file_system",
 			Name:     "Location FSx for Lustre File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_fsx_ontap_file_system",
 			Name:     "Location FSx for NetApp ONTAP File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
 			Name:     "Location FSx for OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_fsx_windows_file_system",
 			Name:     "Location FSx for Windows File Server File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -89,7 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_hdfs",
 			Name:     "Location HDFS",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -97,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_nfs",
 			Name:     "Location NFS",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -105,7 +105,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_object_storage",
 			Name:     "Location Object Storage",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -113,7 +113,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_s3",
 			Name:     "Location S3",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -121,7 +121,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_location_smb",
 			Name:     "Location SMB",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -129,7 +129,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_datasync_task",
 			Name:     "Task",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 	}

@@ -45,8 +45,8 @@ func TestAccCodeGuruProfilerProfilingGroup_basic(t *testing.T) {
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "true"),
 				),
@@ -114,8 +114,8 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "true"),
 				),
@@ -124,8 +124,8 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 				Config: testAccProfilingGroupConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "false"),
 				),

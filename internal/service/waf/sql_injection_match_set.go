@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_waf_sql_injection_match_set")
@@ -29,7 +30,7 @@ func ResourceSQLInjectionMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,7 +50,7 @@ func ResourceSQLInjectionMatchSet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -71,13 +72,13 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get(names.AttrName).(string))
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateSqlInjectionMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		return conn.CreateSqlInjectionMatchSetWithContext(ctx, params)
@@ -94,7 +95,7 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
-	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get(names.AttrName).(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
 	}
@@ -107,10 +108,10 @@ func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceDat
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "reading WAF SQL Injection Match Set (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF SQL Injection Match Set (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	d.Set("name", resp.SqlInjectionMatchSet.Name)
+	d.Set(names.AttrName, resp.SqlInjectionMatchSet.Name)
 
 	if err := d.Set("sql_injection_match_tuples", flattenSQLInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sql_injection_match_tuples: %s", err)

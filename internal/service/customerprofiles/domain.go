@@ -38,7 +38,7 @@ func ResourceDomain() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceDomain() *schema.Resource {
 											},
 										},
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -101,7 +101,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -163,7 +163,7 @@ func ResourceDomain() *schema.Resource {
 							},
 						},
 						"conflict_resolution": conflictResolutionSchema(),
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -189,7 +189,7 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Computed:         true,
 							Optional:         true,
@@ -313,7 +313,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Customer Profiles Domain: (%s) %s", d.Id(), err)
 	}
 
-	d.Set("arn", buildDomainARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("domain_name", output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
@@ -330,7 +330,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &customerprofiles.UpdateDomainInput{
 			DomainName: aws.String(d.Get("domain_name").(string)),
 		}
@@ -422,7 +422,7 @@ func expandMatching(tfMap []interface{}) *types.MatchingRequest {
 
 	apiObject := &types.MatchingRequest{}
 
-	if v, ok := tfList["enabled"]; ok {
+	if v, ok := tfList[names.AttrEnabled]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -453,7 +453,7 @@ func expandAutoMerging(tfMap []interface{}) *types.AutoMerging {
 
 	apiObject := &types.AutoMerging{}
 
-	if v, ok := tfList["enabled"]; ok {
+	if v, ok := tfList[names.AttrEnabled]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -591,7 +591,7 @@ func expandRuleBasedMatching(tfMap []interface{}) *types.RuleBasedMatchingReques
 
 	apiObject := &types.RuleBasedMatchingRequest{}
 
-	if v, ok := tfList["enabled"]; ok {
+	if v, ok := tfList[names.AttrEnabled]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -708,7 +708,7 @@ func flattenMatching(apiObject *types.MatchingResponse) []interface{} {
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.ExportingConfig; v != nil {
@@ -738,7 +738,7 @@ func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []inte
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.ExportingConfig; v != nil {
@@ -757,7 +757,7 @@ func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []inte
 		tfMap["max_allowed_rule_level_for_merging"] = aws.ToInt32(v)
 	}
 
-	tfMap["status"] = types.IdentityResolutionJobStatus(apiObject.Status)
+	tfMap[names.AttrStatus] = types.IdentityResolutionJobStatus(apiObject.Status)
 
 	return []interface{}{tfMap}
 }
@@ -778,7 +778,7 @@ func flattenAutoMerging(apiObject *types.AutoMerging) []interface{} {
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.MinAllowedConfidenceScoreForMerging; v != nil {

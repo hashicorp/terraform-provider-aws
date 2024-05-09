@@ -36,7 +36,7 @@ func resourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func resourceClusterSnapshot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,9 +122,9 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshot:%s/%s", aws.StringValue(snapshot.ClusterIdentifier), d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cluster_identifier", snapshot.ClusterIdentifier)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("manual_snapshot_retention_period", snapshot.ManualSnapshotRetentionPeriod)
 	d.Set("owner_account", snapshot.OwnerAccount)
 	d.Set("snapshot_identifier", snapshot.SnapshotIdentifier)
@@ -138,7 +138,7 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &redshift.ModifyClusterSnapshotInput{
 			ManualSnapshotRetentionPeriod: aws.Int64(int64(d.Get("manual_snapshot_retention_period").(int))),
 			SnapshotIdentifier:            aws.String(d.Id()),

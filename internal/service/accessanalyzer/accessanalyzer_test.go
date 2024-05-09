@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // AccessAnalyzer is limited to one per region, so run serially locally and in TeamCity.
@@ -21,7 +22,7 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 			"basic":             testAccAnalyzer_basic,
 			"configuration":     testAccAnalyzer_configuration,
 			"disappears":        testAccAnalyzer_disappears,
-			"tags":              testAccAccessAnalyzerAnalyzer_tagsSerial,
+			names.AttrTags:      testAccAccessAnalyzerAnalyzer_tagsSerial,
 			"Type_Organization": testAccAnalyzer_Type_Organization,
 		},
 		"ArchiveRule": {

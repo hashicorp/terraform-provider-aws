@@ -45,7 +45,7 @@ func ResourceLink() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,7 +132,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameLink, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("label", out.Label)
 	d.Set("label_template", out.LabelTemplate)
 	d.Set("link_id", out.Id)

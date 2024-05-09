@@ -44,7 +44,7 @@ func resourceVPNConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -582,7 +582,7 @@ func resourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -609,7 +609,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -682,7 +682,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpnConnection),
-		Type:              aws.String(d.Get("type").(string)),
+		Type:              aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("transit_gateway_id"); ok {
@@ -732,11 +732,11 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
 	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
-	d.Set("type", vpnConnection.Type)
+	d.Set(names.AttrType, vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
@@ -1445,7 +1445,7 @@ func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{}
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
+		tfMap[names.AttrState] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -1533,7 +1533,7 @@ func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+		tfMap[names.AttrStatus] = aws.StringValue(v)
 	}
 
 	if v := apiObject.StatusMessage; v != nil {

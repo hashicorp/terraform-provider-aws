@@ -115,7 +115,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
@@ -404,7 +404,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName, tfrds.InstanceEngineAuroraMySQL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 			{
@@ -432,7 +432,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraPostgreSQL(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora-postgresql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 			{
@@ -484,7 +484,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -514,7 +514,7 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testi
 				Config: testAccGlobalClusterConfig_sourceClusterIDStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
 				),
 			},
 			{

@@ -39,7 +39,7 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_basic(t *testing.T) {
 					testAccCheckPermissionsBoundaryAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary.0.customer_managed_policy_reference.0.name", rNamePolicy1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -77,7 +77,7 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_forceNew(t *testing.T) {
 					testAccCheckPermissionsBoundaryAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary.0.customer_managed_policy_reference.0.name", rNamePolicy2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, names.AttrARN),
 				),
 			},
 			{

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_batch_scheduling_policy")
@@ -23,7 +24,7 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -68,11 +69,11 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -82,7 +83,7 @@ func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	schedulingPolicy, err := FindSchedulingPolicyByARN(ctx, conn, d.Get("arn").(string))
+	schedulingPolicy, err := FindSchedulingPolicyByARN(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Batch Scheduling Policy", err))
@@ -92,9 +93,9 @@ func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("fair_share_policy", flattenFairsharePolicy(schedulingPolicy.FairsharePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting fair_share_policy: %s", err)
 	}
-	d.Set("name", schedulingPolicy.Name)
+	d.Set(names.AttrName, schedulingPolicy.Name)
 
-	if err := d.Set("tags", KeyValueTags(ctx, schedulingPolicy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, schedulingPolicy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

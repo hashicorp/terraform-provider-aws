@@ -40,7 +40,7 @@ func ResourceRuleGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,12 +49,12 @@ func ResourceRuleGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"encryption_configuration": encryptionConfigurationSchema(),
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func ResourceRuleGroup() *schema.Resource {
 														},
 													},
 												},
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -354,7 +354,7 @@ func ResourceRuleGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -385,7 +385,7 @@ func ResourceRuleGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -437,7 +437,7 @@ func ResourceRuleGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(networkfirewall.RuleGroupType_Values(), false),
@@ -464,15 +464,15 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &networkfirewall.CreateRuleGroupInput{
 		Capacity:      aws.Int64(int64(d.Get("capacity").(int))),
 		RuleGroupName: aws.String(name),
 		Tags:          getTagsIn(ctx),
-		Type:          aws.String(d.Get("type").(string)),
+		Type:          aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -521,15 +521,15 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	response := output.RuleGroupResponse
-	d.Set("arn", response.RuleGroupArn)
+	d.Set(names.AttrARN, response.RuleGroupArn)
 	d.Set("capacity", response.Capacity)
-	d.Set("description", response.Description)
+	d.Set(names.AttrDescription, response.Description)
 	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
-	d.Set("name", response.RuleGroupName)
+	d.Set(names.AttrName, response.RuleGroupName)
 	if err := d.Set("rule_group", flattenRuleGroup(output.RuleGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule_group: %s", err)
 	}
-	d.Set("type", response.Type)
+	d.Set(names.AttrType, response.Type)
 	d.Set("update_token", output.UpdateToken)
 
 	setTagsOut(ctx, response.Tags)
@@ -542,15 +542,15 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
+	if d.HasChanges(names.AttrDescription, "encryption_configuration", "rule_group", "rules", names.AttrType) {
 		input := &networkfirewall.UpdateRuleGroupInput{
 			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 			RuleGroupArn:            aws.String(d.Id()),
-			Type:                    aws.String(d.Get("type").(string)),
+			Type:                    aws.String(d.Get(names.AttrType).(string)),
 			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -856,7 +856,7 @@ func expandIPSets(l []interface{}) map[string]*networkfirewall.IPSet {
 			continue
 		}
 
-		if key, ok := tfMap["key"].(string); ok && key != "" {
+		if key, ok := tfMap[names.AttrKey].(string); ok && key != "" {
 			if tfList, ok := tfMap["ip_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
 				tfMap, ok := tfList[0].(map[string]interface{})
 				if ok {
@@ -885,7 +885,7 @@ func expandIPSetReferences(l []interface{}) map[string]*networkfirewall.IPSetRef
 			continue
 		}
 
-		if key, ok := tfMap["key"].(string); ok && key != "" {
+		if key, ok := tfMap[names.AttrKey].(string); ok && key != "" {
 			if tfList, ok := tfMap["ip_set_reference"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
 				tfMap, ok := tfList[0].(map[string]interface{})
 				if ok {
@@ -914,7 +914,7 @@ func expandPortSets(l []interface{}) map[string]*networkfirewall.PortSet {
 			continue
 		}
 
-		if key, ok := tfMap["key"].(string); ok && key != "" {
+		if key, ok := tfMap[names.AttrKey].(string); ok && key != "" {
 			if tfList, ok := tfMap["port_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
 				tfMap, ok := tfList[0].(map[string]interface{})
 				if ok {
@@ -1121,7 +1121,7 @@ func flattenIPSetReferences(m map[string]*networkfirewall.IPSetReference) []inte
 	sets := make([]interface{}, 0, len(m))
 	for k, v := range m {
 		tfMap := map[string]interface{}{
-			"key":              k,
+			names.AttrKey:      k,
 			"ip_set_reference": flattenIPSetReference(v),
 		}
 		sets = append(sets, tfMap)
@@ -1160,8 +1160,8 @@ func flattenIPSets(m map[string]*networkfirewall.IPSet) []interface{} {
 	sets := make([]interface{}, 0, len(m))
 	for k, v := range m {
 		tfMap := map[string]interface{}{
-			"key":    k,
-			"ip_set": flattenIPSet(v),
+			names.AttrKey: k,
+			"ip_set":      flattenIPSet(v),
 		}
 		sets = append(sets, tfMap)
 	}
@@ -1176,8 +1176,8 @@ func flattenPortSets(m map[string]*networkfirewall.PortSet) []interface{} {
 	sets := make([]interface{}, 0, len(m))
 	for k, v := range m {
 		tfMap := map[string]interface{}{
-			"key":      k,
-			"port_set": flattenPortSet(v),
+			names.AttrKey: k,
+			"port_set":    flattenPortSet(v),
 		}
 		sets = append(sets, tfMap)
 	}

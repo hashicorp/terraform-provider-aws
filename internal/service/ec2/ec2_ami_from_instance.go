@@ -45,7 +45,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -183,12 +183,12 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -255,9 +255,9 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceID := d.Get("source_instance_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreateImageInput{
-		Description:       aws.String(d.Get("description").(string)),
+		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),

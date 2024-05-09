@@ -37,8 +37,8 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "a test schema"),
-					resource.TestCheckResourceAttr(resourceName, "name", modelName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "a test schema"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, modelName),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.GetMod
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["rest_api_id"])
+		output, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["rest_api_id"])
 
 		if err != nil {
 			return err
@@ -107,7 +107,7 @@ func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["rest_api_id"])
+			_, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["rest_api_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -131,7 +131,7 @@ func testAccModelImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 

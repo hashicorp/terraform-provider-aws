@@ -86,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_api_key",
 			Name:     "API Key",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_client_certificate",
 			Name:     "Client Certificate",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -127,7 +127,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_domain_name",
 			Name:     "Domain Name",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -180,7 +180,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_rest_api",
 			Name:     "REST API",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -193,7 +193,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_stage",
 			Name:     "Stage",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -201,7 +201,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_usage_plan",
 			Name:     "Usage Plan",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -214,7 +214,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_vpc_link",
 			Name:     "VPC Link",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}

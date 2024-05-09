@@ -35,9 +35,9 @@ func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 				Config: testAccScramSecretAssociationConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", clusterResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", clusterResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -74,9 +74,9 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName3, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName3, names.AttrARN),
 				),
 			},
 			{
@@ -84,8 +84,8 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, names.AttrARN),
 				),
 			},
 			{

@@ -28,7 +28,7 @@ func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_gateway,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "availability_zones.#", 0),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
@@ -58,7 +58,7 @@ func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_interface,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "availability_zones.#", 0),
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
@@ -90,7 +90,7 @@ func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_custom(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
@@ -121,7 +121,7 @@ func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_customFilter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
@@ -152,7 +152,7 @@ func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_customFilterTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),

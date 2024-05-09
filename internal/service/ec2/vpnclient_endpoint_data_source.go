@@ -31,7 +31,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +56,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -72,7 +72,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -92,7 +92,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -117,14 +117,14 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +138,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": customFiltersSchema(),
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -163,12 +163,12 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"transport_protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,7 +192,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
@@ -217,7 +217,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
@@ -244,10 +244,10 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("connection_log_options", nil)
 	}
-	d.Set("description", ep.Description)
+	d.Set(names.AttrDescription, ep.Description)
 	d.Set("dns_name", ep.DnsName)
 	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set("security_group_ids", aws.StringSlice(ep.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -258,10 +258,10 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
 	d.Set("transport_protocol", ep.TransportProtocol)
-	d.Set("vpc_id", ep.VpcId)
+	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	if err := d.Set("tags", keyValueTagsV2(ctx, ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

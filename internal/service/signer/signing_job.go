@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_signer_signing_job")
@@ -50,17 +51,17 @@ func ResourceSigningJob() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -85,7 +86,7 @@ func ResourceSigningJob() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -177,11 +178,11 @@ func ResourceSigningJob() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -191,7 +192,7 @@ func ResourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -323,7 +324,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
-	if err := d.Set("status", describeSigningJobOutput.Status); err != nil {
+	if err := d.Set(names.AttrStatus, describeSigningJobOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status: %s", err)
 	}
 
@@ -376,15 +377,15 @@ func flattenSigningJobS3Source(apiObject *types.S3Source) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Key; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.ToString(v)
+		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
@@ -421,15 +422,15 @@ func expandSigningJobS3Source(tfList []interface{}) *types.S3Source {
 	}
 	s3Source := &types.S3Source{}
 
-	if v, ok := tfMap["bucket"].(string); ok {
+	if v, ok := tfMap[names.AttrBucket].(string); ok {
 		s3Source.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok {
+	if v, ok := tfMap[names.AttrKey].(string); ok {
 		s3Source.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok {
+	if v, ok := tfMap[names.AttrVersion].(string); ok {
 		s3Source.Version = aws.String(v)
 	}
 
@@ -464,8 +465,8 @@ func expandSigningJobS3Destination(tfList []interface{}) *types.S3Destination {
 	tfMap := tfList[0].(map[string]interface{})
 	s3Destination := &types.S3Destination{}
 
-	if _, ok := tfMap["bucket"]; ok {
-		s3Destination.BucketName = aws.String(tfMap["bucket"].(string))
+	if _, ok := tfMap[names.AttrBucket]; ok {
+		s3Destination.BucketName = aws.String(tfMap[names.AttrBucket].(string))
 	}
 
 	if _, ok := tfMap["prefix"]; ok {
@@ -495,11 +496,11 @@ func flattenSigningJobS3SignedObject(apiObject *types.S3SignedObject) []interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.Key; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

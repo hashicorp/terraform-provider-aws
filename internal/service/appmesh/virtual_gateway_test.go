@@ -39,7 +39,7 @@ func testAccVirtualGateway_basic(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -53,7 +53,7 @@ func testAccVirtualGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", "1"),
@@ -136,7 +136,7 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", "1"),
@@ -172,7 +172,7 @@ func testAccVirtualGateway_BackendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.#", "1"),
@@ -237,7 +237,7 @@ func testAccVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -269,7 +269,7 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -287,7 +287,7 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -296,7 +296,7 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -315,7 +315,7 @@ func testAccVirtualGateway_ListenerConnectionPool(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -347,7 +347,7 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -368,7 +368,7 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -377,7 +377,7 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -398,7 +398,7 @@ func testAccVirtualGateway_ListenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -435,7 +435,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -457,7 +457,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -480,7 +480,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -491,7 +491,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.0.certificate_arn", acmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "STRICT"),
@@ -500,7 +500,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -540,7 +540,7 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -571,7 +571,7 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -586,7 +586,7 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -613,7 +613,7 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 		},
@@ -639,7 +639,7 @@ func testAccVirtualGateway_MultiListenerValidation(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "2"),
@@ -693,7 +693,7 @@ func testAccVirtualGateway_MultiListenerValidation(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -708,7 +708,7 @@ func testAccVirtualGateway_MultiListenerValidation(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "2"),
@@ -762,7 +762,7 @@ func testAccVirtualGateway_MultiListenerValidation(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 		},
@@ -788,7 +788,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
@@ -806,7 +806,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -821,7 +821,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
@@ -837,7 +837,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 			{
@@ -846,7 +846,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vgName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
@@ -866,7 +866,7 @@ func testAccVirtualGateway_Logging(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
 				),
 			},
 		},
@@ -930,7 +930,7 @@ func testAccCheckVirtualGatewayDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["name"])
+			_, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -960,7 +960,7 @@ func testAccCheckVirtualGatewayExists(ctx context.Context, n string, v *appmesh.
 			return fmt.Errorf("No App Mesh Virtual Gateway ID is set")
 		}
 
-		output, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["name"])
+		output, err := tfappmesh.FindVirtualGatewayByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

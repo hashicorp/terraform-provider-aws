@@ -41,17 +41,17 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 					testAccCheckSlotTypeExists(ctx, rName, &v),
 					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, "1"),
 					resource.TestCheckResourceAttr(rName, "create_version", "false"),
-					resource.TestCheckResourceAttr(rName, "description", ""),
+					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{
-						"value": "lilies",
+						names.AttrValue: "lilies",
 					}),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Lirium"),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Martagon"),
-					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID),
+					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID),
 					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
-					resource.TestCheckResourceAttr(rName, "version", tflexmodels.SlotTypeVersionLatest),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 					acctest.CheckResourceAttrRFC3339(rName, "created_date"),
 					acctest.CheckResourceAttrRFC3339(rName, "last_updated_date"),
 				),
@@ -86,7 +86,7 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
 					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", tflexmodels.SlotTypeVersionLatest),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 				),
 			},
 			{
@@ -100,7 +100,7 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
 					testAccCheckSlotTypeExistsWithVersion(ctx, rName, "1", &v),
-					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "description", ""),
+					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func TestAccLexModelsSlotType_description(t *testing.T) {
 				Config: testAccSlotTypeUpdateConfig_description(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "description", "Types of flowers to pick up"),
+					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Types of flowers to pick up"),
 				),
 			},
 			{
@@ -192,7 +192,7 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 					testAccCheckSlotTypeExists(ctx, rName, &v),
 					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{
-						"value": "tulips",
+						names.AttrValue: "tulips",
 					}),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Eduardoregelia"),
 					resource.TestCheckTypeSetElemAttr(rName, "enumeration_value.*.synonyms.*", "Podonix"),
@@ -228,7 +228,7 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID1),
+					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID1),
 				),
 			},
 			{
@@ -241,7 +241,7 @@ func TestAccLexModelsSlotType_name(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID2),
+					resource.TestCheckResourceAttr(rName, names.AttrName, testSlotTypeID2),
 				),
 			},
 			{
@@ -354,9 +354,9 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, version, &v1),
-					resource.TestCheckResourceAttr(slotTypeResourceName, "version", version),
+					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, version),
 					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, version, &v2),
-					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", version),
 				),
 			},
@@ -367,15 +367,15 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, updatedVersion, &v1),
-					resource.TestCheckResourceAttr(slotTypeResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, updatedVersion),
 					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(slotTypeResourceName, "enumeration_value.*", map[string]string{
-						"value": "tulips",
+						names.AttrValue: "tulips",
 					}),
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Eduardoregelia"),
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Podonix"),
 					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, updatedVersion, &v2),
-					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, updatedVersion),
 					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", updatedVersion),
 				),
 			},

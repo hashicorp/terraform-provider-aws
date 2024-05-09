@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_redshiftserverless_namespace", name="Namespace")
@@ -22,7 +23,7 @@ func dataSourceNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +42,7 @@ func dataSourceNamespace() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,11 +79,11 @@ func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(namespaceName)
 
 	d.Set("admin_username", resource.AdminUsername)
-	d.Set("arn", resource.NamespaceArn)
+	d.Set(names.AttrARN, resource.NamespaceArn)
 	d.Set("db_name", resource.DbName)
 	d.Set("default_iam_role_arn", resource.DefaultIamRoleArn)
 	d.Set("iam_roles", flattenNamespaceIAMRoles(resource.IamRoles))
-	d.Set("kms_key_id", resource.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, resource.KmsKeyId)
 	d.Set("log_exports", resource.LogExports)
 
 	d.Set("namespace_id", resource.NamespaceId)

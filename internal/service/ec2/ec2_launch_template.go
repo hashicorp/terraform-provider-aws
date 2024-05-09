@@ -44,7 +44,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Computed: true,
 										Optional: true,
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
@@ -197,7 +197,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				ConflictsWith: []string{"update_default_version"},
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
@@ -221,7 +221,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -234,7 +234,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -247,7 +247,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -273,13 +273,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"iam_instance_profile.0.name"},
 							ValidateFunc:  verify.ValidARN,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -705,14 +705,14 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -725,7 +725,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  verify.ValidLaunchTemplateName,
 			},
 			"network_interfaces": {
@@ -751,7 +751,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -923,7 +923,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ec2.ResourceType_Values(), false),
 						},
-						"tags": tftags.TagsSchema(),
+						names.AttrTags: tftags.TagsSchema(),
 					},
 				},
 			},
@@ -980,14 +980,14 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeLaunchTemplate),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.VersionDescription = aws.String(v.(string))
 	}
 
@@ -1038,11 +1038,11 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	d.Set("description", ltv.VersionDescription)
+	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
-	d.Set("name", lt.LaunchTemplateName)
+	d.Set(names.AttrName, lt.LaunchTemplateName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
@@ -1063,7 +1063,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"capacity_reservation_specification",
 		"cpu_options",
 		"credit_specification",
-		"description",
+		names.AttrDescription,
 		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
@@ -1099,7 +1099,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.VersionDescription = aws.String(v.(string))
 		}
 
@@ -1223,7 +1223,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		apiObject.EnclaveOptions = &ec2.LaunchTemplateEnclaveOptionsRequest{
-			Enabled: aws.Bool(tfMap["enabled"].(bool)),
+			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		}
 	}
 
@@ -1279,7 +1279,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		apiObject.Monitoring = &ec2.LaunchTemplatesMonitoringRequest{
-			Enabled: aws.Bool(tfMap["enabled"].(bool)),
+			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		}
 	}
 
@@ -1385,7 +1385,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.Iops = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -1455,7 +1455,7 @@ func expandElasticGpuSpecification(tfMap map[string]interface{}) *ec2.ElasticGpu
 
 	apiObject := &ec2.ElasticGpuSpecification{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -1495,7 +1495,7 @@ func expandLaunchTemplateElasticInferenceAccelerator(tfMap map[string]interface{
 
 	apiObject := &ec2.LaunchTemplateElasticInferenceAccelerator{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -1535,11 +1535,11 @@ func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string
 
 	apiObject := &ec2.LaunchTemplateIamInstanceProfileSpecificationRequest{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1981,7 +1981,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
@@ -2158,7 +2158,7 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 		apiObject.ResourceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
 			apiObject.Tags = Tags(v)
 		}
@@ -2241,7 +2241,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	}
 	if apiObject.EnclaveOptions != nil {
 		tfMap := map[string]interface{}{
-			"enabled": aws.BoolValue(apiObject.EnclaveOptions.Enabled),
+			names.AttrEnabled: aws.BoolValue(apiObject.EnclaveOptions.Enabled),
 		}
 
 		if err := d.Set("enclave_options", []interface{}{tfMap}); err != nil {
@@ -2306,7 +2306,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	}
 	if apiObject.Monitoring != nil {
 		tfMap := map[string]interface{}{
-			"enabled": aws.BoolValue(apiObject.Monitoring.Enabled),
+			names.AttrEnabled: aws.BoolValue(apiObject.Monitoring.Enabled),
 		}
 
 		if err := d.Set("monitoring", []interface{}{tfMap}); err != nil {
@@ -2407,7 +2407,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SnapshotId; v != nil {
@@ -2491,7 +2491,7 @@ func flattenElasticGpuSpecificationResponse(apiObject *ec2.ElasticGpuSpecificati
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2523,7 +2523,7 @@ func flattenLaunchTemplateElasticInferenceAcceleratorResponse(apiObject *ec2.Lau
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2555,11 +2555,11 @@ func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *ec2.LaunchT
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap[names.AttrARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2973,7 +2973,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	if v := apiObject.DeviceIndex; v != nil {
@@ -3152,7 +3152,7 @@ func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject *ec2.L
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap

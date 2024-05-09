@@ -13,7 +13,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` on Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
 * data-source/aws_rds_orderable_db_instance: Fix `InvalidParameterValue: Invalid value 3412 for MaxRecords. Must be between 20 and 1000` errors ([#37251](https://github.com/hashicorp/terraform-provider-aws/issues/37251))
+* resource/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
+* resource/aws_fsx_openzfs_file_system: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
 * resource/aws_kms_custom_key_store: Change `trust_anchor_certificate` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#37092](https://github.com/hashicorp/terraform-provider-aws/issues/37092))
 * resource/aws_securitylake_aws_log_source: Correctly handles unspecified `source_version` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
 * resource/aws_securitylake_aws_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_cluster_activity_stream")
@@ -41,7 +42,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -69,7 +70,7 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	input := &rds.StartActivityStreamInput{
 		ApplyImmediately:                aws.Bool(true),
 		EngineNativeAuditFieldsIncluded: aws.Bool(d.Get("engine_native_audit_fields_included").(bool)),
-		KmsKeyId:                        aws.String(d.Get("kms_key_id").(string)),
+		KmsKeyId:                        aws.String(d.Get(names.AttrKMSKeyID).(string)),
 		Mode:                            aws.String(d.Get("mode").(string)),
 		ResourceArn:                     aws.String(arn),
 	}
@@ -104,7 +105,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("kinesis_stream_name", output.ActivityStreamKinesisStreamName)
-	d.Set("kms_key_id", output.ActivityStreamKmsKeyId)
+	d.Set(names.AttrKMSKeyID, output.ActivityStreamKmsKeyId)
 	d.Set("mode", output.ActivityStreamMode)
 	d.Set("resource_arn", output.DBClusterArn)
 

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_config")
@@ -36,7 +37,7 @@ func ResourceConfig() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(autodefinedReverseFlag_Values(), false),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 		autodefinedReverseFlag = autodefinedReverseFlagDisable
 	}
 	d.Set("autodefined_reverse_flag", autodefinedReverseFlag)
-	d.Set("owner_id", resolverConfig.OwnerId)
+	d.Set(names.AttrOwnerID, resolverConfig.OwnerId)
 	d.Set("resource_id", resolverConfig.ResourceId)
 
 	return nil

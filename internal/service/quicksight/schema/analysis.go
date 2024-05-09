@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func AnalysisDefinitionSchema() *schema.Schema {
@@ -50,7 +51,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							"status":              stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+							names.AttrStatus:      stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 						},
 					},
 				},
@@ -82,10 +83,10 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Computed:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
 							},
-							"description":           stringSchema(false, validation.StringLenBetween(1, 1024)),
+							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							"name":                  stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -127,7 +128,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
+							names.AttrARN: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: verify.ValidARN,
@@ -166,7 +167,7 @@ func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *quicksight.Anal
 	}
 
 	sourceTemplate := &quicksight.AnalysisSourceTemplate{}
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		sourceTemplate.Arn = aws.String(v)
 	}
 	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {

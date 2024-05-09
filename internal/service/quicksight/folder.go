@@ -48,7 +48,7 @@ func ResourceFolder() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func ResourceFolder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -151,7 +151,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	in := &quicksight.CreateFolderInput{
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -169,11 +169,11 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := conn.CreateFolderWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get("name").(string), err)
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Arn == nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	return resourceFolderRead(ctx, d, meta)
@@ -198,13 +198,13 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameFolder, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
 	d.Set("folder_id", out.FolderId)
 	d.Set("folder_type", out.FolderType)
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 
 	if len(out.FolderPath) > 0 {
 		d.Set("parent_folder_arn", out.FolderPath[len(out.FolderPath)-1])
@@ -237,11 +237,11 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permission", "tags", "tags_all") {
+	if d.HasChangesExcept("permission", names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateFolderInput{
 			AwsAccountId: aws.String(awsAccountId),
 			FolderId:     aws.String(folderId),
-			Name:         aws.String(d.Get("name").(string)),
+			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Folder (%s): %#v", d.Id(), in)

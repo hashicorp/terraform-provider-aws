@@ -42,8 +42,8 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
-					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "encryption"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -73,19 +73,19 @@ func TestAccOpenSearchServerlessSecurityPolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSecurityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityPolicyConfig_update(rName, "description"),
+				Config: testAccSecurityPolicyConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
-					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "encryption"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
 				Config: testAccSecurityPolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
-					resource.TestCheckResourceAttr(resourceName, "type", "encryption"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "encryption"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
 			},
 		},
@@ -130,7 +130,7 @@ func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
+			_, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -159,7 +159,7 @@ func testAccCheckSecurityPolicyExists(ctx context.Context, name string, security
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
+		resp, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityPolicy, rs.Primary.ID, err)
@@ -178,7 +178,7 @@ func testAccSecurityPolicyImportStateIdFunc(resourceName string) resource.Import
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["type"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrType]), nil
 	}
 }
 

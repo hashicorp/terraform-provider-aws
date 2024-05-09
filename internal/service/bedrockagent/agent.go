@@ -91,7 +91,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
@@ -147,7 +147,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

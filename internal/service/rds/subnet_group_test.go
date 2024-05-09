@@ -37,14 +37,14 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(fmt.Sprintf("subgrp:%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("subgrp:%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "IPV4"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccRDSSubnetGroup_nameGenerated(t *testing.T) {
 				Config: testAccSubnetGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 				Config: testAccSubnetGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -226,7 +226,7 @@ func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
@@ -239,7 +239,7 @@ func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 				Config: testAccDBSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description updated"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
@@ -263,7 +263,7 @@ func TestAccRDSSubnetGroup_updateSubnets(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
@@ -276,7 +276,7 @@ func TestAccRDSSubnetGroup_updateSubnets(t *testing.T) {
 				Config: testAccDBSubnetGroupConfig_updatedSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 				),
 			},

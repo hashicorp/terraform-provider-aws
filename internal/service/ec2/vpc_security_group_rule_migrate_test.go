@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestSecurityGroupRuleMigrateState(t *testing.T) {
@@ -28,7 +29,7 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 				"to_port":                  "0",
 				"security_group_id":        "sg-13877277",
 				"cidr_blocks.#":            "0",
-				"type":                     "ingress",
+				names.AttrType:             "ingress",
 				"protocol":                 "-1",
 				"from_port":                "0",
 				"source_security_group_id": "sg-11877275",
@@ -42,7 +43,7 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 				"security_group_id": "sg-0981746d",
 				"from_port":         "0",
 				"to_port":           "0",
-				"type":              "ingress",
+				names.AttrType:      "ingress",
 				"self":              "false",
 				"protocol":          "-1",
 				"cidr_blocks.0":     "172.16.1.0/24",

@@ -32,11 +32,11 @@ func TestAccWAFV2RegexPatternSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRegexPatternSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexache.MustCompile(fmt.Sprintf("regional/regexpatternset/%v/.+$", name))),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(datasourceName, names.AttrARN, "wafv2", regexache.MustCompile(fmt.Sprintf("regional/regexpatternset/%v/.+$", name))),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "regular_expression", resourceName, "regular_expression"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scope", resourceName, "scope"),
 				),

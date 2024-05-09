@@ -79,7 +79,7 @@ func ResourceUser() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -103,12 +103,12 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -121,7 +121,7 @@ func ResourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,7 +142,7 @@ func ResourceUser() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -197,12 +197,12 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -276,7 +276,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Locale = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -369,7 +369,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
-	if err := d.Set("name", []interface{}{flattenName(out.Name)}); err != nil {
+	if err := d.Set(names.AttrName, []interface{}{flattenName(out.Name)}); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
@@ -514,7 +514,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					}
 
 					if v := address.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					result = append(result, m)
@@ -539,11 +539,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = email.Primary
 
 					if v := email.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					if v := email.Value; v != nil {
-						m["value"] = v
+						m[names.AttrValue] = v
 					}
 
 					result = append(result, m)
@@ -568,11 +568,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = email.Primary
 
 					if v := email.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					if v := email.Value; v != nil {
-						m["value"] = v
+						m[names.AttrValue] = v
 					}
 
 					result = append(result, m)

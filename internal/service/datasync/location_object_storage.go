@@ -54,7 +54,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,7 +177,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("access_key", output.AccessKey)
 	d.Set("agent_arns", output.AgentArns)
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("bucket_name", bucketName)
 	d.Set("server_certificate", string(output.ServerCertificate))
 	d.Set("server_hostname", hostname)
@@ -193,7 +193,7 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationObjectStorageInput{
 			LocationArn: aws.String(d.Id()),
 		}

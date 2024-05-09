@@ -27,7 +27,7 @@ func dataSourceDistribution() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +35,7 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -59,7 +59,7 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +76,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	output, err := findDistributionByID(ctx, conn, id)
 
 	if err != nil {
@@ -89,14 +89,14 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 	if aliases := distributionConfig.Aliases; aliases != nil {
 		d.Set("aliases", aliases.Items)
 	}
-	d.Set("arn", distribution.ARN)
+	d.Set(names.AttrARN, distribution.ARN)
 	d.Set("domain_name", distribution.DomainName)
-	d.Set("enabled", distributionConfig.Enabled)
+	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 	d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
-	d.Set("status", distribution.Status)
+	d.Set(names.AttrStatus, distribution.Status)
 	d.Set("web_acl_id", distributionConfig.WebACLId)
 
 	return diags

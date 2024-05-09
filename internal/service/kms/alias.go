@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_alias", name="Alias")
@@ -33,11 +34,11 @@ func resourceAlias() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -50,7 +51,7 @@ func resourceAlias() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validNameForResource,
 			},
 			"target_key_arn": {
@@ -74,7 +75,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if namePrefix == "" {
 		namePrefix = aliasNamePrefix
 	}
-	name := create.Name(d.Get("name").(string), namePrefix)
+	name := create.Name(d.Get(names.AttrName).(string), namePrefix)
 	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
 		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
@@ -119,8 +120,8 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", aliasARN)
-	d.Set("name", alias.AliasName)
+	d.Set(names.AttrARN, aliasARN)
+	d.Set(names.AttrName, alias.AliasName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(alias.AliasName)))
 	d.Set("target_key_arn", targetKeyARN)
 	d.Set("target_key_id", targetKeyID)

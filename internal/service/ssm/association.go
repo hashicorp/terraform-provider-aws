@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_association")
@@ -38,7 +39,7 @@ func ResourceAssociation() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +86,7 @@ func ResourceAssociation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -120,7 +121,7 @@ func ResourceAssociation() *schema.Resource {
 					},
 				},
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
@@ -143,7 +144,7 @@ func ResourceAssociation() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 163),
@@ -172,7 +173,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
 	associationInput := &ssm.CreateAssociationInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("apply_only_at_cron_interval"); ok {
@@ -191,7 +192,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
@@ -272,11 +273,11 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("association/%s", aws.StringValue(association.AssociationId)),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	d.Set("association_name", association.AssociationName)
 	d.Set("instance_id", association.InstanceId)
-	d.Set("name", association.Name)
+	d.Set(names.AttrName, association.Name)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
 	d.Set("sync_compliance", association.SyncCompliance)
@@ -286,7 +287,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("max_errors", association.MaxErrors)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 
-	if err := d.Set("parameters", flattenParameters(association.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameters, flattenParameters(association.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSM Association (%s): %s", d.Id(), err)
 	}
 
@@ -332,7 +333,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.SyncCompliance = aws.String(d.Get("sync_compliance").(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
+	if v, ok := d.GetOk(names.AttrParameters); ok {
 		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 

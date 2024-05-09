@@ -46,7 +46,7 @@ func resourceServiceNetworkServiceAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func resourceServiceNetworkServiceAssociation() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -145,7 +145,7 @@ func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("created_by", out.CreatedBy)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
@@ -157,7 +157,7 @@ func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema
 	}
 	d.Set("service_identifier", out.ServiceId)
 	d.Set("service_network_identifier", out.ServiceNetworkId)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 
 	return nil
 }

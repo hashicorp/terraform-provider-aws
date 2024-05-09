@@ -41,7 +41,7 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("key-pair/%s", rName)),
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),

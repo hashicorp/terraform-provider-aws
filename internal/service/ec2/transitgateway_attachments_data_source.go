@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_attachments")
@@ -32,7 +33,7 @@ func DataSourceTransitGatewayAttachments() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -47,7 +48,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)

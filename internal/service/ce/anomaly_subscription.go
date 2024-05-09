@@ -51,7 +51,7 @@ func resourceAnomalySubscription() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func resourceAnomalySubscription() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,7 +85,7 @@ func resourceAnomalySubscription() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.SubscriberType](),
@@ -112,7 +112,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &awstypes.AnomalySubscription{
 			Frequency:        awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string)),
@@ -159,10 +159,10 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("account_id", subscription.AccountId)
-	d.Set("arn", subscription.SubscriptionArn)
+	d.Set(names.AttrARN, subscription.SubscriptionArn)
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
-	d.Set("name", subscription.SubscriptionName)
+	d.Set(names.AttrName, subscription.SubscriptionName)
 	d.Set("subscriber", flattenSubscribers(subscription.Subscribers))
 	if err := d.Set("threshold_expression", []interface{}{flattenExpression(subscription.ThresholdExpression)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting threshold_expression: %s", err)
@@ -176,7 +176,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
 			SubscriptionArn: aws.String(d.Id()),
 		}
@@ -268,7 +268,7 @@ func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
 
 		apiObjects = append(apiObjects, awstypes.Subscriber{
 			Address: aws.String(tfMap["address"].(string)),
-			Type:    awstypes.SubscriberType(tfMap["type"].(string)),
+			Type:    awstypes.SubscriberType(tfMap[names.AttrType].(string)),
 		})
 	}
 
@@ -284,8 +284,8 @@ func flattenSubscribers(apiObjects []awstypes.Subscriber) []interface{} {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			"address": aws.ToString(apiObject.Address),
-			"type":    apiObject.Type,
+			"address":      aws.ToString(apiObject.Address),
+			names.AttrType: apiObject.Type,
 		})
 	}
 

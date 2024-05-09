@@ -37,7 +37,7 @@ func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppImageExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

@@ -36,12 +36,12 @@ func testAccHSM_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexache.MustCompile(`^hsm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_state", string(types.HsmStateActive)),
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", names.AttrID),
 				),
 			},
 			{

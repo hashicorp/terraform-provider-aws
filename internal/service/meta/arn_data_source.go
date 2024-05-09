@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
@@ -39,11 +40,11 @@ func (d *dataSourceARN) Schema(ctx context.Context, req datasource.SchemaRequest
 			"account": schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

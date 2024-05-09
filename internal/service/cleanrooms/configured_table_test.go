@@ -38,8 +38,8 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "name", TEST_NAME),
-					resource.TestCheckResourceAttr(resourceName, "description", TEST_DESCRIPTION),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "analysis_method", TEST_ANALYSIS_METHOD),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
@@ -103,8 +103,8 @@ func TestAccCleanRoomsConfiguredTable_mutableProperties(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(rName, "updated description", "updated tag", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableIsTheSame(resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "updated description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", "updated tag"),
 				),
 			},

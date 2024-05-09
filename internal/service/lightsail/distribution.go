@@ -55,7 +55,7 @@ func ResourceDistribution() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Amazon Resource Name (ARN) of the distribution.",
@@ -255,7 +255,7 @@ func ResourceDistribution() *schema.Resource {
 				Description: "Indicates whether the distribution is enabled.",
 				Default:     true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "The name of the distribution.",
@@ -268,7 +268,7 @@ func ResourceDistribution() *schema.Resource {
 				Description: "An object that describes the origin resource of the distribution, such as a Lightsail instance, bucket, or load balancer.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
@@ -304,7 +304,7 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The Lightsail resource type (e.g., Distribution).",
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The status of the distribution.",
@@ -334,7 +334,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	in := &lightsail.CreateDistributionInput{
 		BundleId:             aws.String(d.Get("bundle_id").(string)),
 		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
-		DistributionName:     aws.String(d.Get("name").(string)),
+		DistributionName:     aws.String(d.Get(names.AttrName).(string)),
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -358,11 +358,11 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.CreateDistribution(ctx, in)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Distribution == nil {
-		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionCreating, ResNameDistribution, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	id := aws.ToString(out.Distribution.Name)
@@ -416,7 +416,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("alternative_domain_names", out.AlternativeDomainNames)
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("bundle_id", out.BundleId)
 	if err := d.Set("cache_behavior", flattenCacheBehaviorsPerPath(out.CacheBehaviors)); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
@@ -443,10 +443,10 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
 	d.Set("resource_type", out.ResourceType)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("support_code", out.SupportCode)
 
 	setTagsOut(ctx, out.Tags)
@@ -759,7 +759,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ProtocolPolicy; v != "" {
@@ -784,7 +784,7 @@ func expandInputOrigin(tfMap map[string]interface{}) *types.InputOrigin {
 
 	a := &types.InputOrigin{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		a.Name = aws.String(v)
 	}
 

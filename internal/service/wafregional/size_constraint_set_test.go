@@ -38,7 +38,7 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sizeConstraintSet),
+						resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(
 						resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
@@ -48,8 +48,8 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
-						"data": "",
-						"type": "BODY",
+						"data":         "",
+						names.AttrType: "BODY",
 					}),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sizeConstraintSet),
+						resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(
 						resourceName, "size_constraints.#", "1"),
 				),
@@ -90,7 +90,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sizeConstraintSetNewName),
+						resourceName, names.AttrName, sizeConstraintSetNewName),
 					resource.TestCheckResourceAttr(
 						resourceName, "size_constraints.#", "1"),
 				),
@@ -145,7 +145,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
@@ -155,8 +155,8 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
-						"data": "",
-						"type": "BODY",
+						"data":         "",
+						names.AttrType: "BODY",
 					}),
 				),
 			},
@@ -165,7 +165,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
@@ -175,8 +175,8 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
-						"data": "",
-						"type": "BODY",
+						"data":         "",
+						names.AttrType: "BODY",
 					}),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "size_constraints.#", "0"),
 				),

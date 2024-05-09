@@ -34,25 +34,25 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", "id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
-					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "shards.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexache.MustCompile(`^000[12]$`)),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.num_nodes", "2"),
@@ -66,7 +66,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
@@ -97,22 +97,22 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
-					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
@@ -169,7 +169,7 @@ func TestAccMemoryDBCluster_nameGenerated(t *testing.T) {
 				Config: testAccClusterConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 				Config: testAccClusterConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
 				),
 			},
@@ -271,7 +271,7 @@ func TestAccMemoryDBCluster_create_withKMS(t *testing.T) {
 				Config: testAccClusterConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -299,7 +299,7 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "9999"),
-					resource.TestCheckResourceAttr(resourceName, "port", "9999"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
 				),
 			},
 			{
@@ -434,7 +434,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 				Config: testAccClusterConfig_description(rName, "Test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test 1"),
 				),
 			},
 			{
@@ -446,7 +446,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 				Config: testAccClusterConfig_description(rName, "Test 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test 2"),
 				),
 			},
 			{
@@ -458,7 +458,7 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 				Config: testAccClusterConfig_description(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -803,7 +803,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
 				),
 			},
 			{
@@ -816,8 +816,8 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"), // add one
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.1", names.AttrID),
 				),
 			},
 			{
@@ -834,7 +834,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"), // remove one
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
 				),
 			},
 			{
@@ -951,7 +951,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 			{
@@ -975,7 +975,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 			{
@@ -1069,7 +1069,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1099,7 +1099,7 @@ func testAccCheckClusterExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
-		_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes["name"])
+		_, err := tfmemorydb.FindClusterByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

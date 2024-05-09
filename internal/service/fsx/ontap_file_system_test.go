@@ -37,7 +37,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
@@ -50,21 +50,21 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", "id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", "128"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -72,7 +72,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -101,7 +101,7 @@ func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -134,7 +134,7 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_oneHaPair(rName, throughput2),
@@ -174,7 +174,7 @@ func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids", "fsx_admin_password"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs, "fsx_admin_password"},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_adminPassword(rName, pass2),
@@ -211,7 +211,7 @@ func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -242,7 +242,7 @@ func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName, 4000),
@@ -304,7 +304,7 @@ func TestAccFSxONTAPFileSystem_securityGroupIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs2(rName),
@@ -335,22 +335,22 @@ func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_routeTable(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", names.AttrID),
 				),
 			},
 			{
@@ -358,7 +358,7 @@ func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
 			},
 		},
@@ -389,7 +389,7 @@ func TestAccFSxONTAPFileSystem_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -437,7 +437,7 @@ func TestAccFSxONTAPFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -474,7 +474,7 @@ func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 0),
@@ -511,14 +511,14 @@ func TestAccFSxONTAPFileSystem_kmsKeyID(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 		},
 	})
@@ -547,7 +547,7 @@ func TestAccFSxONTAPFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -584,7 +584,7 @@ func TestAccFSxONTAPFileSystem_throughputCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_throughputCapacity(rName),
@@ -630,7 +630,7 @@ func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
 				Config: testAccONTAPFileSystemConfig_storageCapacity(rName),

@@ -74,7 +74,7 @@ func (r *resourceCollection) Metadata(_ context.Context, request resource.Metada
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -87,20 +87,20 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"kms_key_arn": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -124,7 +124,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -137,7 +137,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -306,7 +306,7 @@ func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.Modify
 }
 
 func (r *resourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {

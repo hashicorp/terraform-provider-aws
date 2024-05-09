@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_rule_group")
@@ -18,7 +19,7 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFirewallRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,11 +39,11 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +55,7 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,16 +78,16 @@ func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(aws.StringValue(ruleGroup.Id))
-	d.Set("arn", ruleGroup.Arn)
+	d.Set(names.AttrARN, ruleGroup.Arn)
 	d.Set("creation_time", ruleGroup.CreationTime)
 	d.Set("creator_request_id", ruleGroup.CreatorRequestId)
 	d.Set("firewall_rule_group_id", ruleGroup.Id)
 	d.Set("modification_time", ruleGroup.ModificationTime)
-	d.Set("name", ruleGroup.Name)
-	d.Set("owner_id", ruleGroup.OwnerId)
+	d.Set(names.AttrName, ruleGroup.Name)
+	d.Set(names.AttrOwnerID, ruleGroup.OwnerId)
 	d.Set("rule_count", ruleGroup.RuleCount)
 	d.Set("share_status", ruleGroup.ShareStatus)
-	d.Set("status", ruleGroup.Status)
+	d.Set(names.AttrStatus, ruleGroup.Status)
 	d.Set("status_message", ruleGroup.StatusMessage)
 
 	return nil

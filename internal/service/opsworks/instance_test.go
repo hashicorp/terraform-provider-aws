@@ -39,7 +39,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "state", "stopped"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "stopped"),
 					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
@@ -53,7 +53,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
+				ImportStateVerifyIgnore: []string{names.AttrState}, //state is something we pass to the API and get back as status :(
 			},
 			{
 				Config: testAccInstanceConfig_update(rName),
@@ -94,7 +94,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"state"},
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 			{
 				Config: testAccInstanceConfig_updateHostName(rName),

@@ -32,7 +32,7 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
@@ -69,8 +69,8 @@ func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_basicViaAccessPoint(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "bucket", accessPointResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "key", resourceName, "key"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucket, accessPointResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKey, resourceName, names.AttrKey),
 				),
 			},
 		},
@@ -130,7 +130,7 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "sse_kms_key_id", resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sse_kms_key_id", resourceName, names.AttrKMSKeyID),
 				),
 			},
 		},
@@ -162,7 +162,7 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "sse_kms_key_id", resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sse_kms_key_id", resourceName, names.AttrKMSKeyID),
 				),
 			},
 		},

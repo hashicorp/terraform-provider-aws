@@ -627,7 +627,7 @@ func TestAccCloudFrontDistribution_Origin_originAccessControl(t *testing.T) {
 				Config: testAccDistributionConfig_originAccessControl(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.test", &distribution),
-					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.0", "id"),
+					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.0", names.AttrID),
 				),
 			},
 			{
@@ -643,7 +643,7 @@ func TestAccCloudFrontDistribution_Origin_originAccessControl(t *testing.T) {
 				Config: testAccDistributionConfig_originAccessControl(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.test", &distribution),
-					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.1", "id"),
+					resource.TestCheckResourceAttrPair("aws_cloudfront_distribution.test", "origin.0.origin_access_control_id", "aws_cloudfront_origin_access_control.test.1", names.AttrID),
 				),
 			},
 		},
@@ -675,7 +675,7 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", regexache.MustCompile(`distribution/[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
@@ -697,7 +697,7 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
 					resource.TestMatchResourceAttr(resourceName, "domain_name", regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
@@ -1030,7 +1030,7 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_realtimeLogARN(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1065,7 +1065,7 @@ func TestAccCloudFrontDistribution_OrderedCacheBehavior_realtimeLogARN(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ordered_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ordered_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1100,7 +1100,7 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 				Config: testAccDistributionConfig_enabled(false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -1116,7 +1116,7 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 				Config: testAccDistributionConfig_enabled(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},
@@ -1314,7 +1314,7 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"retain_on_delete",
-					"status",
+					names.AttrStatus,
 					"wait_for_deployment",
 				},
 			},

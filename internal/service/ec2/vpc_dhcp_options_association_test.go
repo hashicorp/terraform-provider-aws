@@ -148,7 +148,7 @@ func testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resour
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["vpc_id"], nil
+		return rs.Primary.Attributes[names.AttrVPCID], nil
 	}
 }
 

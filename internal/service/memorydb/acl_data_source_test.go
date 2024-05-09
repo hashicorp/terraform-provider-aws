@@ -29,9 +29,9 @@ func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
 			{
 				Config: testAccACLDataSourceConfig_basic(rName, userName1, userName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "minimum_engine_version", resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "user_names.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "user_names.*", resourceName, "user_names.0"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "user_names.*", resourceName, "user_names.1"),

@@ -34,7 +34,7 @@ func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 				Config: testAccEBSDefaultKMSKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSDefaultKMSKey(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, names.AttrARN),
 				),
 			},
 			{

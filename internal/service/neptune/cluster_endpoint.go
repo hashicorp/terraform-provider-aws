@@ -41,7 +41,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +146,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", ep.DBClusterEndpointArn)
+	d.Set(names.AttrARN, ep.DBClusterEndpointArn)
 	d.Set("cluster_endpoint_identifier", ep.DBClusterEndpointIdentifier)
 	d.Set("cluster_identifier", ep.DBClusterIdentifier)
 	d.Set("endpoint", ep.Endpoint)
@@ -161,7 +161,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		clusterID, clusterEndpointID, err := clusterEndpointParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

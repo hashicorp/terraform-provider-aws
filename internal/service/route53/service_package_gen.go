@@ -55,7 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_route53_health_check",
 			Name:     "Health Check",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "healthcheck",
 			},
 		},
@@ -92,7 +92,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "hostedzone",
 			},
 		},

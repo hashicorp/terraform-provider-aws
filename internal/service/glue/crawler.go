@@ -48,7 +48,7 @@ func ResourceCrawler() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,7 +132,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -309,7 +309,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -430,7 +430,7 @@ func ResourceCrawler() *schema.Resource {
 func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	crawlerInput, err := createCrawlerInput(ctx, d, name)
 	if err != nil {
@@ -502,12 +502,12 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
 	}.String()
-	d.Set("arn", crawlerARN)
-	d.Set("name", crawler.Name)
+	d.Set(names.AttrARN, crawlerARN)
+	d.Set(names.AttrName, crawler.Name)
 	d.Set("database_name", crawler.DatabaseName)
 	d.Set("role", crawler.Role)
 	d.Set("configuration", crawler.Configuration)
-	d.Set("description", crawler.Description)
+	d.Set(names.AttrDescription, crawler.Description)
 	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
 	d.Set("schedule", "")
 	if crawler.Schedule != nil {
@@ -576,9 +576,9 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		updateCrawlerInput, err := updateCrawlerInput(d, name)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
@@ -657,7 +657,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 		Tags:         getTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
 	}
-	if description, ok := d.GetOk("description"); ok {
+	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
 	if schedule, ok := d.GetOk("schedule"); ok {
@@ -710,7 +710,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 		Role:         aws.String(d.Get("role").(string)),
 		Targets:      expandCrawlerTargets(d),
 	}
-	if description, ok := d.GetOk("description"); ok {
+	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
 

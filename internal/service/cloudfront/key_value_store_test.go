@@ -38,11 +38,11 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "comment"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{

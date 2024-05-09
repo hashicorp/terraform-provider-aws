@@ -44,7 +44,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,11 +127,11 @@ func ResourceLoggingConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -157,17 +157,17 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateLoggingConfiguration(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
@@ -196,14 +196,14 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionReading, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 
 	if err := d.Set("destination_configuration", flattenDestinationConfiguration(out.DestinationConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
-	d.Set("state", out.State)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrState, out.State)
 
 	return diags
 }
@@ -219,8 +219,8 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 		Identifier: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("name") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChanges(names.AttrName) {
+		in.Name = aws.String(d.Get(names.AttrName).(string))
 		update = true
 	}
 

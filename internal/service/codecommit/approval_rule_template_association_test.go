@@ -35,7 +35,7 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_basic(t *testing.T) {
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "approval_rule_template_name", templateResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "approval_rule_template_name", templateResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository_name", repoResourceName, "repository_name"),
 				),
 			},

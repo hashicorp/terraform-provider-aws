@@ -37,7 +37,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -65,7 +65,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceArn := d.Get("resource_arn").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
@@ -79,7 +79,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	_, err = conn.PutResourcePolicy(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get("policy").(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get(names.AttrPolicy).(string), err)
 	}
 
 	d.SetId(resourceArn)
@@ -109,13 +109,13 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("resource_arn", resourceArn)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.Policy))
 
 	if err != nil {
 		return diag.Errorf("setting policy %s: %s", aws.ToString(policy.Policy), err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return nil
 }

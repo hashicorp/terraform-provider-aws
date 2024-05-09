@@ -38,7 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_acm_certificate",
 			Name:     "Certificate",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{

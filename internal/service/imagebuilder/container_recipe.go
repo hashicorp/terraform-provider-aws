@@ -35,7 +35,7 @@ func ResourceContainerRecipe() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,12 +58,12 @@ func ResourceContainerRecipe() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -83,7 +83,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -154,7 +154,7 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.IntBetween(100, 64000),
 												},
-												"kms_key_id": {
+												names.AttrKMSKeyID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
@@ -213,13 +213,13 @@ func ResourceContainerRecipe() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -267,7 +267,7 @@ func ResourceContainerRecipe() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -300,7 +300,7 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.ContainerType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -316,11 +316,11 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.InstanceConfiguration = expandInstanceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -336,7 +336,7 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.TargetRepository = expandTargetContainerRepository(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.SemanticVersion = aws.String(v.(string))
 	}
 
@@ -385,11 +385,11 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 
 	containerRecipe := output.ContainerRecipe
 
-	d.Set("arn", containerRecipe.Arn)
+	d.Set(names.AttrARN, containerRecipe.Arn)
 	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
 	d.Set("container_type", containerRecipe.ContainerType)
 	d.Set("date_created", containerRecipe.DateCreated)
-	d.Set("description", containerRecipe.Description)
+	d.Set(names.AttrDescription, containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
 	d.Set("encrypted", containerRecipe.Encrypted)
 
@@ -399,8 +399,8 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("instance_configuration", nil)
 	}
 
-	d.Set("kms_key_id", containerRecipe.KmsKeyId)
-	d.Set("name", containerRecipe.Name)
+	d.Set(names.AttrKMSKeyID, containerRecipe.KmsKeyId)
+	d.Set(names.AttrName, containerRecipe.Name)
 	d.Set("owner", containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
@@ -408,7 +408,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	setTagsOut(ctx, containerRecipe.Tags)
 
 	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
-	d.Set("version", containerRecipe.Version)
+	d.Set(names.AttrVersion, containerRecipe.Version)
 	d.Set("working_directory", containerRecipe.WorkingDirectory)
 
 	return diags

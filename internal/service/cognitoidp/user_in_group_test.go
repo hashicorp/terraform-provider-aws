@@ -38,8 +38,8 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", userGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "group_name", userGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "username", userResourceName, "username"),
 				),
 			},

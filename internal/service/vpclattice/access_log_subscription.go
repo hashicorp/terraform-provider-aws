@@ -38,7 +38,7 @@ func resourceAccessLogSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +107,7 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("destination_arn", out.DestinationArn)
 	d.Set("resource_arn", out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)

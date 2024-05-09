@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscalingplans_scaling_plan")
@@ -56,7 +57,7 @@ func ResourceScalingPlan() *schema.Resource {
 							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -76,7 +77,7 @@ func ResourceScalingPlan() *schema.Resource {
 				},
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -329,7 +330,7 @@ func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingPlansClient(ctx)
 
-	scalingPlanName := d.Get("name").(string)
+	scalingPlanName := d.Get(names.AttrName).(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
 		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
@@ -382,7 +383,7 @@ func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting application_source: %s", err)
 	}
-	d.Set("name", scalingPlan.ScalingPlanName)
+	d.Set(names.AttrName, scalingPlan.ScalingPlanName)
 	err = d.Set("scaling_instruction", flattenScalingInstructions(scalingPlan.ScalingInstructions))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scaling_instruction: %s", err)
@@ -463,7 +464,7 @@ func resourceScalingPlanImport(ctx context.Context, d *schema.ResourceData, meta
 	scalingPlanVersion := 1
 
 	d.SetId(scalingPlanCreateResourceID(scalingPlanName, scalingPlanVersion))
-	d.Set("name", scalingPlanName)
+	d.Set(names.AttrName, scalingPlanName)
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
 	return []*schema.ResourceData{d}, nil
@@ -493,7 +494,7 @@ func expandApplicationSource(vApplicationSource []interface{}) *awstypes.Applica
 
 			mTagFilter := vTagFilter.(map[string]interface{})
 
-			if v, ok := mTagFilter["key"].(string); ok && v != "" {
+			if v, ok := mTagFilter[names.AttrKey].(string); ok && v != "" {
 				tagFilter.Key = aws.String(v)
 			}
 
@@ -524,8 +525,8 @@ func flattenApplicationSource(applicationSource *awstypes.ApplicationSource) []i
 
 		for _, tagFilter := range tagFilters {
 			mTagFilter := map[string]interface{}{
-				"key":    aws.ToString(tagFilter.Key),
-				"values": flex.FlattenStringValueSet(tagFilter.Values),
+				names.AttrKey: aws.ToString(tagFilter.Key),
+				"values":      flex.FlattenStringValueSet(tagFilter.Values),
 			}
 
 			vTagFilters = append(vTagFilters, mTagFilter)

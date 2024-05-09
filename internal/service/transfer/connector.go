@@ -41,7 +41,7 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_role", output.AccessRole)
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
@@ -218,7 +218,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &transfer.UpdateConnectorInput{
 			ConnectorId: aws.String(d.Id()),
 		}

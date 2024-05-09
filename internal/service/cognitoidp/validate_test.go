@@ -6,6 +6,8 @@ package cognitoidp
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidUserGroupName(t *testing.T) {
@@ -23,7 +25,7 @@ func TestValidUserGroupName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validUserGroupName(s, "name")
+		_, errors := validUserGroupName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito User Pool Group Name: %v", s, errors)
 		}
@@ -35,7 +37,7 @@ func TestValidUserGroupName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validUserGroupName(s, "name")
+		_, errors := validUserGroupName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito User Pool Group Name: %v", s, errors)
 		}

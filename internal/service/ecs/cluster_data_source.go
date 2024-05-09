@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecs_cluster")
@@ -20,7 +21,7 @@ func DataSourceCluster() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,22 +58,22 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -91,14 +92,14 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
-	d.Set("arn", cluster.ClusterArn)
+	d.Set(names.AttrARN, cluster.ClusterArn)
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
-	d.Set("status", cluster.Status)
+	d.Set(names.AttrStatus, cluster.Status)
 
 	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

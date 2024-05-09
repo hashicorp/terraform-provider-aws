@@ -37,8 +37,8 @@ func TestAccFSxOpenZFSSnapshot_basic(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`snapshot/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`snapshot/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "volume_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -140,7 +140,7 @@ func TestAccFSxOpenZFSSnapshot_name(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func TestAccFSxOpenZFSSnapshot_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot2),
 					testAccCheckOpenZFSSnapshotNotRecreated(&snapshot1, &snapshot2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -176,8 +176,8 @@ func TestAccFSxOpenZFSSnapshot_childVolume(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_childVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`snapshot/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`snapshot/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -207,7 +207,7 @@ func TestAccFSxOpenZFSSnapshot_volumeID(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_volumeID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -220,7 +220,7 @@ func TestAccFSxOpenZFSSnapshot_volumeID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot2),
 					testAccCheckOpenZFSSnapshotRecreated(&snapshot1, &snapshot2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

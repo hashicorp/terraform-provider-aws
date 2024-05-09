@@ -41,7 +41,7 @@ func resourceGatewayRoute() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -66,7 +66,7 @@ func resourceGatewayRoute() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -172,7 +172,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 																fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix.0.value", attrName),
 															},
 														},
-														"value": {
+														names.AttrValue: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
@@ -199,7 +199,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"port": {
+											names.AttrPort: {
 												Type:         schema.TypeInt,
 												Optional:     true,
 												ValidateFunc: validation.IsPortNumber,
@@ -292,7 +292,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 											},
-											"name": {
+											names.AttrName: {
 												Type:         schema.TypeString,
 												Required:     true,
 												ValidateFunc: validation.StringLenBetween(1, 50),
@@ -356,7 +356,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
-								"port": {
+								names.AttrPort: {
 									Type:         schema.TypeInt,
 									Optional:     true,
 									ValidateFunc: validation.IsPortNumber,
@@ -392,7 +392,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													},
 												},
 											},
-											"name": {
+											names.AttrName: {
 												Type:     schema.TypeString,
 												Required: true,
 											},
@@ -440,7 +440,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"port": {
+													names.AttrPort: {
 														Type:         schema.TypeInt,
 														Optional:     true,
 														ValidateFunc: validation.IsPortNumber,
@@ -473,7 +473,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IsPortNumber,
@@ -509,7 +509,7 @@ func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateGatewayRouteInput{
 		GatewayRouteName:   aws.String(name),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
@@ -538,7 +538,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string))
+		return findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -554,12 +554,12 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	gatewayRoute := outputRaw.(*appmesh.GatewayRouteData)
 
 	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_date", gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", gatewayRoute.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", gatewayRoute.MeshName)
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
-	d.Set("name", gatewayRoute.GatewayRouteName)
+	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
 	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -575,7 +575,7 @@ func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
-			GatewayRouteName:   aws.String(d.Get("name").(string)),
+			GatewayRouteName:   aws.String(d.Get(names.AttrName).(string)),
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
 			Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
 			VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
@@ -601,7 +601,7 @@ func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Deleting App Mesh Gateway Route: %s", d.Id())
 	input := &appmesh.DeleteGatewayRouteInput{
-		GatewayRouteName:   aws.String(d.Get("name").(string)),
+		GatewayRouteName:   aws.String(d.Get(names.AttrName).(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
@@ -642,7 +642,7 @@ func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(gatewayRoute.Metadata.Uid))
 	d.Set("mesh_name", gatewayRoute.MeshName)
-	d.Set("name", gatewayRoute.GatewayRouteName)
+	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
 	return []*schema.ResourceData{d}, nil
@@ -744,7 +744,7 @@ func expandGatewayRouteTarget(vRouteTarget []interface{}) *appmesh.GatewayRouteT
 		routeTarget.VirtualService = virtualService
 	}
 
-	if vPort, ok := mRouteTarget["port"].(int); ok && vPort > 0 {
+	if vPort, ok := mRouteTarget[names.AttrPort].(int); ok && vPort > 0 {
 		routeTarget.Port = aws.Int64(int64(vPort))
 	}
 
@@ -781,7 +781,7 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 			routeMatch.ServiceName = aws.String(vServiceName)
 		}
 
-		if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+		if vPort, ok := mRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 			routeMatch.Port = aws.Int64(int64(vPort))
 		}
 
@@ -822,7 +822,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 		if vDefaultPrefix, ok := mRoutePrefixRewrite["default_prefix"].(string); ok && vDefaultPrefix != "" {
 			routePrefixRewrite.DefaultPrefix = aws.String(vDefaultPrefix)
 		}
-		if vValue, ok := mRoutePrefixRewrite["value"].(string); ok && vValue != "" {
+		if vValue, ok := mRoutePrefixRewrite[names.AttrValue].(string); ok && vValue != "" {
 			routePrefixRewrite.Value = aws.String(vValue)
 		}
 		routeRewrite.Prefix = routePrefixRewrite
@@ -840,7 +840,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 
 	mRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
 
-	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+	if vPort, ok := mRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 		routeMatch.Port = aws.Int64(int64(vPort))
 	}
 
@@ -859,7 +859,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 			if vInvert, ok := mHeader["invert"].(bool); ok {
 				header.Invert = aws.Bool(vInvert)
 			}
-			if vName, ok := mHeader["name"].(string); ok && vName != "" {
+			if vName, ok := mHeader[names.AttrName].(string); ok && vName != "" {
 				header.Name = aws.String(vName)
 			}
 
@@ -939,7 +939,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 
 			mQueryParameter := vQueryParameter.(map[string]interface{})
 
-			if vName, ok := mQueryParameter["name"].(string); ok && vName != "" {
+			if vName, ok := mQueryParameter[names.AttrName].(string); ok && vName != "" {
 				queryParameter.Name = aws.String(vName)
 			}
 
@@ -1015,7 +1015,7 @@ func flattenGatewayRouteTarget(routeTarget *appmesh.GatewayRouteTarget) []interf
 	}
 
 	mRouteTarget := map[string]interface{}{
-		"port": int(aws.Int64Value(routeTarget.Port)),
+		names.AttrPort: int(aws.Int64Value(routeTarget.Port)),
 	}
 
 	if virtualService := routeTarget.VirtualService; virtualService != nil {
@@ -1049,7 +1049,7 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 			"service_name": aws.StringValue(routeMatch.ServiceName),
 		}
 		if routeMatch.Port != nil {
-			mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+			mRouteMatch[names.AttrPort] = int(aws.Int64Value(routeMatch.Port))
 		}
 
 		mGrpcRoute["match"] = []interface{}{mRouteMatch}
@@ -1066,7 +1066,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	mRouteMatch := map[string]interface{}{}
 
 	if routeMatch.Port != nil {
-		mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+		mRouteMatch[names.AttrPort] = int(aws.Int64Value(routeMatch.Port))
 	}
 
 	if routeMatch.Prefix != nil {
@@ -1077,8 +1077,8 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 	for _, header := range routeMatch.Headers {
 		mHeader := map[string]interface{}{
-			"invert": aws.BoolValue(header.Invert),
-			"name":   aws.StringValue(header.Name),
+			"invert":       aws.BoolValue(header.Invert),
+			names.AttrName: aws.StringValue(header.Name),
 		}
 
 		if match := header.Match; match != nil {
@@ -1136,7 +1136,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 	for _, queryParameter := range routeMatch.QueryParameters {
 		mQueryParameter := map[string]interface{}{
-			"name": aws.StringValue(queryParameter.Name),
+			names.AttrName: aws.StringValue(queryParameter.Name),
 		}
 
 		if match := queryParameter.Match; match != nil {
@@ -1181,7 +1181,7 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrit
 			"default_prefix": aws.StringValue(rewritePrefix.DefaultPrefix),
 		}
 		if rewritePrefixValue := rewritePrefix.Value; rewritePrefixValue != nil {
-			mRewritePrefix["value"] = aws.StringValue(rewritePrefix.Value)
+			mRewritePrefix[names.AttrValue] = aws.StringValue(rewritePrefix.Value)
 		}
 		mRouteRewrite["prefix"] = []interface{}{mRewritePrefix}
 	}

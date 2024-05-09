@@ -52,7 +52,7 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "training_data_config.0.s3_uri"),

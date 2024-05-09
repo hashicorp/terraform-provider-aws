@@ -26,8 +26,8 @@ func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedAccountID),
+					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, names.AttrARN, expectedAccountID, "iam", "root"),
 				),
 			},
 		},
@@ -48,8 +48,8 @@ func TestAccELBServiceAccountDataSource_region(t *testing.T) {
 			{
 				Config: testAccServiceAccountDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedAccountID),
+					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, names.AttrARN, expectedAccountID, "iam", "root"),
 				),
 			},
 		},

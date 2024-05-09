@@ -37,7 +37,7 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -104,7 +104,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	lbName := d.Get("name").(string)
+	lbName := d.Get(names.AttrName).(string)
 	in := lightsail.CreateLoadBalancerInput{
 		InstancePort:     int32(d.Get("instance_port").(int)),
 		LoadBalancerName: aws.String(lbName),
@@ -149,7 +149,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
 	}
 
-	d.Set("arn", lb.Arn)
+	d.Set(names.AttrARN, lb.Arn)
 	d.Set("created_at", lb.CreatedAt.Format(time.RFC3339))
 	d.Set("dns_name", lb.DnsName)
 	d.Set("health_check_path", lb.HealthCheckPath)
@@ -157,7 +157,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("protocol", lb.Protocol)
 	d.Set("public_ports", lb.PublicPorts)
-	d.Set("name", lb.Name)
+	d.Set(names.AttrName, lb.Name)
 	d.Set("support_code", lb.SupportCode)
 
 	setTagsOut(ctx, lb.Tags)
@@ -169,7 +169,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	lbName := d.Get("name").(string)
+	lbName := d.Get(names.AttrName).(string)
 
 	in := &lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),
@@ -200,7 +200,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	lbName := d.Get("name").(string)
+	lbName := d.Get(names.AttrName).(string)
 
 	out, err := conn.DeleteLoadBalancer(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),

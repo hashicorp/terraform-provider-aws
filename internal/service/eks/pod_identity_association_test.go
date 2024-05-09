@@ -43,7 +43,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -157,7 +157,7 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -170,7 +170,7 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_updatedRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},
 		},

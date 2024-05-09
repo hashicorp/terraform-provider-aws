@@ -43,7 +43,7 @@ func ResourceAuthPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -53,7 +53,7 @@ func ResourceAuthPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -74,7 +74,7 @@ func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Get("resource_identifier").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
 	}
@@ -88,7 +88,7 @@ func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err = conn.PutAuthPolicy(ctx, in)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAuthPolicy, d.Get("policy").(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAuthPolicy, d.Get(names.AttrPolicy).(string), err)
 	}
 
 	d.SetId(resourceId)
@@ -119,13 +119,13 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("resource_identifier", resourceId)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.Policy))
 
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAuthPolicy, aws.ToString(policy.Policy), err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return nil
 }

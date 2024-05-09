@@ -39,21 +39,21 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
 						"ip_address_type": networkfirewall.IPAddressTypeIpv4,
 					}),
@@ -88,21 +88,21 @@ func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 				Config: testAccFirewallConfig_dualstackSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
 						"ip_address_type": networkfirewall.IPAddressTypeDualstack,
 					}),
@@ -134,21 +134,21 @@ func TestAccNetworkFirewallFirewall_description(t *testing.T) {
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_description(rName, "updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -272,7 +272,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -285,9 +285,9 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -317,7 +317,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -327,12 +327,12 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, "availability_zone"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -345,9 +345,9 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 				),
 			},
 			{

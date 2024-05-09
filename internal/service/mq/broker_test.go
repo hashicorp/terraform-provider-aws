@@ -39,7 +39,7 @@ func TestValidateBrokerName(t *testing.T) {
 		strings.Repeat("x", 50),
 	}
 	for _, v := range validNames {
-		_, errors := tfmq.ValidateBrokerName(v, "name")
+		_, errors := tfmq.ValidateBrokerName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid broker name: %q", v, errors)
 		}
@@ -53,7 +53,7 @@ func TestValidateBrokerName(t *testing.T) {
 		strings.Repeat("x", 51),
 	}
 	for _, v := range invalidNames {
-		_, errors := tfmq.ValidateBrokerName(v, "name")
+		_, errors := tfmq.ValidateBrokerName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid broker name", v)
 		}
@@ -270,7 +270,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -465,7 +465,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -556,7 +556,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -685,7 +685,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
@@ -771,7 +771,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_options.0.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_options.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "false"),
 				),
 			},
@@ -1308,7 +1308,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com$`)),
@@ -1405,7 +1405,7 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 					// data_replication_mode is not returned until after reboot
 					resource.TestCheckResourceAttr(resourceName, "data_replication_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_data_replication_mode", string(types.DataReplicationModeCrdr)),
-					resource.TestCheckResourceAttrPair(resourceName, "data_replication_primary_broker_arn", primaryBrokerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_replication_primary_broker_arn", primaryBrokerResourceName, names.AttrARN),
 				),
 			},
 			{

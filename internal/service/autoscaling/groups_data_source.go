@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_autoscaling_groups", name="Groups")
@@ -33,7 +34,7 @@ func dataSourceGroups() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -67,11 +68,11 @@ func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
 		// In previous iterations, users were expected to provide "key" and "value" tag names.
 		// With the addition of asgs filters, the signature is "tag-key" and "tag-value", so these conditions prevent breaking changes.
 		// https://docs.aws.amazon.com/sdk-for-go/api/service/autoscaling/#Filter
-		name := m["name"].(string)
-		if name == "key" {
+		name := m[names.AttrName].(string)
+		if name == names.AttrKey {
 			name = "tag-key"
 		}
-		if name == "value" {
+		if name == names.AttrValue {
 			name = "tag-value"
 		}
 		filters = append(filters, awstypes.Filter{

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_firewall_config")
@@ -36,7 +37,7 @@ func ResourceFirewallConfig() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.FirewallFailOpenStatus_Values(), false),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +88,7 @@ func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
-	d.Set("owner_id", firewallConfig.OwnerId)
+	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
 	d.Set("resource_id", firewallConfig.ResourceId)
 
 	return nil

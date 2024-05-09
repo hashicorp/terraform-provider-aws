@@ -53,7 +53,7 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
-	d.Set("state", transitGatewayPeeringAttachment.State)
+	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
 	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)

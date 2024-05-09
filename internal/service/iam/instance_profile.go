@@ -46,7 +46,7 @@ func resourceInstanceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -185,7 +185,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	d.Set("arn", instanceProfile.Arn)
+	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
 	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))

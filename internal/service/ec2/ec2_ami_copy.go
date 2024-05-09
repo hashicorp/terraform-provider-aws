@@ -46,7 +46,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func ResourceAMICopy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -187,7 +187,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -202,12 +202,12 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -273,11 +273,11 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	sourceImageID := d.Get("source_ami_id").(string)
 	input := &ec2.CopyImageInput{
 		ClientToken:   aws.String(id.UniqueId()),
-		Description:   aws.String(d.Get("description").(string)),
+		Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
 		Name:          aws.String(name),
 		SourceImageId: aws.String(sourceImageID),
@@ -288,7 +288,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DestinationOutpostArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 

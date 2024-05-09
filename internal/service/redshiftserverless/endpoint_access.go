@@ -19,6 +19,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshiftserverless_endpoint_access", name="Endpoint Access")
@@ -38,7 +39,7 @@ func resourceEndpointAccess() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,11 +55,11 @@ func resourceEndpointAccess() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -99,7 +100,7 @@ func resourceEndpointAccess() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -137,7 +138,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		input.OwnerAccount = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -177,11 +178,11 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("address", endpointAccess.Address)
-	d.Set("arn", endpointAccess.EndpointArn)
+	d.Set(names.AttrARN, endpointAccess.EndpointArn)
 	d.Set("endpoint_name", endpointAccess.EndpointName)
 	d.Set("owner_account", d.Get("owner_account"))
-	d.Set("port", endpointAccess.Port)
-	d.Set("subnet_ids", aws.StringValueSlice(endpointAccess.SubnetIds))
+	d.Set(names.AttrPort, endpointAccess.Port)
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(endpointAccess.SubnetIds))
 	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}

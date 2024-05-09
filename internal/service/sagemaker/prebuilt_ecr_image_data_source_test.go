@@ -26,7 +26,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPrebuiltECRImageDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", "1")),
 				),
@@ -49,7 +49,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
 			{
 				Config: testAccPrebuiltECRImageDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "sagemaker-scikit-learn", "2.2-1.0.11.0")),
 				),

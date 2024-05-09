@@ -35,9 +35,9 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGat
 			{
 				Config: testAccTransitGatewayDxGatewayAttachmentDataSourceConfig_transit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "dx_gateway_id", dxGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
 				),
 			},
 		},
@@ -65,9 +65,9 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T, sem
 			{
 				Config: testAccTransitGatewayDxGatewayAttachmentDataSourceConfig_transitFilter(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "dx_gateway_id", dxGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
 				),
 			},
 		},

@@ -35,7 +35,7 @@ func ResourceLag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func ResourceLag() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -94,7 +94,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(name),
@@ -157,12 +157,12 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		AccountID: aws.StringValue(lag.OwnerAccount),
 		Resource:  fmt.Sprintf("dxlag/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("connections_bandwidth", lag.ConnectionsBandwidth)
 	d.Set("has_logical_redundancy", lag.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
 	d.Set("location", lag.Location)
-	d.Set("name", lag.LagName)
+	d.Set(names.AttrName, lag.LagName)
 	d.Set("owner_account_id", lag.OwnerAccount)
 	d.Set("provider_name", lag.ProviderName)
 
@@ -173,10 +173,10 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		input := &directconnect.UpdateLagInput{
 			LagId:   aws.String(d.Id()),
-			LagName: aws.String(d.Get("name").(string)),
+			LagName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		log.Printf("[DEBUG] Updating Direct Connect LAG: %s", input)

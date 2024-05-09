@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 	propagationTimeout = 2 * time.Minute
 
 	RoleStatusARNIsUniqueID = "uniqueid"
-	RoleStatusARNIsARN      = "arn"
+	RoleStatusARNIsARN      = names.AttrARN
 	RoleStatusNotFound      = "notfound"
 )
 
@@ -35,7 +36,7 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, 
 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
-		Target:                    []string{RoleStatusARNIsARN},
+		Target:                    []string{names.AttrARN},
 		Refresh:                   statusRoleCreate(ctx, conn, id),
 		Timeout:                   propagationTimeout,
 		NotFoundChecks:            10,
@@ -64,7 +65,7 @@ func statusRoleCreate(ctx context.Context, conn *iam.Client, id string) retry.St
 		}
 
 		if arn.IsARN(aws.ToString(role.Arn)) {
-			return role, RoleStatusARNIsARN, nil
+			return role, names.AttrARN, nil
 		}
 
 		return role, RoleStatusARNIsUniqueID, nil

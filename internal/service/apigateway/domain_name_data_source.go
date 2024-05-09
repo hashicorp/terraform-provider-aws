@@ -23,7 +23,7 @@ func dataSourceDomainName() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDomainNameRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +101,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(output.DomainName))
-	d.Set("arn", domainNameARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainNameARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("certificate_arn", output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
 	if output.CertificateUploadDate != nil {

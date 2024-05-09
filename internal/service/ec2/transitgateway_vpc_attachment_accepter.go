@@ -48,7 +48,7 @@ func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -183,12 +183,12 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(ctx context.Context, d *sch
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
-	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
 	d.Set("transit_gateway_attachment_id", transitGatewayVPCAttachment.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
 	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
-	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
+	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
 	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ebs_snapshot")
@@ -30,7 +31,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +39,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +48,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			"filter": customFiltersSchema(),
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +88,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"volume_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -165,21 +166,21 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
-	d.Set("description", snapshot.Description)
+	d.Set(names.AttrDescription, snapshot.Description)
 	d.Set("encrypted", snapshot.Encrypted)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("outpost_arn", snapshot.OutpostArn)
 	d.Set("owner_alias", snapshot.OwnerAlias)
-	d.Set("owner_id", snapshot.OwnerId)
+	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("snapshot_id", snapshot.SnapshotId)
-	d.Set("state", snapshot.State)
+	d.Set(names.AttrState, snapshot.State)
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	if err := d.Set("tags", KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

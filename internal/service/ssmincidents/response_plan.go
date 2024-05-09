@@ -51,7 +51,7 @@ func ResourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -68,7 +68,7 @@ func ResourceResponsePlan() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -91,7 +91,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,7 +160,7 @@ func ResourceResponsePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -178,7 +178,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -203,18 +203,18 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
 		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
 		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := client.CreateResponsePlan(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get("name").(string), err)
+		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), err)
 	}
 
 	if output == nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.Arn))
@@ -247,7 +247,7 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ssmincidents.UpdateResponsePlanInput{
 			Arn: aws.String(d.Id()),
 		}

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_ipam_pool_cidr_allocation")
@@ -46,7 +47,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -110,7 +111,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 		input.Cidr = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 

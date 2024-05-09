@@ -258,7 +258,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
@@ -275,7 +275,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 						"lb_port":           "80",
 						"lb_protocol":       "http",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group"),
@@ -333,7 +333,7 @@ func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 				Config: testAccLoadBalancerConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-lb-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-lb-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-lb-"),
 				),
 			},
@@ -361,7 +361,7 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 				Config: testAccLoadBalancerConfig_namePrefix("tf-px-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-px-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-px-"),
 				),
 			},
@@ -439,7 +439,7 @@ func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 				Config: testAccLoadBalancerConfig_fullRangeOfCharacters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -542,7 +542,7 @@ func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 				Config: testAccLoadBalancerConfig_zeroValueName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, generatedNameRegexp),
 				),
 			},
 		},

@@ -39,11 +39,11 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_address", address1),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "identity", "aws_ses_domain_identity.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "identity", "aws_ses_domain_identity.test", names.AttrARN),
 				),
 			},
 			{
@@ -55,7 +55,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_address", address2),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
 				),
@@ -83,7 +83,7 @@ func TestAccPinpointEmailChannel_set(t *testing.T) {
 				Config: testAccEmailChannelConfig_configurationSet(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", names.AttrName),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 				Config: testAccEmailChannelConfig_noRole(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", names.AttrARN),
 				),
 			},
 			{

@@ -34,7 +34,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,7 +167,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -193,7 +193,7 @@ func dataSourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -226,7 +226,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("automated_snapshot_retention_period", rsc.AutomatedSnapshotRetentionPeriod)
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
@@ -262,13 +262,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("encrypted", rsc.Encrypted)
 	if rsc.Endpoint != nil {
 		d.Set("endpoint", rsc.Endpoint.Address)
-		d.Set("port", rsc.Endpoint.Port)
+		d.Set(names.AttrPort, rsc.Endpoint.Port)
 	}
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v *redshift.ClusterIamRole) string {
 		return aws.StringValue(v.IamRoleArn)
 	}))
-	d.Set("kms_key_id", rsc.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, rsc.KmsKeyId)
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 	d.Set("master_username", rsc.MasterUsername)
@@ -281,7 +281,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
-	d.Set("vpc_id", rsc.VpcId)
+	d.Set(names.AttrVPCID, rsc.VpcId)
 	d.Set("vpc_security_group_ids", tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)
 	}))

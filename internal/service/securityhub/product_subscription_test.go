@@ -90,7 +90,7 @@ func testAccCheckProductSubscriptionExists(ctx context.Context, n string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes["arn"])
+		_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		return err
 	}
@@ -105,7 +105,7 @@ func testAccCheckProductSubscriptionDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes["arn"])
+			_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if tfresource.NotFound(err) {
 				continue

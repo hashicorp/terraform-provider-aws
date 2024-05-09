@@ -21,7 +21,7 @@ func dataSourceInstanceProfile() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstanceProfileRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +37,7 @@ func dataSourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,12 +65,12 @@ func dataSourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.ToString(instanceProfile.InstanceProfileId))
-	d.Set("arn", instanceProfile.Arn)
+	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", fmt.Sprintf("%v", instanceProfile.CreateDate))
 	d.Set("path", instanceProfile.Path)
 	if len(instanceProfile.Roles) > 0 {
 		role := instanceProfile.Roles[0]
-		d.Set("role_arn", role.Arn)
+		d.Set(names.AttrRoleARN, role.Arn)
 		d.Set("role_id", role.RoleId)
 		d.Set("role_name", role.RoleName)
 	}

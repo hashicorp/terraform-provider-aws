@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_network_insights_path")
@@ -22,7 +23,7 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 		ReadWithoutTimeout: dataSourceNetworkInsightsPathRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,7 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -98,7 +99,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 
 	networkInsightsPathID := aws.StringValue(nip.NetworkInsightsPathId)
 	d.SetId(networkInsightsPathID)
-	d.Set("arn", nip.NetworkInsightsPathArn)
+	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
 	d.Set("destination", nip.Destination)
 	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
@@ -109,7 +110,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	if err := d.Set("tags", KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

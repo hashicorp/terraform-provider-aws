@@ -21,14 +21,14 @@ import (
 func resourceInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,7 +161,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -271,7 +271,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -328,7 +328,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -386,7 +386,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -446,7 +446,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -479,7 +479,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -615,7 +615,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -644,7 +644,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -674,7 +674,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -766,7 +766,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -882,7 +882,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -932,7 +932,7 @@ func InstanceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, 
 		return nil, nil
 	}
 
-	rawState["id"] = rawState["resource_id"]
+	rawState[names.AttrID] = rawState["resource_id"]
 
 	return rawState, nil
 }

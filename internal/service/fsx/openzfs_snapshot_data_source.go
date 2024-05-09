@@ -27,7 +27,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOpenZFSSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +41,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -104,9 +104,9 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 
 	snapshot := snapshots[0]
 	d.SetId(aws.StringValue(snapshot.SnapshotId))
-	d.Set("arn", snapshot.ResourceARN)
+	d.Set(names.AttrARN, snapshot.ResourceARN)
 	d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339))
-	d.Set("name", snapshot.Name)
+	d.Set(names.AttrName, snapshot.Name)
 	d.Set("snapshot_id", snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 

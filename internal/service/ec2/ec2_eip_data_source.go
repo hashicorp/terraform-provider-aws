@@ -30,7 +30,7 @@ func dataSourceEIP() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func dataSourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -108,7 +108,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	input := &ec2.DescribeAddressesInput{}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.AllocationIds = []string{v.(string)}
 	}
 
@@ -117,7 +117,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
@@ -138,7 +138,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if eip.Domain == types.DomainTypeVpc {
 		allocationID := aws.ToString(eip.AllocationId)
 		d.SetId(allocationID)
-		d.Set("arn", eipARN(meta.(*conns.AWSClient), allocationID))
+		d.Set(names.AttrARN, eipARN(meta.(*conns.AWSClient), allocationID))
 
 		addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
 
@@ -152,7 +152,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else {
 		d.SetId(aws.ToString(eip.PublicIp))
-		d.Set("arn", nil)
+		d.Set(names.AttrARN, nil)
 		d.Set("ptr_record", nil)
 	}
 	d.Set("association_id", eip.AssociationId)

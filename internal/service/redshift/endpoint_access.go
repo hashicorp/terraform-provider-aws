@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_endpoint_access", name="Endpoint Access")
@@ -51,7 +52,7 @@ func resourceEndpointAccess() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
 				),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -99,7 +100,7 @@ func resourceEndpointAccess() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -173,7 +174,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("vpc_security_group_ids", vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
 	d.Set("resource_owner", endpoint.ResourceOwner)
 	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
-	d.Set("port", endpoint.Port)
+	d.Set(names.AttrPort, endpoint.Port)
 	d.Set("address", endpoint.Address)
 
 	if err := d.Set("vpc_endpoint", flattenVPCEndpoint(endpoint.VpcEndpoint)); err != nil {
@@ -262,7 +263,7 @@ func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

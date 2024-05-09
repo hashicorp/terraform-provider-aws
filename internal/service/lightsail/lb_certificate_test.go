@@ -44,8 +44,8 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_basic(rName, lbName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`LoadBalancerTlsCertificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`LoadBalancerTlsCertificate/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),

@@ -91,7 +91,7 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateARN *string)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
+					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, names.AttrName)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -147,7 +147,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
+					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, names.AttrName)),
 			},
 			{
 				Config: testAccAPIMappingConfig_key(rName, *certificateARN, "$context.apiId"),
@@ -155,7 +155,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainNameResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
+					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, names.AttrName)),
 			},
 			{
 				ResourceName:      resourceName,
