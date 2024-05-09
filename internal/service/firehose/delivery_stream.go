@@ -665,7 +665,7 @@ func resourceDeliveryStream() *schema.Resource {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"region": {
+													names.AttrRegion: {
 														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
@@ -2209,7 +2209,7 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 	if v, ok := m["catalog_id"].(string); ok && v != "" {
 		config.CatalogId = aws.String(v)
 	}
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		config.Region = aws.String(v)
 	}
 
@@ -3697,7 +3697,7 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 	m := map[string]interface{}{
 		"catalog_id":           aws.ToString(sc.CatalogId),
 		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
-		"region":               aws.ToString(sc.Region),
+		names.AttrRegion:       aws.ToString(sc.Region),
 		names.AttrRoleARN:      aws.ToString(sc.RoleARN),
 		"table_name":           aws.ToString(sc.TableName),
 		"version_id":           aws.ToString(sc.VersionId),
