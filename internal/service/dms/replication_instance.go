@@ -59,7 +59,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -157,7 +157,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 
 	replicationInstanceID := d.Get("replication_instance_id").(string)
 	input := &dms.CreateReplicationInstanceInput{
-		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade:       aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
@@ -226,7 +226,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
@@ -265,8 +265,8 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange(names.AttrEngineVersion) {
