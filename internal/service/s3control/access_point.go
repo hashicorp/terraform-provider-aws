@@ -38,7 +38,7 @@ func resourceAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -161,7 +161,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	name := d.Get(names.AttrName).(string)
@@ -281,7 +281,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set(names.AttrBucket, output.Bucket)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("alias", output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
