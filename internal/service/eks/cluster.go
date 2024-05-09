@@ -99,7 +99,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -292,7 +292,7 @@ func resourceCluster() *schema.Resource {
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -425,7 +425,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
 	}
-	d.Set("created_at", aws.ToTime(cluster.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(cluster.CreatedAt).String())
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
@@ -949,7 +949,7 @@ func expandVpcConfigRequest(tfList []interface{}) *types.VpcConfigRequest { // n
 	apiObject := &types.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(tfMap["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(tfMap["endpoint_public_access"].(bool)),
-		SecurityGroupIds:      flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds:      flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
 		SubnetIds:             flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 	}
 
@@ -1093,7 +1093,7 @@ func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]i
 		"cluster_security_group_id": aws.ToString(vpcConfig.ClusterSecurityGroupId),
 		"endpoint_private_access":   vpcConfig.EndpointPrivateAccess,
 		"endpoint_public_access":    vpcConfig.EndpointPublicAccess,
-		"security_group_ids":        vpcConfig.SecurityGroupIds,
+		names.AttrSecurityGroupIDs:  vpcConfig.SecurityGroupIds,
 		names.AttrSubnetIDs:         vpcConfig.SubnetIds,
 		"public_access_cidrs":       vpcConfig.PublicAccessCidrs,
 		names.AttrVPCID:             aws.ToString(vpcConfig.VpcId),

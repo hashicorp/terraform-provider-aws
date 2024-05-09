@@ -219,7 +219,7 @@ func ResourceKxCluster() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 26),
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -331,7 +331,7 @@ func ResourceKxCluster() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(types.IPAddressTypeIpV4), true),
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -934,7 +934,7 @@ func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 		a.VpcId = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		a.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -1042,7 +1042,7 @@ func expandDatabase(tfMap map[string]interface{}) *types.KxDatabaseConfiguration
 
 	a := &types.KxDatabaseConfiguration{}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		a.DatabaseName = aws.String(v)
 	}
 
@@ -1291,7 +1291,7 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		m["security_group_ids"] = v
+		m[names.AttrSecurityGroupIDs] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
@@ -1399,7 +1399,7 @@ func flattenDatabase(apiObject *types.KxDatabaseConfiguration) map[string]interf
 	m := map[string]interface{}{}
 
 	if v := apiObject.DatabaseName; v != nil {
-		m["database_name"] = aws.ToString(v)
+		m[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.DataviewName; v != nil {

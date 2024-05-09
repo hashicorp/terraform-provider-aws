@@ -60,7 +60,7 @@ func ResourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -104,7 +104,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	vocabularyName := d.Get(names.AttrName).(string)
 	input := &connect.CreateVocabularyInput{
 		ClientToken:    aws.String(id.UniqueId()),
@@ -173,7 +173,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, vocabulary.Arn)
 	d.Set("content", vocabulary.Content)
 	d.Set("failure_reason", vocabulary.FailureReason)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("language_code", vocabulary.LanguageCode)
 	d.Set("last_modified_time", vocabulary.LastModifiedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, vocabulary.Name)

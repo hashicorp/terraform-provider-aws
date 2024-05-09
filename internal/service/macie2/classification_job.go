@@ -85,10 +85,10 @@ func ResourceClassificationJob() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 500),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -127,7 +127,7 @@ func ResourceClassificationJob() *schema.Resource {
 							Optional:      true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -523,7 +523,7 @@ func ResourceClassificationJob() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{macie2.JobStatusCancelled, macie2.JobStatusRunning, macie2.JobStatusUserPaused}, false),
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -584,7 +584,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))),
+		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 		Tags:            getTagsIn(ctx),
@@ -665,7 +665,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("sampling_percentage", resp.SamplingPercentage)
 	d.Set(names.AttrName, resp.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("initial_run", resp.InitialRun)
 	d.Set("job_type", resp.JobType)
@@ -682,7 +682,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 		status = macie2.JobStatusRunning
 	}
 	d.Set("job_status", status)
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
 	}
@@ -893,7 +893,7 @@ func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefini
 
 		bucketDefinition := &macie2.S3BucketDefinitionForJob{
 			Buckets:   flex.ExpandStringList(v1["buckets"].([]interface{})),
-			AccountId: aws.String(v1["account_id"].(string)),
+			AccountId: aws.String(v1[names.AttrAccountID].(string)),
 		}
 
 		bucketDefinitions = append(bucketDefinitions, bucketDefinition)
@@ -1195,8 +1195,8 @@ func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJo
 			continue
 		}
 		bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
-			"account_id": aws.StringValue(bucket.AccountId),
-			"buckets":    flex.FlattenStringList(bucket.Buckets),
+			names.AttrAccountID: aws.StringValue(bucket.AccountId),
+			"buckets":           flex.FlattenStringList(bucket.Buckets),
 		})
 	}
 

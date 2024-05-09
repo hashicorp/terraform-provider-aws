@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,7 +37,7 @@ func ResourceEBSEncryptionByDefault() *schema.Resource {
 
 func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setEBSEncryptionByDefault(ctx, conn, enabled); err != nil {
@@ -52,9 +52,9 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 
 func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+	resp, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
@@ -66,7 +66,7 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 
 func resourceEBSEncryptionByDefaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setEBSEncryptionByDefault(ctx, conn, enabled); err != nil {
@@ -78,7 +78,7 @@ func resourceEBSEncryptionByDefaultUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceEBSEncryptionByDefaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// Removing the resource disables default encryption.
 	if err := setEBSEncryptionByDefault(ctx, conn, false); err != nil {
@@ -88,13 +88,13 @@ func resourceEBSEncryptionByDefaultDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.EC2, enabled bool) error {
+func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bool) error {
 	var err error
 
 	if enabled {
-		_, err = conn.EnableEbsEncryptionByDefaultWithContext(ctx, &ec2.EnableEbsEncryptionByDefaultInput{})
+		_, err = conn.EnableEbsEncryptionByDefault(ctx, &ec2.EnableEbsEncryptionByDefaultInput{})
 	} else {
-		_, err = conn.DisableEbsEncryptionByDefaultWithContext(ctx, &ec2.DisableEbsEncryptionByDefaultInput{})
+		_, err = conn.DisableEbsEncryptionByDefault(ctx, &ec2.DisableEbsEncryptionByDefaultInput{})
 	}
 
 	return err

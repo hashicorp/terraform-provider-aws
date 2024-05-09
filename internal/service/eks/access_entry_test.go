@@ -43,7 +43,7 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
 					resource.TestCheckResourceAttrSet(resourceName, "access_entry_arn"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "modified_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

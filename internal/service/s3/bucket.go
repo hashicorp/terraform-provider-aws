@@ -444,7 +444,7 @@ func resourceBucket() *schema.Resource {
 														},
 													},
 												},
-												"account_id": {
+												names.AttrAccountID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidAccountID,
@@ -2536,7 +2536,7 @@ func expandBucketDestination(l []interface{}) *types.Destination {
 		}
 	}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.Account = aws.String(v)
 	}
 
@@ -2685,7 +2685,7 @@ func flattenBucketDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.Account != nil {
-		m["account_id"] = aws.ToString(dest.Account)
+		m[names.AttrAccountID] = aws.ToString(dest.Account)
 	}
 
 	if dest.Bucket != nil {

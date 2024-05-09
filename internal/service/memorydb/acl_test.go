@@ -90,7 +90,7 @@ func TestAccMemoryDBACL_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccMemoryDBACL_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tftest-"),
 				),
 			},
 		},

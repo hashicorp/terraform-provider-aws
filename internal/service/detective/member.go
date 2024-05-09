@@ -36,7 +36,7 @@ func ResourceMember() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -96,7 +96,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	graphARN := d.Get("graph_arn").(string)
 	id := memberCreateResourceID(graphARN, accountID)
 	input := &detective.CreateMembersInput{
@@ -154,7 +154,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Detective Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", member.AccountId)
+	d.Set(names.AttrAccountID, member.AccountId)
 	d.Set("administrator_id", member.AdministratorId)
 	d.Set("disabled_reason", member.DisabledReason)
 	d.Set("email_address", member.EmailAddress)

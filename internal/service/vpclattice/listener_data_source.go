@@ -31,7 +31,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -99,7 +99,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,12 +138,12 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	// Set simple arguments
 	d.SetId(aws.ToString(out.Id))
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("listener_id", out.Id)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrPort, out.Port)
-	d.Set("protocol", out.Protocol)
+	d.Set(names.AttrProtocol, out.Protocol)
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_id", out.ServiceId)
 

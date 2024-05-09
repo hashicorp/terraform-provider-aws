@@ -55,7 +55,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,7 +137,7 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("creator_id", out.CreatorId)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set("instance_type", out.InstanceType)
+	d.Set(names.AttrInstanceType, out.InstanceType)
 	d.Set("last_updated_time", out.LastUpdatedTime.String())
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))

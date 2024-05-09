@@ -48,9 +48,9 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Testing lex bot alias create."),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, testBotAliasID),
@@ -97,7 +97,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"created_date"},
+				ImportStateVerifyIgnore: []string{names.AttrCreatedDate},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -114,7 +114,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"created_date"},
+				ImportStateVerifyIgnore: []string{names.AttrCreatedDate},
 			},
 		},
 	})

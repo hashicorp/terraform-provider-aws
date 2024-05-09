@@ -61,7 +61,7 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -92,7 +92,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeUserHierarchyGroupInput{
 		InstanceId: aws.String(instanceID),
@@ -129,7 +129,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set(names.AttrARN, hierarchyGroup.Arn)
 	d.Set("hierarchy_group_id", hierarchyGroup.Id)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("level_id", hierarchyGroup.LevelId)
 	d.Set(names.AttrName, hierarchyGroup.Name)
 

@@ -2263,7 +2263,7 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 				Config: testAccInstanceConfig_type(rName, "t2.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 				),
 			},
 			{
@@ -2277,7 +2277,7 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
 				),
 			},
 		},
@@ -2301,7 +2301,7 @@ func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
 				Config: testAccInstanceConfig_typeReplace(rName, "m5.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "m5.2xlarge"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m5.2xlarge"),
 				),
 			},
 			{
@@ -2309,7 +2309,7 @@ func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "m6g.2xlarge"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m6g.2xlarge"),
 				),
 			},
 		},
@@ -2337,7 +2337,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.medium", "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserData),
 				),
 			},
@@ -2345,7 +2345,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.large", "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
 					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserDataUpdated),
 				),
 			},
@@ -2375,7 +2375,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserDataBase64(rName, "t2.medium", "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
 				),
 			},
@@ -2383,7 +2383,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserDataBase64(rName, "t2.large", "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
 				),
 			},
@@ -2867,28 +2867,28 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sdd",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
+						names.AttrDeleteOnTermination: "true",
+						"device_name":                 "/dev/sdd",
+						"encrypted":                   "false",
+						"iops":                        "100",
+						"volume_size":                 "10",
+						"volume_type":                 "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sdc",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
+						names.AttrDeleteOnTermination: "true",
+						"device_name":                 "/dev/sdc",
+						"encrypted":                   "false",
+						"iops":                        "100",
+						"volume_size":                 "10",
+						"volume_type":                 "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sdb",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
+						names.AttrDeleteOnTermination: "true",
+						"device_name":                 "/dev/sdb",
+						"encrypted":                   "false",
+						"iops":                        "100",
+						"volume_size":                 "10",
+						"volume_type":                 "gp2",
 					}),
 				),
 			},
@@ -3552,7 +3552,7 @@ func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
 					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_type", instanceTypeDataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceType, instanceTypeDataSourceName, names.AttrInstanceType),
 				),
 			},
 		},
@@ -3580,7 +3580,7 @@ func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_type", instanceTypeDataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceType, instanceTypeDataSourceName, names.AttrInstanceType),
 				),
 			},
 		},
@@ -5710,7 +5710,7 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 				r := tfec2.ResourceVolumeAttachment()
 				d := r.Data(nil)
 				d.Set("device_name", deviceName)
-				d.Set("instance_id", instanceID)
+				d.Set(names.AttrInstanceID, instanceID)
 				d.Set("volume_id", volumeID)
 
 				if err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta()); err != nil {

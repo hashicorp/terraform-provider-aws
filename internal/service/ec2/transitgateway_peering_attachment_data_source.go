@@ -52,7 +52,7 @@ func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	d.Set("peer_region", peer.Region)
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
 	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
-	d.Set("transit_gateway_id", local.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, local.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 

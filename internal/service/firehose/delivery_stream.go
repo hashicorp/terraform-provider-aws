@@ -390,7 +390,7 @@ func resourceDeliveryStream() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: verify.ValidARN,
 										},
-										"security_group_ids": {
+										names.AttrSecurityGroupIDs: {
 											Type:     schema.TypeSet,
 											Required: true,
 											ForceNew: true,
@@ -661,7 +661,7 @@ func resourceDeliveryStream() *schema.Resource {
 														Optional: true,
 														Computed: true,
 													},
-													"database_name": {
+													names.AttrDatabaseName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -957,7 +957,7 @@ func resourceDeliveryStream() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: verify.ValidARN,
 										},
-										"security_group_ids": {
+										names.AttrSecurityGroupIDs: {
 											Type:     schema.TypeSet,
 											Required: true,
 											ForceNew: true,
@@ -1152,7 +1152,7 @@ func resourceDeliveryStream() *schema.Resource {
 											ForceNew:     true,
 											ValidateFunc: verify.ValidARN,
 										},
-										"security_group_ids": {
+										names.AttrSecurityGroupIDs: {
 											Type:     schema.TypeSet,
 											Required: true,
 											ForceNew: true,
@@ -2200,7 +2200,7 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 	m := l[0].(map[string]interface{})
 
 	config := &types.SchemaConfiguration{
-		DatabaseName: aws.String(m["database_name"].(string)),
+		DatabaseName: aws.String(m[names.AttrDatabaseName].(string)),
 		RoleARN:      aws.String(m[names.AttrRoleARN].(string)),
 		TableName:    aws.String(m["table_name"].(string)),
 		VersionId:    aws.String(m["version_id"].(string)),
@@ -2355,7 +2355,7 @@ func expandVPCConfiguration(es map[string]interface{}) *types.VpcConfiguration {
 	return &types.VpcConfiguration{
 		RoleARN:          aws.String(vpcConfig[names.AttrRoleARN].(string)),
 		SubnetIds:        flex.ExpandStringValueSet(vpcConfig[names.AttrSubnetIDs].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringValueSet(vpcConfig["security_group_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(vpcConfig[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
@@ -3331,10 +3331,10 @@ func flattenVPCConfigurationDescription(description *types.VpcConfigurationDescr
 	}
 
 	m := map[string]interface{}{
-		names.AttrVPCID:      aws.ToString(description.VpcId),
-		names.AttrSubnetIDs:  description.SubnetIds,
-		"security_group_ids": description.SecurityGroupIds,
-		names.AttrRoleARN:    aws.ToString(description.RoleARN),
+		names.AttrVPCID:            aws.ToString(description.VpcId),
+		names.AttrSubnetIDs:        description.SubnetIds,
+		names.AttrSecurityGroupIDs: description.SecurityGroupIds,
+		names.AttrRoleARN:          aws.ToString(description.RoleARN),
 	}
 
 	return []map[string]interface{}{m}
@@ -3695,12 +3695,12 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 	}
 
 	m := map[string]interface{}{
-		"catalog_id":      aws.ToString(sc.CatalogId),
-		"database_name":   aws.ToString(sc.DatabaseName),
-		"region":          aws.ToString(sc.Region),
-		names.AttrRoleARN: aws.ToString(sc.RoleARN),
-		"table_name":      aws.ToString(sc.TableName),
-		"version_id":      aws.ToString(sc.VersionId),
+		"catalog_id":           aws.ToString(sc.CatalogId),
+		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
+		"region":               aws.ToString(sc.Region),
+		names.AttrRoleARN:      aws.ToString(sc.RoleARN),
+		"table_name":           aws.ToString(sc.TableName),
+		"version_id":           aws.ToString(sc.VersionId),
 	}
 
 	return []map[string]interface{}{m}

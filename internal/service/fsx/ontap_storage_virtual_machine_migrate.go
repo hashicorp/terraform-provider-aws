@@ -53,7 +53,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,

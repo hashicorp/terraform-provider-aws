@@ -38,7 +38,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -57,7 +57,7 @@ func testAccSecurityProfile_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -88,7 +88,7 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -108,7 +108,7 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, "security_profile_id"),
 
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),

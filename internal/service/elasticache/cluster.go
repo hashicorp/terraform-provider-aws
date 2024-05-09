@@ -62,13 +62,13 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Default:      "true",
 				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,7 +142,7 @@ func resourceCluster() *schema.Resource {
 				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -267,14 +267,14 @@ func resourceCluster() *schema.Resource {
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
-					"engine_version",
+					names.AttrEngineVersion,
 					"maintenance_window",
 					"node_type",
 					"notification_topic_arn",
 					"num_cache_nodes",
 					"parameter_group_name",
 					names.AttrPort,
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"snapshot_arns",
 					"snapshot_name",
 					"snapshot_retention_limit",
@@ -282,7 +282,7 @@ func resourceCluster() *schema.Resource {
 					"subnet_group_name",
 				},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -358,7 +358,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		input.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("node_type"); ok {
@@ -381,12 +381,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Engine = aws.String(v.(string))
 	}
 
-	version := d.Get("engine_version").(string)
+	version := d.Get(names.AttrEngineVersion).(string)
 	if version != "" {
 		input.EngineVersion = aws.String(version)
 	}
 
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
+	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
@@ -448,7 +448,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AZMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
@@ -539,7 +539,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
 		}
 	}
-	d.Set("availability_zone", c.PreferredAvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, c.PreferredAvailabilityZone)
 	if aws.StringValue(c.PreferredAvailabilityZone) == "Multiple" {
 		d.Set("az_mode", "cross-az")
 	} else {
@@ -571,8 +571,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		requestUpdate := false
-		if d.HasChange("security_group_ids") {
-			if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
 				input.SecurityGroupIds = flex.ExpandStringSet(attr)
 				requestUpdate = true
 			}
@@ -628,13 +628,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			requestUpdate = true
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 			requestUpdate = true
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			v := d.Get("auto_minor_version_upgrade")
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			v := d.Get(names.AttrAutoMinorVersionUpgrade)
 			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				input.AutoMinorVersionUpgrade = aws.Bool(v)
 			}
@@ -948,11 +948,11 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			return fmt.Errorf("Unexpected nil pointer in: %s", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
-			names.AttrID:        aws.StringValue(node.CacheNodeId),
-			"address":           aws.StringValue(node.Endpoint.Address),
-			names.AttrPort:      aws.Int64Value(node.Endpoint.Port),
-			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
-			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
+			names.AttrID:               aws.StringValue(node.CacheNodeId),
+			"address":                  aws.StringValue(node.Endpoint.Address),
+			names.AttrPort:             aws.Int64Value(node.Endpoint.Port),
+			names.AttrAvailabilityZone: aws.StringValue(node.CustomerAvailabilityZone),
+			"outpost_arn":              aws.StringValue(node.CustomerOutpostArn),
 		})
 	}
 
@@ -979,10 +979,10 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)
 	}
-	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
+	d.Set(names.AttrAutoMinorVersionUpgrade, strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
+	if err := d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
 		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
 

@@ -119,7 +119,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_basic(t *testin
 				Config: testAccContainerServiceDeploymentVersionConfig_Container_basic(rName, containerName, helloWorldImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "1"),

@@ -121,7 +121,7 @@ func resourceInstanceFleet() *schema.Resource {
 							},
 							Set: resourceClusterEBSHashConfig,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,

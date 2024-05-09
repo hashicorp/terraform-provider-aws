@@ -25,7 +25,7 @@ func DataSourceBudget() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBudgetRead,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -185,7 +185,7 @@ func DataSourceBudget() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -274,13 +274,13 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	if err != nil {
@@ -328,7 +328,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrName, budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	return diags
 }

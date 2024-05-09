@@ -51,7 +51,7 @@ func ResourcePermissionSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -157,7 +157,7 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, permissionSet.PermissionSetArn)
-	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, permissionSet.Description)
 	d.Set("instance_arn", instanceARN)
 	d.Set(names.AttrName, permissionSet.Name)

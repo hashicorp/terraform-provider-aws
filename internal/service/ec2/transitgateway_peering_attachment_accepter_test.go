@@ -43,8 +43,8 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T, semaphor
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", peeringAttachmentName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, peeringAttachmentName, names.AttrID),
 				),
 			},
 			{
@@ -138,8 +138,8 @@ func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", peeringAttachmentName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, peeringAttachmentName, names.AttrID),
 				),
 			},
 			{

@@ -121,7 +121,7 @@ func resourceInstanceGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -151,7 +151,7 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceType:     aws.String(d.Get("instance_type").(string)),
+		InstanceType:     aws.String(d.Get(names.AttrInstanceType).(string)),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 	}
 
@@ -268,7 +268,7 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("ebs_optimized", ig.EbsOptimized)
 	d.Set("instance_count", ig.RequestedInstanceCount)
-	d.Set("instance_type", ig.InstanceType)
+	d.Set(names.AttrInstanceType, ig.InstanceType)
 	d.Set(names.AttrName, ig.Name)
 	d.Set("running_instance_count", ig.RunningInstanceCount)
 

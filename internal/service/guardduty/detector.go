@@ -37,7 +37,7 @@ func ResourceDetector() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", meta.(*conns.AWSClient).AccountID)
+	d.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,

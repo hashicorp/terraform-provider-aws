@@ -53,10 +53,10 @@ func ResourceACL() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateResourceName(aclNameMaxLength),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -83,7 +83,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateACLInput{
 		ACLName: aws.String(name),
 		Tags:    getTagsIn(ctx),
@@ -189,7 +189,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
 	d.Set(names.AttrName, acl.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(acl.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(acl.Name)))
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
 	return diags

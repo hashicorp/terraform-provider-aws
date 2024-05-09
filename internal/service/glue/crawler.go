@@ -63,7 +63,7 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -100,7 +100,7 @@ func ResourceCrawler() *schema.Resource {
 				},
 				ValidateFunc: validation.StringIsJSON,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -257,7 +257,7 @@ func ResourceCrawler() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -504,7 +504,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}.String()
 	d.Set(names.AttrARN, crawlerARN)
 	d.Set(names.AttrName, crawler.Name)
-	d.Set("database_name", crawler.DatabaseName)
+	d.Set(names.AttrDatabaseName, crawler.DatabaseName)
 	d.Set("role", crawler.Role)
 	d.Set("configuration", crawler.Configuration)
 	d.Set(names.AttrDescription, crawler.Description)
@@ -652,7 +652,7 @@ func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta int
 func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string) (*glue.CreateCrawlerInput, error) {
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
-		DatabaseName: aws.String(d.Get("database_name").(string)),
+		DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
 		Role:         aws.String(d.Get("role").(string)),
 		Tags:         getTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
@@ -706,7 +706,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.UpdateCrawlerInput, error) {
 	crawlerInput := &glue.UpdateCrawlerInput{
 		Name:         aws.String(crawlerName),
-		DatabaseName: aws.String(d.Get("database_name").(string)),
+		DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
 		Role:         aws.String(d.Get("role").(string)),
 		Targets:      expandCrawlerTargets(d),
 	}
@@ -928,7 +928,7 @@ func expandCatalogTargets(targets []interface{}) []*glue.CatalogTarget {
 
 func expandCatalogTarget(cfg map[string]interface{}) *glue.CatalogTarget {
 	target := &glue.CatalogTarget{
-		DatabaseName: aws.String(cfg["database_name"].(string)),
+		DatabaseName: aws.String(cfg[names.AttrDatabaseName].(string)),
 		Tables:       flex.ExpandStringList(cfg["tables"].([]interface{})),
 	}
 
@@ -1085,7 +1085,7 @@ func flattenCatalogTargets(CatalogTargets []*glue.CatalogTarget) []map[string]in
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(catalogTarget.ConnectionName)
 		attrs["tables"] = flex.FlattenStringList(catalogTarget.Tables)
-		attrs["database_name"] = aws.StringValue(catalogTarget.DatabaseName)
+		attrs[names.AttrDatabaseName] = aws.StringValue(catalogTarget.DatabaseName)
 		attrs["event_queue_arn"] = aws.StringValue(catalogTarget.EventQueueArn)
 		attrs["dlq_event_queue_arn"] = aws.StringValue(catalogTarget.DlqEventQueueArn)
 
@@ -1221,7 +1221,7 @@ func expandLakeFormationConfiguration(cfg []interface{}) *glue.LakeFormationConf
 
 	target := &glue.LakeFormationConfiguration{}
 
-	if v, ok := m["account_id"].(string); ok {
+	if v, ok := m[names.AttrAccountID].(string); ok {
 		target.AccountId = aws.String(v)
 	}
 
@@ -1238,7 +1238,7 @@ func flattenLakeFormationConfiguration(cfg *glue.LakeFormationConfiguration) []m
 	}
 
 	m := map[string]interface{}{
-		"account_id":                     aws.StringValue(cfg.AccountId),
+		names.AttrAccountID:              aws.StringValue(cfg.AccountId),
 		"use_lake_formation_credentials": aws.BoolValue(cfg.UseLakeFormationCredentials),
 	}
 

@@ -32,7 +32,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -112,7 +112,7 @@ func DataSourceCluster() *schema.Resource {
 							Set:      nodeHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -182,7 +182,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("acl_name", cluster.ACLName)
 	d.Set(names.AttrARN, cluster.ARN)
-	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, cluster.AutoMinorVersionUpgrade)
 
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
@@ -200,7 +200,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set(names.AttrDescription, cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
-	d.Set("engine_version", cluster.EngineVersion)
+	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
 	d.Set(names.AttrName, cluster.Name)
@@ -219,7 +219,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, v := range cluster.SecurityGroups {
 		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
 	}
-	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(securityGroupIds))
 
 	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)

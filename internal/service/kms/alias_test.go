@@ -94,7 +94,7 @@ func TestAccKMSAlias_Name_generated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, tfkms.AliasNamePrefix),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccKMSAlias_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				),
 			},
 			{

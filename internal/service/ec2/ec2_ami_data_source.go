@@ -361,13 +361,13 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
-				"encrypted":             fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
-				"iops":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
-				"throughput":            fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
-				"volume_size":           fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
-				"snapshot_id":           aws.StringValue(v.Ebs.SnapshotId),
-				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
+				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
+				"encrypted":                   fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				"iops":                        fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
+				"volume_size":                 fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
+				"snapshot_id":                 aws.StringValue(v.Ebs.SnapshotId),
+				"volume_type":                 aws.StringValue(v.Ebs.VolumeType),
 			}
 
 			mapping["ebs"] = ebs
@@ -429,7 +429,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	if d, ok := m["ebs"]; ok {
 		if len(d.(map[string]interface{})) > 0 {
 			e := d.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s-", e["delete_on_termination"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["encrypted"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["iops"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))

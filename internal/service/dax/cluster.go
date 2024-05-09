@@ -98,7 +98,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -127,7 +127,7 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -192,7 +192,7 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -214,7 +214,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	nodeType := d.Get("node_type").(string)
 	numNodes := int32(d.Get("replication_factor").(int))
 	subnetGroupName := d.Get("subnet_group_name").(string)
-	securityIdSet := d.Get("security_group_ids").(*schema.Set)
+	securityIdSet := d.Get(names.AttrSecurityGroupIDs).(*schema.Set)
 	securityIds := flex.ExpandStringSet(securityIdSet)
 	input := &dax.CreateClusterInput{
 		ClusterName:       aws.String(clusterName),
@@ -247,7 +247,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	preferredAZs := d.Get("availability_zones").(*schema.Set)
+	preferredAZs := d.Get(names.AttrAvailabilityZones).(*schema.Set)
 	if preferredAZs.Len() > 0 {
 		input.AvailabilityZones = flex.ExpandStringValueSet(preferredAZs)
 	}
@@ -346,7 +346,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
-	d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups))
 
 	if c.ParameterGroup != nil {
 		d.Set("parameter_group_name", c.ParameterGroup.ParameterGroupName)
@@ -386,8 +386,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		requestUpdate = true
 	}
 
-	if d.HasChange("security_group_ids") {
-		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
+	if d.HasChange(names.AttrSecurityGroupIDs) {
+		if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
 			req.SecurityGroupIds = flex.ExpandStringValueSet(attr)
 			requestUpdate = true
 		}
@@ -480,10 +480,10 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 
 	for _, node := range sortedNodes {
 		nodeData = append(nodeData, map[string]interface{}{
-			names.AttrID:        aws.ToString(node.NodeId),
-			"address":           aws.ToString(node.Endpoint.Address),
-			names.AttrPort:      node.Endpoint.Port,
-			"availability_zone": aws.ToString(node.AvailabilityZone),
+			names.AttrID:               aws.ToString(node.NodeId),
+			"address":                  aws.ToString(node.Endpoint.Address),
+			names.AttrPort:             node.Endpoint.Port,
+			names.AttrAvailabilityZone: aws.ToString(node.AvailabilityZone),
 		})
 	}
 

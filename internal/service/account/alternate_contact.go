@@ -47,7 +47,7 @@ func resourceAlternateContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -88,7 +88,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	contactType := d.Get("alternate_contact_type").(string)
 	id := alternateContactCreateResourceID(accountID, contactType)
 	input := &account.PutAlternateContactInput{
@@ -148,7 +148,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("alternate_contact_type", output.AlternateContactType)
 	d.Set("email_address", output.EmailAddress)
 	d.Set(names.AttrName, output.Name)

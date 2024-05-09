@@ -45,7 +45,7 @@ func TestAccNetworkFirewallResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_networkfirewall_firewall_policy.test", names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":\["network-firewall:CreateFirewall","network-firewall:UpdateFirewall","network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccNetworkFirewallResourcePolicy_ignoreEquivalent(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_networkfirewall_firewall_policy.test", names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":\["network-firewall:CreateFirewall","network-firewall:UpdateFirewall","network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 				Config: testAccResourcePolicyConfig_ruleGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_rule_group.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_networkfirewall_rule_group.test", names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Action":\["network-firewall:CreateFirewallPolicy","network-firewall:UpdateFirewallPolicy","network-firewall:ListRuleGroups"\]`)),
 				),
 			},

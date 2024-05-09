@@ -134,13 +134,21 @@ func AssertMaybeSinglePtrResult[T any](a []*T) (option.Option[*T], error) {
 
 // AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
 // Returns a `NotFound` error otherwise.
-func AssertSingleValueResult[T any](a []T) (*T, error) {
+func AssertSingleValueResult[T any](a []T, fs ...FoundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
+	} else if v := &a[0]; v == nil {
+		return nil, NewEmptyResultError(nil)
+	} else {
+		for _, f := range fs {
+			if !f(v) {
+				return nil, NewEmptyResultError(nil)
+			}
+		}
+		return v, nil
 	}
-	return &a[0], nil
 }
 
 // AssertFirstValueResult returns a pointer to the first value in the specified slice of values.

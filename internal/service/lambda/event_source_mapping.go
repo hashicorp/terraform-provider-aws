@@ -135,7 +135,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -898,7 +898,7 @@ func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *awstypes.D
 		apiObject.CollectionName = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -951,7 +951,7 @@ func flattenDocumentDBEventSourceConfig(apiObject *awstypes.DocumentDBEventSourc
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	return tfMap

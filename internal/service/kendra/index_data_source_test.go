@@ -33,7 +33,7 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.#", resourceName, "capacity_units.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.0.query_capacity_units", resourceName, "capacity_units.0.query_capacity_units"),
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.0.storage_capacity_units", resourceName, "capacity_units.0.storage_capacity_units"),
-					resource.TestCheckResourceAttrPair(datasourceName, "created_at", resourceName, "created_at"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreatedAt, resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "document_metadata_configuration_updates.#", resourceName, "document_metadata_configuration_updates.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "edition", resourceName, "edition"),

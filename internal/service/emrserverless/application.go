@@ -192,7 +192,7 @@ func resourceApplication() *schema.Resource {
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -624,7 +624,7 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 
 	apiObject := &types.NetworkConfiguration{}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -643,7 +643,7 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

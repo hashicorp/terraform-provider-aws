@@ -37,7 +37,7 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 				subnetID := parts[0]
 				reservationID := parts[1]
 
-				d.Set("subnet_id", subnetID)
+				d.Set(names.AttrSubnetID, subnetID)
 				d.SetId(reservationID)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -66,7 +66,7 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.SubnetCidrReservationType_Values(), false),
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,7 +82,7 @@ func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.CreateSubnetCidrReservationInput{
 		Cidr:            aws.String(d.Get("cidr_block").(string)),
 		ReservationType: aws.String(d.Get("reservation_type").(string)),
-		SubnetId:        aws.String(d.Get("subnet_id").(string)),
+		SubnetId:        aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -105,7 +105,7 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	output, err := FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, d.Get("subnet_id").(string), d.Id())
+	output, err := FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, d.Get(names.AttrSubnetID).(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet CIDR Reservation (%s) not found, removing from state", d.Id())
@@ -121,7 +121,7 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrOwnerID, output.OwnerId)
 	d.Set("reservation_type", output.ReservationType)
-	d.Set("subnet_id", output.SubnetId)
+	d.Set(names.AttrSubnetID, output.SubnetId)
 
 	return diags
 }

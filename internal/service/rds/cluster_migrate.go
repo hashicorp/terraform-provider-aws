@@ -35,7 +35,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -78,7 +78,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -145,7 +145,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				ForceNew: true,
 				Default:  EngineModeProvisioned,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -241,7 +241,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -290,7 +290,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -397,7 +397,7 @@ func resourceClusterResourceV0() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,

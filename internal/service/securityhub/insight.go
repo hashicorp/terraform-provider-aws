@@ -49,7 +49,7 @@ func resourceInsight() *schema.Resource {
 						"company_name":                                stringFilterSchema(),
 						"compliance_status":                           stringFilterSchema(),
 						"confidence":                                  numberFilterSchema(),
-						"created_at":                                  dateFilterSchema(),
+						names.AttrCreatedAt:                           dateFilterSchema(),
 						"criticality":                                 numberFilterSchema(),
 						names.AttrDescription:                         stringFilterSchema(),
 						"finding_provider_fields_confidence":          numberFilterSchema(),
@@ -522,7 +522,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.Confidence = expandNumberFilters(v.List())
 	}
 
-	if v, ok := tfMap["created_at"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrCreatedAt].(*schema.Set); ok && v.Len() > 0 {
 		filters.CreatedAt = expandDateFilters(v.List())
 	}
 
@@ -1142,7 +1142,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"company_name":                                flattenStringFilters(filters.CompanyName),
 		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
 		"confidence":                                  flattenNumberFilters(filters.Confidence),
-		"created_at":                                  flattenDateFilters(filters.CreatedAt),
+		names.AttrCreatedAt:                           flattenDateFilters(filters.CreatedAt),
 		"criticality":                                 flattenNumberFilters(filters.Criticality),
 		names.AttrDescription:                         flattenStringFilters(filters.Description),
 		"finding_provider_fields_confidence":          flattenNumberFilters(filters.FindingProviderFieldsConfidence),

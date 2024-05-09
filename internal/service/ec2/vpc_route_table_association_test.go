@@ -38,7 +38,7 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
 			},
 			{
@@ -79,7 +79,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
 				),
 			},
 		},
@@ -235,8 +235,8 @@ func testAccRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportS
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 		var target string
-		if rs.Primary.Attributes["subnet_id"] != "" {
-			target = rs.Primary.Attributes["subnet_id"]
+		if rs.Primary.Attributes[names.AttrSubnetID] != "" {
+			target = rs.Primary.Attributes[names.AttrSubnetID]
 		} else if rs.Primary.Attributes["gateway_id"] != "" {
 			target = rs.Primary.Attributes["gateway_id"]
 		}

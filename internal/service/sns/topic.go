@@ -151,9 +151,9 @@ var (
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name_prefix"},
+			ConflictsWith: []string{names.AttrNamePrefix},
 		},
-		"name_prefix": {
+		names.AttrNamePrefix: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
@@ -355,9 +355,9 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	name := arn.Resource
 	d.Set(names.AttrName, name)
 	if d.Get("fifo_topic").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
 	} else {
-		d.Set("name_prefix", create.NamePrefixFromName(name))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
 
 	return nil
@@ -472,7 +472,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 }
 
 func topicName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_topic").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}

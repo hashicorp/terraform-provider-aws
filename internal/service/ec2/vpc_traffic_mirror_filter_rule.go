@@ -69,7 +69,7 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 					},
 				},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -142,7 +142,7 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 		input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("protocol"); ok {
+	if v, ok := d.GetOk(names.AttrProtocol); ok {
 		input.Protocol = aws.Int64(int64(v.(int)))
 	}
 
@@ -194,7 +194,7 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 	} else {
 		d.Set("destination_port_range", nil)
 	}
-	d.Set("protocol", rule.Protocol)
+	d.Set(names.AttrProtocol, rule.Protocol)
 	d.Set("rule_action", rule.RuleAction)
 	d.Set("rule_number", rule.RuleNumber)
 	d.Set("source_cidr_block", rule.SourceCidrBlock)
@@ -237,14 +237,14 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 		if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
 			// Modify request that adds port range seems to fail if protocol is not set in the request.
-			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
+			input.Protocol = aws.Int64(int64(d.Get(names.AttrProtocol).(int)))
 		} else {
 			removeFields = append(removeFields, ec2.TrafficMirrorFilterRuleFieldDestinationPortRange)
 		}
 	}
 
-	if d.HasChange("protocol") {
-		if v := d.Get("protocol").(int); v != 0 {
+	if d.HasChange(names.AttrProtocol) {
+		if v := d.Get(names.AttrProtocol).(int); v != 0 {
 			input.Protocol = aws.Int64(int64(v))
 		} else {
 			removeFields = append(removeFields, ec2.TrafficMirrorFilterRuleFieldProtocol)
@@ -267,7 +267,7 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 		if v, ok := d.GetOk("source_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
 			// Modify request that adds port range seems to fail if protocol is not set in the request.
-			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
+			input.Protocol = aws.Int64(int64(d.Get(names.AttrProtocol).(int)))
 		} else {
 			removeFields = append(removeFields, ec2.TrafficMirrorFilterRuleFieldSourcePortRange)
 		}

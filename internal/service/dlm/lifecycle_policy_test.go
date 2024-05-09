@@ -100,7 +100,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.0.parameters.0.description_regex", "^.*Created for policy: policy-1234567890abcdef0.*$"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.0.parameters.0.event_type", "shareSnapshot"),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.event_source.0.parameters.0.snapshot_owner.0", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.event_source.0.parameters.0.snapshot_owner.0", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -242,7 +242,7 @@ func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.share_rule.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.share_rule.0.target_accounts.0", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.share_rule.0.target_accounts.0", "data.aws_caller_identity.current", names.AttrAccountID),
 				),
 			},
 			{

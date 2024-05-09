@@ -116,7 +116,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
@@ -324,7 +324,7 @@ func flattenS3DestinationConfiguration(apiObject types.S3DestinationConfiguratio
 	m := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		m["bucket_name"] = aws.ToString(v)
+		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -395,7 +395,7 @@ func expandS3DestinationConfiguration(vSettings []interface{}) *types.S3Destinat
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 

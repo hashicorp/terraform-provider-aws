@@ -64,10 +64,10 @@ func ResourceParameterGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validParamGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -109,7 +109,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
@@ -154,7 +154,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
 	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &neptune.DescribeDBParametersInput{
