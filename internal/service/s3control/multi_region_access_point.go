@@ -107,7 +107,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 								},
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -128,7 +128,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: verify.ValidAccountID,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -396,7 +396,7 @@ func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *typ
 		apiObject.PublicAccessBlock = expandPublicAccessBlockConfiguration(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["region"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrRegion].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Regions = expandRegions(v.List())
 	}
 
@@ -489,7 +489,7 @@ func flattenMultiRegionAccessPointReport(apiObject *types.MultiRegionAccessPoint
 	}
 
 	if v := apiObject.Regions; v != nil {
-		tfMap["region"] = flattenRegionReports(v)
+		tfMap[names.AttrRegion] = flattenRegionReports(v)
 	}
 
 	return tfMap
@@ -533,7 +533,7 @@ func flattenRegionReport(apiObject types.RegionReport) map[string]interface{} {
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap
