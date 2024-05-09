@@ -109,7 +109,7 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ses_sdkv1.SES, error) {
 	sess := config["session"].(*session_sdkv1.Session)
 
-	return ses_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return ses_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
