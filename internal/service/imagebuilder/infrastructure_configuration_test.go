@@ -49,7 +49,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "subnet_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
 				),
@@ -478,7 +478,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_subnetID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 				),
 			},
 			{
@@ -491,7 +491,7 @@ func TestAccImageBuilderInfrastructureConfiguration_subnetID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName2, names.AttrID),
 				),
 			},
 		},
