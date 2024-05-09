@@ -52,7 +52,7 @@ func resourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -181,7 +181,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	arn := aws.StringValue(vr.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
 	d.Set("mesh_owner", vr.Metadata.MeshOwner)
 	d.Set(names.AttrName, vr.VirtualRouterName)

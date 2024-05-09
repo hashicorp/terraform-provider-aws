@@ -32,7 +32,7 @@ func dataSourceVirtualNode() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -76,7 +76,7 @@ func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta
 	arn := aws.StringValue(vn.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vn.MeshName)
 	meshOwner := aws.StringValue(vn.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
