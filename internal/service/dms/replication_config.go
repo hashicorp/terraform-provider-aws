@@ -87,7 +87,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"preferred_maintenance_window": {
+						names.AttrPreferredMaintenanceWindow: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -627,15 +627,15 @@ func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrAvailabilityZone:     aws.StringValue(apiObject.AvailabilityZone),
-		"dns_name_servers":             aws.StringValue(apiObject.DnsNameServers),
-		names.AttrKMSKeyID:             aws.StringValue(apiObject.KmsKeyId),
-		"max_capacity_units":           aws.Int64Value(apiObject.MaxCapacityUnits),
-		"min_capacity_units":           aws.Int64Value(apiObject.MinCapacityUnits),
-		"multi_az":                     aws.BoolValue(apiObject.MultiAZ),
-		"preferred_maintenance_window": aws.StringValue(apiObject.PreferredMaintenanceWindow),
-		"replication_subnet_group_id":  aws.StringValue(apiObject.ReplicationSubnetGroupId),
-		names.AttrVPCSecurityGroupIDs:  flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
+		names.AttrAvailabilityZone:           aws.StringValue(apiObject.AvailabilityZone),
+		"dns_name_servers":                   aws.StringValue(apiObject.DnsNameServers),
+		names.AttrKMSKeyID:                   aws.StringValue(apiObject.KmsKeyId),
+		"max_capacity_units":                 aws.Int64Value(apiObject.MaxCapacityUnits),
+		"min_capacity_units":                 aws.Int64Value(apiObject.MinCapacityUnits),
+		"multi_az":                           aws.BoolValue(apiObject.MultiAZ),
+		names.AttrPreferredMaintenanceWindow: aws.StringValue(apiObject.PreferredMaintenanceWindow),
+		"replication_subnet_group_id":        aws.StringValue(apiObject.ReplicationSubnetGroupId),
+		names.AttrVPCSecurityGroupIDs:        flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
 	}
 
 	return []interface{}{tfMap}
@@ -672,7 +672,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.MultiAZ = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["preferred_maintenance_window"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPreferredMaintenanceWindow].(string); ok && v != "" {
 		apiObject.PreferredMaintenanceWindow = aws.String(v)
 	}
 
