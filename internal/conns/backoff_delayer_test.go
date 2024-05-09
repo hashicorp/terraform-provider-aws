@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	awsclient "github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
+	smithy "github.com/aws/smithy-go"
 )
 
 func TestBackoffDelayer(t *testing.T) {
@@ -25,13 +26,17 @@ func TestBackoffDelayer(t *testing.T) {
 		MaxRetryDelay:    maxBackoff,
 		MaxThrottleDelay: maxBackoff,
 	}
-	v2compat := &v1CompatibleBackoff{
+	v1compat := &v1CompatibleBackoff{
 		maxRetryDelay: maxBackoff,
 	}
 
-	err := awserr.New("ThrottlingException", "Rate exceeded", nil)
+	err1 := awserr.New("ThrottlingException", "Rate exceeded", nil)
+	err2 := &smithy.GenericAPIError{
+		Code:    "ThrottlingException",
+		Message: "Rate exceeded",
+	}
 	req := request.Request{
-		Error: err,
+		Error: err1,
 		HTTPResponse: &http.Response{
 			StatusCode: 400,
 		},
@@ -39,9 +44,9 @@ func TestBackoffDelayer(t *testing.T) {
 	for i := 0; i < maxRetries; i++ {
 		d1 := v1.RetryRules(&req)
 		req.RetryCount++
-		d2, _ := v2.BackoffDelay(i, err)
-		d2compat, _ := v2compat.BackoffDelay(i, err)
+		d2, _ := v2.BackoffDelay(i, err2)
+		d1compat, _ := v1compat.BackoffDelay(i, err2)
 
-		t.Logf("%d v1: %s, v2: %s v2compat: %s\n", i, d1.String(), d2.String(), d2compat.String())
+		t.Logf("%d v1: %s, v2: %s v1compat: %s\n", i, d1.String(), d2.String(), d1compat.String())
 	}
 }
