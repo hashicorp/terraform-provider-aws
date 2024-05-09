@@ -1045,3 +1045,13 @@ rules:
       - pattern: '"delete_on_termination"'
     severity: ERROR
     fix: "names.AttrDeleteOnTermination"
+  - id: literal-account_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAccountID` for the string literal "account_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"account_id"'
+    severity: ERROR
+    fix: "names.AttrAccountID"
