@@ -84,8 +84,8 @@ github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.5 h1:tKYxdS50kWhS9lRedC
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.5/go.mod h1:QdNvYtC3DYswfkhnlWXa0Oib+8jugRL/a+5Nbhw4v/g=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.2 h1:KzCv3x2hMF4MTa/j+zvDnHdN6taoyHyLpAnEr3pon5E=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.2/go.mod h1:/D6V245MG0yEqSULoBf/zLdQk8lmsMZXR3d/vc2mOdo=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.0 h1:VqDSGymIERqxdeB3hDz0wgfV1bmF/1rkG3hUcVl+c+w=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.0/go.mod h1:6CwV+GE3wrFqkrU2LB8cajHMWJn7jFFhRtxBQiOZ5kw=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.1 h1:zQ0iImatA8un4xoDD/xEf/NCYvEsqeajbPd7wzChg1U=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.1/go.mod h1:6CwV+GE3wrFqkrU2LB8cajHMWJn7jFFhRtxBQiOZ5kw=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.23.0 h1:6S7G2RUoGYINXQoT6WHpGo3/C9lUHww6vx9tl/jKiEg=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.23.0/go.mod h1:JFS3MaNoisHXHQm5/xRQjj1tICixIgT8Vv32D0lV5NE=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.5 h1:ZP/RF+wQiit1QP3DAqaJLgCJDXpJXu2xvdsgrh5ds+s=
