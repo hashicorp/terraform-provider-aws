@@ -306,7 +306,7 @@ func ResourceInstance() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -966,7 +966,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBName:                  aws.String(d.Get("db_name").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
-			EngineVersion:           aws.String(d.Get("engine_version").(string)),
+			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			S3BucketName:            aws.String(tfMap["bucket_name"].(string)),
@@ -1209,7 +1209,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Engine = aws.String(engine)
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			modifyDbInstanceInput.EngineVersion = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
@@ -1571,7 +1571,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBName:                  aws.String(d.Get("db_name").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
-			EngineVersion:           aws.String(d.Get("engine_version").(string)),
+			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
@@ -2165,8 +2165,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			dbInstancePopulateModify(input, d)
 
-			if d.HasChange("engine_version") {
-				input.EngineVersion = aws.String(d.Get("engine_version").(string))
+			if d.HasChange(names.AttrEngineVersion) {
+				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
@@ -2558,7 +2558,7 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 }
 
 func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
-	oldVersion := d.Get("engine_version").(string)
+	oldVersion := d.Get(names.AttrEngineVersion).(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {

@@ -82,7 +82,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -195,7 +195,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("cluster_id", cluster.CacheClusterId)
 	d.Set("engine", cluster.Engine)
-	d.Set("engine_version", cluster.EngineVersion)
+	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)

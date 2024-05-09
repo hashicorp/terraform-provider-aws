@@ -50,8 +50,8 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("engine_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				newVersion := d.Get("engine_version").(string)
+			customdiff.ForceNewIf(names.AttrEngineVersion, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get(names.AttrEngineVersion).(string)
 				domainName := d.Get("domain_name").(string)
 
 				conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
@@ -78,7 +78,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 
-				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
 			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
@@ -86,7 +86,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 
-				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
 			customdiff.ForceNewIf("advanced_security_options.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("advanced_security_options.0.enabled")
@@ -458,7 +458,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -641,7 +641,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		TagList:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -848,7 +848,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, ds.ARN)
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
-	d.Set("engine_version", ds.EngineVersion)
+	d.Set(names.AttrEngineVersion, ds.EngineVersion)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
@@ -996,7 +996,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					input.ClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
+					if engineType, version, err := ParseEngineVersion(d.Get(names.AttrEngineVersion).(string)); err == nil {
 						switch engineType {
 						case opensearchservice.EngineTypeElasticsearch:
 							if semver.LessThan(version, "7.9") {
@@ -1081,10 +1081,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 		}
 
-		if d.HasChange("engine_version") {
+		if d.HasChange(names.AttrEngineVersion) {
 			upgradeInput := opensearchservice.UpgradeDomainInput{
 				DomainName:    aws.String(d.Get("domain_name").(string)),
-				TargetVersion: aws.String(d.Get("engine_version").(string)),
+				TargetVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			}
 
 			_, err := conn.UpgradeDomainWithContext(ctx, &upgradeInput)

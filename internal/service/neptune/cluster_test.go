@@ -68,7 +68,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
@@ -499,7 +499,7 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, "1.1.0.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.1.0.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -507,7 +507,7 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.1.1.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -531,7 +531,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.1.1.0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -539,7 +539,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.2.0.1", "default.neptune1.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.2.0.1"),
 				),
 			},
 			testAccClusterImportStep(resourceName),

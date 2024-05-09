@@ -70,7 +70,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -175,7 +175,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
@@ -228,7 +228,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("allocated_storage", instance.AllocatedStorage)
 	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
-	d.Set("engine_version", instance.EngineVersion)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
@@ -269,8 +269,8 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		if d.HasChange("multi_az") {

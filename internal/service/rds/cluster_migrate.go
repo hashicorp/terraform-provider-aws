@@ -145,7 +145,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				ForceNew: true,
 				Default:  EngineModeProvisioned,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

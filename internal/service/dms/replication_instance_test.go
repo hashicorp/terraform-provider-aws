@@ -38,7 +38,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
@@ -210,7 +210,7 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.4.7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.4.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.4.7"),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.5.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.1"),
 				),
 			},
 		},

@@ -48,7 +48,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "enable_performance_insights"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_class"),

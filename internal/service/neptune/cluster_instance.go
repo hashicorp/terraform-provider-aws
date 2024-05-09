@@ -91,7 +91,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:      engineNeptune,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -214,7 +214,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -273,7 +273,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
 	d.Set("cluster_identifier", clusterID)
 	d.Set("dbi_resource_id", db.DbiResourceId)
-	d.Set("engine_version", db.EngineVersion)
+	d.Set(names.AttrEngineVersion, db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))

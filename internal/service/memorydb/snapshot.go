@@ -56,7 +56,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"engine_version": {
+						names.AttrEngineVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -247,7 +247,7 @@ func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{}
 
 	m := map[string]interface{}{
 		names.AttrDescription:      aws.StringValue(v.Description),
-		"engine_version":           aws.StringValue(v.EngineVersion),
+		names.AttrEngineVersion:    aws.StringValue(v.EngineVersion),
 		"maintenance_window":       aws.StringValue(v.MaintenanceWindow),
 		names.AttrName:             aws.StringValue(v.Name),
 		"node_type":                aws.StringValue(v.NodeType),
