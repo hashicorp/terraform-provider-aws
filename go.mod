@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.2
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.4
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.32.0
