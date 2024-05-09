@@ -1035,3 +1035,13 @@ rules:
       - pattern: '"vpc_security_group_ids"'
     severity: ERROR
     fix: "names.AttrVPCSecurityGroupIDs"
+  - id: literal-delete_on_termination-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDeleteOnTermination` for the string literal "delete_on_termination"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"delete_on_termination"'
+    severity: ERROR
+    fix: "names.AttrDeleteOnTermination"
