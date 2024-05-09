@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_engine_version")
@@ -97,7 +98,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +172,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -211,7 +212,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -233,7 +234,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		"preferred_major_targets",
 		"preferred_upgrade_targets",
 		"preferred_versions",
-		"version",
+		names.AttrVersion,
 	}) {
 		input.DefaultOnly = aws.Bool(true)
 	}
@@ -418,7 +419,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("engine_description", found.DBEngineDescription)
 	d.Set("exportable_log_types", found.ExportableLogTypes)
 	d.Set("parameter_group_family", found.DBParameterGroupFamily)
-	d.Set("status", found.Status)
+	d.Set(names.AttrStatus, found.Status)
 
 	var characterSets []string
 	for _, cs := range found.SupportedCharacterSets {
@@ -457,7 +458,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("valid_minor_targets", minorTargets)
 	d.Set("valid_major_targets", majorTargets)
 
-	d.Set("version", found.EngineVersion)
+	d.Set(names.AttrVersion, found.EngineVersion)
 	d.Set("version_actual", found.EngineVersion)
 	d.Set("version_description", found.DBEngineVersionDescription)
 

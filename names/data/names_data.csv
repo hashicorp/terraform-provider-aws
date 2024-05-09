@@ -61,7 +61,7 @@ cloudcontrol,cloudcontrol,cloudcontrolapi,cloudcontrol,,cloudcontrol,,cloudcontr
 clouddirectory,clouddirectory,clouddirectory,clouddirectory,,clouddirectory,,,CloudDirectory,CloudDirectory,,1,,,aws_clouddirectory_,,clouddirectory_,Cloud Directory,Amazon,,x,,,,,CloudDirectory,,,
 servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicediscovery,,,ServiceDiscovery,ServiceDiscovery,,1,,aws_service_discovery_,aws_servicediscovery_,,service_discovery_,Cloud Map,AWS,,,,,,,ServiceDiscovery,ListNamespaces,,
 cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
-cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
+cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,x,,2,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,"StackSetName: aws_sdkv2.String(""test"")",
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
 cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfrontkeyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
@@ -126,7 +126,7 @@ docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocumentDB,
 docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,,,DocDB Elastic,ListClusters,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,x,,,,,drs,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,
-dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
+dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,x,,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
 dax,dax,dax,dax,,dax,,,DAX,DAX,,,2,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,,,DAX,DescribeClusters,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,x,,,,,DynamoDB Streams,,,
 ,,,,,ec2ebs,ec2,,EC2EBS,,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,,,x,,,,,,Part of EC2
@@ -216,7 +216,7 @@ kinesisvideo,kinesisvideo,kinesisvideo,kinesisvideo,,kinesisvideo,,,KinesisVideo
 kinesis-video-archived-media,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,,kinesisvideoarchivedmedia,,,KinesisVideoArchivedMedia,KinesisVideoArchivedMedia,,1,,,aws_kinesisvideoarchivedmedia_,,kinesisvideoarchivedmedia_,Kinesis Video Archived Media,Amazon,,x,,,,,Kinesis Video Archived Media,,,
 kinesis-video-media,kinesisvideomedia,kinesisvideomedia,kinesisvideomedia,,kinesisvideomedia,,,KinesisVideoMedia,KinesisVideoMedia,,1,,,aws_kinesisvideomedia_,,kinesisvideomedia_,Kinesis Video Media,Amazon,,x,,,,,Kinesis Video Media,,,
 kinesis-video-signaling,kinesisvideosignaling,kinesisvideosignalingchannels,kinesisvideosignaling,,kinesisvideosignaling,,kinesisvideosignalingchannels,KinesisVideoSignaling,KinesisVideoSignalingChannels,,1,,,aws_kinesisvideosignaling_,,kinesisvideosignaling_,Kinesis Video Signaling,Amazon,,x,,,,,Kinesis Video Signaling,,,
-kms,kms,kms,kms,,kms,,,KMS,KMS,,1,,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,,,KMS,ListKeys,,
+kms,kms,kms,kms,,kms,,,KMS,KMS,,,2,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,,,KMS,ListKeys,,
 lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,,2,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,,,LakeFormation,ListResources,,
 lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,,Lambda,ListFunctions,,
 launch-wizard,launchwizard,launchwizard,launchwizard,,launchwizard,,,LaunchWizard,LaunchWizard,,,2,,aws_launchwizard_,,launchwizard_,Launch Wizard,AWS,,,,,,,Launch Wizard,ListWorkloads,,
@@ -378,7 +378,7 @@ vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,,,x,,,,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,,,x,,,,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,,,x,,,,,,Part of EC2
-wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,1,,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,,
+wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,,2,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,Scope: awstypes.ScopeRegional,
 waf,waf,waf,waf,,waf,,,WAF,WAF,,,2,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
 waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,,2,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,,,,No SDK support

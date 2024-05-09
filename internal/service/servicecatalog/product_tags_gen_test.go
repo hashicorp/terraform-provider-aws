@@ -27,7 +27,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -41,7 +41,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -56,7 +56,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
@@ -72,7 +72,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
@@ -88,7 +88,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
 				},
@@ -102,7 +102,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
 				},
@@ -211,7 +211,7 @@ func TestAccServiceCatalogProduct_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -225,7 +225,7 @@ func TestAccServiceCatalogProduct_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -257,7 +257,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -271,7 +271,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -325,7 +325,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -339,7 +339,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 						"key2": config.StringVariable(""),
 					}),
@@ -355,7 +355,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 						"key2": config.StringVariable(""),
 					}),
@@ -371,7 +371,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -385,7 +385,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -417,7 +417,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -431,7 +431,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -445,7 +445,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -616,7 +616,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -637,7 +637,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -656,7 +656,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -680,7 +680,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -739,7 +739,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -759,7 +759,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -779,7 +779,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -803,7 +803,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -823,7 +823,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -843,7 +843,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -873,7 +873,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToProviderOnly(t *testi
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -952,7 +952,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToResourceOnly(t *testi
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -969,7 +969,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToResourceOnly(t *testi
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1004,7 +1004,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_emptyResourceTag(t *testing.T
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -1024,7 +1024,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_emptyResourceTag(t *testing.T
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_api_cache")
@@ -39,7 +40,7 @@ func ResourceAPICache() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.ApiCachingBehavior_Values(), false),
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.ApiCacheType_Values(), false),
@@ -70,7 +71,7 @@ func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	params := &appsync.CreateApiCacheInput{
 		ApiId:              aws.String(apiID),
-		Type:               aws.String(d.Get("type").(string)),
+		Type:               aws.String(d.Get(names.AttrType).(string)),
 		ApiCachingBehavior: aws.String(d.Get("api_caching_behavior").(string)),
 		Ttl:                aws.Int64(int64(d.Get("ttl").(int))),
 	}
@@ -113,7 +114,7 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("api_id", d.Id())
-	d.Set("type", cache.Type)
+	d.Set(names.AttrType, cache.Type)
 	d.Set("api_caching_behavior", cache.ApiCachingBehavior)
 	d.Set("ttl", cache.Ttl)
 	d.Set("at_rest_encryption_enabled", cache.AtRestEncryptionEnabled)
@@ -130,8 +131,8 @@ func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		ApiId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("type") {
-		params.Type = aws.String(d.Get("type").(string))
+	if d.HasChange(names.AttrType) {
+		params.Type = aws.String(d.Get(names.AttrType).(string))
 	}
 
 	if d.HasChange("api_caching_behavior") {

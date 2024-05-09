@@ -59,7 +59,7 @@ func resourceAnalyzer() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func resourceAnalyzer() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -112,7 +112,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         getTagsIn(ctx),
-		Type:         types.Type(d.Get("type").(string)),
+		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -153,7 +153,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("analyzer_name", analyzer.Name)
-	d.Set("arn", analyzer.Arn)
+	d.Set(names.AttrARN, analyzer.Arn)
 	if analyzer.Configuration != nil {
 		if err := d.Set("configuration", []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
@@ -161,7 +161,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("configuration", nil)
 	}
-	d.Set("type", analyzer.Type)
+	d.Set(names.AttrType, analyzer.Type)
 
 	setTagsOut(ctx, analyzer.Tags)
 

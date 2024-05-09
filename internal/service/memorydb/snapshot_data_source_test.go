@@ -27,7 +27,7 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSnapshotDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.description", resourceName, "cluster_configuration.0.description"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.engine_version", resourceName, "cluster_configuration.0.engine_version"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.maintenance_window", resourceName, "cluster_configuration.0.maintenance_window"),
@@ -41,9 +41,9 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.subnet_group_name", resourceName, "cluster_configuration.0.subnet_group_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.vpc_id", resourceName, "cluster_configuration.0.vpc_id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_name", resourceName, "cluster_name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "source", resourceName, "source"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", "test"),

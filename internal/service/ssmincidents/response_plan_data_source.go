@@ -34,7 +34,7 @@ func DataSourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -51,7 +51,7 @@ func DataSourceResponsePlan() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -74,7 +74,7 @@ func DataSourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -141,7 +141,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -159,11 +159,11 @@ func DataSourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -175,7 +175,7 @@ const (
 func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	d.SetId(d.Get("arn").(string))
+	d.SetId(d.Get(names.AttrARN).(string))
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
@@ -195,7 +195,7 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
 	}
 

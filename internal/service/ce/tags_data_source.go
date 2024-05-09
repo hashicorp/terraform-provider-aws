@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -45,7 +46,7 @@ func dataSourceTags() *schema.Resource {
 				ConflictsWith: []string{"search_string"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.Metric](),
@@ -63,7 +64,7 @@ func dataSourceTags() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags": {
+			names.AttrTags: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -124,7 +125,7 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
-	d.Set("tags", output.Tags)
+	d.Set(names.AttrTags, output.Tags)
 
 	return diags
 }
@@ -153,7 +154,7 @@ func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
 
 func expandTagsSortBy(tfMap map[string]interface{}) awstypes.SortDefinition {
 	apiObject := awstypes.SortDefinition{}
-	apiObject.Key = aws.String(tfMap["key"].(string))
+	apiObject.Key = aws.String(tfMap[names.AttrKey].(string))
 	if v, ok := tfMap["sort_order"]; ok {
 		apiObject.SortOrder = awstypes.SortOrder(v.(string))
 	}

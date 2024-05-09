@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_athena_database")
@@ -55,7 +56,7 @@ func resourceDatabase() *schema.Resource {
 					},
 				},
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -95,7 +96,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -115,7 +116,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	createStmt := fmt.Sprintf("create database `%s`", name)
 	var queryString bytes.Buffer
 	queryString.WriteString(createStmt)
@@ -175,7 +176,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("comment", db.Description)
-	d.Set("name", db.Name)
+	d.Set(names.AttrName, db.Name)
 	d.Set("properties", db.Parameters)
 
 	return diags
@@ -237,7 +238,7 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
-		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
+		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
 		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
 	}
 

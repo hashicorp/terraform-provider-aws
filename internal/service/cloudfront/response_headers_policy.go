@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_response_headers_policy", name="Response Headers Policy")
@@ -136,7 +137,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -152,7 +153,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -310,7 +311,7 @@ func resourceResponseHeadersPolicy() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -331,7 +332,7 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.ResponseHeadersPolicyConfig{
 		Name: aws.String(name),
 	}
@@ -408,7 +409,7 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 		d.Set("custom_headers_config", nil)
 	}
 	d.Set("etag", output.ETag)
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
 		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
@@ -443,7 +444,7 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 	// "When you update a response headers policy, the entire policy is replaced. You cannot update some policy fields independent of others."
 	//
 	apiObject := &awstypes.ResponseHeadersPolicyConfig{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -766,7 +767,7 @@ func expandResponseHeadersPolicyCustomHeader(tfMap map[string]interface{}) *awst
 		apiObject.Override = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -829,7 +830,7 @@ func flattenResponseHeadersPolicyCustomHeader(apiObject *awstypes.ResponseHeader
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1278,7 +1279,7 @@ func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]inter
 
 	apiObject := &awstypes.ResponseHeadersPolicyServerTimingHeadersConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1297,7 +1298,7 @@ func flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject *awstypes.R
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.SamplingRate; v != nil {

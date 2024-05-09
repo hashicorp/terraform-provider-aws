@@ -36,7 +36,7 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
@@ -55,7 +55,7 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 				Config: testAccLocationSMBConfig_basic(rName, "/test2/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),

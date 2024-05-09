@@ -37,11 +37,11 @@ func ResourceDataIntegration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -51,7 +51,7 @@ func ResourceDataIntegration() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -113,7 +113,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateDataIntegrationInput{
 		ClientToken:    aws.String(id.UniqueId()),
 		KmsKey:         aws.String(d.Get("kms_key").(string)),
@@ -123,7 +123,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -157,10 +157,10 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Data Integration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key", output.KmsKey)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	if err := d.Set("schedule_config", flattenScheduleConfig(output.ScheduleConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "schedule_config tags: %s", err)
 	}
@@ -176,11 +176,11 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	if d.HasChanges("description", "name") {
+	if d.HasChanges(names.AttrDescription, names.AttrName) {
 		_, err := conn.UpdateDataIntegration(ctx, &appintegrations.UpdateDataIntegrationInput{
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			Identifier:  aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		})
 
 		if err != nil {

@@ -35,7 +35,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
-					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
 			},
 			{
@@ -49,7 +49,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
-					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
 			},
 		},

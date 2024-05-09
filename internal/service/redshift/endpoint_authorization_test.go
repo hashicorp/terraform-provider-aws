@@ -38,10 +38,10 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
+					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", names.AttrAccountID),
 					acctest.CheckResourceAttrAccountID(resourceName, "grantor"),
 				),
 			},

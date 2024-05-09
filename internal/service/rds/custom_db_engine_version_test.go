@@ -54,9 +54,9 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds",
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds",
 						regexache.MustCompile(fmt.Sprintf(`cev:custom-sqlserver.+%s.+`, rName))),
 				),
 			},
@@ -102,8 +102,8 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", status),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, status),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
 				),
 			},
@@ -117,8 +117,8 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
 			},
 		},
@@ -156,9 +156,9 @@ func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_oracle(rName, bucket),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
 				),
 			},
 			{
@@ -203,9 +203,9 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_manifestFile(rName, bucket, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf(`cev:custom-oracle.+%s.+`, rName))),
 				),
 			},
 			{

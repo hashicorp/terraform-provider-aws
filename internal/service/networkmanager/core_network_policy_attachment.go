@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_networkmanager_core_network_policy_attachment")
@@ -59,7 +60,7 @@ func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 					return json
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,7 +92,7 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("core_network_id", coreNetwork.CoreNetworkId)
-	d.Set("state", coreNetwork.State)
+	d.Set(names.AttrState, coreNetwork.State)
 
 	// getting the policy document uses a different API call
 	// pass in latestPolicyVersionId to get the latest version id by default

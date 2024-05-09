@@ -44,7 +44,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "priority", "20"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 				Config: testAccListenerRuleConfig_fixedResponse(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "priority", "10"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", "404"),
 				),
@@ -106,7 +106,7 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 				Config: testAccListenerRuleConfig_methodMatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "priority", "40"),
 				),
 			},
@@ -173,7 +173,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, name string, rule *vpcl
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
-			RuleIdentifier:     aws.String(rs.Primary.Attributes["arn"]),
+			RuleIdentifier:     aws.String(rs.Primary.Attributes[names.AttrARN]),
 			ListenerIdentifier: aws.String(listenerIdentifier),
 			ServiceIdentifier:  aws.String(serviceIdentifier),
 		})
@@ -201,7 +201,7 @@ func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 			serviceIdentifier := rs.Primary.Attributes["service_identifier"]
 
 			_, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
-				RuleIdentifier:     aws.String(rs.Primary.Attributes["arn"]),
+				RuleIdentifier:     aws.String(rs.Primary.Attributes[names.AttrARN]),
 				ListenerIdentifier: aws.String(listenerIdentifier),
 				ServiceIdentifier:  aws.String(serviceIdentifier),
 			})

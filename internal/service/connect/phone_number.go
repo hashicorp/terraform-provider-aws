@@ -39,7 +39,7 @@ func ResourcePhoneNumber() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func ResourcePhoneNumber() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(connect.PhoneNumberCountryCode_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -65,7 +65,7 @@ func ResourcePhoneNumber() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validPhoneNumberPrefix,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -74,7 +74,7 @@ func ResourcePhoneNumber() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -86,7 +86,7 @@ func ResourcePhoneNumber() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -104,7 +104,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	targetArn := d.Get("target_arn").(string)
-	phoneNumberType := d.Get("type").(string)
+	phoneNumberType := d.Get(names.AttrType).(string)
 	input := &connect.SearchAvailablePhoneNumbersInput{
 		MaxResults:             aws.Int64(1),
 		PhoneNumberCountryCode: aws.String(d.Get("country_code").(string)),
@@ -141,7 +141,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetArn:   aws.String(targetArn),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input2.PhoneNumberDescription = aws.String(v.(string))
 	}
 
@@ -193,14 +193,14 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	phoneNumberSummary := resp.ClaimedPhoneNumberSummary
 
-	d.Set("arn", phoneNumberSummary.PhoneNumberArn)
+	d.Set(names.AttrARN, phoneNumberSummary.PhoneNumberArn)
 	d.Set("country_code", phoneNumberSummary.PhoneNumberCountryCode)
-	d.Set("description", phoneNumberSummary.PhoneNumberDescription)
+	d.Set(names.AttrDescription, phoneNumberSummary.PhoneNumberDescription)
 	d.Set("phone_number", phoneNumberSummary.PhoneNumber)
-	d.Set("type", phoneNumberSummary.PhoneNumberType)
+	d.Set(names.AttrType, phoneNumberSummary.PhoneNumberType)
 	d.Set("target_arn", phoneNumberSummary.TargetArn)
 
-	if err := d.Set("status", flattenPhoneNumberStatus(phoneNumberSummary.PhoneNumberStatus)); err != nil {
+	if err := d.Set(names.AttrStatus, flattenPhoneNumberStatus(phoneNumberSummary.PhoneNumberStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting status: %s", err)
 	}
 
@@ -274,8 +274,8 @@ func flattenPhoneNumberStatus(apiObject *connect.PhoneNumberStatus) []interface{
 	}
 
 	values := map[string]interface{}{
-		"message": aws.StringValue(apiObject.Message),
-		"status":  aws.StringValue(apiObject.Status),
+		"message":        aws.StringValue(apiObject.Message),
+		names.AttrStatus: aws.StringValue(apiObject.Status),
 	}
 
 	return []interface{}{values}

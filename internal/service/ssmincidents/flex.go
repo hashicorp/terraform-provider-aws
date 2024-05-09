@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
@@ -21,11 +22,11 @@ func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 
 		input := types.RegionMapInputValue{}
 
-		if kmsKey := regionData["kms_key_arn"].(string); kmsKey != "DefaultKey" {
+		if kmsKey := regionData[names.AttrKMSKeyARN].(string); kmsKey != "DefaultKey" {
 			input.SseKmsKeyId = aws.String(kmsKey)
 		}
 
-		regionMap[regionData["name"].(string)] = input
+		regionMap[regionData[names.AttrName].(string)] = input
 	}
 
 	return regionMap
@@ -40,9 +41,9 @@ func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{
 	for regionName, regionData := range regions {
 		region := make(map[string]interface{})
 
-		region["name"] = regionName
-		region["status"] = regionData.Status
-		region["kms_key_arn"] = aws.ToString(regionData.SseKmsKeyId)
+		region[names.AttrName] = regionName
+		region[names.AttrStatus] = regionData.Status
+		region[names.AttrKMSKeyARN] = aws.ToString(regionData.SseKmsKeyId)
 
 		if v := regionData.StatusMessage; v != nil {
 			region["status_message"] = aws.ToString(v)
@@ -218,7 +219,7 @@ func expandSSMAutomations(automations []interface{}) []types.Action {
 			ssmAutomation.DocumentName = aws.String(v)
 		}
 
-		if v, ok := automationData["role_arn"].(string); ok {
+		if v, ok := automationData[names.AttrRoleARN].(string); ok {
 			ssmAutomation.RoleArn = aws.String(v)
 		}
 
@@ -260,7 +261,7 @@ func flattenSSMAutomations(actions []types.Action) []interface{} {
 			}
 
 			if v := ssmAutomation.RoleArn; v != nil {
-				a["role_arn"] = aws.ToString(v)
+				a[names.AttrRoleARN] = aws.ToString(v)
 			}
 
 			if v := ssmAutomation.DocumentVersion; v != nil {
@@ -289,7 +290,7 @@ func expandParameters(parameters *schema.Set) map[string][]string {
 	parameterMap := make(map[string][]string)
 	for _, parameter := range parameters.List() {
 		parameterData := parameter.(map[string]interface{})
-		name := parameterData["name"].(string)
+		name := parameterData[names.AttrName].(string)
 		values := flex.ExpandStringValueSet(parameterData["values"].(*schema.Set))
 		parameterMap[name] = values
 	}
@@ -300,7 +301,7 @@ func flattenParameters(parameterMap map[string][]string) []map[string]interface{
 	result := make([]map[string]interface{}, 0)
 	for name, values := range parameterMap {
 		data := make(map[string]interface{})
-		data["name"] = name
+		data[names.AttrName] = name
 		data["values"] = flex.FlattenStringValueList(values)
 		result = append(result, data)
 	}
@@ -369,7 +370,7 @@ func expandPagerDutyIntegration(integrations []interface{}) []types.Integration 
 
 		pagerDutyIntegration := types.PagerDutyConfiguration{}
 
-		if v, ok := integrationData["name"].(string); ok && v != "" {
+		if v, ok := integrationData[names.AttrName].(string); ok && v != "" {
 			pagerDutyIntegration.Name = aws.String(v)
 		}
 
@@ -399,7 +400,7 @@ func flattenPagerDutyIntegration(integrations []types.Integration) []interface{}
 			pagerDutyData := map[string]interface{}{}
 
 			if v := pagerDutyConfiguration.Name; v != nil {
-				pagerDutyData["name"] = v
+				pagerDutyData[names.AttrName] = v
 			}
 
 			if v := pagerDutyConfiguration.PagerDutyIncidentConfiguration.ServiceId; v != nil {

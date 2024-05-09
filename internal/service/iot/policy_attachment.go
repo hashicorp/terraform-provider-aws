@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_policy_attachment")
@@ -29,7 +30,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +48,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	policyName := d.Get("policy").(string)
+	policyName := d.Get(names.AttrPolicy).(string)
 	target := d.Get("target").(string)
 	id := policyAttachmentCreateResourceID(policyName, target)
 	input := &iot.AttachPolicyInput{

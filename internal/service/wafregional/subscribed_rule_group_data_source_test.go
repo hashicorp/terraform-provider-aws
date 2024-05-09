@@ -43,21 +43,21 @@ func TestAccWAFRegionalSubscribedRuleGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_name(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_metricName(metricName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_nameAndMetricName(ruleGroupName, metricName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
 				),
 			},

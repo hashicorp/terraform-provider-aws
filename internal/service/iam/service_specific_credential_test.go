@@ -36,9 +36,9 @@ func TestAccIAMServiceSpecificCredential_basic(t *testing.T) {
 				Config: testAccServiceSpecificCredentialConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", "codecommit.amazonaws.com"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_user_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_specific_credential_id"),
 				),
@@ -71,14 +71,14 @@ func TestAccIAMServiceSpecificCredential_multi(t *testing.T) {
 				Config: testAccServiceSpecificCredentialConfig_multi(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "service_name", "codecommit.amazonaws.com"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_user_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_specific_credential_id"),
-					resource.TestCheckResourceAttrPair(resourceName2, "user_name", "aws_iam_user.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName2, "user_name", "aws_iam_user.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName2, "service_name", "codecommit.amazonaws.com"),
-					resource.TestCheckResourceAttr(resourceName2, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttrSet(resourceName2, "service_user_name"),
 					resource.TestCheckResourceAttrSet(resourceName2, "service_specific_credential_id"),
 				),
@@ -110,7 +110,7 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
 			{
@@ -123,14 +123,14 @@ func TestAccIAMServiceSpecificCredential_status(t *testing.T) {
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{
 				Config: testAccServiceSpecificCredentialConfig_status(rName, "Inactive"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
 		},

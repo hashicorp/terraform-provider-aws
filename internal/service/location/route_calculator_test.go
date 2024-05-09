@@ -39,7 +39,7 @@ func TestAccLocationRouteCalculator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "calculator_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -91,7 +91,7 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 				Config: testAccRouteCalculatorConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 				Config: testAccRouteCalculatorConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},

@@ -157,7 +157,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Retry for IAM and Lambda eventual consistency.
-	_, err := tfresource.RetryWhenIsOneOf[*awstypes.ResourceConflictException, *awstypes.ResourceNotFoundException](ctx, lambdaPropagationTimeout,
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.ResourceConflictException, *awstypes.ResourceNotFoundException](ctx, lambdaPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AddPermission(ctx, input)
 		})

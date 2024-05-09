@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_apns_voip_sandbox_channel")
@@ -47,7 +48,7 @@ func ResourceAPNSVoIPSandboxChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -97,7 +98,7 @@ func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.Resourc
 	params := &pinpoint.APNSVoipSandboxChannelRequest{}
 
 	params.DefaultAuthenticationMethod = aws.String(d.Get("default_authentication_method").(string))
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 	params.Certificate = aws.String(certificate.(string))
 	params.PrivateKey = aws.String(privateKey.(string))
@@ -143,7 +144,7 @@ func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("application_id", output.APNSVoipSandboxChannelResponse.ApplicationId)
 	d.Set("default_authentication_method", output.APNSVoipSandboxChannelResponse.DefaultAuthenticationMethod)
-	d.Set("enabled", output.APNSVoipSandboxChannelResponse.Enabled)
+	d.Set(names.AttrEnabled, output.APNSVoipSandboxChannelResponse.Enabled)
 	// Sensitive params are not returned
 
 	return diags

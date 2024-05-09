@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_model", name="Model")
@@ -40,7 +41,7 @@ func resourceModel() *schema.Resource {
 				}
 				apiID := idParts[0]
 				name := idParts[1]
-				d.Set("name", name)
+				d.Set(names.AttrName, name)
 				d.Set("rest_api_id", apiID)
 
 				conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
@@ -63,11 +64,11 @@ func resourceModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -95,14 +96,14 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateModelInput{
 		ContentType: aws.String(d.Get("content_type").(string)),
 		Name:        aws.String(name),
 		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -125,7 +126,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	model, err := findModelByTwoPartKey(ctx, conn, d.Get("name").(string), d.Get("rest_api_id").(string))
+	model, err := findModelByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Model (%s) not found, removing from state", d.Id())
@@ -138,7 +139,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("content_type", model.ContentType)
-	d.Set("description", model.Description)
+	d.Set(names.AttrDescription, model.Description)
 	d.Set("schema", model.Schema)
 
 	return diags
@@ -150,11 +151,11 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
-			Value: aws.String(d.Get("description").(string)),
+			Value: aws.String(d.Get(names.AttrDescription).(string)),
 		})
 	}
 
@@ -167,7 +168,7 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	input := &apigateway.UpdateModelInput{
-		ModelName:       aws.String(d.Get("name").(string)),
+		ModelName:       aws.String(d.Get(names.AttrName).(string)),
 		PatchOperations: operations,
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 	}
@@ -187,7 +188,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	_, err := conn.DeleteModel(ctx, &apigateway.DeleteModelInput{
-		ModelName: aws.String(d.Get("name").(string)),
+		ModelName: aws.String(d.Get(names.AttrName).(string)),
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	})
 

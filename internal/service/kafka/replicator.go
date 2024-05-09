@@ -46,7 +46,7 @@ func resourceReplicator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func resourceReplicator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -93,7 +93,7 @@ func resourceReplicator() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"subnet_ids": {
+									names.AttrSubnetIDs: {
 										Type:     schema.TypeSet,
 										Required: true,
 										ForceNew: true,
@@ -241,7 +241,7 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -289,9 +289,9 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	d.Set("arn", output.ReplicatorArn)
+	d.Set(names.AttrARN, output.ReplicatorArn)
 	d.Set("current_version", output.CurrentVersion)
-	d.Set("description", output.ReplicatorDescription)
+	d.Set(names.AttrDescription, output.ReplicatorDescription)
 	d.Set("kafka_cluster", flattenKafkaClusterDescriptions(output.KafkaClusters))
 	d.Set("replication_info_list", flattenReplicationInfoDescriptions(output.ReplicationInfoList, sourceARN, targetARN))
 	d.Set("replicator_name", output.ReplicatorName)
@@ -307,7 +307,7 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &kafka.UpdateReplicationInfoInput{
 			CurrentVersion:        aws.String(d.Get("current_version").(string)),
 			ReplicatorArn:         aws.String(d.Id()),
@@ -610,7 +610,7 @@ func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcCo
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSubnetIDs] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap
@@ -815,7 +815,7 @@ func expandKafkaClusterClientVPCConfig(tfMap map[string]interface{}) *types.Kafk
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 

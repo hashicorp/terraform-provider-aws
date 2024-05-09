@@ -40,8 +40,8 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "collection_arn", "geo", fmt.Sprintf("geofence-collection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "collection_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -93,7 +93,7 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -127,7 +127,7 @@ func TestAccLocationGeofenceCollection_kmsKeyID(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{

@@ -40,7 +40,7 @@ func TestAccIAMUserSSHKey_basic(t *testing.T) {
 				Config: testAccUserSSHKeyConfig_encoding(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccIAMUserSSHKey_pemEncoding(t *testing.T) {
 				Config: testAccSSHKeyConfig_pemEncoding(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 				),
 			},
 			{

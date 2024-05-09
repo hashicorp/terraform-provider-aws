@@ -49,7 +49,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -216,7 +216,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", association.ResourceARN)
+	d.Set(names.AttrARN, association.ResourceARN)
 	d.Set("batch_import_meta_data_on_create", association.BatchImportMetaDataOnCreate)
 	d.Set("data_repository_path", association.DataRepositoryPath)
 	d.Set("file_system_id", association.FileSystemId)
@@ -235,7 +235,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
 			AssociationId:      aws.String(d.Id()),
 			ClientRequestToken: aws.String(id.UniqueId()),

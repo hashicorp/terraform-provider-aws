@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_endpoint_authorization", name="Endpoint Authorization")
@@ -44,7 +45,7 @@ func resourceEndpointAuthorization() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -82,7 +83,7 @@ func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.Resource
 	account := d.Get("account").(string)
 	input := redshift.AuthorizeEndpointAccessInput{
 		Account:           aws.String(account),
-		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		ClusterIdentifier: aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 	}
 
 	if v, ok := d.GetOk("vpc_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -119,7 +120,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("account", endpoint.Grantee)
 	d.Set("grantee", endpoint.Grantee)
 	d.Set("grantor", endpoint.Grantor)
-	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
 	d.Set("vpc_ids", flex.FlattenStringSet(endpoint.AllowedVPCs))
 	d.Set("allowed_all_vpcs", endpoint.AllowedAllVPCs)
 	d.Set("endpoint_count", endpoint.EndpointCount)

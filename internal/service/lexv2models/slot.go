@@ -118,7 +118,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -149,7 +149,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"text": schema.StringAttribute{
 										Required: true,
 									},
-									"value": schema.StringAttribute{
+									names.AttrValue: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -165,7 +165,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -178,7 +178,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -488,10 +488,10 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -510,7 +510,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"slot_type_id": schema.StringAttribute{
@@ -522,7 +522,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"obfuscation_setting":       obfuscationSettingLNB,
 			"value_elicitation_setting": valueElicitationSettingLNB,
 			//sub_slot_setting
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

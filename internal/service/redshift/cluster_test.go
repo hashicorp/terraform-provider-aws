@@ -38,7 +38,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
@@ -81,7 +81,7 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_aqua(rName, "enabled"),
+				Config: testAccClusterConfig_aqua(rName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
@@ -106,7 +106,7 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_aqua(rName, "enabled"),
+				Config: testAccClusterConfig_aqua(rName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
@@ -192,7 +192,7 @@ func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, keyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -269,7 +269,7 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging.0.bucket_name", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging.0.bucket_name", bucketResourceName, names.AttrBucket),
 				),
 			},
 			{
@@ -321,7 +321,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Config: testAccClusterConfig_snapshotCopyEnabled(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "1"),
 				),
 			},
@@ -329,7 +329,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Config: testAccClusterConfig_snapshotCopyEnabled(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "3"),
 				),
 			},
@@ -570,7 +570,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
 				),
 			},
 			{
@@ -578,7 +578,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v2),
 					testAccCheckClusterNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.1"),
 				),
 			},
 		},
@@ -603,7 +603,7 @@ func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocati
 					testAccCheckClusterExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
 				),
 			},
 			{
@@ -612,7 +612,7 @@ func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocati
 					testAccCheckClusterExists(ctx, resourceName, &v2),
 					testAccCheckClusterNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.1"),
 				),
 			},
 		},
@@ -637,7 +637,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
 				),
 			},
 			{
@@ -791,7 +791,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_restoreFromSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_identifier", "aws_redshift_cluster_snapshot.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_identifier", "aws_redshift_cluster_snapshot.test", names.AttrID),
 				),
 			},
 			{
@@ -826,7 +826,7 @@ func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
 				Config: testAccClusterConfig_restoreFromSnapshotARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_arn", "aws_redshift_cluster_snapshot.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_arn", "aws_redshift_cluster_snapshot.test", names.AttrARN),
 				),
 			},
 			{
@@ -861,7 +861,7 @@ func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
 				Config: testAccClusterConfig_manageMasterPassword(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_password", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_password_secret_arn"),
 				),

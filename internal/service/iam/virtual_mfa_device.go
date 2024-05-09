@@ -43,7 +43,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vMFA.SerialNumber)
+	d.Set(names.AttrARN, vMFA.SerialNumber)
 
 	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {

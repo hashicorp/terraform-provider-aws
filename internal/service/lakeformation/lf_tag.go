@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // This value is defined by AWS API
@@ -44,7 +45,7 @@ func ResourceLFTag() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -71,7 +72,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	tagKey := d.Get("key").(string)
+	tagKey := d.Get(names.AttrKey).(string)
 	tagValues := d.Get("values").(*schema.Set)
 
 	var catalogID string
@@ -143,7 +144,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
-	d.Set("key", output.TagKey)
+	d.Set(names.AttrKey, output.TagKey)
 	d.Set("values", flex.FlattenStringValueSet(output.TagValues))
 	d.Set("catalog_id", output.CatalogId)
 

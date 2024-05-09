@@ -74,8 +74,8 @@ func testAccQueueCheckDataSource(datasourceName, resourceName string) resource.T
 		}
 
 		attrNames := []string{
-			"arn",
-			"name",
+			names.AttrARN,
+			names.AttrName,
 		}
 
 		for _, attrName := range attrNames {

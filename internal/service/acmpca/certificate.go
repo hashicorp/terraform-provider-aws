@@ -72,7 +72,7 @@ func resourceCertificate() *schema.Resource {
 					return json
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,13 +115,13 @@ func resourceCertificate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.ValidityPeriodType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -205,7 +205,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
+	d.Set(names.AttrARN, d.Id())
 	d.Set("certificate", output.Certificate)
 	d.Set("certificate_authority_arn", d.Get("certificate_authority_arn").(string))
 	d.Set("certificate_chain", output.CertificateChain)
@@ -352,14 +352,14 @@ func expandValidity(l []interface{}) (*types.Validity, error) {
 
 	m := l[0].(map[string]interface{})
 
-	valueType := m["type"].(string)
+	valueType := m[names.AttrType].(string)
 	result := &types.Validity{
 		Type: types.ValidityPeriodType(valueType),
 	}
 
-	i, err := ExpandValidityValue(valueType, m["value"].(string))
+	i, err := ExpandValidityValue(valueType, m[names.AttrValue].(string))
 	if err != nil {
-		return nil, fmt.Errorf("parsing value %q: %w", m["value"].(string), err)
+		return nil, fmt.Errorf("parsing value %q: %w", m[names.AttrValue].(string), err)
 	}
 	result.Value = aws.Int64(i)
 

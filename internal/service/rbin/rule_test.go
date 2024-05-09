@@ -41,7 +41,7 @@ func TestAccRBinRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
 						"retention_period_value": "10",
@@ -62,7 +62,7 @@ func TestAccRBinRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic2(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
 						"retention_period_value": "10",

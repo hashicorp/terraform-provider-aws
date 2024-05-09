@@ -40,13 +40,13 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 				Config: testAccSegmentConfig_basic(rName, pattern),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("segment/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("segment/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "id", "evidently", fmt.Sprintf("segment/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrID, "evidently", fmt.Sprintf("segment/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", pattern),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 				Config: testAccSegmentConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{

@@ -103,14 +103,14 @@ func TestAccIdentityStoreGroup_descriptionChange(t *testing.T) {
 				Config: testAccGroupConfig_description(description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", description1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
 				Config: testAccGroupConfig_description(description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
 			},
 		},

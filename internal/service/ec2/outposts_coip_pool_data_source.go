@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_coip_pool")
@@ -46,12 +47,12 @@ func DataSourceCoIPPool() *schema.Resource {
 				Computed: true,
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 
 			"filter": customFiltersSchema(),
 		},
@@ -77,7 +78,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	req.Filters = newAttributeFilterList(filters)
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		req.Filters = append(req.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
@@ -108,7 +109,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(coip.PoolId))
 
 	d.Set("local_gateway_route_table_id", coip.LocalGatewayRouteTableId)
-	d.Set("arn", coip.PoolArn)
+	d.Set(names.AttrARN, coip.PoolArn)
 
 	if err := d.Set("pool_cidrs", aws.StringValueSlice(coip.PoolCidrs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting pool_cidrs: %s", err)
@@ -116,7 +117,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("pool_id", coip.PoolId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

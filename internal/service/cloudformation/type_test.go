@@ -16,7 +16,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -44,21 +44,21 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 				Config: testAccTypeConfig_name(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexache.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
-					resource.TestCheckResourceAttr(resourceName, "description", "An example resource schema demonstrating some basic constructs and validation rules."),
+					resource.TestCheckResourceAttr(resourceName, "deprecated_status", string(awstypes.DeprecatedStatusLive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An example resource schema demonstrating some basic constructs and validation rules."),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "is_default_version", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_type", cloudformation.ProvisioningTypeFullyMutable),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
 					resource.TestCheckResourceAttr(resourceName, "schema_handler_package", fmt.Sprintf("s3://%s/test", rName)),
 					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
 					resource.TestCheckResourceAttr(resourceName, "source_url", "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git"),
-					resource.TestCheckResourceAttr(resourceName, "type", cloudformation.RegistryTypeResource),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RegistryTypeResource)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
 					resource.TestCheckResourceAttr(resourceName, "type_name", typeName),
-					resource.TestCheckResourceAttr(resourceName, "visibility", cloudformation.VisibilityPrivate),
+					resource.TestCheckResourceAttr(resourceName, "visibility", string(awstypes.VisibilityPrivate)),
 					resource.TestMatchResourceAttr(resourceName, "version_id", regexache.MustCompile(`.+`)),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccCloudFormationType_executionRoleARN(t *testing.T) {
 				Config: testAccTypeConfig_executionRoleARN(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -138,8 +138,8 @@ func TestAccCloudFormationType_logging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_group_name", cloudwatchLogGroupResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_group_name", cloudwatchLogGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -153,11 +153,7 @@ func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.T
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudFormation Type ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 		_, err := tfcloudformation.FindTypeByARN(ctx, conn, rs.Primary.ID)
 
@@ -167,7 +163,7 @@ func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.T
 
 func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudformation_stack_set" {
@@ -218,7 +214,7 @@ func testAccTypeZipGenerator(t *testing.T, typeName string) string {
 	tempDir := t.TempDir()
 	_, currentFilePath, _, _ := runtime.Caller(0)
 
-	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "testdata", "examplecompany-exampleservice-exampleresource")
+	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "test-fixtures", "examplecompany-exampleservice-exampleresource")
 	targetDirectoryPath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource")
 	targetZipFilePath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource.zip")
 

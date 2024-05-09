@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafregional_regex_match_set", name="Regex Match Set")
@@ -33,7 +34,7 @@ func resourceRegexMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -57,7 +58,7 @@ func resourceRegexMatchSet() *schema.Resource {
 											return strings.ToLower(v.(string))
 										},
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -84,7 +85,7 @@ func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateRegexMatchSetInput{
 			ChangeToken: token,
@@ -119,7 +120,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("reading WAF Regional Regex Match Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", set.Name)
+	d.Set(names.AttrName, set.Name)
 	d.Set("regex_match_tuple", FlattenRegexMatchTuples(set.RegexMatchTuples))
 
 	return diags

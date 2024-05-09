@@ -36,7 +36,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "min_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
@@ -248,7 +248,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 				Config: testAccTargetConfig_optionalRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &readTarget),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", "role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"),
 				),
 			},
 		},

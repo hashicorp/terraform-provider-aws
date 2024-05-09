@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func getReplicationSetARN(context context.Context, client *ssmincidents.Client) (string, error) {
@@ -34,7 +35,7 @@ func setResponsePlanResourceData(
 	if err := d.Set("action", flattenAction(getResponsePlanOutput.Actions)); err != nil {
 		return d, err
 	}
-	if err := d.Set("arn", getResponsePlanOutput.Arn); err != nil {
+	if err := d.Set(names.AttrARN, getResponsePlanOutput.Arn); err != nil {
 		return d, err
 	}
 	if err := d.Set("chat_channel", flattenChatChannel(getResponsePlanOutput.ChatChannel)); err != nil {
@@ -52,7 +53,7 @@ func setResponsePlanResourceData(
 	if err := d.Set("integration", flattenIntegration(getResponsePlanOutput.Integrations)); err != nil {
 		return d, err
 	}
-	if err := d.Set("name", getResponsePlanOutput.Name); err != nil {
+	if err := d.Set(names.AttrName, getResponsePlanOutput.Name); err != nil {
 		return d, err
 	}
 	return d, nil

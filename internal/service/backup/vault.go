@@ -43,7 +43,7 @@ func ResourceVault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,14 +52,14 @@ func ResourceVault() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,13 +84,13 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateBackupVaultInput{
 		BackupVaultName: aws.String(name),
 		BackupVaultTags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.EncryptionKeyArn = aws.String(v.(string))
 	}
 
@@ -121,9 +121,9 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Backup Vault (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.BackupVaultArn)
-	d.Set("kms_key_arn", output.EncryptionKeyArn)
-	d.Set("name", output.BackupVaultName)
+	d.Set(names.AttrARN, output.BackupVaultArn)
+	d.Set(names.AttrKMSKeyARN, output.EncryptionKeyArn)
+	d.Set(names.AttrName, output.BackupVaultName)
 	d.Set("recovery_points", output.NumberOfRecoveryPoints)
 
 	return diags

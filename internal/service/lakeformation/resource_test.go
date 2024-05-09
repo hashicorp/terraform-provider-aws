@@ -36,9 +36,9 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 				Config: testAccResourceConfig_basic(bucketName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "with_federation", "false"),
 				),
 			},
@@ -89,8 +89,8 @@ func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 				Config: testAccResourceConfig_serviceLinkedRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 		},
@@ -116,16 +116,16 @@ func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 				Config: testAccResourceConfig_basic(bucketName, roleName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccResourceConfig_basic(bucketName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -154,16 +154,16 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 				Config: testAccResourceConfig_serviceLinkedRole(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 			{
 				Config: testAccResourceConfig_basic(bucketName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -189,7 +189,7 @@ func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
 				Config: testAccResourceConfig_hybridAccessEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, bucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "true"),
 				),
 			},

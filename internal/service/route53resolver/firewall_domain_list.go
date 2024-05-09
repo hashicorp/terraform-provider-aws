@@ -38,7 +38,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +64,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
@@ -114,8 +114,8 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	arn := aws.StringValue(firewallDomainList.Arn)
-	d.Set("arn", arn)
-	d.Set("name", firewallDomainList.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, firewallDomainList.Name)
 
 	input := &route53resolver.ListFirewallDomainsInput{
 		FirewallDomainListId: aws.String(d.Id()),

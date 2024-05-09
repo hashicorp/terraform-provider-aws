@@ -27,7 +27,7 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 				Config: testAccApplicationDataSourceConfig_basic(appARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(datasourceName, "semantic_version"),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
@@ -57,7 +57,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
@@ -68,7 +68,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationIDDataSource(datasourceName),
-					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrName, "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),

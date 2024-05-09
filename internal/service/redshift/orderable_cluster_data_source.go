@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_redshift_orderable_cluster", name="Orderable Cluster Options")
@@ -20,7 +21,7 @@ func dataSourceOrderableCluster() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOrderableClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -131,7 +132,7 @@ func dataSourceOrderableClusterRead(ctx context.Context, d *schema.ResourceData,
 	for _, az := range orderableClusterOption.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(az.Name))
 	}
-	d.Set("availability_zones", availabilityZones)
+	d.Set(names.AttrAvailabilityZones, availabilityZones)
 
 	d.Set("cluster_type", orderableClusterOption.ClusterType)
 	d.Set("cluster_version", orderableClusterOption.ClusterVersion)

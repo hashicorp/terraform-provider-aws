@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
@@ -36,12 +37,12 @@ func ResourceIPSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,12 +51,12 @@ func ResourceIPSet() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.IPSetDescriptorType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
@@ -75,12 +76,12 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateIPSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 		return conn.CreateIPSet(ctx, params)
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF IPSet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 	resp := out.(*waf.CreateIPSetOutput)
 	d.SetId(aws.ToString(resp.IPSet.IPSetId))
@@ -111,22 +112,22 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "reading WAF IPSet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	var descriptors []map[string]interface{}
 
 	for _, descriptor := range resp.IPSet.IPSetDescriptors {
 		d := map[string]interface{}{
-			"type":  string(descriptor.Type),
-			"value": aws.ToString(descriptor.Value),
+			names.AttrType:  string(descriptor.Type),
+			names.AttrValue: aws.ToString(descriptor.Value),
 		}
 		descriptors = append(descriptors, d)
 	}
 
 	d.Set("ip_set_descriptors", descriptors)
 
-	d.Set("name", resp.IPSet.Name)
+	d.Set(names.AttrName, resp.IPSet.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -134,7 +135,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }
@@ -230,8 +231,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 		updates = append(updates, awstypes.IPSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			IPSetDescriptor: &awstypes.IPSetDescriptor{
-				Type:  awstypes.IPSetDescriptorType(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  awstypes.IPSetDescriptorType(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}
@@ -247,8 +248,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 		updates = append(updates, awstypes.IPSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			IPSetDescriptor: &awstypes.IPSetDescriptor{
-				Type:  awstypes.IPSetDescriptorType(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  awstypes.IPSetDescriptorType(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}

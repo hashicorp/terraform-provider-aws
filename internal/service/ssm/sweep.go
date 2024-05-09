@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -287,7 +288,7 @@ func sweepResourceDataSyncs(region string) error {
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(resourceDataSync.SyncName))
-			d.Set("name", resourceDataSync.SyncName)
+			d.Set(names.AttrName, resourceDataSync.SyncName)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

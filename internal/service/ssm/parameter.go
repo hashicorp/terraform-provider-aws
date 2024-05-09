@@ -49,7 +49,7 @@ func ResourceParameter() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -65,7 +65,7 @@ func ResourceParameter() *schema.Resource {
 				}, false),
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -74,14 +74,14 @@ func ResourceParameter() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", "value"},
+				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
 			},
 			"key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -106,19 +106,19 @@ func ResourceParameter() *schema.Resource {
 					return false
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
 			},
-			"value": {
+			names.AttrValue: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", "value"},
+				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -130,14 +130,14 @@ func ResourceParameter() *schema.Resource {
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
 			}),
-			customdiff.ComputedIf("version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("value")
+			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange(names.AttrValue)
 			}),
-			customdiff.ComputedIf("value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("insecure_value")
 			}),
 			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("value")
+				return diff.HasChange(names.AttrValue)
 			}),
 
 			verify.SetTagsDiff,
@@ -149,16 +149,16 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
-	value := d.Get("value").(string)
+	value := d.Get(names.AttrValue).(string)
 	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 		value = v
 	}
 
 	input := &ssm.PutParameterInput{
 		Name:           aws.String(name),
-		Type:           aws.String(d.Get("type").(string)),
+		Type:           aws.String(d.Get(names.AttrType).(string)),
 		Value:          aws.String(value),
 		Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
@@ -172,11 +172,11 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DataType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {
+	if keyID, ok := d.GetOk("key_id"); ok && d.Get(names.AttrType).(string) == ssm.ParameterTypeSecureString {
 		input.SetKeyId(keyID.(string))
 	}
 
@@ -254,16 +254,16 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	param := resp.Parameter
-	d.Set("arn", param.ARN)
+	d.Set(names.AttrARN, param.ARN)
 	name := aws.StringValue(param.Name)
-	d.Set("name", name)
-	d.Set("type", param.Type)
-	d.Set("version", param.Version)
+	d.Set(names.AttrName, name)
+	d.Set(names.AttrType, param.Type)
+	d.Set(names.AttrVersion, param.Version)
 
 	if _, ok := d.GetOk("insecure_value"); ok && aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
 	} else {
-		d.Set("value", param.Value)
+		d.Set(names.AttrValue, param.Value)
 	}
 
 	if aws.StringValue(param.Type) == ssm.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
@@ -292,7 +292,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
-	d.Set("description", detail.Description)
+	d.Set(names.AttrDescription, detail.Description)
 	d.Set("tier", detail.Tier)
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
@@ -304,15 +304,15 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	if d.HasChangesExcept("overwrite", "tags", "tags_all") {
-		value := d.Get("value").(string)
+	if d.HasChangesExcept("overwrite", names.AttrTags, names.AttrTagsAll) {
+		value := d.Get(names.AttrValue).(string)
 
 		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 			value = v
 		}
 		paramInput := &ssm.PutParameterInput{
-			Name:           aws.String(d.Get("name").(string)),
-			Type:           aws.String(d.Get("type").(string)),
+			Name:           aws.String(d.Get(names.AttrName).(string)),
+			Type:           aws.String(d.Get(names.AttrType).(string)),
 			Tier:           aws.String(d.Get("tier").(string)),
 			Value:          aws.String(value),
 			Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
@@ -329,18 +329,18 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			paramInput.DataType = aws.String(d.Get("data_type").(string))
 		}
 
-		if d.HasChange("description") {
-			paramInput.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			paramInput.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("key_id") && d.Get("type").(string) == ssm.ParameterTypeSecureString {
+		if d.HasChange("key_id") && d.Get(names.AttrType).(string) == ssm.ParameterTypeSecureString {
 			paramInput.SetKeyId(d.Get("key_id").(string))
 		}
 
 		_, err := conn.PutParameterWithContext(ctx, paramInput)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-			log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get("name").(string), d.Get("tier").(string))
+			log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get(names.AttrName).(string), d.Get("tier").(string))
 			paramInput.Tier = nil
 			_, err = conn.PutParameterWithContext(ctx, paramInput)
 		}
@@ -358,7 +358,7 @@ func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) {

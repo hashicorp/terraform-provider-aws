@@ -39,7 +39,7 @@ func resourceGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading XRay Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", group.GroupARN)
+	d.Set(names.AttrARN, group.GroupARN)
 	d.Set("filter_expression", group.FilterExpression)
 	d.Set("group_name", group.GroupName)
 	if err := d.Set("insights_configuration", flattenInsightsConfig(group.InsightsConfiguration)); err != nil {
@@ -133,7 +133,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
 
 		if v, ok := d.GetOk("filter_expression"); ok {

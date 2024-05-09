@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route")
@@ -73,7 +74,7 @@ func DataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,12 +89,12 @@ func DataSourceRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -160,7 +161,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 			continue
 		}
 
-		if v, ok := d.GetOk("instance_id"); ok && aws.StringValue(r.InstanceId) != v.(string) {
+		if v, ok := d.GetOk(names.AttrInstanceID); ok && aws.StringValue(r.InstanceId) != v.(string) {
 			continue
 		}
 
@@ -172,11 +173,11 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 			continue
 		}
 
-		if v, ok := d.GetOk("network_interface_id"); ok && aws.StringValue(r.NetworkInterfaceId) != v.(string) {
+		if v, ok := d.GetOk(names.AttrNetworkInterfaceID); ok && aws.StringValue(r.NetworkInterfaceId) != v.(string) {
 			continue
 		}
 
-		if v, ok := d.GetOk("transit_gateway_id"); ok && aws.StringValue(r.TransitGatewayId) != v.(string) {
+		if v, ok := d.GetOk(names.AttrTransitGatewayID); ok && aws.StringValue(r.TransitGatewayId) != v.(string) {
 			continue
 		}
 
@@ -212,11 +213,11 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("gateway_id", route.GatewayId)
-	d.Set("instance_id", route.InstanceId)
+	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
-	d.Set("network_interface_id", route.NetworkInterfaceId)
-	d.Set("transit_gateway_id", route.TransitGatewayId)
+	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
+	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
 	return diags

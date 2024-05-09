@@ -38,7 +38,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
 			{

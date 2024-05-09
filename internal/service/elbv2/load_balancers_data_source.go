@@ -27,7 +27,7 @@ func DataSourceLoadBalancers() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -48,7 +48,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
 	}
 
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if len(tagsToMatch) > 0 {
 		var loadBalancers []*elbv2.LoadBalancer
 

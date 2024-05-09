@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eks_addon_version")
@@ -38,7 +39,7 @@ func dataSourceAddonVersion() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,7 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("addon_name", addonName)
 	d.Set("kubernetes_version", kubernetesVersion)
 	d.Set("most_recent", mostRecent)
-	d.Set("version", versionInfo.AddonVersion)
+	d.Set(names.AttrVersion, versionInfo.AddonVersion)
 
 	return diags
 }

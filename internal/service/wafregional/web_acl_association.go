@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafregional_web_acl_association", name="Web ACL Association")
@@ -39,7 +40,7 @@ func resourceWebACLAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -59,7 +60,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
 	webACLID := d.Get("web_acl_id").(string)
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	id := webACLAssociationCreateResourceID(webACLID, resourceARN)
 	input := &wafregional.AssociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
@@ -100,7 +101,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("reading WAF Regional WebACL Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_arn", resourceARN)
+	d.Set(names.AttrResourceARN, resourceARN)
 	d.Set("web_acl_id", webACL.WebACLId)
 
 	return diags

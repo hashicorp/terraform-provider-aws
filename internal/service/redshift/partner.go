@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_partner", name="Partner")
@@ -32,18 +33,18 @@ func resourcePartner() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,7 +54,7 @@ func resourcePartner() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,12 +70,12 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	account := d.Get("account_id").(string)
-	clusterId := d.Get("cluster_identifier").(string)
+	account := d.Get(names.AttrAccountID).(string)
+	clusterId := d.Get(names.AttrClusterIdentifier).(string)
 	input := redshift.AddPartnerInput{
 		AccountId:         aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
-		DatabaseName:      aws.String(d.Get("database_name").(string)),
+		DatabaseName:      aws.String(d.Get(names.AttrDatabaseName).(string)),
 		PartnerName:       aws.String(d.Get("partner_name").(string)),
 	}
 
@@ -105,11 +106,11 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Partner (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", d.Get("account_id").(string))
-	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
+	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID).(string))
+	d.Set(names.AttrClusterIdentifier, d.Get(names.AttrClusterIdentifier).(string))
 	d.Set("partner_name", out.PartnerName)
-	d.Set("database_name", out.DatabaseName)
-	d.Set("status", out.Status)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("status_message", out.StatusMessage)
 
 	return diags

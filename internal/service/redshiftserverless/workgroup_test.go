@@ -34,7 +34,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
@@ -307,7 +307,7 @@ func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
 				Config: testAccWorkgroupConfig_port(rName, 8191),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port", "8191"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8191"),
 				),
 			},
 			{

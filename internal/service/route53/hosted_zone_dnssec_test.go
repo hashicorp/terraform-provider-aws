@@ -38,7 +38,7 @@ func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 				Config: testAccHostedZoneDNSSECConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccHostedZoneDNSSECExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "signing_status", tfroute53.ServeSignatureSigning),
 				),
 			},

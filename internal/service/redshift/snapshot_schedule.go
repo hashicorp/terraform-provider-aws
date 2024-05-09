@@ -38,7 +38,7 @@ func resourceSnapshotSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func resourceSnapshotSchedule() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ScheduleDescription = aws.String(v.(string))
 	}
 
@@ -128,9 +128,9 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotschedule:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("definitions", aws.StringValueSlice(snapshotSchedule.ScheduleDefinitions))
-	d.Set("description", snapshotSchedule.ScheduleDescription)
+	d.Set(names.AttrDescription, snapshotSchedule.ScheduleDescription)
 	d.Set("identifier", snapshotSchedule.ScheduleIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(snapshotSchedule.ScheduleIdentifier)))
 

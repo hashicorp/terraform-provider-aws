@@ -38,11 +38,11 @@ func TestAccKinesisStream_basic(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kinesis", fmt.Sprintf("stream/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesis", fmt.Sprintf("stream/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "enforce_consumer_deletion", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "24"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", "0"),
@@ -437,14 +437,14 @@ func TestAccKinesisStream_updateKMSKeyID(t *testing.T) {
 				Config: testAccStreamConfig_updateKMSKeyID(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.key.0", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.key.0", names.AttrID),
 				),
 			},
 			{
 				Config: testAccStreamConfig_updateKMSKeyID(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.key.1", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.key.1", names.AttrID),
 				),
 			},
 		},
@@ -612,7 +612,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, v *types.StreamDesc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		output, err := tfkinesis.FindStreamByName(ctx, conn, rs.Primary.Attributes["name"])
+		output, err := tfkinesis.FindStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -633,7 +633,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfkinesis.FindStreamByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfkinesis.FindStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue

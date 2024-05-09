@@ -36,7 +36,7 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_app_type", "JupyterServer"),
 					resource.TestCheckResourceAttrSet(resourceName, "studio_lifecycle_config_content"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

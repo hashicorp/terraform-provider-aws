@@ -46,11 +46,11 @@ func ResourceAccessPoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -194,7 +194,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	ap := resp.AccessPoints[0]
 
-	d.Set("arn", ap.AccessPointArn)
+	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.StringValue(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -205,7 +205,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}.String()
 	d.Set("file_system_arn", fsARN)
 	d.Set("file_system_id", fsID)
-	d.Set("owner_id", ap.OwnerId)
+	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}

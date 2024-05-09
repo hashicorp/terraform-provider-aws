@@ -42,11 +42,11 @@ func resourceParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -57,7 +57,7 @@ func resourceParameterGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -74,11 +74,11 @@ func resourceParameterGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -98,9 +98,9 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &redshift.CreateClusterParameterGroupInput{
-		Description:          aws.String(d.Get("description").(string)),
+		Description:          aws.String(d.Get(names.AttrDescription).(string)),
 		ParameterGroupFamily: aws.String(d.Get("family").(string)),
 		ParameterGroupName:   aws.String(name),
 		Tags:                 getTagsIn(ctx),
@@ -153,10 +153,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", parameterGroup.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, parameterGroup.Description)
 	d.Set("family", parameterGroup.ParameterGroupFamily)
-	d.Set("name", parameterGroup.ParameterGroupName)
+	d.Set(names.AttrName, parameterGroup.ParameterGroupName)
 
 	setTagsOut(ctx, parameterGroup.Tags)
 
@@ -266,9 +266,9 @@ func findParameterGroupByName(ctx context.Context, conn *redshift.Redshift, name
 func resourceParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["value"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrValue].(string))))
 
 	return create.StringHashcode(buf.String())
 }
@@ -281,13 +281,13 @@ func expandParameters(configured []interface{}) []*redshift.Parameter {
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		if data["name"].(string) == "" {
+		if data[names.AttrName].(string) == "" {
 			continue
 		}
 
 		p := &redshift.Parameter{
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
+			ParameterName:  aws.String(data[names.AttrName].(string)),
+			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
 
 		parameters = append(parameters, p)
@@ -300,8 +300,8 @@ func flattenParameters(list []*redshift.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		result = append(result, map[string]interface{}{
-			"name":  aws.StringValue(i.ParameterName),
-			"value": aws.StringValue(i.ParameterValue),
+			names.AttrName:  aws.StringValue(i.ParameterName),
+			names.AttrValue: aws.StringValue(i.ParameterValue),
 		})
 	}
 	return result

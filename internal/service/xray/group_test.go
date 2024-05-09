@@ -36,7 +36,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"), // Computed.
@@ -51,7 +51,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),

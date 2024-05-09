@@ -38,8 +38,8 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", dbName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "properties.%", "0"),
@@ -49,7 +49,7 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
 			},
 		},
 	})
@@ -71,7 +71,7 @@ func TestAccAthenaDatabase_properties(t *testing.T) {
 				Config: testAccDatabaseConfig_properties(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
 					resource.TestCheckResourceAttr(resourceName, "properties.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.creator", "Jane D."),
 				),
@@ -80,7 +80,7 @@ func TestAccAthenaDatabase_properties(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
 			},
 		},
 	})
@@ -102,7 +102,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 				Config: testAccDatabaseConfig_acl(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
 					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
 				),
@@ -111,7 +111,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "acl_configuration", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "acl_configuration", "force_destroy"},
 			},
 		},
 	})
@@ -135,14 +135,14 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_option", "SSE_KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "force_destroy", "encryption_configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy", "encryption_configuration"},
 			},
 		},
 	})
@@ -164,14 +164,14 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
 			},
 		},
 	})
@@ -260,7 +260,7 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 				Config: testAccDatabaseConfig_comment(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "athena is a goddess"),
 				),
 			},
@@ -268,7 +268,7 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
 			},
 		},
 	})
@@ -290,7 +290,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 				Config: testAccDatabaseConfig_unescapedComment(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", dbName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "athena's a goddess"),
 				),
 			},
@@ -298,7 +298,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bucket", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
 			},
 		},
 	})
@@ -467,8 +467,8 @@ func testAccCheckDatabaseDropFails(ctx context.Context, dbName string) resource.
 
 func testAccDatabaseFindBucketName(s *terraform.State, dbName string) (bucket string, err error) {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type == "aws_athena_database" && rs.Primary.Attributes["name"] == dbName {
-			bucket = rs.Primary.Attributes["bucket"]
+		if rs.Type == "aws_athena_database" && rs.Primary.Attributes[names.AttrName] == dbName {
+			bucket = rs.Primary.Attributes[names.AttrBucket]
 			break
 		}
 	}

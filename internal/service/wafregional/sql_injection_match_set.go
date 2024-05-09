@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafregional_sql_injection_match_set", name="SQL Injection Match Set")
@@ -34,7 +35,7 @@ func resourceSQLInjectionMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,7 +60,7 @@ func resourceSQLInjectionMatchSet() *schema.Resource {
 											return strings.ToLower(value)
 										},
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -82,13 +83,13 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	log.Printf("[INFO] Creating Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating Regional WAF SQL Injection Match Set: %s", d.Get(names.AttrName).(string))
 
 	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &wafregional.CreateSqlInjectionMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		return conn.CreateSqlInjectionMatchSet(ctx, params)
@@ -105,7 +106,7 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get(names.AttrName).(string))
 	params := &wafregional.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
 	}
@@ -120,7 +121,7 @@ func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "getting Regional WAF SQL Injection Match Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", resp.SqlInjectionMatchSet.Name)
+	d.Set(names.AttrName, resp.SqlInjectionMatchSet.Name)
 	d.Set("sql_injection_match_tuple", flattenSQLInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
 
 	return diags
@@ -246,7 +247,7 @@ func resourceSQLInjectionMatchSetTupleHash(v interface{}) int {
 		if v, ok := ftm["data"]; ok {
 			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
 		}
-		buf.WriteString(fmt.Sprintf("%s-", ftm["type"].(string)))
+		buf.WriteString(fmt.Sprintf("%s-", ftm[names.AttrType].(string)))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
 

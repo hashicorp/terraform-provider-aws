@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func tableVisualSchema() *schema.Schema {
@@ -114,7 +115,7 @@ func tableVisualSchema() *schema.Schema {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-																									"value": {
+																									names.AttrValue: {
 																										Type:     schema.TypeString,
 																										Optional: true,
 																									},
@@ -740,7 +741,7 @@ func expandTableFieldCustomTextContent(tfList []interface{}) *quicksight.TableFi
 
 	options := &quicksight.TableFieldCustomTextContent{}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		options.Value = aws.String(v)
 	}
 	if v, ok := tfMap["custom_text_content"].([]interface{}); ok && len(v) > 0 {
@@ -1200,7 +1201,7 @@ func flattenTableFieldCustomTextContent(apiObject *quicksight.TableFieldCustomTe
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.StringValue(apiObject.Value)
+		tfMap[names.AttrValue] = aws.StringValue(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}

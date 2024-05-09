@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -62,7 +63,7 @@ func resourceLayerVersionPermission() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +153,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("layer_name", layerName)
-	d.Set("policy", output.Policy)
+	d.Set(names.AttrPolicy, output.Policy)
 	d.Set("revision_id", output.RevisionId)
 	d.Set("version_number", versionNumber)
 

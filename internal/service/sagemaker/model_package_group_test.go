@@ -37,7 +37,7 @@ func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "model_package_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

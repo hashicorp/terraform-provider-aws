@@ -36,7 +36,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
+				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -59,7 +59,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
+				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -83,7 +83,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
-				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
+				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -107,7 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
-				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
+				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",

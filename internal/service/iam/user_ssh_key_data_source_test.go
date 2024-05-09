@@ -36,7 +36,7 @@ func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "fingerprint", resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_key", resourceName, "public_key"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ssh_public_key_id", resourceName, "ssh_public_key_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(dataSourceName, "username", resourceName, "username"),
 				),
 			},

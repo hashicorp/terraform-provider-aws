@@ -29,12 +29,12 @@ func TestAccRoute53ZoneDataSource_id(t *testing.T) {
 			{
 				Config: testAccZoneDataSourceConfig_id(fqdn),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -57,11 +57,11 @@ func TestAccRoute53ZoneDataSource_name(t *testing.T) {
 			{
 				Config: testAccZoneDataSourceConfig_name(fqdn),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -85,11 +85,11 @@ func TestAccRoute53ZoneDataSource_tags(t *testing.T) {
 			{
 				Config: testAccZoneDataSourceConfig_tagsPrivate(fqdn, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -111,11 +111,11 @@ func TestAccRoute53ZoneDataSource_vpc(t *testing.T) {
 			{
 				Config: testAccZoneDataSourceConfig_vpc(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_name_server", dataSourceName, "primary_name_server"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -137,9 +137,9 @@ func TestAccRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 			{
 				Config: testAccZoneDataSourceConfig_serviceDiscovery(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "linked_service_principal", "servicediscovery.amazonaws.com"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "linked_service_description", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "linked_service_description", resourceName, names.AttrARN),
 				),
 			},
 		},

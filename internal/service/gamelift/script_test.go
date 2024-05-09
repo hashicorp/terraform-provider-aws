@@ -44,8 +44,8 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 				Config: testAccScriptConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`script/script-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`script/script-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", fmt.Sprintf("prod-gamescale-scripts-%s", region)),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_location.0.key"),
@@ -62,8 +62,8 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 				Config: testAccScriptConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`script/script-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`script/script-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

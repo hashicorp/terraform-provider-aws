@@ -53,7 +53,7 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -209,7 +209,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("directory_id", workspace.DirectoryId)
 	d.Set("ip_address", workspace.IpAddress)
 	d.Set("computer_name", workspace.ComputerName)
-	d.Set("state", workspace.State)
+	d.Set(names.AttrState, workspace.State)
 	d.Set("root_volume_encryption_enabled", workspace.RootVolumeEncryptionEnabled)
 	d.Set("user_name", workspace.UserName)
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)

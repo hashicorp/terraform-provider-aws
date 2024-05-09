@@ -12,6 +12,10 @@ description: |-
 
 Terraform resource for managing an Amazon Security Lake AWS Log Source.
 
+~> **NOTE:** A single `aws_securitylake_aws_log_source` should be used to configure a log source across all regions and accounts.
+
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_aws_log_source`. Use a `dependsOn` statement.
+
 ## Example Usage
 
 ### Basic Usage
@@ -28,13 +32,13 @@ import { SecuritylakeAwsLogSource } from "./.gen/providers/aws/securitylake-aws-
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new SecuritylakeAwsLogSource(this, "test", {
+    new SecuritylakeAwsLogSource(this, "example", {
+      dependsOn: [awsSecuritylakeDataLakeExample],
       source: [
         {
           accounts: ["123456789012"],
           regions: ["eu-west-1"],
           sourceName: "ROUTE53",
-          sourceVersion: "1.0",
         },
       ],
     });
@@ -52,9 +56,12 @@ The following arguments are required:
 `source` supports the following:
 
 * `accounts` - (Optional) Specify the AWS account information where you want to enable Security Lake.
+  If not specified, uses all accounts included in the Security Lake.
 * `regions` - (Required) Specify the Regions where you want to enable Security Lake.
 * `sourceName` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`.
-* `sourceVersion` - (Optional) The version for a AWS source. This must be a Regionally unique value.
+* `sourceVersion` - (Optional) The version for a AWS source.
+  If not specified, the version will be the default.
+  This must be a Regionally unique value.
 
 ## Attribute Reference
 
@@ -92,4 +99,4 @@ Using `terraform import`, import AWS log sources using the source name. For exam
 % terraform import aws_securitylake_aws_log_source.example ROUTE53
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ee1a170608deb904f09e1ba901701686ec29394191b588406f73bc8dadef1e52 -->
+<!-- cache-key: cdktf-0.20.1 input-80cac9a273b653c7a55d700a9f8a334aab233d2bd2ba1046a02cf3da1678c3bd -->

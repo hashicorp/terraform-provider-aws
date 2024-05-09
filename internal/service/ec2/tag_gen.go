@@ -33,12 +33,12 @@ func resourceTag() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,8 +51,8 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	identifier := d.Get("resource_id").(string)
-	key := d.Get("key").(string)
-	value := d.Get("value").(string)
+	key := d.Get(names.AttrKey).(string)
+	value := d.Get(names.AttrValue).(string)
 
 	if err := createTagsV2(ctx, conn, identifier, TagsV2(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
@@ -85,8 +85,8 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set("resource_id", identifier)
-	d.Set("key", key)
-	d.Set("value", value)
+	d.Set(names.AttrKey, key)
+	d.Set(names.AttrValue, value)
 
 	return diags
 }
@@ -100,7 +100,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTagsV2(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := updateTagsV2(ctx, conn, identifier, nil, map[string]string{key: d.Get(names.AttrValue).(string)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
@@ -116,7 +116,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTagsV2(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := updateTagsV2(ctx, conn, identifier, map[string]string{key: d.Get(names.AttrValue).(string)}, nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 

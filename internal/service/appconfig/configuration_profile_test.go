@@ -38,13 +38,13 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}`)),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/configurationprofile/[0-9a-z]{4,7}`)),
 					resource.TestMatchResourceAttr(resourceName, "configuration_profile_id", regexache.MustCompile(`[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "hosted"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AWS.Freeform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS.Freeform"),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
@@ -119,7 +119,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"type": string(awstypes.ValidatorTypeJsonSchema),
+						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
 					}),
 				),
 			},
@@ -134,8 +134,8 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"content": "",
-						"type":    string(awstypes.ValidatorTypeJsonSchema),
+						"content":      "",
+						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
 					}),
 				),
 			},
@@ -172,9 +172,9 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"type": string(awstypes.ValidatorTypeLambda),
+						names.AttrType: string(awstypes.ValidatorTypeLambda),
 					}),
 				),
 			},
@@ -212,12 +212,12 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"content": "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
-						"type":    string(awstypes.ValidatorTypeJsonSchema),
+						"content":      "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
+						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"type": string(awstypes.ValidatorTypeLambda),
+						names.AttrType: string(awstypes.ValidatorTypeLambda),
 					}),
 				),
 			},
@@ -246,14 +246,14 @@ func TestAccAppConfigConfigurationProfile_updateName(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccConfigurationProfileConfig_name(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
 			{
@@ -281,7 +281,7 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -293,7 +293,7 @@ func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{

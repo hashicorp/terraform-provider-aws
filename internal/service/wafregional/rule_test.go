@@ -39,8 +39,8 @@ func TestAccWAFRegionalRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexache.MustCompile(`rule/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rule/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
 				),
@@ -117,7 +117,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
 				),
@@ -126,7 +126,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 				Config: testAccRuleConfig_changeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
 				),
@@ -180,7 +180,7 @@ func TestAccWAFRegionalRule_noPredicates(t *testing.T) {
 				Config: testAccRuleConfig_noPredicates(wafRuleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
 				),
 			},
@@ -214,12 +214,12 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, "aws_wafregional_ipset.ipset", &ipset),
 					testAccCheckRuleExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					computeRulePredicate(&ipset.IPSetId, false, "IPMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated": "false",
-						"type":    "IPMatch",
+						"negated":      "false",
+						names.AttrType: "IPMatch",
 					}),
 				),
 			},
@@ -228,17 +228,17 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, "aws_wafregional_xss_match_set.xss_match_set", &xssMatchSet),
 					testAccCheckRuleExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "2"),
 					computeRulePredicate(&xssMatchSet.XssMatchSetId, true, "XssMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated": "true",
-						"type":    "XssMatch",
+						"negated":      "true",
+						names.AttrType: "XssMatch",
 					}),
 					computeRulePredicate(&ipset.IPSetId, true, "IPMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated": "true",
-						"type":    "IPMatch",
+						"negated":      "true",
+						names.AttrType: "IPMatch",
 					}),
 				),
 			},
@@ -256,9 +256,9 @@ func computeRulePredicate(dataId **string, negated bool, pType string, idx *int)
 	return func(s *terraform.State) error {
 		predicateResource := tfwafregional.ResourceRule().SchemaMap()["predicate"].Elem.(*schema.Resource)
 		m := map[string]interface{}{
-			"data_id": **dataId,
-			"negated": negated,
-			"type":    pType,
+			"data_id":      **dataId,
+			"negated":      negated,
+			names.AttrType: pType,
 		}
 
 		f := schema.HashResource(predicateResource)

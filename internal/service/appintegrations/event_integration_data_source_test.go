@@ -37,9 +37,9 @@ func TestAccAppIntegrationsEventIntegrationDataSource_name(t *testing.T) {
 			{
 				Config: testAccEventIntegrationDataSourceConfig_Name(rName, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "event_filter.#", resourceName, "event_filter.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "event_filter.0.source", resourceName, "event_filter.0.source"),
 					resource.TestCheckResourceAttrPair(datasourceName, "eventbridge_bus", resourceName, "eventbridge_bus"),

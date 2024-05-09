@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_cache_policy", name="Cache Policy")
@@ -56,7 +57,7 @@ func resourceCachePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -169,7 +170,7 @@ func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.CachePolicyConfig{
 		DefaultTTL: aws.Int64(int64(d.Get("default_ttl").(int))),
 		MaxTTL:     aws.Int64(int64(d.Get("max_ttl").(int))),
@@ -222,7 +223,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("etag", output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
 	d.Set("min_ttl", apiObject.MinTTL)
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
 		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters_in_cache_key_and_forwarded_to_origin: %s", err)
@@ -246,7 +247,7 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 		DefaultTTL: aws.Int64(int64(d.Get("default_ttl").(int))),
 		MaxTTL:     aws.Int64(int64(d.Get("max_ttl").(int))),
 		MinTTL:     aws.Int64(int64(d.Get("min_ttl").(int))),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {

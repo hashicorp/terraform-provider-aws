@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_wafregional_rate_based_rule", name="Rate Based Rule")
@@ -21,7 +22,7 @@ func dataSourceRateBasedRule() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRateBasedRuleRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -32,7 +33,7 @@ func dataSourceRateBasedRule() *schema.Resource {
 func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	rules := make([]awstypes.RuleSummary, 0)
 	// ListRulesInput does not have a name parameter for filtering

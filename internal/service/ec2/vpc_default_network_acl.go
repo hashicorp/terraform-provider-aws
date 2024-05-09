@@ -58,7 +58,7 @@ func resourceDefaultNetworkACL() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -72,7 +72,7 @@ func resourceDefaultNetworkACL() *schema.Resource {
 				// rules
 				"egress":  networkACLRuleSetNestedBlock(),
 				"ingress": networkACLRuleSetNestedBlock(),
-				"owner_id": {
+				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -82,14 +82,14 @@ func resourceDefaultNetworkACL() *schema.Resource {
 				// can't actually remove them, this will be a continual plan until the
 				// Subnets are themselves destroyed or reassigned to a different Network
 				// ACL
-				"subnet_ids": {
+				names.AttrSubnetIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-				"vpc_id": {
+				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},

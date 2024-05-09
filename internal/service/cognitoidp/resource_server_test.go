@@ -41,7 +41,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
-					resource.TestCheckResourceAttr(resourceName, "name", name1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
 				),
@@ -51,7 +51,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
-					resource.TestCheckResourceAttr(resourceName, "name", name2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name2),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
 				),

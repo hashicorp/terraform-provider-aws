@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
@@ -35,7 +36,7 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 }`, // lintignore:AWSAT005
 			valid: true,
 		},
-		"account_id": {
+		names.AttrAccountID: {
 			json: `{
   "Statement":[
     {
@@ -236,7 +237,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		value string
 		valid bool
 	}{
-		"role_arn": {
+		names.AttrRoleARN: {
 			value: "arn:aws:iam::123456789012:role/role-name", // lintignore:AWSAT005
 			valid: true,
 		},
@@ -244,7 +245,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 			value: "arn:aws:iam::123456789012:root", // lintignore:AWSAT005
 			valid: true,
 		},
-		"account_id": {
+		names.AttrAccountID: {
 			value: "123456789012",
 			valid: true,
 		},

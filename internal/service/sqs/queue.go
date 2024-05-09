@@ -40,7 +40,7 @@ import (
 
 var (
 	queueSchema = map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -96,21 +96,21 @@ var (
 			Default:      defaultQueueMessageRetentionPeriod,
 			ValidateFunc: validation.IntBetween(60, 1_209_600),
 		},
-		"name": {
+		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name_prefix"},
+			ConflictsWith: []string{names.AttrNamePrefix},
 		},
-		"name_prefix": {
+		names.AttrNamePrefix: {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"name"},
+			ConflictsWith: []string{names.AttrName},
 		},
-		"policy": {
+		names.AttrPolicy: {
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
@@ -168,7 +168,7 @@ var (
 	}
 
 	queueAttributeMap = attrmap.New(map[string]types.QueueAttributeName{
-		"arn":                               types.QueueAttributeNameQueueArn,
+		names.AttrARN:                       types.QueueAttributeNameQueueArn,
 		"content_based_deduplication":       types.QueueAttributeNameContentBasedDeduplication,
 		"deduplication_scope":               types.QueueAttributeNameDeduplicationScope,
 		"delay_seconds":                     types.QueueAttributeNameDelaySeconds,
@@ -178,13 +178,13 @@ var (
 		"kms_master_key_id":                 types.QueueAttributeNameKmsMasterKeyId,
 		"max_message_size":                  types.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         types.QueueAttributeNameMessageRetentionPeriod,
-		"policy":                            types.QueueAttributeNamePolicy,
+		names.AttrPolicy:                    types.QueueAttributeNamePolicy,
 		"receive_wait_time_seconds":         types.QueueAttributeNameReceiveMessageWaitTimeSeconds,
 		"redrive_allow_policy":              types.QueueAttributeNameRedriveAllowPolicy,
 		"redrive_policy":                    types.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           types.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        types.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
+	}, queueSchema).WithIAMPolicyAttribute(names.AttrPolicy).WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
 // @SDKResource("aws_sqs_queue", name="Queue")
@@ -297,11 +297,11 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("kms_data_key_reuse_period_seconds", defaultQueueKMSDataKeyReusePeriodSeconds)
 	}
 
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	if d.Get("fifo_queue").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoQueueNameSuffix))
 	} else {
-		d.Set("name_prefix", create.NamePrefixFromName(name))
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
 	d.Set("url", d.Id())
 
@@ -311,7 +311,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
 			return diag.FromErr(err)
@@ -387,7 +387,7 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 }
 
 func queueName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}

@@ -41,7 +41,7 @@ func TestAccRoute53TrafficPolicyInstance_basic(t *testing.T) {
 				Config: testAccTrafficPolicyInstanceConfig_basic(rName, zoneName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s.%s", rName, zoneName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s.%s", rName, zoneName)),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "3600"),
 				),
 			},

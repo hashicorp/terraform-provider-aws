@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_endpoint")
@@ -24,7 +25,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,7 +197,7 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -236,7 +237,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -329,7 +330,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -357,7 +358,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -389,7 +390,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -564,7 +565,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -587,9 +588,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	arn := aws.StringValue(out.EndpointArn)
 	d.Set("endpoint_arn", arn)
 	d.Set("endpoint_type", out.EndpointType)
-	d.Set("database_name", out.DatabaseName)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
-	d.Set("port", out.Port)
+	d.Set(names.AttrPort, out.Port)
 	d.Set("server_name", out.ServerName)
 	d.Set("ssl_mode", out.SslMode)
 	d.Set("username", out.Username)
@@ -606,7 +607,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

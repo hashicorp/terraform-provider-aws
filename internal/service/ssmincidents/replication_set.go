@@ -46,7 +46,7 @@ func ResourceReplicationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,17 +55,17 @@ func ResourceReplicationSet() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          "DefaultKey",
 							ValidateDiagFunc: validateNonAliasARN,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -91,7 +91,7 @@ func ResourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,14 +150,14 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
 	}
 
-	d.Set("arn", replicationSet.Arn)
+	d.Set(names.AttrARN, replicationSet.Arn)
 	d.Set("created_by", replicationSet.CreatedBy)
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
 	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
-	d.Set("status", replicationSet.Status)
+	d.Set(names.AttrStatus, replicationSet.Status)
 
 	return nil
 }
@@ -225,8 +225,8 @@ func regionListToRegionMap(list []interface{}) map[string]string {
 	regionMap := make(map[string]string)
 	for _, region := range list {
 		regionData := region.(map[string]interface{})
-		regionName := regionData["name"].(string)
-		regionMap[regionName] = regionData["kms_key_arn"].(string)
+		regionName := regionData[names.AttrName].(string)
+		regionMap[regionName] = regionData[names.AttrKMSKeyARN].(string)
 	}
 
 	return regionMap

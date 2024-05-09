@@ -126,16 +126,16 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -169,7 +169,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -306,7 +306,7 @@ func ResourceInstance() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -356,7 +356,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -385,7 +385,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -415,7 +415,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -511,7 +511,7 @@ func ResourceInstance() *schema.Resource {
 					validation.IntDivisibleBy(31),
 				),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -588,7 +588,7 @@ func ResourceInstance() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -627,7 +627,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -664,7 +664,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"replicate_source_db"},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -745,7 +745,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		sourceDBInstanceID := v.(string)
 		input := &rds.CreateDBInstanceReadReplicaInput{
-			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
@@ -762,7 +762,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			diags = sdkdiag.AppendWarningf(diags, `"allocated_storage" was ignored for DB Instance (%s) because a replica inherits the primary's allocated_storage and cannot be changed at creation.`, identifier)
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -790,7 +790,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 			if arnParts := strings.Split(sourceDBInstanceID, ":"); len(arnParts) >= 4 {
 				input.SourceRegion = aws.String(arnParts[3])
@@ -843,7 +843,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -860,7 +860,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -958,7 +958,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceFromS3Input{
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -966,10 +966,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBName:                  aws.String(d.Get("db_name").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
-			EngineVersion:           aws.String(d.Get("engine_version").(string)),
+			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			S3BucketName:            aws.String(tfMap["bucket_name"].(string)),
+			S3BucketName:            aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:                aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
@@ -978,7 +978,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Tags:                    getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1002,7 +1002,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -1062,7 +1062,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1074,7 +1074,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1110,7 +1110,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
@@ -1143,7 +1143,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			// InvalidParameterCombination: No modifications were requested
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1209,7 +1209,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Engine = aws.String(engine)
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			modifyDbInstanceInput.EngineVersion = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
@@ -1302,7 +1302,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1320,7 +1320,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.TdeCredentialArn = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -1363,7 +1363,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
-			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
@@ -1394,7 +1394,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.UseLatestRestorableTime = aws.Bool(v)
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1507,7 +1507,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1523,7 +1523,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.TdeCredentialArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1563,7 +1563,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		input := &rds.CreateDBInstanceInput{
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -1571,14 +1571,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBName:                  aws.String(d.Get("db_name").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
-			EngineVersion:           aws.String(d.Get("engine_version").(string)),
+			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zone"); ok {
+		if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
@@ -1646,7 +1646,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
@@ -1714,7 +1714,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -1730,7 +1730,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Timezone = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -1834,9 +1834,9 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(v.DbiResourceId))
 
 	d.Set("allocated_storage", v.AllocatedStorage)
-	d.Set("arn", v.DBInstanceArn)
-	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", v.AvailabilityZone)
+	d.Set(names.AttrARN, v.DBInstanceArn)
+	d.Set(names.AttrAutoMinorVersionUpgrade, v.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_target", v.BackupTarget)
 	d.Set("backup_window", v.PreferredBackupWindow)
@@ -1874,7 +1874,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
 	d.Set("instance_class", v.DBInstanceClass)
 	d.Set("iops", v.Iops)
-	d.Set("kms_key_id", v.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, v.KmsKeyId)
 	if v.LatestRestorableTime != nil {
 		d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
 	} else {
@@ -1916,13 +1916,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
 	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
-	d.Set("port", v.DbInstancePort)
+	d.Set(names.AttrPort, v.DbInstancePort)
 	d.Set("publicly_accessible", v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
-	d.Set("status", v.DBInstanceStatus)
+	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set("storage_encrypted", v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
@@ -1932,7 +1932,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	for _, v := range v.VpcSecurityGroups {
 		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	if v.Endpoint != nil {
 		d.Set("address", v.Endpoint.Address)
@@ -1940,7 +1940,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
 		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
-		d.Set("port", v.Endpoint.Port)
+		d.Set(names.AttrPort, v.Endpoint.Port)
 	}
 
 	if v.ListenerEndpoint != nil {
@@ -1997,7 +1997,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"final_snapshot_identifier",
 		"replicate_source_db",
 		"skip_final_snapshot",
-		"tags", "tags_all",
+		names.AttrTags, names.AttrTagsAll,
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
 			"allow_major_version_upgrade",
@@ -2006,7 +2006,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"final_snapshot_identifier",
 			"replicate_source_db",
 			"skip_final_snapshot",
-			"tags", "tags_all",
+			names.AttrTags, names.AttrTagsAll,
 			"deletion_protection",
 			"password",
 		) {
@@ -2165,8 +2165,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			dbInstancePopulateModify(input, d)
 
-			if d.HasChange("engine_version") {
-				input.EngineVersion = aws.String(d.Get("engine_version").(string))
+			if d.HasChange(names.AttrEngineVersion) {
+				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
@@ -2200,9 +2200,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("auto_minor_version_upgrade") {
+	if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
 		needsModify = true
-		input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 	}
 
 	if d.HasChange("backup_retention_period") {
@@ -2375,9 +2375,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("port") {
+	if d.HasChange(names.AttrPort) {
 		needsModify = true
-		input.DBPortNumber = aws.Int32(int32(d.Get("port").(int)))
+		input.DBPortNumber = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 	}
 
 	if d.HasChange("publicly_accessible") {
@@ -2412,8 +2412,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("vpc_security_group_ids") {
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+	if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			needsModify = true
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
@@ -2558,7 +2558,7 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 }
 
 func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
-	oldVersion := d.Get("engine_version").(string)
+	oldVersion := d.Get(names.AttrEngineVersion).(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {
@@ -3026,7 +3026,7 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.Int64Value(v)
+		tfMap[names.AttrPort] = aws.Int64Value(v)
 	}
 
 	return tfMap

@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/shopspring/decimal"
 )
 
@@ -44,14 +45,14 @@ func ResourceBudget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,7 +103,7 @@ func ResourceBudget() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -194,19 +195,19 @@ func ResourceBudget() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"planned_limit"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"notification": {
 				Type:     schema.TypeSet,
@@ -303,10 +304,10 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	budget.BudgetName = aws.String(name)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
@@ -361,14 +362,14 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  "budget/" + budgetName,
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_type", budget.BudgetType)
 
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
@@ -386,8 +387,8 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("limit_unit", budget.BudgetLimit.Unit)
 	}
 
-	d.Set("name", budget.BudgetName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+	d.Set(names.AttrName, budget.BudgetName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	if err := d.Set("planned_limit", convertPlannedBudgetLimitsToSet(budget.PlannedBudgetLimits)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting planned_limit: %s", err)
@@ -768,7 +769,7 @@ func convertCostFiltersToMap(costFilters map[string][]string) []map[string]inter
 		filterValues = append(filterValues, v...)
 
 		convertedCostFilter["values"] = filterValues
-		convertedCostFilter["name"] = k
+		convertedCostFilter[names.AttrName] = k
 		convertedCostFilters = append(convertedCostFilters, convertedCostFilter)
 	}
 
@@ -806,7 +807,7 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]awstypes.Spe
 }
 
 func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
-	budgetName := d.Get("name").(string)
+	budgetName := d.Get(names.AttrName).(string)
 	budgetType := d.Get("budget_type").(string)
 	budgetTimeUnit := d.Get("time_unit").(string)
 	budgetCostFilters := make(map[string][]string)
@@ -814,7 +815,7 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 	if costFilter, ok := d.GetOk("cost_filter"); ok {
 		for _, v := range costFilter.(*schema.Set).List() {
 			element := v.(map[string]interface{})
-			key := element["name"].(string)
+			key := element[names.AttrName].(string)
 			for _, filterValue := range element["values"].([]interface{}) {
 				budgetCostFilters[key] = append(budgetCostFilters[key], filterValue.(string))
 			}

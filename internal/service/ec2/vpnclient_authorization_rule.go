@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_client_vpn_authorization_rule", name="Client VPN Authorization Rule")
@@ -57,7 +58,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -94,7 +95,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 		input.AuthorizeAllGroups = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -138,7 +139,7 @@ func resourceClientVPNAuthorizationRuleRead(ctx context.Context, d *schema.Resou
 	d.Set("access_group_id", rule.GroupId)
 	d.Set("authorize_all_groups", rule.AccessAll)
 	d.Set("client_vpn_endpoint_id", rule.ClientVpnEndpointId)
-	d.Set("description", rule.Description)
+	d.Set(names.AttrDescription, rule.Description)
 	d.Set("target_network_cidr", rule.DestinationCidr)
 
 	return diags
