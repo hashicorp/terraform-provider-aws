@@ -48,6 +48,7 @@ const (
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
+	AttrSession                    = "session"
 	AttrSharedConfigFiles          = "shared_config_files"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
