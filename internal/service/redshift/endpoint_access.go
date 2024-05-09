@@ -38,7 +38,7 @@ func resourceEndpointAccess() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -130,7 +130,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
 		createOpts.ClusterIdentifier = aws.String(v.(string))
 	}
 
@@ -173,7 +173,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("subnet_group_name", endpoint.SubnetGroupName)
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
 	d.Set("resource_owner", endpoint.ResourceOwner)
-	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
 	d.Set(names.AttrPort, endpoint.Port)
 	d.Set("address", endpoint.Address)
 
