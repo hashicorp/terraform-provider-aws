@@ -945,3 +945,13 @@ rules:
       - pattern: '"availability_zones"'
     severity: ERROR
     fix: "names.AttrAvailabilityZones"
+  - id: literal-network_interface_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrNetworkInterfaceID` for the string literal "network_interface_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"network_interface_id"'
+    severity: ERROR
+    fix: "names.AttrNetworkInterfaceID"
