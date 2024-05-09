@@ -38,7 +38,7 @@ func testAccDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -907,7 +907,7 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -1013,7 +1013,7 @@ func testAccDomain_posix(t *testing.T) {
 				Config: testAccDomainConfig_posix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
@@ -1045,7 +1045,7 @@ func testAccDomain_spaceStorageSettings(t *testing.T) {
 				Config: testAccDomainConfig_spaceStorageSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
@@ -1079,7 +1079,7 @@ func testAccDomain_efs(t *testing.T) {
 				Config: testAccDomainConfig_efs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),

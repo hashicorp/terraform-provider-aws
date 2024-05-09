@@ -43,7 +43,7 @@ func resourceUserGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache User Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", userGroup.ARN)
+	d.Set(names.AttrARN, userGroup.ARN)
 	d.Set("engine", userGroup.Engine)
 	d.Set("user_ids", aws.StringValueSlice(userGroup.UserIds))
 	d.Set("user_group_id", userGroup.UserGroupId)
@@ -151,7 +151,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyUserGroupInput{
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}

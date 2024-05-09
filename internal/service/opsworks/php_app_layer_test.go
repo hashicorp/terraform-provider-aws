@@ -31,7 +31,7 @@ func TestAccOpsWorksPHPAppLayer_basic(t *testing.T) {
 				Config: testAccPHPAppLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", "PHP App Server"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "PHP App Server"),
 				),
 			},
 			{

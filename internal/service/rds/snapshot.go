@@ -46,7 +46,7 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +72,7 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,13 +189,13 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zone", snapshot.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_arn", arn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
+	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set("iops", snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)

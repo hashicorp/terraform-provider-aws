@@ -70,7 +70,7 @@ func ResourceFleet() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -362,7 +362,7 @@ func updateCompanyNetworkConfiguration(ctx context.Context, conn *worklink.WorkL
 		config := v.([]interface{})[0].(map[string]interface{})
 		input := &worklink.UpdateCompanyNetworkConfigurationInput{
 			FleetArn:         aws.String(d.Id()),
-			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
+			SecurityGroupIds: flex.ExpandStringSet(config[names.AttrSecurityGroupIDs].(*schema.Set)),
 			SubnetIds:        flex.ExpandStringSet(config[names.AttrSubnetIDs].(*schema.Set)),
 			VpcId:            aws.String(config[names.AttrVPCID].(string)),
 		}

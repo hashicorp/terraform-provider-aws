@@ -49,7 +49,7 @@ func resourceLocationHDFS() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +110,7 @@ func resourceLocationHDFS() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IsPortNumber,
@@ -270,7 +270,7 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("agent_arns", output.AgentArns)
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("block_size", output.BlockSize)
 	d.Set("kerberos_principal", output.KerberosPrincipal)
@@ -293,7 +293,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationHdfsInput{
 			LocationArn: aws.String(d.Id()),
 		}
@@ -425,7 +425,7 @@ func expandHDFSNameNodes(l *schema.Set) []awstypes.HdfsNameNode {
 		raw := m.(map[string]interface{})
 		nameNode := awstypes.HdfsNameNode{
 			Hostname: aws.String(raw["hostname"].(string)),
-			Port:     aws.Int32(int32(raw["port"].(int))),
+			Port:     aws.Int32(int32(raw[names.AttrPort].(int))),
 		}
 		nameNodes = append(nameNodes, nameNode)
 	}
@@ -439,7 +439,7 @@ func flattenHDFSNameNodes(nodes []awstypes.HdfsNameNode) []map[string]interface{
 	for _, raw := range nodes {
 		item := make(map[string]interface{})
 		item["hostname"] = aws.ToString(raw.Hostname)
-		item["port"] = aws.ToInt32(raw.Port)
+		item[names.AttrPort] = aws.ToInt32(raw.Port)
 
 		dataResources = append(dataResources, item)
 	}

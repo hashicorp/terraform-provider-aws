@@ -128,7 +128,7 @@ func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
 		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
 
@@ -138,7 +138,7 @@ func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string
 
 func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_kinesis_streaming_destination" {

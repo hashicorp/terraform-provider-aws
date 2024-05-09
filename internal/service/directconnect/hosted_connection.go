@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_hosted_connection")
@@ -62,7 +63,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,7 +86,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +104,7 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &directconnect.AllocateHostedConnectionInput{
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionId:   aws.String(d.Get("connection_id").(string)),
@@ -149,12 +150,12 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("lag_id", connection.LagId)
 	d.Set("loa_issue_time", aws.TimeValue(connection.LoaIssueTime).Format(time.RFC3339))
 	d.Set("location", connection.Location)
-	d.Set("name", connection.ConnectionName)
+	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("provider_name", connection.ProviderName)
 	d.Set("region", connection.Region)
-	d.Set("state", connection.ConnectionState)
+	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan", connection.Vlan)
 
 	return diags

@@ -87,13 +87,13 @@ func ResourceRuleGroup() *schema.Resource {
 					Optional:      true,
 					Computed:      true,
 					ForceNew:      true,
-					ConflictsWith: []string{"name_prefix"},
+					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
-				"name_prefix": {
+				names.AttrNamePrefix: {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
@@ -158,7 +158,7 @@ func ResourceRuleGroup() *schema.Resource {
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateRuleGroupInput{
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Name:             aws.String(name),
@@ -214,8 +214,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrDescription, ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ruleGroup.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
-
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
 	if err := d.Set("rule", flattenRules(ruleGroup.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}

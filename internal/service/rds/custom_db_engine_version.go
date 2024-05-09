@@ -87,7 +87,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 					validation.StringLenBetween(1, 35),
 				),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -170,7 +170,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 
 	input := rds.CreateCustomDBEngineVersionInput{
 		Engine:        aws.String(d.Get("engine").(string)),
-		EngineVersion: aws.String(d.Get("engine_version").(string)),
+		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -248,7 +248,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("db_parameter_group_family", out.DBParameterGroupFamily)
 	d.Set(names.AttrDescription, out.DBEngineVersionDescription)
 	d.Set("engine", out.Engine)
-	d.Set("engine_version", out.EngineVersion)
+	d.Set(names.AttrEngineVersion, out.EngineVersion)
 	d.Set("image_id", out.Image.ImageId)
 	d.Set(names.AttrKMSKeyID, out.KMSKeyId)
 	d.Set("major_engine_version", out.MajorEngineVersion)

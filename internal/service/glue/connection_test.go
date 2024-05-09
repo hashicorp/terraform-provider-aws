@@ -39,7 +39,7 @@ func TestAccGlueConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("connection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", jdbcConnectionUrl),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
@@ -231,14 +231,14 @@ func TestAccGlueConnection_description(t *testing.T) {
 				Config: testAccConnectionConfig_description(rName, jdbcConnectionUrl, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccConnectionConfig_description(rName, jdbcConnectionUrl, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{
@@ -325,7 +325,7 @@ func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.PASSWORD"),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.USERNAME"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),

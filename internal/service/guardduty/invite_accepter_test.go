@@ -39,8 +39,8 @@ func testAccInviteAccepter_basic(t *testing.T) {
 				Config: testAccInviteAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInviteAccepterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", memberDetectorResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", masterDetectorResourceName, names.AttrAccountID),
 				),
 			},
 			{

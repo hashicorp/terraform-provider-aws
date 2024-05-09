@@ -10,14 +10,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -37,37 +38,42 @@ func RegisterSweepers() {
 func sweepTables(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.DynamoDBConn(ctx)
+	conn := client.DynamoDBClient(ctx)
+	input := &dynamodb.ListTablesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
 	var mutex = &sync.Mutex{}
 
-	err = conn.ListTablesPagesWithContext(ctx, &dynamodb.ListTablesInput{}, func(page *dynamodb.ListTablesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dynamodb.NewListTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DynamoDB Table sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, tableName := range page.TableNames {
-			id := aws.StringValue(tableName)
+		if err != nil {
+			return fmt.Errorf("error listing DynamoDB Tables (%s): %w", region, err)
+		}
 
-			_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+		for _, v := range page.TableNames {
+			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
 				DeletionProtectionEnabled: aws.Bool(false),
-				TableName:                 aws.String(id),
+				TableName:                 aws.String(v),
 			})
 
 			if err != nil {
-				log.Printf("[WARN] DynamoDB Table (%s): %s", id, err)
+				log.Printf("[WARN] DynamoDB Table (%s): %s", v, err)
 			}
 
-			r := ResourceTable()
+			r := resourceTable()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(v)
 
 			// read concurrently and gather errors
 			g.Go(func() error {
@@ -90,25 +96,14 @@ func sweepTables(region string) error {
 				return nil
 			})
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing DynamoDB Tables for %s: %w", region, err))
 	}
 
-	if err = g.Wait().ErrorOrNil(); err != nil {
+	if err := g.Wait().ErrorOrNil(); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping DynamoDB Tables sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables (%s): %w", region, err))
 	}
 
 	return errs.ErrorOrNil()
@@ -117,33 +112,31 @@ func sweepTables(region string) error {
 func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.DynamoDBConn(ctx)
+	conn := client.DynamoDBClient(ctx)
+	input := &dynamodb.ListBackupsInput{
+		BackupType: awstypes.BackupTypeFilterAll,
+	}
 	sweepables := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
 
-	input := &dynamodb.ListBackupsInput{
-		BackupType: aws.String(dynamodb.BackupTypeFilterAll),
-	}
 	err = listBackupsPages(ctx, conn, input, func(page *dynamodb.ListBackupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, backup := range page.BackupSummaries {
-			if aws.StringValue(backup.BackupType) == dynamodb.BackupTypeFilterSystem {
-				log.Printf("[DEBUG] Skipping DynamoDB Backup %q, cannot delete %q backups", aws.StringValue(backup.BackupArn), dynamodb.BackupTypeFilterSystem)
+		for _, v := range page.BackupSummaries {
+			if v.BackupType == awstypes.BackupTypeSystem {
+				log.Printf("[DEBUG] Skipping DynamoDB Backup %q, cannot delete %q backups", aws.ToString(v.BackupArn), v.BackupType)
 				continue
 			}
 
 			sweepables = append(sweepables, backupSweeper{
 				conn: conn,
-				arn:  backup.BackupArn,
+				arn:  v.BackupArn,
 			})
 		}
 
@@ -151,27 +144,22 @@ func sweepBackups(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing DynamoDB Backups for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("listing DynamoDB Backups (%s): %w", region, err))
 	}
 
-	if err = g.Wait().ErrorOrNil(); err != nil {
+	if err := g.Wait().ErrorOrNil(); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepables); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping DynamoDB Backups sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups (%s): %w", region, err))
 	}
 
 	return errs.ErrorOrNil()
 }
 
 type backupSweeper struct {
-	conn *dynamodb.DynamoDB
+	conn *dynamodb.Client
 	arn  *string
 }
 
@@ -180,11 +168,11 @@ func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 		BackupArn: bs.arn,
 	}
 	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
-		_, err := bs.conn.DeleteBackupWithContext(ctx, input)
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupNotFoundException) {
+		_, err := bs.conn.DeleteBackup(ctx, input)
+		if errs.IsA[*awstypes.BackupNotFoundException](err) {
 			return nil
 		}
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupInUseException, dynamodb.ErrCodeLimitExceededException) {
+		if errs.IsA[*awstypes.BackupInUseException](err) || errs.IsA[*awstypes.LimitExceededException](err) {
 			return retry.RetryableError(err)
 		}
 		if err != nil {
@@ -194,7 +182,7 @@ func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 		return nil
 	}, optFns...)
 	if tfresource.TimedOut(err) {
-		_, err = bs.conn.DeleteBackupWithContext(ctx, input)
+		_, err = bs.conn.DeleteBackup(ctx, input)
 	}
 
 	return err

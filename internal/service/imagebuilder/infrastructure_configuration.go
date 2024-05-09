@@ -37,7 +37,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -118,13 +118,13 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			"resource_tags": tftags.TagsSchema(),
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -135,7 +135,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -163,7 +163,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		TerminateInstanceOnFailure: aws.Bool(d.Get("terminate_instance_on_failure").(bool)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,7 +183,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.KeyPair = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -195,7 +195,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -203,7 +203,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.SnsTopicArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_id"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -267,10 +267,10 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 
 	infrastructureConfiguration := output.InfrastructureConfiguration
 
-	d.Set("arn", infrastructureConfiguration.Arn)
+	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
-	d.Set("description", infrastructureConfiguration.Description)
+	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
 
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
 		d.Set("instance_metadata_options", []interface{}{
@@ -288,11 +288,11 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	} else {
 		d.Set("logging", nil)
 	}
-	d.Set("name", infrastructureConfiguration.Name)
+	d.Set(names.AttrName, infrastructureConfiguration.Name)
 	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
+	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)
 
@@ -306,16 +306,16 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges(
-		"description",
+		names.AttrDescription,
 		"instance_metadata_options",
 		"instance_profile_name",
 		"instance_types",
 		"key_pair",
 		"logging",
 		"resource_tags",
-		"security_group_ids",
+		names.AttrSecurityGroupIDs,
 		"sns_topic_arn",
-		"subnet_id",
+		names.AttrSubnetID,
 		"terminate_instance_on_failure",
 	) {
 		input := &imagebuilder.UpdateInfrastructureConfigurationInput{
@@ -323,7 +323,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			TerminateInstanceOnFailure:     aws.Bool(d.Get("terminate_instance_on_failure").(bool)),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -351,7 +351,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 		}
 
-		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -359,7 +359,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.SnsTopicArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("subnet_id"); ok {
+		if v, ok := d.GetOk(names.AttrSubnetID); ok {
 			input.SubnetId = aws.String(v.(string))
 		}
 

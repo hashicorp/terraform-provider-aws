@@ -77,11 +77,11 @@ func resourceEndpointAccess() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"network_interface_id": {
+									names.AttrNetworkInterfaceID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -89,7 +89,7 @@ func resourceEndpointAccess() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"subnet_id": {
+									names.AttrSubnetID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -107,7 +107,7 @@ func resourceEndpointAccess() *schema.Resource {
 					},
 				},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -142,7 +142,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -186,7 +186,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}
-	d.Set("vpc_security_group_ids", tfslices.ApplyToAll(endpointAccess.VpcSecurityGroups, func(v *redshiftserverless.VpcSecurityGroupMembership) string {
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(endpointAccess.VpcSecurityGroups, func(v *redshiftserverless.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)
 	}))
 	d.Set("workgroup_name", endpointAccess.WorkgroupName)
@@ -202,7 +202,7 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 		EndpointName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 

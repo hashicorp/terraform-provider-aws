@@ -55,7 +55,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -89,7 +89,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:         schema.TypeString,
 													Default:      awstypes.NfsVersionNfs3,
 													Optional:     true,
@@ -123,7 +123,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
 													Default:  awstypes.SmbVersionAutomatic,
 													Optional: true,
@@ -198,7 +198,7 @@ func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationFsxOntapInput{
-		Protocol:                 expandProtocol(d.Get("protocol").([]interface{})),
+		Protocol:                 expandProtocol(d.Get(names.AttrProtocol).([]interface{})),
 		SecurityGroupArns:        flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		StorageVirtualMachineArn: aws.String(d.Get("storage_virtual_machine_arn").(string)),
 		Tags:                     getTagsIn(ctx),
@@ -241,7 +241,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
 	// SMB Password is not returned from the API.
@@ -250,7 +250,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 			output.Protocol.SMB.Password = aws.String(smbPassword)
 		}
 	}
-	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
+	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
 	d.Set("security_group_arns", output.SecurityGroupArns)

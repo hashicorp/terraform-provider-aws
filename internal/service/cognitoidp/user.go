@@ -70,7 +70,7 @@ func resourceUser() *schema.Resource {
 				},
 				Optional: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -110,7 +110,7 @@ func resourceUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(params.UserPoolId), aws.StringValue(resp.User.Username)))
 
-	if v := d.Get("enabled"); !v.(bool) {
+	if v := d.Get(names.AttrEnabled); !v.(bool) {
 		disableParams := &cognitoidentityprovider.AdminDisableUserInput{
 			Username:   aws.String(d.Get("username").(string)),
 			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
@@ -252,8 +252,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("preferred_mfa_setting", user.PreferredMfaSetting)
-	d.Set("status", user.UserStatus)
-	d.Set("enabled", user.Enabled)
+	d.Set(names.AttrStatus, user.UserStatus)
+	d.Set(names.AttrEnabled, user.Enabled)
 	d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339))
 	d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339))
 	d.Set("sub", retrieveUserSub(user.UserAttributes))
@@ -302,8 +302,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("enabled") {
-		enabled := d.Get("enabled").(bool)
+	if d.HasChange(names.AttrEnabled) {
+		enabled := d.Get(names.AttrEnabled).(bool)
 
 		if enabled {
 			enableParams := &cognitoidentityprovider.AdminEnableUserInput{
@@ -553,7 +553,7 @@ func UserAttributeKeyMatchesStandardAttribute(input string) bool {
 		"family_name",
 		"locale",
 		"middle_name",
-		"name",
+		names.AttrName,
 		"nickname",
 		"phone_number",
 		"phone_number_verified",

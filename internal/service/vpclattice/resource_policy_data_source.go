@@ -24,7 +24,7 @@ func DataSourceResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -40,7 +40,7 @@ const (
 func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	resourceArn := d.Get("resource_arn").(string)
+	resourceArn := d.Get(names.AttrResourceARN).(string)
 
 	out, err := findResourcePolicyByID(ctx, conn, resourceArn)
 	if err != nil {

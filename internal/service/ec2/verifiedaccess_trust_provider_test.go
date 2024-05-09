@@ -44,7 +44,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
 					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
 					resource.TestCheckResourceAttr(resourceName, "user_trust_provider_type", userTrustProviderType),

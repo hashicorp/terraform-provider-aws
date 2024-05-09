@@ -44,7 +44,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -66,7 +66,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -155,7 +155,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Computed: true,
 			},
 			"filter": storageVirtualMachineFiltersSchema(),
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -176,7 +176,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,10 +196,12 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.StorageVirtualMachineIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -221,7 +223,7 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, svm.ActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
-	d.Set("arn", svm.ResourceARN)
+	d.Set(names.AttrARN, svm.ResourceARN)
 	d.Set("creation_time", svm.CreationTime.Format(time.RFC3339))
 	if err := d.Set("endpoints", flattenSvmEndpoints(svm.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
@@ -231,11 +233,19 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	if err := d.Set("lifecycle_transition_reason", flattenLifecycleTransitionReason(svm.LifecycleTransitionReason)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_transition_reason: %s", err)
 	}
-	d.Set("name", svm.Name)
+	d.Set(names.AttrName, svm.Name)
 	d.Set("subtype", svm.Subtype)
 	d.Set("uuid", svm.UUID)
 
-	setTagsOut(ctx, svm.Tags)
+	// SVM tags aren't set in the Describe response.
+	// setTagsOut(ctx, svm.Tags)
+
+	tags := KeyValueTags(ctx, svm.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }

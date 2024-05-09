@@ -36,7 +36,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -62,7 +62,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 				Config: testAccIntegrationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -81,7 +81,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 				Config: testAccIntegrationConfig_updateURI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de/updated"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -100,7 +100,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 				Config: testAccIntegrationConfig_updateNoTemplates(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -115,7 +115,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -149,7 +149,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -168,7 +168,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 				Config: testAccIntegrationConfig_updateContentHandling(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -186,7 +186,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 				Config: testAccIntegrationConfig_removeContentHandling(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -226,7 +226,7 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 				Config: testAccIntegrationConfig_cacheKeyParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -270,7 +270,7 @@ func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 				Config: testAccIntegrationConfig_cacheKeyParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
@@ -292,7 +292,7 @@ func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 				Config: testAccIntegrationConfig_cacheKeyUpdateParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),

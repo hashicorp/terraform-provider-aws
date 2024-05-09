@@ -53,7 +53,7 @@ func ResourceMap() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -91,7 +91,7 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Configuration = expandConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -145,7 +145,7 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
@@ -159,12 +159,12 @@ func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &locationservice.UpdateMapInput{
 			MapName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 

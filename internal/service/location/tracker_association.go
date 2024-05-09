@@ -77,11 +77,11 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 	out, err := conn.AssociateTrackerConsumerWithContext(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", trackerName, consumerArn))

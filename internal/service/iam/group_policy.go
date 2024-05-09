@@ -48,9 +48,9 @@ func resourceGroupPolicy() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -82,7 +82,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	groupName := d.Get("group").(string)
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	request := &iam.PutGroupPolicyInput{
 		GroupName:      aws.String(groupName),
 		PolicyDocument: aws.String(policyDoc),
@@ -143,7 +143,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("group", groupName)
 	d.Set(names.AttrName, policyName)
-	d.Set("name_prefix", create.NamePrefixFromName(policyName))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
 	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags

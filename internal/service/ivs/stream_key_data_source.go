@@ -20,7 +20,7 @@ func DataSourceStreamKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamKeyRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -28,11 +28,11 @@ func DataSourceStreamKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -55,14 +55,14 @@ func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(out.Arn))
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("channel_arn", out.ChannelArn)
-	d.Set("value", out.Value)
+	d.Set(names.AttrValue, out.Value)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, DSNameStreamKey, d.Id(), err)
 	}
 

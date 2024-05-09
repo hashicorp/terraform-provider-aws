@@ -39,12 +39,12 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/.+/authorizers/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/authorizers/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "TOKEN"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 					resource.TestCheckResourceAttr(resourceName, "identity_validation_expression", ""),
 				),
@@ -61,9 +61,9 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName+"_modified"),
-					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_modified"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "TOKEN"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(360)),
 					resource.TestCheckResourceAttr(resourceName, "identity_validation_expression", ".*"),
 				),
@@ -86,8 +86,8 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", "2"),
 				),
 			},
@@ -100,8 +100,8 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_cognitoUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", "3"),
 				),
 			},
@@ -125,9 +125,9 @@ func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_cognitoCredentials(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", "2"),
 				),
 			},
@@ -157,10 +157,10 @@ func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "TOKEN"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -172,18 +172,18 @@ func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", "2"),
 				),
 			},
 			{
 				Config: testAccAuthorizerConfig_lambdaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName+"_modified"),
-					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_modified"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "TOKEN"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", roleResourceName, names.AttrARN),
 				),
 			},
 		},

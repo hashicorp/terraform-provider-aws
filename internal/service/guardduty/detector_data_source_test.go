@@ -30,9 +30,9 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					acctest.CheckResourceAttrGlobalARN(datasourceName, "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
-					resource.TestCheckResourceAttr(datasourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},
@@ -57,9 +57,9 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					acctest.CheckResourceAttrGlobalARN(datasourceName, "service_role_arn", "iam", "role/aws-service-role/guardduty.amazonaws.com/AWSServiceRoleForAmazonGuardDuty"),
-					resource.TestCheckResourceAttr(datasourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},

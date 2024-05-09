@@ -54,7 +54,7 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,7 +170,7 @@ func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
 	d.Set("domain", output.Domain)
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))

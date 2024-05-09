@@ -38,7 +38,7 @@ func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 				Config: testAccWebACLAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexache.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", rName))),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrResourceARN, "apigateway", regexache.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexache.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", rName))),
 				),
 			},

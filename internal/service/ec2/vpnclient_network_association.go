@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_client_vpn_network_association", name="Client VPN Network Association")
@@ -46,12 +47,12 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +68,7 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
 		ClientToken:         aws.String(id.UniqueId()),
 		ClientVpnEndpointId: aws.String(endpointID),
-		SubnetId:            aws.String(d.Get("subnet_id").(string)),
+		SubnetId:            aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
 	output, err := conn.AssociateClientVpnTargetNetworkWithContext(ctx, input)
@@ -104,8 +105,8 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 
 	d.Set("association_id", network.AssociationId)
 	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
-	d.Set("subnet_id", network.TargetNetworkId)
-	d.Set("vpc_id", network.VpcId)
+	d.Set(names.AttrSubnetID, network.TargetNetworkId)
+	d.Set(names.AttrVPCID, network.VpcId)
 
 	return diags
 }

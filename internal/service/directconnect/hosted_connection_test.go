@@ -46,7 +46,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 				Config: testAccHostedConnectionConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", env.ConnectionId),
 					resource.TestCheckResourceAttr(resourceName, "owner_account_id", env.OwnerAccountId),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Mbps"),

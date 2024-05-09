@@ -86,7 +86,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -104,7 +104,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -118,7 +118,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validIdentifierPrefix,
-				ConflictsWith: []string{"cluster_identifier"},
+				ConflictsWith: []string{names.AttrClusterIdentifier},
 			},
 			"cluster_members": {
 				Type:     schema.TypeSet,
@@ -135,7 +135,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -226,7 +226,7 @@ func ResourceCluster() *schema.Resource {
 				Default:      EngineModeProvisioned,
 				ValidateFunc: validation.StringInSlice(EngineMode_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -342,7 +342,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -410,7 +410,7 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -538,7 +538,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -576,7 +576,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	identifier := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("cluster_identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -602,7 +602,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -615,7 +615,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("database_name"); ok {
+		if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 			input.DatabaseName = aws.String(v.(string))
 		}
 
@@ -639,7 +639,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -679,7 +679,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
@@ -693,7 +693,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -721,7 +721,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			S3BucketName:        aws.String(tfMap["bucket_name"].(string)),
+			S3BucketName:        aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
@@ -729,7 +729,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -741,7 +741,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v := d.Get("database_name"); v.(string) != "" {
+		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
 
@@ -765,7 +765,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -801,7 +801,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
@@ -809,7 +809,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -929,7 +929,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
@@ -948,7 +948,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -971,7 +971,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.AllocatedStorage = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -983,7 +983,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v := d.Get("database_name"); v.(string) != "" {
+		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
 
@@ -1027,7 +1027,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -1079,7 +1079,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
@@ -1107,7 +1107,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -1169,10 +1169,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("allocated_storage", dbc.AllocatedStorage)
 	clusterARN := aws.StringValue(dbc.DBClusterArn)
 	d.Set(names.AttrARN, clusterARN)
-	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
@@ -1186,7 +1186,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// diff.
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
 	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("database_name", dbc.DatabaseName)
+		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
 	}
 	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
@@ -1239,7 +1239,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	if dbc.ScalingConfigurationInfo != nil {
@@ -1262,7 +1262,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", securityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
 
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
@@ -1371,15 +1371,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		// This can happen when updates are deferred (apply_immediately = false), and
 		// multiple applies occur before the maintenance window. In this case,
 		// continue sending the desired engine_version as part of the modify request.
-		if d.Get("engine_version").(string) != d.Get("engine_version_actual").(string) {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.Get(names.AttrEngineVersion).(string) != d.Get("engine_version_actual").(string) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		if d.HasChange("iam_database_authentication_enabled") {
@@ -1416,8 +1416,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("scaling_configuration") {
@@ -1436,8 +1436,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageType = aws.String(d.Get("storage_type").(string))
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 				input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 			} else {
 				input.VpcSecurityGroupIds = aws.StringSlice(nil)
@@ -1669,7 +1669,7 @@ func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, rol
 }
 
 func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
-	oldVersion := d.Get("engine_version").(string)
+	oldVersion := d.Get(names.AttrEngineVersion).(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {

@@ -37,7 +37,7 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,11 +47,11 @@ func ResourcePolicy() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -61,7 +61,7 @@ func ResourcePolicy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -77,12 +77,12 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreatePolicyInput{
 		Content:     aws.String(d.Get("content").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Name:        aws.String(name),
-		Type:        aws.String(d.Get("type").(string)),
+		Type:        aws.String(d.Get(names.AttrType).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -115,11 +115,11 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	policySummary := policy.PolicySummary
-	d.Set("arn", policySummary.Arn)
+	d.Set(names.AttrARN, policySummary.Arn)
 	d.Set("content", policy.Content)
-	d.Set("description", policySummary.Description)
-	d.Set("name", policySummary.Name)
-	d.Set("type", policySummary.Type)
+	d.Set(names.AttrDescription, policySummary.Description)
+	d.Set(names.AttrName, policySummary.Name)
+	d.Set(names.AttrType, policySummary.Type)
 
 	if aws.BoolValue(policySummary.AwsManaged) {
 		return diag.Diagnostics{
@@ -137,7 +137,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &organizations.UpdatePolicyInput{
 			PolicyId: aws.String(d.Id()),
 		}
@@ -146,12 +146,12 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Content = aws.String(d.Get("content").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		_, err := conn.UpdatePolicyWithContext(ctx, input)

@@ -174,7 +174,7 @@ func resourceRegisteredDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"domain_name": {
+				names.AttrDomainName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -264,7 +264,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -392,7 +392,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("billing_contact", nil)
 	}
 	d.Set("billing_privacy", domainDetail.BillingPrivacy)
-	d.Set("domain_name", domainDetail.DomainName)
+	d.Set(names.AttrDomainName, domainDetail.DomainName)
 	if domainDetail.ExpirationDate != nil {
 		d.Set("expiration_date", aws.ToTime(domainDetail.ExpirationDate).Format(time.RFC3339))
 	} else {

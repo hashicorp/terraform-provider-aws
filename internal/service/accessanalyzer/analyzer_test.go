@@ -37,10 +37,10 @@ func testAccAnalyzer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.TypeAccount)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeAccount)),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 				Config: testAccAnalyzerConfig_typeOrganization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.TypeOrganization)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeOrganization)),
 				),
 			},
 			{

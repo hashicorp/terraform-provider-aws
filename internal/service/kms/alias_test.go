@@ -38,10 +38,10 @@ func TestAccKMSAlias_basic(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`alias/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", tfkms.AliasNamePrefix+rName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`alias/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tfkms.AliasNamePrefix+rName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, names.AttrID),
 				),
 			},
 			{
@@ -93,8 +93,8 @@ func TestAccKMSAlias_Name_generated(t *testing.T) {
 				Config: testAccAliasConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, id.UniqueIDSuffixLength))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, tfkms.AliasNamePrefix),
 				),
 			},
 			{
@@ -122,8 +122,8 @@ func TestAccKMSAlias_namePrefix(t *testing.T) {
 				Config: testAccAliasConfig_namePrefix(rName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -153,16 +153,16 @@ func TestAccKMSAlias_updateKeyID(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key1ResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccAliasConfig_updatedKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key2ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key2ResourceName, names.AttrID),
 				),
 			},
 			{
@@ -192,11 +192,11 @@ func TestAccKMSAlias_multipleAliasesForSameKey(t *testing.T) {
 				Config: testAccAliasConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, names.AttrID),
 					testAccCheckAliasExists(ctx, alias2ResourceName, &alias),
-					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_arn", keyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_id", keyResourceName, "id"),
+					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_arn", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_id", keyResourceName, names.AttrID),
 				),
 			},
 			{

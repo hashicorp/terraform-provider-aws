@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
@@ -62,7 +63,7 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +130,7 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 	d.Set("domain", domainName)
 	d.Set("domain_owner", owner)
 	d.Set("policy_revision", policy.Revision)
-	d.Set("resource_arn", policy.ResourceArn)
+	d.Set(names.AttrResourceARN, policy.ResourceArn)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(policy.Document))
 	if err != nil {

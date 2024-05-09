@@ -3,7 +3,7 @@
 // it may also be a different identifier depending on the service.
 func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, id string, tags tftags.KeyValueTags) error {
 	tflog.Debug(ctx, "Waiting for tag propagation", map[string]any{
-		"tags": tags,
+		names.AttrTags: tags,
 	})
 
 	checkFunc := func() (bool, error) {

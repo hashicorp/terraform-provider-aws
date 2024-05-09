@@ -92,13 +92,13 @@ func ResourceStateMachine() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -168,7 +168,7 @@ func ResourceStateMachine() *schema.Resource {
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
@@ -235,7 +235,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("logging_configuration", nil)
 	}
 	d.Set(names.AttrName, output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("publish", d.Get("publish").(bool))
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)

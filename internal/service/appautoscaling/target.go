@@ -55,7 +55,7 @@ func resourceTarget() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -92,7 +92,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:              getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleARN = aws.String(v.(string))
 	}
 
@@ -130,11 +130,11 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	t := outputRaw.(*applicationautoscaling.ScalableTarget)
 
-	d.Set("arn", t.ScalableTargetARN)
+	d.Set(names.AttrARN, t.ScalableTargetARN)
 	d.Set("max_capacity", t.MaxCapacity)
 	d.Set("min_capacity", t.MinCapacity)
 	d.Set("resource_id", t.ResourceId)
-	d.Set("role_arn", t.RoleARN)
+	d.Set(names.AttrRoleARN, t.RoleARN)
 	d.Set("scalable_dimension", t.ScalableDimension)
 	d.Set("service_namespace", t.ServiceNamespace)
 
@@ -145,7 +145,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &applicationautoscaling.RegisterScalableTargetInput{
 			MaxCapacity:       aws.Int64(int64(d.Get("max_capacity").(int))),
 			MinCapacity:       aws.Int64(int64(d.Get("min_capacity").(int))),
@@ -154,7 +154,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 		}
 
-		if v, ok := d.GetOk("role_arn"); ok {
+		if v, ok := d.GetOk(names.AttrRoleARN); ok {
 			input.RoleARN = aws.String(v.(string))
 		}
 

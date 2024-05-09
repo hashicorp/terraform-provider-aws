@@ -15,9 +15,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -691,7 +692,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 			testAccCheckBucketDestroy(ctx),
 			func(s *terraform.State) error {
 				// Tear down CF stack.
-				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 				requestToken := id.UniqueId()
 				req := &cloudformation.DeleteStackInput{
@@ -700,7 +701,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 				}
 
 				log.Printf("[DEBUG] Deleting CloudFormation stack: %s", stackID)
-				if _, err := conn.DeleteStackWithContext(ctx, req); err != nil {
+				if _, err := conn.DeleteStack(ctx, req); err != nil {
 					return fmt.Errorf("error deleting CloudFormation stack: %w", err)
 				}
 
@@ -2766,7 +2767,7 @@ func testAccCheckBucketDeleteObjects(ctx context.Context, n string, keys ...stri
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, v *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 		stackName := sdkacctest.RandomWithPrefix("tf-acc-test-s3tags")
 		templateBody := fmt.Sprintf(`{
   "Resources": {
@@ -2786,7 +2787,7 @@ func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, v 
 			TemplateBody:       aws.String(templateBody),
 		}
 
-		output, err := conn.CreateStackWithContext(ctx, input)
+		output, err := conn.CreateStack(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("creating CloudFormation Stack: %w", err)
@@ -2799,8 +2800,8 @@ func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, v 
 			return fmt.Errorf("waiting for CloudFormation Stack (%s) create: %w", stackID, err)
 		}
 
-		if status := aws.ToString(stack.StackStatus); status != cloudformation.StackStatusCreateComplete {
-			return fmt.Errorf("invalid CloudFormation Stack (%s) status: %s", stackID, status)
+		if stack.StackStatus != cloudformationtypes.StackStatusCreateComplete {
+			return fmt.Errorf("invalid CloudFormation Stack (%s) status: %s", stackID, stack.StackStatus)
 		}
 
 		*v = stackID

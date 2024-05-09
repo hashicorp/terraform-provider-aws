@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_policy", name="Policy")
@@ -54,7 +55,7 @@ func resourcePolicy() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 1023),
 							},
-							"id": {
+							names.AttrID: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
@@ -81,11 +82,11 @@ func resourcePolicy() *schema.Resource {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"name": {
+																names.AttrName: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -130,7 +131,7 @@ func resourcePolicy() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -143,7 +144,7 @@ func resourcePolicy() *schema.Resource {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				"enabled": {
+				names.AttrEnabled: {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  true,
@@ -162,7 +163,7 @@ func resourcePolicy() *schema.Resource {
 					Optional:     true,
 					ValidateFunc: validation.IntAtLeast(1),
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -354,11 +355,11 @@ func resourcePolicy() *schema.Resource {
 											ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"name": {
+													names.AttrName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -381,7 +382,7 @@ func resourcePolicy() *schema.Resource {
 														Optional:     true,
 														ValidateFunc: validation.StringLenBetween(1, 2047),
 													},
-													"id": {
+													names.AttrID: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
@@ -408,11 +409,11 @@ func resourcePolicy() *schema.Resource {
 																				Optional: true,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"name": {
+																						names.AttrName: {
 																							Type:     schema.TypeString,
 																							Required: true,
 																						},
-																						"value": {
+																						names.AttrValue: {
 																							Type:     schema.TypeString,
 																							Required: true,
 																						},
@@ -507,7 +508,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input, err := expandPutScalingPolicyInput(d)
 
 	if err != nil {
@@ -542,13 +543,13 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("adjustment_type", p.AdjustmentType)
-	d.Set("arn", p.PolicyARN)
+	d.Set(names.AttrARN, p.PolicyARN)
 	d.Set("autoscaling_group_name", p.AutoScalingGroupName)
 	d.Set("cooldown", p.Cooldown)
-	d.Set("enabled", p.Enabled)
+	d.Set(names.AttrEnabled, p.Enabled)
 	d.Set("estimated_instance_warmup", p.EstimatedInstanceWarmup)
 	d.Set("metric_aggregation_type", p.MetricAggregationType)
-	d.Set("name", p.PolicyName)
+	d.Set(names.AttrName, p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
 	d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 
@@ -615,7 +616,7 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta inte
 	asgName := idParts[0]
 	policyName := idParts[1]
 
-	d.Set("name", policyName)
+	d.Set(names.AttrName, policyName)
 	d.Set("autoscaling_group_name", asgName)
 	d.SetId(policyName)
 
@@ -671,8 +672,8 @@ func findScalingPolicyByTwoPartKey(ctx context.Context, conn *autoscaling.Client
 func expandPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPolicyInput, error) {
 	input := &autoscaling.PutScalingPolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
-		Enabled:              aws.Bool(d.Get("enabled").(bool)),
-		PolicyName:           aws.String(d.Get("name").(string)),
+		Enabled:              aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		PolicyName:           aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	// get policy_type first as parameter support depends on policy type
@@ -812,8 +813,8 @@ func expandTargetTrackingConfiguration(configs []interface{}) *awstypes.TargetTr
 				for i := range metDimList {
 					dim := dims[i].(map[string]interface{})
 					md := awstypes.MetricDimension{
-						Name:  aws.String(dim["name"].(string)),
-						Value: aws.String(dim["value"].(string)),
+						Name:  aws.String(dim[names.AttrName].(string)),
+						Value: aws.String(dim[names.AttrValue].(string)),
 					}
 					metDimList[i] = md
 				}
@@ -834,7 +835,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 	for i := range metricDataQueries {
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := awstypes.TargetTrackingMetricDataQuery{
-			Id: aws.String(metricDataQueryFlat["id"].(string)),
+			Id: aws.String(metricDataQueryFlat[names.AttrID].(string)),
 		}
 		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]interface{})) > 0 {
 			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
@@ -849,8 +850,8 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 				for i := range dimList {
 					dim := dims[i].(map[string]interface{})
 					md := awstypes.MetricDimension{
-						Name:  aws.String(dim["name"].(string)),
-						Value: aws.String(dim["value"].(string)),
+						Name:  aws.String(dim[names.AttrName].(string)),
+						Value: aws.String(dim[names.AttrValue].(string)),
 					}
 					dimList[i] = md
 				}
@@ -999,7 +1000,7 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []awstypes.Met
 	for i := range metricDataQueries {
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := awstypes.MetricDataQuery{
-			Id: aws.String(metricDataQueryFlat["id"].(string)),
+			Id: aws.String(metricDataQueryFlat[names.AttrID].(string)),
 		}
 		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]interface{})) > 0 {
 			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
@@ -1014,8 +1015,8 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []awstypes.Met
 				for i := range dimList {
 					dim := dims[i].(map[string]interface{})
 					md := awstypes.MetricDimension{
-						Name:  aws.String(dim["name"].(string)),
-						Value: aws.String(dim["value"].(string)),
+						Name:  aws.String(dim[names.AttrName].(string)),
+						Value: aws.String(dim[names.AttrValue].(string)),
 					}
 					dimList[i] = md
 				}
@@ -1076,8 +1077,8 @@ func flattenTargetTrackingConfiguration(config *awstypes.TargetTrackingConfigura
 				for i := range dimSpec {
 					dim := map[string]interface{}{}
 					rawDim := config.CustomizedMetricSpecification.Dimensions[i]
-					dim["name"] = aws.ToString(rawDim.Name)
-					dim["value"] = aws.ToString(rawDim.Value)
+					dim[names.AttrName] = aws.ToString(rawDim.Name)
+					dim[names.AttrValue] = aws.ToString(rawDim.Value)
 					dimSpec[i] = dim
 				}
 				spec["metric_dimension"] = dimSpec
@@ -1093,7 +1094,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []awstypes.TargetT
 	for i := range metricDataQueriesSpec {
 		metricDataQuery := map[string]interface{}{}
 		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery["id"] = aws.ToString(rawMetricDataQuery.Id)
+		metricDataQuery[names.AttrID] = aws.ToString(rawMetricDataQuery.Id)
 		if rawMetricDataQuery.Expression != nil {
 			metricDataQuery["expression"] = aws.ToString(rawMetricDataQuery.Expression)
 		}
@@ -1110,8 +1111,8 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []awstypes.TargetT
 				for i := range dimSpec {
 					dim := map[string]interface{}{}
 					rawDim := rawMetric.Dimensions[i]
-					dim["name"] = aws.ToString(rawDim.Name)
-					dim["value"] = aws.ToString(rawDim.Value)
+					dim[names.AttrName] = aws.ToString(rawDim.Name)
+					dim[names.AttrValue] = aws.ToString(rawDim.Value)
 					dimSpec[i] = dim
 				}
 				metricSpec["dimensions"] = dimSpec
@@ -1244,7 +1245,7 @@ func flattenMetricDataQueries(metricDataQueries []awstypes.MetricDataQuery) []in
 	for i := range metricDataQueriesSpec {
 		metricDataQuery := map[string]interface{}{}
 		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery["id"] = aws.ToString(rawMetricDataQuery.Id)
+		metricDataQuery[names.AttrID] = aws.ToString(rawMetricDataQuery.Id)
 		if rawMetricDataQuery.Expression != nil {
 			metricDataQuery["expression"] = aws.ToString(rawMetricDataQuery.Expression)
 		}
@@ -1261,8 +1262,8 @@ func flattenMetricDataQueries(metricDataQueries []awstypes.MetricDataQuery) []in
 				for i := range dimSpec {
 					dim := map[string]interface{}{}
 					rawDim := rawMetric.Dimensions[i]
-					dim["name"] = aws.ToString(rawDim.Name)
-					dim["value"] = aws.ToString(rawDim.Value)
+					dim[names.AttrName] = aws.ToString(rawDim.Name)
+					dim[names.AttrValue] = aws.ToString(rawDim.Value)
 					dimSpec[i] = dim
 				}
 				metricSpec["dimensions"] = dimSpec

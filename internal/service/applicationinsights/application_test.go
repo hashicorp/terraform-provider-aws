@@ -37,7 +37,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", "false"),
@@ -54,7 +54,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", "false"),
@@ -82,7 +82,7 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", "false"),

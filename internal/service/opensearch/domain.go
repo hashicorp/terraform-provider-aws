@@ -50,9 +50,9 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("engine_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				newVersion := d.Get("engine_version").(string)
-				domainName := d.Get("domain_name").(string)
+			customdiff.ForceNewIf(names.AttrEngineVersion, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				newVersion := d.Get(names.AttrEngineVersion).(string)
+				domainName := d.Get(names.AttrDomainName).(string)
 
 				conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 				resp, err := conn.GetCompatibleVersionsWithContext(ctx, &opensearchservice.GetCompatibleVersionsInput{
@@ -78,7 +78,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 
-				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
 			customdiff.ForceNewIf("node_to_node_encryption.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("node_to_node_encryption.0.enabled")
@@ -86,7 +86,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 
-				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
+				return !inPlaceEncryptionEnableVersion(d.Get(names.AttrEngineVersion).(string))
 			}),
 			customdiff.ForceNewIf("advanced_security_options.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				o, n := d.GetChange("advanced_security_options.0.enabled")
@@ -129,7 +129,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -164,7 +164,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +200,7 @@ func ResourceDomain() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(opensearchservice.TimeUnit_Values(), false),
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeInt,
 													Required: true,
 												},
@@ -243,7 +243,7 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
@@ -271,7 +271,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
@@ -324,7 +324,7 @@ func ResourceDomain() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -333,7 +333,7 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -390,7 +390,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -440,11 +440,11 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -458,7 +458,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -478,7 +478,7 @@ func ResourceDomain() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -498,7 +498,7 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -512,7 +512,7 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -589,25 +589,25 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -620,7 +620,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainImport(ctx context.Context,
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -631,17 +631,17 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state
-	resp, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	resp, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain %q already exists", aws.StringValue(resp.DomainName))
 	}
 
 	input := &opensearchservice.CreateDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		TagList:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -776,7 +776,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be created", d.Id())
-	if err := WaitForDomainCreation(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := WaitForDomainCreation(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -786,7 +786,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
 
 		input := &opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		input.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
@@ -807,7 +807,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
@@ -820,7 +820,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	outDescribeDomainConfig, err := conn.DescribeDomainConfigWithContext(ctx, &opensearchservice.DescribeDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	})
 
 	if err != nil {
@@ -845,10 +845,10 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(aws.StringValue(ds.ARN))
-	d.Set("arn", ds.ARN)
+	d.Set(names.AttrARN, ds.ARN)
 	d.Set("domain_id", ds.DomainId)
-	d.Set("domain_name", ds.DomainName)
-	d.Set("engine_version", ds.EngineVersion)
+	d.Set(names.AttrDomainName, ds.DomainName)
+	d.Set(names.AttrEngineVersion, ds.EngineVersion)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
@@ -943,9 +943,9 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		if d.HasChange("access_policies") {
@@ -996,7 +996,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					input.ClusterConfig = expandClusterConfig(m)
 
 					// Work around "ValidationException: Your domain's Elasticsearch version does not support cold storage options. Upgrade to Elasticsearch 7.9 or later.".
-					if engineType, version, err := ParseEngineVersion(d.Get("engine_version").(string)); err == nil {
+					if engineType, version, err := ParseEngineVersion(d.Get(names.AttrEngineVersion).(string)); err == nil {
 						switch engineType {
 						case opensearchservice.EngineTypeElasticsearch:
 							if semver.LessThan(version, "7.9") {
@@ -1077,14 +1077,14 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 		}
 
-		if d.HasChange("engine_version") {
+		if d.HasChange(names.AttrEngineVersion) {
 			upgradeInput := opensearchservice.UpgradeDomainInput{
-				DomainName:    aws.String(d.Get("domain_name").(string)),
-				TargetVersion: aws.String(d.Get("engine_version").(string)),
+				DomainName:    aws.String(d.Get(names.AttrDomainName).(string)),
+				TargetVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			}
 
 			_, err := conn.UpgradeDomainWithContext(ctx, &upgradeInput)
@@ -1092,7 +1092,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: %s", d.Id(), err)
 			}
 
-			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: waiting for completion: %s", d.Id(), err)
 			}
 		}
@@ -1104,7 +1104,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
 	_, err := conn.DeleteDomainWithContext(ctx, &opensearchservice.DeleteDomainInput{
@@ -1118,7 +1118,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be deleted", domainName)
-	if err := waitForDomainDelete(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForDomainDelete(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 
@@ -1204,7 +1204,7 @@ func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 func expandNodeToNodeEncryptionOptions(s map[string]interface{}) *opensearchservice.NodeToNodeEncryptionOptions {
 	options := opensearchservice.NodeToNodeEncryptionOptions{}
 
-	if v, ok := s["enabled"]; ok {
+	if v, ok := s[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
 	return &options
@@ -1217,7 +1217,7 @@ func flattenNodeToNodeEncryptionOptions(o *opensearchservice.NodeToNodeEncryptio
 
 	m := map[string]interface{}{}
 	if o.Enabled != nil {
-		m["enabled"] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
 	}
 
 	return []map[string]interface{}{m}
@@ -1248,7 +1248,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := m["instance_type"]; ok {
+	if v, ok := m[names.AttrInstanceType]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
 
@@ -1310,7 +1310,7 @@ func expandColdStorageOptions(l []interface{}) *opensearchservice.ColdStorageOpt
 
 	ColdStorageOptions := &opensearchservice.ColdStorageOptions{}
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := m[names.AttrEnabled]; ok {
 		ColdStorageOptions.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -1339,7 +1339,7 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 		m["instance_count"] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(c.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)
 	}
 	if c.MultiAZWithStandbyEnabled != nil {
 		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)
@@ -1375,7 +1375,7 @@ func flattenColdStorageOptions(coldStorageOptions *opensearchservice.ColdStorage
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(coldStorageOptions.Enabled),
+		names.AttrEnabled: aws.BoolValue(coldStorageOptions.Enabled),
 	}
 
 	return []interface{}{m}

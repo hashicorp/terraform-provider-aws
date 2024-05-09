@@ -37,8 +37,8 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`subnet/subnet-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
@@ -50,7 +50,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -593,7 +593,7 @@ func TestAccVPCSubnet_availabilityZoneID(t *testing.T) {
 				Config: testAccVPCSubnetConfig_availabilityZoneID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
 				),
 			},
@@ -746,7 +746,7 @@ func TestAccVPCSubnet_outpost(t *testing.T) {
 				Config: testAccVPCSubnetConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{

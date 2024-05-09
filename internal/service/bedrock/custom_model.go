@@ -129,7 +129,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				CustomType: fwtypes.StringEnumType[awstypes.ModelCustomizationJobStatus](),
 				Computed:   true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -182,7 +182,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -256,7 +256,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"security_group_ids": schema.SetAttribute{
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,
@@ -264,7 +264,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 								setplanmodifier.RequiresReplace(),
 							},
 						},
-						"subnet_ids": schema.SetAttribute{
+						names.AttrSubnetIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,

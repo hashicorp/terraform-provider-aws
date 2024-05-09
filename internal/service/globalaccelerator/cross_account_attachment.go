@@ -63,7 +63,7 @@ func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request res
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"principals": schema.SetAttribute{

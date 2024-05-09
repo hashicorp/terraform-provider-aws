@@ -50,7 +50,7 @@ func resourceKey() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func resourceKey() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -110,7 +110,7 @@ func resourceKey() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -153,7 +153,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Tags:                           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -161,7 +161,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.MultiRegion = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		p, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -209,7 +209,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		if err := waitKeyPolicyPropagated(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) policy update: %s", d.Id(), err)
 		}
@@ -246,10 +246,10 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "KMS Key (%s) is not a multi-Region primary key", d.Id())
 	}
 
-	d.Set("arn", key.metadata.Arn)
+	d.Set(names.AttrARN, key.metadata.Arn)
 	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
-	d.Set("description", key.metadata.Description)
+	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
 	d.Set("is_enabled", key.metadata.Enabled)
 	d.Set("key_id", key.metadata.KeyId)
@@ -262,12 +262,12 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("xks_key_id", nil)
 	}
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	setTagsOut(ctx, key.tags)
 
@@ -295,13 +295,13 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if hasChange, description := d.HasChange("description"), d.Get("description").(string); hasChange {
+	if hasChange, description := d.HasChange(names.AttrDescription), d.Get(names.AttrDescription).(string); hasChange {
 		if err := updateKeyDescription(ctx, conn, "KMS Key", d.Id(), description); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if hasChange, policy, bypass := d.HasChange("policy"), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool); hasChange {
+	if hasChange, policy, bypass := d.HasChange(names.AttrPolicy), d.Get(names.AttrPolicy).(string), d.Get("bypass_policy_lockout_safety_check").(bool); hasChange {
 		if err := updateKeyPolicy(ctx, conn, "KMS Key", d.Id(), policy, bypass); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

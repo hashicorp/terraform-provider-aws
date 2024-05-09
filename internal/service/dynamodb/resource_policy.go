@@ -52,11 +52,11 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{

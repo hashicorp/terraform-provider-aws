@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_multicast_domain_association")
@@ -33,12 +34,12 @@ func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,8 +59,8 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
-	attachmentID := d.Get("transit_gateway_attachment_id").(string)
-	subnetID := d.Get("subnet_id").(string)
+	attachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	id := TransitGatewayMulticastDomainAssociationCreateResourceID(multicastDomainID, attachmentID, subnetID)
 	input := &ec2.AssociateTransitGatewayMulticastDomainInput{
 		SubnetIds:                       aws.StringSlice([]string{subnetID}),
@@ -106,8 +107,8 @@ func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Multicast Domain Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("subnet_id", multicastDomainAssociation.Subnet.SubnetId)
-	d.Set("transit_gateway_attachment_id", multicastDomainAssociation.TransitGatewayAttachmentId)
+	d.Set(names.AttrSubnetID, multicastDomainAssociation.Subnet.SubnetId)
+	d.Set(names.AttrTransitGatewayAttachmentID, multicastDomainAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_multicast_domain_id", multicastDomainID)
 
 	return diags

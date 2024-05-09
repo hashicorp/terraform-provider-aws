@@ -46,7 +46,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Contex
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"organization_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -136,7 +136,7 @@ func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Contex
 }
 
 func (r *resourceOrganizationAdminAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceOrganizationAdminAccountRegistrationData struct {
