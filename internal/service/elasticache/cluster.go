@@ -142,7 +142,7 @@ func resourceCluster() *schema.Resource {
 				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -267,7 +267,7 @@ func resourceCluster() *schema.Resource {
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
-					"engine_version",
+					names.AttrEngineVersion,
 					"maintenance_window",
 					"node_type",
 					"notification_topic_arn",
@@ -381,7 +381,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Engine = aws.String(v.(string))
 	}
 
-	version := d.Get("engine_version").(string)
+	version := d.Get(names.AttrEngineVersion).(string)
 	if version != "" {
 		input.EngineVersion = aws.String(version)
 	}
@@ -628,8 +628,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			requestUpdate = true
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 			requestUpdate = true
 		}
 

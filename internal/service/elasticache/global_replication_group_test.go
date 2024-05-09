@@ -879,7 +879,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"engine_version"},
+				ImportStateVerifyIgnore: []string{names.AttrEngineVersion},
 			},
 		},
 	})
