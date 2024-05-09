@@ -5,6 +5,7 @@ package names
 
 const (
 	AttrARN                 = "arn"
+	AttrAccountID           = "account_id"
 	AttrAvailabilityZone    = "availability_zone"
 	AttrAvailabilityZones   = "availability_zones"
 	AttrBucket              = "bucket"

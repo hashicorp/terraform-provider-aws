@@ -42,7 +42,7 @@ func ResourceDelegatedAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,21 +65,21 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	in := &inspector2.EnableDelegatedAdminAccountInput{
-		DelegatedAdminAccountId: aws.String(d.Get("account_id").(string)),
+		DelegatedAdminAccountId: aws.String(d.Get(names.AttrAccountID).(string)),
 		ClientToken:             aws.String(id.UniqueId()),
 	}
 
 	out, err := conn.EnableDelegatedAdminAccount(ctx, in)
 
 	if err != nil && !errs.MessageContains(err, "ConflictException", "already enabled") {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameDelegatedAdminAccount, d.Get("account_id").(string), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameDelegatedAdminAccount, d.Get(names.AttrAccountID).(string), err)
 	}
 
 	if err == nil && (out == nil || out.DelegatedAdminAccountId == nil) {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameDelegatedAdminAccount, d.Get("account_id").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameDelegatedAdminAccount, d.Get(names.AttrAccountID).(string), errors.New("empty output"))
 	}
 
-	d.SetId(d.Get("account_id").(string))
+	d.SetId(d.Get(names.AttrAccountID).(string))
 
 	if err := WaitDelegatedAdminAccountEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForCreation, ResNameDelegatedAdminAccount, d.Id(), err)
@@ -105,7 +105,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameDelegatedAdminAccount, d.Id(), err)
 	}
 
-	d.Set("account_id", ai)
+	d.Set(names.AttrAccountID, ai)
 	d.Set("relationship_status", st)
 
 	return diags
@@ -119,7 +119,7 @@ func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.Resource
 	log.Printf("[INFO] Deleting Inspector DelegatedAdminAccount %s", d.Id())
 
 	_, err := conn.DisableDelegatedAdminAccount(ctx, &inspector2.DisableDelegatedAdminAccountInput{
-		DelegatedAdminAccountId: aws.String(d.Get("account_id").(string)),
+		DelegatedAdminAccountId: aws.String(d.Get(names.AttrAccountID).(string)),
 	})
 
 	if err != nil {
