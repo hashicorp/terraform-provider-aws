@@ -292,8 +292,8 @@ github.com/aws/aws-sdk-go-v2/service/qbusiness v1.6.1 h1:TjDg29LJwoLOe53kf5TJ7te
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.6.1/go.mod h1:GA+mlGvbl5shamVdR+zkQDrdExUQ9WAEnPlMtdiuVr8=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.21.5 h1:wh+eFaiLFeISAoINkD9tLOJ/rrpLPy6sVhFXkEfKvxM=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.21.5/go.mod h1:T789CzkMLwKq1b5MxcUfQeoUisJ6jJhciaZTtAQtUOU=
-github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4 h1:f5RY4vrfqBG5nmgSiEejpFOeWfzkCXd+EpOsRdL4W+I=
-github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4/go.mod h1:BUtbswz07qEjzGypmeUdtP53noKx1PBKAnX9Fe0Mul4=
+github.com/aws/aws-sdk-go-v2/service/rbin v1.16.5 h1:/HQfwoS7nNnbuyrBAqJOCHSpYBzVKENQjY2JzsCiYxs=
+github.com/aws/aws-sdk-go-v2/service/rbin v1.16.5/go.mod h1:BUtbswz07qEjzGypmeUdtP53noKx1PBKAnX9Fe0Mul4=
 github.com/aws/aws-sdk-go-v2/service/rds v1.78.0 h1:EfurrcA19HaB9gZYd157DiozoPfkX2CH5/QnDZqNFrY=
 github.com/aws/aws-sdk-go-v2/service/rds v1.78.0/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0 h1:j18lTPPqe+qlapn1R8//+ujvXdplku8V41xzBNNLtn0=
