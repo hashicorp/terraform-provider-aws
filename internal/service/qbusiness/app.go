@@ -74,7 +74,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"display_name": schema.StringAttribute{
 				Description: "The display name of the Amazon Q application.",
-				Optional:    true,
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
