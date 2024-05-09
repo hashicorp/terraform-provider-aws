@@ -1321,7 +1321,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
 													),
 												},
-												"region": {
+												names.AttrRegion: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
@@ -2166,7 +2166,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.
 		properties.PrivateLinkServiceName = aws.String(v)
 	}
 
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		properties.Region = aws.String(v)
 	}
 
@@ -2373,7 +2373,7 @@ func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConne
 	}
 
 	if properties.Region != nil {
-		m["region"] = aws.ToString(properties.Region)
+		m[names.AttrRegion] = aws.ToString(properties.Region)
 	}
 
 	m["stage"] = aws.ToString(properties.Stage)
