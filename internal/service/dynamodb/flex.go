@@ -131,7 +131,7 @@ func attributeFromRaw(v any) (awstypes.AttributeValue, error) {
 		return nil, fmt.Errorf("unexpected raw attribute type (%T) for data type descriptor: %s", v, k)
 	}
 
-	panic("unreachable")
+	panic("unreachable") //lintignore:R009
 }
 
 func rawFromAttribute(a awstypes.AttributeValue) (any, error) {
