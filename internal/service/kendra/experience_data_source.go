@@ -82,7 +82,7 @@ func DataSourceExperience() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -177,7 +177,7 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
-	if err := d.Set("endpoints", flattenEndpoints(resp.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenEndpoints(resp.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
