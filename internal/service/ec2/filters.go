@@ -120,7 +120,7 @@ func customFiltersSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{
@@ -142,7 +142,7 @@ func customRequiredFiltersSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{
@@ -162,7 +162,7 @@ func customFiltersBlock() datasourceschema.Block {
 				names.AttrName: datasourceschema.StringAttribute{
 					Required: true,
 				},
-				"values": datasourceschema.SetAttribute{
+				names.AttrValues: datasourceschema.SetAttribute{
 					ElementType: types.StringType,
 					Required:    true,
 				},
@@ -193,7 +193,7 @@ func newCustomFilterList(s *schema.Set) []*ec2_sdkv1.Filter {
 
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *ec2_sdkv1.Filter {
 		tfMap := tfList.(map[string]interface{})
-		return newFilter(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap["values"].(*schema.Set)))
+		return newFilter(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
 
@@ -213,7 +213,7 @@ func newCustomFilterListV2(s *schema.Set) []awstypes.Filter {
 
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
 		tfMap := tfList.(map[string]interface{})
-		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap["values"].(*schema.Set)))
+		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
 

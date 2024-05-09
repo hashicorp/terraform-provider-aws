@@ -117,7 +117,7 @@ func TestNewCustomFilterList(t *testing.T) {
 
 	// We also need an appropriately-configured set for
 	// the list of values.
-	valuesSchema := filtersSchema.Elem.(*schema.Resource).Schema["values"]
+	valuesSchema := filtersSchema.Elem.(*schema.Resource).Schema[names.AttrValues]
 	valuesSet := func(vals ...string) *schema.Set {
 		ret := valuesSchema.ZeroValue().(*schema.Set)
 		for _, val := range vals {
@@ -127,12 +127,12 @@ func TestNewCustomFilterList(t *testing.T) {
 	}
 
 	filters.Add(map[string]interface{}{
-		names.AttrName: "foo",
-		"values":       valuesSet("bar", "baz"),
+		names.AttrName:   "foo",
+		names.AttrValues: valuesSet("bar", "baz"),
 	})
 	filters.Add(map[string]interface{}{
-		names.AttrName: "pizza",
-		"values":       valuesSet("cheese"),
+		names.AttrName:   "pizza",
+		names.AttrValues: valuesSet("cheese"),
 	})
 
 	expected := []*ec2.Filter{
