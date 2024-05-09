@@ -34,7 +34,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,7 +144,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, permissionSet.Description)
 	d.Set("instance_arn", instanceArn)
 	d.Set(names.AttrName, permissionSet.Name)

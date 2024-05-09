@@ -38,7 +38,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_basic(t *testing.T) {
 				Config: testAccMultiRegionAccessPointPolicyConfig_basic(bucketName, multiRegionAccessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", multiRegionAccessPointName),
 					resource.TestCheckResourceAttrSet(resourceName, "details.0.policy"),

@@ -38,7 +38,7 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_failure"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.DefaultSgId"),
@@ -216,7 +216,7 @@ func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})
@@ -239,7 +239,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 				Config: testAccStackConfig_allAttributesBodies(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
@@ -257,13 +257,13 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "policy_body"},
+				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters, "policy_body"},
 			},
 			{
 				Config: testAccStackConfig_allAttributesBodiesModified(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
@@ -310,7 +310,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"on_failure", "parameters"},
+				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters},
 			},
 			{
 				Config: testAccStackConfig_params(rName, vpcCidrUpdated),
@@ -348,7 +348,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
+				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters, "template_url"},
 			},
 			{
 				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
@@ -382,7 +382,7 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
+				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters, "template_url"},
 			},
 		},
 	})
@@ -411,7 +411,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
+				ImportStateVerifyIgnore: []string{"on_failure", names.AttrParameters, "template_url"},
 			},
 			{
 				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
@@ -521,7 +521,7 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})

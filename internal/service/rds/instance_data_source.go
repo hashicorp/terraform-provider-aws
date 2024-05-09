@@ -33,11 +33,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -173,7 +173,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,8 +254,8 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(instance.DBInstanceIdentifier))
 	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
 	d.Set("ca_cert_identifier", instance.CACertificateIdentifier)
 	d.Set("db_cluster_identifier", instance.DBClusterIdentifier)
@@ -274,7 +274,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(instance.EnabledCloudwatchLogsExports))
 	d.Set("engine", instance.Engine)
-	d.Set("engine_version", instance.EngineVersion)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set("iops", instance.Iops)
 	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
 	d.Set("license_model", instance.LicenseModel)
@@ -294,7 +294,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 	d.Set("option_group_memberships", optionGroupNames)
 	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", instance.DbiResourceId)

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_policy_table_association")
@@ -40,7 +41,7 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,7 +63,7 @@ func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *
 
 	// If the TGW attachment is already associated with a TGW route table, disassociate it to prevent errors like
 	// "IncorrectState: Cannot have both PolicyTableAssociation and RouteTableAssociation on the same TransitGateway Attachment".
-	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
+	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
 
 	if err != nil {
@@ -133,7 +134,7 @@ func resourceTransitGatewayPolicyTableAssociationRead(ctx context.Context, d *sc
 
 	d.Set("resource_id", transitGatewayPolicyTableAssociation.ResourceId)
 	d.Set("resource_type", transitGatewayPolicyTableAssociation.ResourceType)
-	d.Set("transit_gateway_attachment_id", transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_policy_table_id", transitGatewayPolicyTableAssociation.TransitGatewayPolicyTableId)
 
 	return diags

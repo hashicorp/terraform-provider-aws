@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_api_gateway_authorizer", name="Authorizer")
@@ -18,7 +19,7 @@ func dataSourceAuthorizer() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAuthorizerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +47,7 @@ func dataSourceAuthorizer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +60,7 @@ func dataSourceAuthorizer() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +81,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(authorizerID)
-	d.Set("arn", authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
+	d.Set(names.AttrARN, authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
@@ -90,9 +91,9 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("authorizer_uri", authorizer.AuthorizerUri)
 	d.Set("identity_source", authorizer.IdentitySource)
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
-	d.Set("name", authorizer.Name)
+	d.Set(names.AttrName, authorizer.Name)
 	d.Set("provider_arns", authorizer.ProviderARNs)
-	d.Set("type", authorizer.Type)
+	d.Set(names.AttrType, authorizer.Type)
 
 	return diags
 }

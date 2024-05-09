@@ -36,9 +36,9 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.#", "1"),

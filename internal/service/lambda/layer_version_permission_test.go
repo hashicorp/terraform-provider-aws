@@ -128,7 +128,7 @@ func TestAccLambdaLayerVersionPermission_account(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 					resource.TestCheckResourceAttrPair(resourceName, "layer_name", "aws_lambda_layer_version.test", "layer_arn"),
 				),

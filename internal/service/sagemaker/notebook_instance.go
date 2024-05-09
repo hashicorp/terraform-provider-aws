@@ -92,7 +92,7 @@ func ResourceNotebookInstance() *schema.Resource {
 					},
 				},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
@@ -112,7 +112,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Default:      sagemaker.RootAccessEnabled,
 				ValidateFunc: validation.StringInSlice(sagemaker.RootAccess_Values(), false),
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				MinItems: 1,
 				Optional: true,
@@ -142,7 +142,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -169,10 +169,10 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	name := d.Get(names.AttrName).(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
 		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{})),
-		InstanceType:                         aws.String(d.Get("instance_type").(string)),
+		InstanceType:                         aws.String(d.Get(names.AttrInstanceType).(string)),
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get(names.AttrRoleARN).(string)),
-		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+		SecurityGroupIds:                     flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		Tags:                                 getTagsIn(ctx),
 	}
 
@@ -208,7 +208,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.RootAccess = aws.String(v.(string))
 	}
 
-	if s, ok := d.GetOk("subnet_id"); ok {
+	if s, ok := d.GetOk(names.AttrSubnetID); ok {
 		input.SubnetId = aws.String(s.(string))
 	}
 
@@ -253,16 +253,16 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrARN, notebookInstance.NotebookInstanceArn)
 	d.Set("default_code_repository", notebookInstance.DefaultCodeRepository)
 	d.Set("direct_internet_access", notebookInstance.DirectInternetAccess)
-	d.Set("instance_type", notebookInstance.InstanceType)
+	d.Set(names.AttrInstanceType, notebookInstance.InstanceType)
 	d.Set(names.AttrKMSKeyID, notebookInstance.KmsKeyId)
 	d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName)
 	d.Set(names.AttrName, notebookInstance.NotebookInstanceName)
-	d.Set("network_interface_id", notebookInstance.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, notebookInstance.NetworkInterfaceId)
 	d.Set("platform_identifier", notebookInstance.PlatformIdentifier)
 	d.Set(names.AttrRoleARN, notebookInstance.RoleArn)
 	d.Set("root_access", notebookInstance.RootAccess)
-	d.Set("security_groups", aws.StringValueSlice(notebookInstance.SecurityGroups))
-	d.Set("subnet_id", notebookInstance.SubnetId)
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(notebookInstance.SecurityGroups))
+	d.Set(names.AttrSubnetID, notebookInstance.SubnetId)
 	d.Set("url", notebookInstance.Url)
 	d.Set("volume_size", notebookInstance.VolumeSizeInGB)
 
@@ -310,8 +310,8 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.InstanceMetadataServiceConfiguration = expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{}))
 		}
 
-		if d.HasChange("instance_type") {
-			input.InstanceType = aws.String(d.Get("instance_type").(string))
+		if d.HasChange(names.AttrInstanceType) {
+			input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
 		}
 
 		if d.HasChange("lifecycle_config_name") {

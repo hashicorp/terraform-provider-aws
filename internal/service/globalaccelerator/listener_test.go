@@ -34,7 +34,7 @@ func TestAccGlobalAcceleratorListener_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "80",
@@ -93,7 +93,7 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "443",

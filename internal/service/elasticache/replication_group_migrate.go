@@ -36,7 +36,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,
@@ -78,7 +78,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -91,7 +91,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Default:      engineRedis,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -110,7 +110,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 					"num_node_groups",
 					"parameter_group_name",
 					"engine",
-					"engine_version",
+					names.AttrEngineVersion,
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
@@ -211,7 +211,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 					return strings.HasPrefix(old, "global-datastore-")
 				},
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -258,7 +258,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -316,7 +316,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Set:           schema.HashString,
 				ConflictsWith: []string{"auth_token"},
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,

@@ -78,7 +78,7 @@ func resourceMonitor() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -451,7 +451,7 @@ func expandS3Config(tfList []interface{}) *types.S3Config {
 	tfMap := tfList[0].(map[string]interface{})
 	apiObject := &types.S3Config{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -497,7 +497,7 @@ func flattenS3Config(apiObject *types.S3Config) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"bucket_name":         aws.ToString(apiObject.BucketName),
+		names.AttrBucketName:  aws.ToString(apiObject.BucketName),
 		"log_delivery_status": string(apiObject.LogDeliveryStatus),
 	}
 

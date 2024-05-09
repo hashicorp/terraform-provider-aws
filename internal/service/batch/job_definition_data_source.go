@@ -95,7 +95,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 			"scheduling_priority": schema.Int64Attribute{
 				Computed: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(jobDefinitionStatus_Values()...),
@@ -111,7 +111,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 					},
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},

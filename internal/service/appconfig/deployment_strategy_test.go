@@ -37,10 +37,10 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`deploymentstrategy/[0-9a-z]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`deploymentstrategy/[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replicate_to", string(awstypes.ReplicateToNone)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -70,14 +70,14 @@ func TestAccAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
 				Config: testAccDeploymentStrategyConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{

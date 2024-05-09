@@ -114,7 +114,7 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -142,7 +142,7 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, acctest.ResourcePrefix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, acctest.ResourcePrefix),
 				),
 			},
 			{

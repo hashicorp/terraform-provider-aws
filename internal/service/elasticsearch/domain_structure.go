@@ -9,13 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecurityOptionsInput {
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
 	group := m[0].(map[string]interface{})
 
-	if advancedSecurityEnabled, ok := group["enabled"]; ok {
+	if advancedSecurityEnabled, ok := group[names.AttrEnabled]; ok {
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
 		if advancedSecurityEnabled.(bool) {
@@ -107,7 +108,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*elasticsearch.A
 
 func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *elasticsearch.Duration {
 	autoTuneMaintenanceScheduleDuration := &elasticsearch.Duration{
-		Value: aws.Int64(int64(tfMap["value"].(int))),
+		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
 		Unit:  aws.String(tfMap["unit"].(string)),
 	}
 
@@ -126,7 +127,7 @@ func expandESSAMLOptions(data []interface{}) *elasticsearch.SAMLOptionsInput {
 	options := elasticsearch.SAMLOptionsInput{}
 	group := data[0].(map[string]interface{})
 
-	if SAMLEnabled, ok := group["enabled"]; ok {
+	if SAMLEnabled, ok := group[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(SAMLEnabled.(bool))
 
 		if SAMLEnabled.(bool) {
@@ -175,7 +176,7 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.Advan
 	}
 
 	m := map[string]interface{}{}
-	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
+	m[names.AttrEnabled] = aws.BoolValue(advancedSecurityOptions.Enabled)
 	if aws.BoolValue(advancedSecurityOptions.Enabled) {
 		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
@@ -226,7 +227,7 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elastic
 func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *elasticsearch.Duration) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m["value"] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
+	m[names.AttrValue] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
 	m["unit"] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
 
 	return m
@@ -238,8 +239,8 @@ func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *elasticsearch.SAM
 	}
 
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(samlOptions.Enabled),
-		"idp":     flattenESSAMLIdpOptions(samlOptions.Idp),
+		names.AttrEnabled: aws.BoolValue(samlOptions.Enabled),
+		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
 	}
 
 	m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
@@ -302,7 +303,7 @@ func expandLogPublishingOptions(m *schema.Set) map[string]*elasticsearch.LogPubl
 		lo := vv.(map[string]interface{})
 		options[lo["log_type"].(string)] = &elasticsearch.LogPublishingOption{
 			CloudWatchLogsLogGroupArn: aws.String(lo["cloudwatch_log_group_arn"].(string)),
-			Enabled:                   aws.Bool(lo["enabled"].(bool)),
+			Enabled:                   aws.Bool(lo[names.AttrEnabled].(bool)),
 		}
 	}
 
@@ -313,8 +314,8 @@ func flattenLogPublishingOptions(o map[string]*elasticsearch.LogPublishingOption
 	m := make([]map[string]interface{}, 0)
 	for logType, val := range o {
 		mm := map[string]interface{}{
-			"log_type": logType,
-			"enabled":  aws.BoolValue(val.Enabled),
+			"log_type":        logType,
+			names.AttrEnabled: aws.BoolValue(val.Enabled),
 		}
 
 		if val.CloudWatchLogsLogGroupArn != nil {

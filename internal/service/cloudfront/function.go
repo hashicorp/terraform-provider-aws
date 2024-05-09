@@ -20,6 +20,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_function", name="Function")
@@ -35,7 +36,7 @@ func resourceFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +64,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -78,7 +79,7 @@ func resourceFunction() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionRuntime](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +91,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	functionName := d.Get("name").(string)
+	functionName := d.Get(names.AttrName).(string)
 	input := &cloudfront.CreateFunctionInput{
 		FunctionCode: []byte(d.Get("code").(string)),
 		FunctionConfig: &awstypes.FunctionConfig{
@@ -144,15 +145,15 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage: %s", d.Id(), err)
 	}
 
-	d.Set("arn", outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
+	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set("comment", outputDF.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
 	}
-	d.Set("name", outputDF.FunctionSummary.Name)
+	d.Set(names.AttrName, outputDF.FunctionSummary.Name)
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("status", outputDF.FunctionSummary.Status)
+	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)
 
 	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
 		Name:  aws.String(d.Id()),

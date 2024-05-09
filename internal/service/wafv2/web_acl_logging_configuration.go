@@ -161,7 +161,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 					Description:      "Parts of the request to exclude from logs",
 					DiffSuppressFunc: suppressRedactedFieldsDiff,
 				},
-				"resource_arn": {
+				names.AttrResourceARN: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -177,7 +177,7 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	config := &wafv2.LoggingConfiguration{
 		LogDestinationConfigs: flex.ExpandStringSet(d.Get("log_destination_configs").(*schema.Set)),
 		ResourceArn:           aws.String(resourceARN),
@@ -235,7 +235,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("redacted_fields", flattenRedactedFields(loggingConfig.RedactedFields)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting redacted_fields: %s", err)
 	}
-	d.Set("resource_arn", loggingConfig.ResourceArn)
+	d.Set(names.AttrResourceARN, loggingConfig.ResourceArn)
 
 	return diags
 }

@@ -84,7 +84,7 @@ func targetParametersSchema() *schema.Schema {
 												},
 											},
 										},
-										"instance_type": {
+										names.AttrInstanceType: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -268,7 +268,7 @@ func targetParametersSchema() *schema.Schema {
 														Optional:         true,
 														ValidateDiagFunc: enum.Validate[types.AssignPublicIp](),
 													},
-													"security_groups": {
+													names.AttrSecurityGroups: {
 														Type:     schema.TypeSet,
 														Optional: true,
 														MaxItems: 5,
@@ -939,7 +939,7 @@ func expandBatchContainerOverrides(tfMap map[string]interface{}) *types.BatchCon
 		apiObject.Environment = expandBatchEnvironmentVariables(v)
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
@@ -1259,7 +1259,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfigura
 		apiObject.AssignPublicIp = types.AssignPublicIp(v)
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
@@ -1984,7 +1984,7 @@ func flattenBatchContainerOverrides(apiObject *types.BatchContainerOverrides) ma
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.ToString(v)
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.ResourceRequirements; v != nil {
@@ -2448,7 +2448,7 @@ func flattenVPCConfiguration(apiObject *types.AwsVpcConfiguration) map[string]in
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.Subnets; v != nil {

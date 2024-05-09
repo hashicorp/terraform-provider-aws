@@ -110,7 +110,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
@@ -172,7 +172,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 		},
 	}
 
-	if v, ok := d.GetOk("name_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrNamePrefix); ok {
 		filters = append(filters, &ssm.PatchOrchestratorFilter{
 			Key: aws.String("NAME_PREFIX"),
 			Values: []*string{

@@ -28,7 +28,7 @@ func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPipelineDefinitionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.#", resourceName, "pipeline_object.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.0.id", resourceName, "pipeline_object.0.id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "pipeline_object.0.name", resourceName, "pipeline_object.0.name"),

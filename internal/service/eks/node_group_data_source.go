@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eks_node_group")
@@ -24,7 +25,7 @@ func dataSourceNodeGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,15 +57,15 @@ func dataSourceNodeGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -111,7 +112,7 @@ func dataSourceNodeGroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -145,26 +146,26 @@ func dataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"taints": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -175,7 +176,7 @@ func dataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +201,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(id)
 	d.Set("ami_type", nodeGroup.AmiType)
-	d.Set("arn", nodeGroup.NodegroupArn)
+	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
 	d.Set("cluster_name", nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
@@ -225,14 +226,14 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("scaling_config", nil)
 	}
-	d.Set("status", nodeGroup.Status)
-	d.Set("subnet_ids", nodeGroup.Subnets)
+	d.Set(names.AttrStatus, nodeGroup.Status)
+	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting taints: %s", err)
 	}
-	d.Set("version", nodeGroup.Version)
+	d.Set(names.AttrVersion, nodeGroup.Version)
 
-	if err := d.Set("tags", KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

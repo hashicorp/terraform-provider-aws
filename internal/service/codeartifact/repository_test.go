@@ -33,12 +33,12 @@ func testAccRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", "owner"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -113,12 +113,12 @@ func testAccRepository_owner(t *testing.T) {
 				Config: testAccRepositoryConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", "owner"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
 				),
@@ -147,7 +147,7 @@ func testAccRepository_description(t *testing.T) {
 				Config: testAccRepositoryConfig_desc(rName, "desc"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func testAccRepository_description(t *testing.T) {
 				Config: testAccRepositoryConfig_desc(rName, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 				),
 			},
 		},

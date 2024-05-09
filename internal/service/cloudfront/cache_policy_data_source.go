@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_cache_policy", name="Cache Policy")
@@ -32,10 +33,10 @@ func dataSourceCachePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
 			"max_ttl": {
 				Type:     schema.TypeInt,
@@ -45,10 +46,10 @@ func dataSourceCachePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"id", "name"},
+				ExactlyOneOf: []string{names.AttrID, names.AttrName},
 			},
 			"parameters_in_cache_key_and_forwarded_to_origin": {
 				Type:     schema.TypeList,
@@ -150,10 +151,10 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 
 	var cachePolicyID string
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		cachePolicyID = v.(string)
 	} else {
-		name := d.Get("name").(string)
+		name := d.Get(names.AttrName).(string)
 		input := &cloudfront.ListCachePoliciesInput{}
 
 		err := listCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
@@ -195,7 +196,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("etag", output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
 	d.Set("min_ttl", apiObject.MinTTL)
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
 		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters_in_cache_key_and_forwarded_to_origin: %s", err)

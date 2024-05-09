@@ -39,7 +39,7 @@ func resourceStudio() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func resourceStudio() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -73,7 +73,7 @@ func resourceStudio() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -84,7 +84,7 @@ func resourceStudio() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				MaxItems: 5,
 				MinItems: 1,
@@ -103,7 +103,7 @@ func resourceStudio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -125,15 +125,15 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AuthMode:                 aws.String(d.Get("auth_mode").(string)),
 		DefaultS3Location:        aws.String(d.Get("default_s3_location").(string)),
 		EngineSecurityGroupId:    aws.String(d.Get("engine_security_group_id").(string)),
-		Name:                     aws.String(d.Get("name").(string)),
+		Name:                     aws.String(d.Get(names.AttrName).(string)),
 		ServiceRole:              aws.String(d.Get("service_role").(string)),
-		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
-		VpcId:                    aws.String(d.Get("vpc_id").(string)),
+		VpcId:                    aws.String(d.Get(names.AttrVPCID).(string)),
 		WorkspaceSecurityGroupId: aws.String(d.Get("workspace_security_group_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -180,25 +180,25 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &emr.UpdateStudioInput{
 			StudioId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("default_s3_location") {
 			input.DefaultS3Location = aws.String(d.Get("default_s3_location").(string))
 		}
 
-		if d.HasChange("subnet_ids") {
-			input.SubnetIds = flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
+		if d.HasChange(names.AttrSubnetIDs) {
+			input.SubnetIds = flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
 		}
 
 		_, err := conn.UpdateStudioWithContext(ctx, input)
@@ -227,20 +227,20 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading EMR Studio (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", studio.StudioArn)
+	d.Set(names.AttrARN, studio.StudioArn)
 	d.Set("auth_mode", studio.AuthMode)
 	d.Set("default_s3_location", studio.DefaultS3Location)
-	d.Set("description", studio.Description)
+	d.Set(names.AttrDescription, studio.Description)
 	d.Set("engine_security_group_id", studio.EngineSecurityGroupId)
 	d.Set("idp_auth_url", studio.IdpAuthUrl)
 	d.Set("idp_relay_state_parameter_name", studio.IdpRelayStateParameterName)
-	d.Set("name", studio.Name)
+	d.Set(names.AttrName, studio.Name)
 	d.Set("service_role", studio.ServiceRole)
 	d.Set("url", studio.Url)
 	d.Set("user_role", studio.UserRole)
-	d.Set("vpc_id", studio.VpcId)
+	d.Set(names.AttrVPCID, studio.VpcId)
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
-	d.Set("subnet_ids", flex.FlattenStringSet(studio.SubnetIds))
+	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(studio.SubnetIds))
 
 	setTagsOut(ctx, studio.Tags)
 

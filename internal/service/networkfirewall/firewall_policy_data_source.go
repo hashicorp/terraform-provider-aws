@@ -81,7 +81,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -108,7 +108,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

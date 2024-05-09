@@ -38,25 +38,25 @@ func ResourceApplicationVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,10 +77,10 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	application := d.Get("application").(string)
-	description := d.Get("description").(string)
-	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-	name := d.Get("name").(string)
+	description := d.Get(names.AttrDescription).(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	key := d.Get(names.AttrKey).(string)
+	name := d.Get(names.AttrName).(string)
 
 	s3Location := awstypes.S3Location{
 		S3Bucket: aws.String(bucket),
@@ -129,8 +129,8 @@ func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	arn := aws.ToString(resp.ApplicationVersions[0].ApplicationVersionArn)
-	d.Set("arn", arn)
-	d.Set("description", resp.ApplicationVersions[0].Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, resp.ApplicationVersions[0].Description)
 
 	return diags
 }
@@ -139,7 +139,7 @@ func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		if err := resourceApplicationVersionDescriptionUpdate(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application Version (%s): %s", d.Id(), err)
 		}
@@ -185,8 +185,8 @@ func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceDat
 
 func resourceApplicationVersionDescriptionUpdate(ctx context.Context, conn *elasticbeanstalk.Client, d *schema.ResourceData) error {
 	application := d.Get("application").(string)
-	description := d.Get("description").(string)
-	name := d.Get("name").(string)
+	description := d.Get(names.AttrDescription).(string)
+	name := d.Get(names.AttrName).(string)
 
 	_, err := conn.UpdateApplicationVersion(ctx, &elasticbeanstalk.UpdateApplicationVersionInput{
 		ApplicationName: aws.String(application),

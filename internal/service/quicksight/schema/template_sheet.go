@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -287,7 +288,7 @@ func layoutSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+																			names.AttrStatus: stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 																		},
 																	},
 																},
@@ -894,10 +895,10 @@ func expandSheetDefinition(tfMap map[string]interface{}) *quicksight.SheetDefini
 	if v, ok := tfMap["content_type"].(string); ok && v != "" {
 		sheet.ContentType = aws.String(v)
 	}
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		sheet.Description = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		sheet.Name = aws.String(v)
 	}
 	if v, ok := tfMap["title"].(string); ok && v != "" {
@@ -1461,7 +1462,7 @@ func expandSectionAfterPageBreak(tfList []interface{}) *quicksight.SectionAfterP
 
 	config := &quicksight.SectionAfterPageBreak{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -2221,7 +2222,7 @@ func flattenSectionAfterPageBreak(apiObject *quicksight.SectionAfterPageBreak) [
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}

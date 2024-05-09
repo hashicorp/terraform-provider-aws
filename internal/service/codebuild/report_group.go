@@ -38,7 +38,7 @@ func resourceReportGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func resourceReportGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -89,7 +89,7 @@ func resourceReportGroup() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ReportExportConfigType](),
@@ -97,7 +97,7 @@ func resourceReportGroup() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -105,7 +105,7 @@ func resourceReportGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -121,12 +121,12 @@ func resourceReportGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codebuild.CreateReportGroupInput{
 		ExportConfig: expandReportGroupExportConfig(d.Get("export_config").([]interface{})),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
-		Type:         types.ReportType(d.Get("type").(string)),
+		Type:         types.ReportType(d.Get(names.AttrType).(string)),
 	}
 
 	output, err := conn.CreateReportGroup(ctx, input)
@@ -156,13 +156,13 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Report Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", reportGroup.Arn)
+	d.Set(names.AttrARN, reportGroup.Arn)
 	d.Set("created", reportGroup.Created.Format(time.RFC3339))
 	if err := d.Set("export_config", flattenReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting export config: %s", err)
 	}
-	d.Set("name", reportGroup.Name)
-	d.Set("type", reportGroup.Type)
+	d.Set(names.AttrName, reportGroup.Name)
+	d.Set(names.AttrType, reportGroup.Type)
 
 	setTagsOut(ctx, reportGroup.Tags)
 
@@ -181,7 +181,7 @@ func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.ExportConfig = expandReportGroupExportConfig(d.Get("export_config").([]interface{}))
 	}
 
-	if d.HasChange("tags_all") {
+	if d.HasChange(names.AttrTagsAll) {
 		input.Tags = getTagsIn(ctx)
 	}
 
@@ -295,7 +295,7 @@ func expandReportGroupExportConfig(tfList []interface{}) *types.ReportExportConf
 		apiObject.S3Destination = expandReportGroupS3ReportExportConfig(v.([]interface{}))
 	}
 
-	if v, ok := tfMap["type"]; ok {
+	if v, ok := tfMap[names.AttrType]; ok {
 		apiObject.ExportConfigType = types.ReportExportConfigType(v.(string))
 	}
 
@@ -309,7 +309,7 @@ func flattenReportGroupExportConfig(apiObject *types.ReportExportConfig) []map[s
 
 	tfMap := map[string]interface{}{
 		"s3_destination": flattenReportGroupS3ReportExportConfig(apiObject.S3Destination),
-		"type":           apiObject.ExportConfigType,
+		names.AttrType:   apiObject.ExportConfigType,
 	}
 
 	return []map[string]interface{}{tfMap}
@@ -323,7 +323,7 @@ func expandReportGroupS3ReportExportConfig(tfList []interface{}) *types.S3Report
 	tfMap := tfList[0].(map[string]interface{})
 	apiObject := &types.S3ReportExportConfig{}
 
-	if v, ok := tfMap["bucket"]; ok {
+	if v, ok := tfMap[names.AttrBucket]; ok {
 		apiObject.Bucket = aws.String(v.(string))
 	}
 
@@ -356,7 +356,7 @@ func flattenReportGroupS3ReportExportConfig(apiObject *types.S3ReportExportConfi
 	}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.ToString(v)
+		tfMap[names.AttrBucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.EncryptionDisabled; v != nil {

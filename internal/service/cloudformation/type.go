@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudformation_type", name="Type")
@@ -34,7 +35,7 @@ func resourceType() *schema.Resource {
 		ReadWithoutTimeout:   resourceTypeRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +47,7 @@ func resourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +108,7 @@ func resourceType() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -158,7 +159,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.LoggingConfig = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
+	if v, ok := d.GetOk(names.AttrType); ok {
 		input.Type = awstypes.RegistryType(v.(string))
 	}
 
@@ -201,10 +202,10 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("default_version_id", output.DefaultVersionId)
 	d.Set("deprecated_status", output.DeprecatedStatus)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("documentation_url", output.DocumentationUrl)
 	d.Set("execution_role_arn", output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
@@ -218,7 +219,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("provisioning_type", output.ProvisioningType)
 	d.Set("schema", output.Schema)
 	d.Set("source_url", output.SourceUrl)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 	d.Set("type_arn", typeARN)
 	d.Set("type_name", output.TypeName)
 	d.Set("version_id", versionID)

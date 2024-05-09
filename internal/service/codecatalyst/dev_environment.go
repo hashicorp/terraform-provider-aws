@@ -53,7 +53,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -69,7 +69,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				Default:  15,
 				Optional: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.InstanceType](),
@@ -125,7 +125,7 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 	storage := expandPersistentStorageConfiguration(d.Get("persistent_storage").([]interface{})[0].(map[string]interface{}))
-	instanceType := types.InstanceType(d.Get("instance_type").(string))
+	instanceType := types.InstanceType(d.Get(names.AttrInstanceType).(string))
 	in := &codecatalyst.CreateDevEnvironmentInput{
 		ProjectName:       aws.String(d.Get("project_name").(string)),
 		SpaceName:         aws.String(d.Get("space_name").(string)),
@@ -191,7 +191,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("alias", out.Alias)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set("instance_type", out.InstanceType)
+	d.Set(names.AttrInstanceType, out.InstanceType)
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 
@@ -222,8 +222,8 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		update = true
 	}
 
-	if d.HasChanges("instance_type") {
-		in.InstanceType = types.InstanceType(d.Get("instance_type").(string))
+	if d.HasChanges(names.AttrInstanceType) {
+		in.InstanceType = types.InstanceType(d.Get(names.AttrInstanceType).(string))
 		update = true
 	}
 	if !update {
@@ -396,7 +396,7 @@ func flattenIde(apiObject *types.Ide) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Runtime; v != nil {
@@ -478,7 +478,7 @@ func expandIdesConfiguration(tfList []interface{}) []types.IdeConfiguration {
 func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration {
 	apiObject := types.IdeConfiguration{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {

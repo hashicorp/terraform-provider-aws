@@ -36,7 +36,7 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
@@ -47,7 +47,7 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
@@ -58,7 +58,7 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
@@ -89,7 +89,7 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
@@ -127,7 +127,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
@@ -165,7 +165,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),

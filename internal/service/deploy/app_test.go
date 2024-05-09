@@ -37,9 +37,9 @@ func TestAccDeployApp_basic(t *testing.T) {
 				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`application:%s`, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`application:%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "linked_to_github", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
@@ -166,14 +166,14 @@ func TestAccDeployApp_name(t *testing.T) {
 				Config: testAccAppConfig_name(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
 				Config: testAccAppConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -290,7 +290,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *types.ApplicationIn
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
 
-		output, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes["name"])
+		output, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

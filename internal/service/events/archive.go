@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_archive", name="Archive")
@@ -35,11 +36,11 @@ func resourceArchive() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -59,7 +60,7 @@ func resourceArchive() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -77,13 +78,13 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateArchiveInput{
 		ArchiveName:    aws.String(name),
 		EventSourceArn: aws.String(d.Get("event_source_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -127,11 +128,11 @@ func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Archive (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ArchiveArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.ArchiveArn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("event_pattern", output.EventPattern)
 	d.Set("event_source_arn", output.EventSourceArn)
-	d.Set("name", output.ArchiveName)
+	d.Set(names.AttrName, output.ArchiveName)
 	d.Set("retention_days", output.RetentionDays)
 
 	return diags
@@ -142,10 +143,10 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	input := &eventbridge.UpdateArchiveInput{
-		ArchiveName: aws.String(d.Get("name").(string)),
+		ArchiveName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 

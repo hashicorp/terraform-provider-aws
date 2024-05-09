@@ -43,9 +43,9 @@ func resourceUserPolicy() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -82,7 +82,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	userName := d.Get("user").(string)
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get("name_prefix").(string))
+	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.PutUserPolicyInput{
 		PolicyDocument: aws.String(policyDoc),
 		PolicyName:     aws.String(policyName),
@@ -142,7 +142,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrName, policyName)
-	d.Set("name_prefix", create.NamePrefixFromName(policyName))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
 	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("user", userName)
 

@@ -40,11 +40,11 @@ func TestAccAuditManagerFramework_basic(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.controls.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexache.MustCompile(`assessmentFramework/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessmentFramework/+.`)),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccAuditManagerFramework_tags(t *testing.T) {
 				Config: testAccFrameworkConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -116,7 +116,7 @@ func TestAccAuditManagerFramework_tags(t *testing.T) {
 				Config: testAccFrameworkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -126,7 +126,7 @@ func TestAccAuditManagerFramework_tags(t *testing.T) {
 				Config: testAccFrameworkConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -154,9 +154,9 @@ func TestAccAuditManagerFramework_optional(t *testing.T) {
 				Config: testAccFrameworkConfig_optional(rName, "text1", "text1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compliance_type", "text1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "text1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text1"),
 				),
 			},
 			{
@@ -168,9 +168,9 @@ func TestAccAuditManagerFramework_optional(t *testing.T) {
 				Config: testAccFrameworkConfig_optional(rName, "text2", "text2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compliance_type", "text2"),
-					resource.TestCheckResourceAttr(resourceName, "description", "text2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text2"),
 				),
 			},
 		},
