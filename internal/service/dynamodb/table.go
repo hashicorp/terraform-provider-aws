@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -2330,14 +2332,14 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 	var errs []error
 
 	if len(unindexedAttributes) > 0 {
+		slices.Sort(unindexedAttributes)
+
 		errs = append(errs, fmt.Errorf("all attributes must be indexed. Unused attributes: %q", unindexedAttributes))
 	}
 
 	if len(indexedAttributes) > 0 {
-		missingIndexes := []string{}
-		for index := range indexedAttributes {
-			missingIndexes = append(missingIndexes, index)
-		}
+		missingIndexes := tfmaps.Keys(indexedAttributes)
+		slices.Sort(missingIndexes)
 
 		errs = append(errs, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
 	}
