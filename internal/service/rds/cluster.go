@@ -135,7 +135,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -615,7 +615,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("database_name"); ok {
+		if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 			input.DatabaseName = aws.String(v.(string))
 		}
 
@@ -741,7 +741,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v := d.Get("database_name"); v.(string) != "" {
+		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
 
@@ -983,7 +983,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
-		if v := d.Get("database_name"); v.(string) != "" {
+		if v := d.Get(names.AttrDatabaseName); v.(string) != "" {
 			input.DatabaseName = aws.String(v.(string))
 		}
 
@@ -1186,7 +1186,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// diff.
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
 	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("database_name", dbc.DatabaseName)
+		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
 	}
 	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
