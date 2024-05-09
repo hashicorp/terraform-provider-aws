@@ -555,7 +555,7 @@ func ResourceApplication() *schema.Resource {
 													},
 												},
 
-												"name_prefix": {
+												names.AttrNamePrefix: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -2029,7 +2029,7 @@ func expandInput(vInput []interface{}) *kinesisanalyticsv2.Input {
 		input.KinesisStreamsInput = kinesisStreamsInput
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		input.NamePrefix = aws.String(vNamePrefix)
 	}
 
@@ -2149,7 +2149,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 		inputUpdate.KinesisStreamsInputUpdate = kinesisStreamsInputUpdate
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		inputUpdate.NamePrefixUpdate = aws.String(vNamePrefix)
 	}
 
@@ -2652,7 +2652,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			mInput := map[string]interface{}{
 				"in_app_stream_names": flex.FlattenStringList(inputDescription.InAppStreamNames),
 				"input_id":            aws.StringValue(inputDescription.InputId),
-				"name_prefix":         aws.StringValue(inputDescription.NamePrefix),
+				names.AttrNamePrefix:  aws.StringValue(inputDescription.NamePrefix),
 			}
 
 			if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
