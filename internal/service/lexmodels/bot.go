@@ -135,7 +135,7 @@ func ResourceBot() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -321,7 +321,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("failure_reason", output.FailureReason)
 	d.Set("idle_session_ttl_in_seconds", output.IdleSessionTTLInSeconds)
 	d.Set("intent", flattenIntents(output.Intents))
-	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("locale", output.Locale)
 	d.Set(names.AttrName, output.Name)
 	d.Set("nlu_intent_confidence_threshold", output.NluIntentConfidenceThreshold)

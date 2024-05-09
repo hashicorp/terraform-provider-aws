@@ -67,7 +67,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
 					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
 					resource.TestCheckNoResourceAttr(rName, "intent"),
-					acctest.CheckResourceAttrRFC3339(rName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, "locale", "en-US"),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testBotID),
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),

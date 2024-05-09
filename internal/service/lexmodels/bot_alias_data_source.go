@@ -49,7 +49,7 @@ func DataSourceBotAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("checksum", resp.Checksum)
 	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, resp.Name)
 
 	return diags

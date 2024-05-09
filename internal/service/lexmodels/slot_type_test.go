@@ -53,7 +53,7 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
-					acctest.CheckResourceAttrRFC3339(rName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 				),
 			},
 			{

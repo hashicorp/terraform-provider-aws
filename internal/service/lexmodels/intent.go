@@ -144,7 +144,7 @@ func ResourceIntent() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -392,7 +392,7 @@ func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("checksum", resp.Checksum)
 	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, resp.Name)
 
 	version, err := FindLatestIntentVersionByName(ctx, conn, d.Id())

@@ -54,7 +54,7 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(rName, "dialog_code_hook"),
 					resource.TestCheckNoResourceAttr(rName, "follow_up_prompt"),
 					resource.TestCheckNoResourceAttr(rName, "fulfillment_activity"),
-					acctest.CheckResourceAttrRFC3339(rName, "last_updated_date"),
+					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testIntentID),
 					resource.TestCheckNoResourceAttr(rName, "parent_intent_signature"),
 					resource.TestCheckNoResourceAttr(rName, "rejection_statement"),

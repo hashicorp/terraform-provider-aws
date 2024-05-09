@@ -43,7 +43,7 @@ func TestAccLexModelsBotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_model_improvements", resourceName, "enable_model_improvements"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "failure_reason", resourceName, "failure_reason"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_session_ttl_in_seconds", resourceName, "idle_session_ttl_in_seconds"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "last_updated_date", resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrLastUpdatedDate, resourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "nlu_intent_confidence_threshold", resourceName, "nlu_intent_confidence_threshold"),
