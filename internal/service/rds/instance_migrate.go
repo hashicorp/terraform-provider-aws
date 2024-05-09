@@ -173,7 +173,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Default:  false,
 			},
 
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -917,7 +917,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"replicate_source_db"},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,

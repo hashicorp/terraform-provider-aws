@@ -911,7 +911,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"vpc_security_group_ids"},
+				ConflictsWith: []string{names.AttrVPCSecurityGroupIDs},
 			},
 			"tag_specifications": {
 				Type:     schema.TypeList,
@@ -938,7 +938,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
@@ -1089,7 +1089,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"security_group_names",
 		"tag_specifications",
 		"user_data",
-		"vpc_security_group_ids",
+		names.AttrVPCSecurityGroupIDs,
 	}
 	latestVersion := int64(d.Get("latest_version").(int))
 
@@ -1307,7 +1307,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(ctx, v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -2338,7 +2338,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 		return fmt.Errorf("setting tag_specifications: %w", err)
 	}
 	d.Set("user_data", apiObject.UserData)
-	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiObject.SecurityGroupIds))
+	d.Set(names.AttrVPCSecurityGroupIDs, aws.StringValueSlice(apiObject.SecurityGroupIds))
 
 	return nil
 }

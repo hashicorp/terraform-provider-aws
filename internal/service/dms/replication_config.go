@@ -99,7 +99,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validReplicationSubnetGroupID,
 						},
-						"vpc_security_group_ids": {
+						names.AttrVPCSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -635,7 +635,7 @@ func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
 		"multi_az":                     aws.BoolValue(apiObject.MultiAZ),
 		"preferred_maintenance_window": aws.StringValue(apiObject.PreferredMaintenanceWindow),
 		"replication_subnet_group_id":  aws.StringValue(apiObject.ReplicationSubnetGroupId),
-		"vpc_security_group_ids":       flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
+		names.AttrVPCSecurityGroupIDs:  flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
 	}
 
 	return []interface{}{tfMap}
@@ -680,7 +680,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.ReplicationSubnetGroupId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrVPCSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 

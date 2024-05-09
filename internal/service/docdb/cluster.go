@@ -257,7 +257,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -346,7 +346,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -433,7 +433,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -526,7 +526,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", securityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
 
 	return diags
 }
@@ -581,8 +581,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 			} else {
 				input.VpcSecurityGroupIds = aws.StringSlice([]string{})

@@ -344,7 +344,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 								}
 							},
 						},
-						"vpc_security_group_ids": {
+						names.AttrVPCSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -1269,7 +1269,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	}
 
 	var securityGroupIds []*string
-	if v, ok := d["vpc_security_group_ids"]; ok {
+	if v, ok := d[names.AttrVPCSecurityGroupIDs]; ok {
 		if s := v.(*schema.Set); s.Len() > 0 {
 			for _, v := range s.List() {
 				securityGroupIds = append(securityGroupIds, aws.String(v.(string)))
@@ -1940,7 +1940,7 @@ func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, r
 			securityGroupIds.Add(aws.StringValue(group.GroupId))
 		}
 	}
-	m["vpc_security_group_ids"] = securityGroupIds
+	m[names.AttrVPCSecurityGroupIDs] = securityGroupIds
 
 	if l.WeightedCapacity != nil {
 		m["weighted_capacity"] = strconv.FormatFloat(*l.WeightedCapacity, 'f', 0, 64)

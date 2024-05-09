@@ -107,7 +107,7 @@ func resourceEndpointAccess() *schema.Resource {
 					},
 				},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -126,7 +126,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		SubnetGroupName: aws.String(d.Get("subnet_group_name").(string)),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -171,7 +171,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("endpoint_name", endpoint.EndpointName)
 	d.Set("subnet_group_name", endpoint.SubnetGroupName)
-	d.Set("vpc_security_group_ids", vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
 	d.Set("resource_owner", endpoint.ResourceOwner)
 	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
 	d.Set(names.AttrPort, endpoint.Port)
@@ -188,8 +188,8 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChanges("vpc_security_group_ids") {
-		_, n := d.GetChange("vpc_security_group_ids")
+	if d.HasChanges(names.AttrVPCSecurityGroupIDs) {
+		_, n := d.GetChange(names.AttrVPCSecurityGroupIDs)
 		if n == nil {
 			n = new(schema.Set)
 		}
