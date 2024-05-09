@@ -1786,47 +1786,6 @@ func WaitVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.EC2, id stri
 	return nil, err
 }
 
-const (
-	customerGatewayCreatedTimeout = 10 * time.Minute
-	customerGatewayDeletedTimeout = 5 * time.Minute
-)
-
-func WaitCustomerGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{CustomerGatewayStatePending},
-		Target:     []string{CustomerGatewayStateAvailable},
-		Refresh:    StatusCustomerGatewayState(ctx, conn, id),
-		Timeout:    customerGatewayCreatedTimeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitCustomerGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CustomerGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{CustomerGatewayStateAvailable, CustomerGatewayStateDeleting},
-		Target:  []string{},
-		Refresh: StatusCustomerGatewayState(ctx, conn, id),
-		Timeout: customerGatewayDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.CustomerGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NatGateway, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.NatGatewayStatePending},

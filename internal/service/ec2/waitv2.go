@@ -358,3 +358,44 @@ func WaitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 
 	return nil, err
 }
+
+const (
+	customerGatewayCreatedTimeout = 10 * time.Minute
+	customerGatewayDeletedTimeout = 5 * time.Minute
+)
+
+func WaitCustomerGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.CustomerGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(CustomerGatewayStatePending),
+		Target:     enum.Slice(CustomerGatewayStateAvailable),
+		Refresh:    StatusCustomerGatewayState(ctx, conn, id),
+		Timeout:    customerGatewayCreatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.CustomerGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(CustomerGatewayStateAvailable, CustomerGatewayStateDeleting),
+		Target:  []string{},
+		Refresh: StatusCustomerGatewayState(ctx, conn, id),
+		Timeout: customerGatewayDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}

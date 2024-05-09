@@ -9,9 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -68,40 +69,40 @@ func dataSourceVPNGateway() *schema.Resource {
 
 func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpnGatewaysInput{}
 
 	if id, ok := d.GetOk(names.AttrID); ok {
-		input.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
+		input.VpnGatewayIds = []string{id.(string)}
 	}
 
-	input.Filters = newAttributeFilterList(
+	input.Filters = newAttributeFilterListV2(
 		map[string]string{
 			names.AttrState:     d.Get(names.AttrState).(string),
 			"availability-zone": d.Get(names.AttrAvailabilityZone).(string),
 		},
 	)
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		input.Filters = append(input.Filters, newAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterListV2(
 			map[string]string{
 				"amazon-side-asn": asn.(string),
 			},
 		)...)
 	}
 	if id, ok := d.GetOk("attached_vpc_id"); ok {
-		input.Filters = append(input.Filters, newAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterListV2(
 			map[string]string{
 				"attachment.state":  "attached",
 				"attachment.vpc-id": id.(string),
 			},
 		)...)
 	}
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
@@ -115,19 +116,19 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))
 	}
 
-	d.SetId(aws.StringValue(vgw.VpnGatewayId))
+	d.SetId(aws.ToString(vgw.VpnGatewayId))
 
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vgw.AmazonSideAsn), 10))
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(vgw.AmazonSideAsn), 10))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
 	for _, attachment := range vgw.VpcAttachments {
-		if aws.StringValue(attachment.State) == ec2.AttachmentStatusAttached {
+		if attachment.State == awstypes.AttachmentStatusAttached {
 			d.Set("attached_vpc_id", attachment.VpcId)
 			break
 		}

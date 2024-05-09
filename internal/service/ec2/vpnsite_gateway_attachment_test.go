@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcAttachment
+	var v awstypes.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -43,7 +43,7 @@ func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 
 func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpcAttachment
+	var v awstypes.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -65,7 +65,7 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *ec2.VpcAttachment) resource.TestCheckFunc {
+func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *awstypes.VpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -76,7 +76,7 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *ec
 			return fmt.Errorf("No EC2 VPN Gateway Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNGatewayVPCAttachment(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
 
@@ -92,7 +92,7 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *ec
 
 func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_gateway_attachment" {

@@ -5,10 +5,13 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,11 +48,11 @@ func resourceVPNGatewayRoutePropagation() *schema.Resource {
 
 func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
-	err := routeTableEnableVGWRoutePropagation(ctx, conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
+	err := routeTableEnableVGWRoutePropagationV2(ctx, conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -62,7 +65,7 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 
 func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
@@ -70,7 +73,7 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = routeTableDisableVGWRoutePropagation(ctx, conn, routeTableID, gatewayID)
+	err = routeTableDisableVGWRoutePropagationV2(ctx, conn, routeTableID, gatewayID)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return diags
@@ -81,7 +84,7 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 
 func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
@@ -102,4 +105,44 @@ func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.Resou
 	}
 
 	return diags
+}
+
+// routeTableDisableVGWRoutePropagation attempts to disable VGW route propagation.
+// Any error is returned.
+func routeTableDisableVGWRoutePropagationV2(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
+	input := &ec2.DisableVgwRoutePropagationInput{
+		GatewayId:    aws.String(gatewayID),
+		RouteTableId: aws.String(routeTableID),
+	}
+
+	_, err := conn.DisableVgwRoutePropagation(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("disabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
+	}
+
+	return nil
+}
+
+// routeTableEnableVGWRoutePropagation attempts to enable VGW route propagation.
+// The specified eventual consistency timeout is respected.
+// Any error is returned.
+func routeTableEnableVGWRoutePropagationV2(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string, timeout time.Duration) error {
+	input := &ec2.EnableVgwRoutePropagationInput{
+		GatewayId:    aws.String(gatewayID),
+		RouteTableId: aws.String(routeTableID),
+	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
+		func() (interface{}, error) {
+			return conn.EnableVgwRoutePropagation(ctx, input)
+		},
+		errCodeGatewayNotAttached,
+	)
+
+	if err != nil {
+		return fmt.Errorf("enabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
+	}
+
+	return nil
 }
