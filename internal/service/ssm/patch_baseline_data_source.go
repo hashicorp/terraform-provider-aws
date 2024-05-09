@@ -66,7 +66,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -94,7 +94,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

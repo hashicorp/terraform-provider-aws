@@ -82,7 +82,7 @@ func resourcePatchBaseline() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 20,
@@ -137,7 +137,7 @@ func resourcePatchBaseline() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 20,
@@ -455,7 +455,7 @@ func expandPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {
 
 		filter := &ssm.PatchFilter{
 			Key:    aws.String(config[names.AttrKey].(string)),
-			Values: flex.ExpandStringList(config["values"].([]interface{})),
+			Values: flex.ExpandStringList(config[names.AttrValues].([]interface{})),
 		}
 
 		filters = append(filters, filter)
@@ -476,7 +476,7 @@ func flattenPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]interface
 	for _, filter := range group.PatchFilters {
 		f := make(map[string]interface{})
 		f[names.AttrKey] = aws.StringValue(filter.Key)
-		f["values"] = flex.FlattenStringList(filter.Values)
+		f[names.AttrValues] = flex.FlattenStringList(filter.Values)
 
 		result = append(result, f)
 	}
@@ -500,7 +500,7 @@ func expandPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 
 			filter := &ssm.PatchFilter{
 				Key:    aws.String(fCfg[names.AttrKey].(string)),
-				Values: flex.ExpandStringList(fCfg["values"].([]interface{})),
+				Values: flex.ExpandStringList(fCfg[names.AttrValues].([]interface{})),
 			}
 
 			filters = append(filters, filter)

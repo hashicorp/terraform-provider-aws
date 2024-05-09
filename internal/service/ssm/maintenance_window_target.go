@@ -68,7 +68,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 								validation.StringLenBetween(1, 163),
 							),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,

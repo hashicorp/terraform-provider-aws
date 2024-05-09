@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssm_parameters_by_path")
@@ -44,7 +45,7 @@ func DataSourceParametersByPath() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"values": {
+			names.AttrValues: {
 				Type:      schema.TypeList,
 				Computed:  true,
 				Sensitive: true,
@@ -98,7 +99,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	d.Set("arns", arns)
 	d.Set("names", names)
 	d.Set("types", types)
-	d.Set("values", values)
+	d.Set(names.AttrValues, values)
 
 	return diags
 }
