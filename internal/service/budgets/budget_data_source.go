@@ -25,7 +25,7 @@ func DataSourceBudget() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBudgetRead,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -276,11 +276,11 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	if err != nil {
