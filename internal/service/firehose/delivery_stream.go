@@ -735,7 +735,7 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"access_key": {
+							names.AttrAccessKey: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 4096),
@@ -2938,7 +2938,7 @@ func expandHTTPEndpointConfiguration(ep map[string]interface{}) *types.HttpEndpo
 		endpointConfiguration.Name = aws.String(Name.(string))
 	}
 
-	if AccessKey, ok := ep["access_key"]; ok {
+	if AccessKey, ok := ep[names.AttrAccessKey]; ok {
 		endpointConfiguration.AccessKey = aws.String(AccessKey.(string))
 	}
 
@@ -3812,7 +3812,7 @@ func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDe
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		"access_key":                 configuredAccessKey,
+		names.AttrAccessKey:          configuredAccessKey,
 		"url":                        aws.ToString(description.EndpointConfiguration.Url),
 		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
