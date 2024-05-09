@@ -116,7 +116,7 @@ func ResourceGameServerGroup() *schema.Resource {
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(gamelift.GameServerGroupInstanceType_Values(), false),
@@ -413,7 +413,7 @@ func expandInstanceDefinition(tfMap map[string]interface{}) *gamelift.InstanceDe
 	}
 
 	apiObject := &gamelift.InstanceDefinition{
-		InstanceType: aws.String(tfMap["instance_type"].(string)),
+		InstanceType: aws.String(tfMap[names.AttrInstanceType].(string)),
 	}
 
 	if v, ok := tfMap["weighted_capacity"].(string); ok && v != "" {
@@ -501,7 +501,7 @@ func flattenInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[strin
 	}
 
 	tfMap := map[string]interface{}{
-		"instance_type": aws.StringValue(apiObject.InstanceType),
+		names.AttrInstanceType: aws.StringValue(apiObject.InstanceType),
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {

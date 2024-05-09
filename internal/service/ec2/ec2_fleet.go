@@ -85,7 +85,7 @@ func ResourceFleet() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -427,7 +427,7 @@ func ResourceFleet() *schema.Resource {
 											},
 										},
 									},
-									"instance_type": {
+									names.AttrInstanceType: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -1071,7 +1071,7 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 		apiObject.InstanceRequirements = expandInstanceRequirementsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
@@ -1298,7 +1298,7 @@ func flattenFleetInstances(apiObject *ec2.DescribeFleetsInstances) map[string]in
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Lifecycle; v != nil {
@@ -1445,7 +1445,7 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MaxPrice; v != nil {

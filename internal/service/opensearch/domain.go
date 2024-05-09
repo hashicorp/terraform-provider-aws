@@ -271,7 +271,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
@@ -1248,7 +1248,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := m["instance_type"]; ok {
+	if v, ok := m[names.AttrInstanceType]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
 
@@ -1339,7 +1339,7 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 		m["instance_count"] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(c.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)
 	}
 	if c.MultiAZWithStandbyEnabled != nil {
 		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)

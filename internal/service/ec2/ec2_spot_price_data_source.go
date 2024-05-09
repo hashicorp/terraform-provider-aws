@@ -27,7 +27,7 @@ func DataSourceSpotPrice() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": customFiltersSchema(),
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 		StartTime: &now,
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		instanceType := v.(string)
 		input.InstanceTypes = []*string{
 			aws.String(instanceType),
