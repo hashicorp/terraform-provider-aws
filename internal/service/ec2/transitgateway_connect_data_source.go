@@ -29,7 +29,7 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": customFiltersSchema(),
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId))
-	d.Set("protocol", transitGatewayConnect.Options.Protocol)
+	d.Set(names.AttrProtocol, transitGatewayConnect.Options.Protocol)
 	d.Set("transit_gateway_connect_id", transitGatewayConnect.TransitGatewayAttachmentId)
 	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)

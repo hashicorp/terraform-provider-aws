@@ -136,7 +136,7 @@ func networkACLRuleNestedBlock() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -390,7 +390,7 @@ func networkACLRuleHash(v interface{}) int {
 
 	// The AWS network ACL API only speaks protocol numbers, and that's
 	// all we store. Never hash a protocol name.
-	protocolNumber, _ := networkACLProtocolNumber(tfMap["protocol"].(string))
+	protocolNumber, _ := networkACLProtocolNumber(tfMap[names.AttrProtocol].(string))
 	buf.WriteString(fmt.Sprintf("%d-", protocolNumber))
 
 	if v, ok := tfMap["cidr_block"]; ok {
@@ -531,7 +531,7 @@ func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 		apiObject.PortRange.To = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		protocolNumber, err := networkACLProtocolNumber(v)
 
 		if err != nil {
@@ -627,7 +627,7 @@ func flattenNetworkACLEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 			return nil
 		}
 
-		tfMap["protocol"] = strconv.Itoa(protocolNumber)
+		tfMap[names.AttrProtocol] = strconv.Itoa(protocolNumber)
 	}
 
 	if apiObject := apiObject.IcmpTypeCode; apiObject != nil {

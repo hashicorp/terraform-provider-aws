@@ -102,7 +102,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
@@ -131,7 +131,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
@@ -387,7 +387,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap["protocol"] = v
+		tfmap[names.AttrProtocol] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
@@ -413,7 +413,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap["protocol"] = v
+		tfmap[names.AttrProtocol] = v
 	}
 
 	return []interface{}{tfmap}
@@ -452,7 +452,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
@@ -478,7 +478,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiobject
@@ -495,7 +495,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
@@ -517,7 +517,7 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiObject

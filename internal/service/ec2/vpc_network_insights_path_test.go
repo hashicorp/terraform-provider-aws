@@ -39,7 +39,7 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", "aws_network_interface.test.1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "tcp"),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test.0", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", ""),

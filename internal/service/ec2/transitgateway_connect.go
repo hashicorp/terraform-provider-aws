@@ -44,7 +44,7 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"protocol": {
+			names.AttrProtocol: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -87,7 +87,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	transportAttachmentID := d.Get("transport_attachment_id").(string)
 	input := &ec2.CreateTransitGatewayConnectInput{
 		Options: &ec2.CreateTransitGatewayConnectRequestOptions{
-			Protocol: aws.String(d.Get("protocol").(string)),
+			Protocol: aws.String(d.Get(names.AttrProtocol).(string)),
 		},
 		TagSpecifications:                   getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
 		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
@@ -193,7 +193,7 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	d.Set("protocol", transitGatewayConnect.Options.Protocol)
+	d.Set(names.AttrProtocol, transitGatewayConnect.Options.Protocol)
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
 	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)

@@ -140,7 +140,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -273,7 +273,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -327,7 +327,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -436,7 +436,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -625,7 +625,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1109,7 +1109,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1597,7 +1597,7 @@ func flattenAnalysisAclRule(apiObject *ec2.AnalysisAclRule) map[string]interface
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RuleAction; v != nil {
@@ -1711,7 +1711,7 @@ func flattenAnalysisPacketHeader(apiObject *ec2.AnalysisPacketHeader) map[string
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceAddresses; v != nil {
@@ -1795,7 +1795,7 @@ func flattenAnalysisSecurityGroupRule(apiObject *ec2.AnalysisSecurityGroupRule) 
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityGroupId; v != nil {
