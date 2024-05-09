@@ -566,6 +566,5 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
-* `minified_json` - Minified JSON policy document rendered based on the arguments above.
 
 <!-- cache-key: cdktf-0.20.1 input-c602f06a4415d21639bfb95fc6d2eb21bd336984864688c93e5e0c70aab27794 -->
