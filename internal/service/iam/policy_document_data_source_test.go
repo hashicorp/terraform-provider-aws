@@ -29,11 +29,6 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
 						testAccPolicyDocumentExpectedJSON(),
 					),
-				),
-			},
-			{
-				Config: testAccPolicyDocumentDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "minified_json",
 						testAccPolicyDocumentExpectedJSONMinified(),
 					),
