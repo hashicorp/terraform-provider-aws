@@ -207,7 +207,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,
@@ -686,7 +686,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,
@@ -1295,7 +1295,7 @@ func expandUserSettings(l []interface{}) *sagemaker.UserSettings {
 		config.RSessionAppSettings = expandRSessionAppSettings(v)
 	}
 
-	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		config.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
@@ -1804,7 +1804,7 @@ func flattenUserSettings(config *sagemaker.UserSettings) []map[string]interface{
 	}
 
 	if config.SecurityGroups != nil {
-		m["security_groups"] = flex.FlattenStringSet(config.SecurityGroups)
+		m[names.AttrSecurityGroups] = flex.FlattenStringSet(config.SecurityGroups)
 	}
 
 	if config.SharingSettings != nil {
@@ -2251,7 +2251,7 @@ func expanDefaultSpaceSettings(l []interface{}) *sagemaker.DefaultSpaceSettings 
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
-	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		config.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
@@ -2278,7 +2278,7 @@ func flattenDefaultSpaceSettings(config *sagemaker.DefaultSpaceSettings) []map[s
 	}
 
 	if config.SecurityGroups != nil {
-		m["security_groups"] = flex.FlattenStringSet(config.SecurityGroups)
+		m[names.AttrSecurityGroups] = flex.FlattenStringSet(config.SecurityGroups)
 	}
 
 	return []map[string]interface{}{m}
