@@ -103,7 +103,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain", acmCertificateResourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain", acmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
