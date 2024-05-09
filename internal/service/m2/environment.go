@@ -87,7 +87,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"engine_version": schema.StringAttribute{
+			names.AttrEngineVersion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
