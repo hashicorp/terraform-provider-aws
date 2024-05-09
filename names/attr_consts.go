@@ -37,6 +37,7 @@ const (
 	AttrPolicy                     = "policy"
 	AttrPort                       = "port"
 	AttrPreferredMaintenanceWindow = "preferred_maintenance_window"
+	AttrProtocol                   = "protocol"
 	AttrResourceARN                = "resource_arn"
 	AttrRoleARN                    = "role_arn"
 	AttrSecurityGroupIDs           = "security_group_ids"
