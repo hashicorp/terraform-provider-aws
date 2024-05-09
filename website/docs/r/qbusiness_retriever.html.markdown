@@ -16,8 +16,30 @@ Provides a Q Business Retriever resource.
 resource "aws_qbusiness_retriever" "example" {
   application_id = "aws_qbusiness_app.test.application_id"
   display_name   = "Retriever display name"
+
   native_index_configuration {
     index_id = aws_qbusiness_index.test.index_id
+
+    string_boost_override {
+      boost_key      = "string"
+      boosting_level = "HIGH"
+      attribute_value_boosting = {
+        "key1" = "VERY_HIGH"
+        "key2" = "VERY_HIGH"
+      }
+    }
+
+    number_boost_override {
+      boost_key      = "number1"
+      boosting_level = "HIGH"
+      boosting_type  = "PRIORITIZE_LARGER_VALUES"
+    }
+
+    number_boost_override {
+      boost_key      = "number2"
+      boosting_level = "LOW"
+      boosting_type  = "PRIORITIZE_SMALLER_VALUES"
+    }
   }
 }
 ```
@@ -39,6 +61,33 @@ This resource supports the following arguments:
 `native_index_configuration` supports the following:
 
 * `index_id` - (Required) Identifier for the Amazon Q index.
+* `date_boost_override` - (Optional) Provides information on boosting `DATE` type document attributes.
+* `number_boost_override` - (Optional) Provides information on boosting `NUMBER` type document attributes.
+* `string_boost_override` - (Optional) Provides information on boosting `STRING` type document attributes.
+* `string_list_boost_override` - (Optional) Provides information on boosting `STRING_LIST` type document attributes.
+
+`date_boost_override` supports the following:
+
+* `boost_key` - (Required) Document attribute name
+* `boosting_level` - (Required) Specifies how much a document attribute is boosted. Values are `NONE`, `LOW`, `MEDIUM`, `HIGH`, `VERY_HIGH`
+* `boosting_duration` - (Required) Specifies the duration, in seconds, of a boost applies to a DATE type document attribute
+
+`number_boost_override` supports the following:
+
+* `boost_key` - (Required) Document attribute name
+* `boosting_level` - (Required) Specifies how much a document attribute is boosted. Values are `NONE`, `LOW`, `MEDIUM`, `HIGH`, `VERY_HIGH`
+* `boosting_type` - (Required) Specifies how much a document attribute is boosted. Values are `PRIORITIZE_LARGER_VALUES`, `PRIORITIZE_SMALLER_VALUES`
+
+`string_boost_override` supports the following:
+
+* `boost_key` - (Required) Document attribute name
+* `boosting_level` - (Required) Specifies how much a document attribute is boosted. Values are `NONE`, `LOW`, `MEDIUM`, `HIGH`, `VERY_HIGH`
+* `attribute_value_boosting` - (Required) Specifies specific values of a STRING type document attribute being boosted. String to string map
+
+`string_list_boost_override` supports the following:
+
+* `boost_key` - (Required) Document attribute name
+* `boosting_level` - (Required) Specifies how much a document attribute is boosted. Values are `NONE`, `LOW`, `MEDIUM`, `HIGH`, `VERY_HIGH`
 
 ## Attribute Reference
 
