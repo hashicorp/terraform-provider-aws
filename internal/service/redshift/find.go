@@ -481,7 +481,7 @@ func findIntegrationByARN(ctx context.Context, conn *redshift.Client, arn string
 	return findIntegration(ctx, conn, &input)
 }
 
-func findIDCApplicationByArn(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.RedshiftIdcApplication, error) {
+func findIDCApplicationByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.RedshiftIdcApplication, error) {
 	input := &redshift.DescribeRedshiftIdcApplicationsInput{
 		RedshiftIdcApplicationArn: aws.String(arn),
 	}
