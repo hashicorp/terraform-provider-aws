@@ -73,7 +73,7 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*licensemanager_sdkv1.LicenseManager, error) {
 	sess := config["session"].(*session_sdkv1.Session)
 
-	return licensemanager_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return licensemanager_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
