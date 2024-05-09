@@ -54,6 +54,7 @@ const (
 	AttrType                       = "type"
 	AttrVPCSecurityGroupIDs        = "vpc_security_group_ids"
 	AttrValue                      = "value"
+	AttrValues                     = "values"
 	AttrVersion                    = "version"
 	AttrVPCID                      = "vpc_id"
 )

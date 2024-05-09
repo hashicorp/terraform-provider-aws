@@ -72,7 +72,7 @@ func ResourceResponsePlan() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},

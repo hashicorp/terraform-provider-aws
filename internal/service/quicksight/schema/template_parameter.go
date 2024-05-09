@@ -388,7 +388,7 @@ func parameterSelectableValuesSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"link_to_data_set_column": columnSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -746,7 +746,7 @@ func expandParameterSelectableValues(tfList []interface{}) *quicksight.Parameter
 	if v, ok := tfMap["link_to_data_set_column"].([]interface{}); ok && len(v) > 0 {
 		values.LinkToDataSetColumn = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		values.Values = flex.ExpandStringList(v)
 	}
 
@@ -1080,7 +1080,7 @@ func flattenParameterSelectableValues(apiObject *quicksight.ParameterSelectableV
 		tfMap["link_to_data_set_column"] = flattenColumnIdentifier(apiObject.LinkToDataSetColumn)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flex.FlattenStringList(apiObject.Values)
+		tfMap[names.AttrValues] = flex.FlattenStringList(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

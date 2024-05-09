@@ -291,7 +291,7 @@ func expandParameters(parameters *schema.Set) map[string][]string {
 	for _, parameter := range parameters.List() {
 		parameterData := parameter.(map[string]interface{})
 		name := parameterData[names.AttrName].(string)
-		values := flex.ExpandStringValueSet(parameterData["values"].(*schema.Set))
+		values := flex.ExpandStringValueSet(parameterData[names.AttrValues].(*schema.Set))
 		parameterMap[name] = values
 	}
 	return parameterMap
@@ -302,7 +302,7 @@ func flattenParameters(parameterMap map[string][]string) []map[string]interface{
 	for name, values := range parameterMap {
 		data := make(map[string]interface{})
 		data[names.AttrName] = name
-		data["values"] = flex.FlattenStringValueList(values)
+		data[names.AttrValues] = flex.FlattenStringValueList(values)
 		result = append(result, data)
 	}
 	return result
