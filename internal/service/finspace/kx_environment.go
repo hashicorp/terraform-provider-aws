@@ -166,7 +166,7 @@ func ResourceKxEnvironment() *schema.Resource {
 											},
 										},
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 5),
@@ -600,7 +600,7 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
 		a.RuleNumber = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		a.Protocol = &v
 	}
 	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
@@ -729,10 +729,10 @@ func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) 
 	}
 
 	m := map[string]interface{}{
-		"cidr_block":  aws.ToString(apiObject.CidrBlock),
-		"protocol":    aws.ToString(apiObject.Protocol),
-		"rule_action": apiObject.RuleAction,
-		"rule_number": apiObject.RuleNumber,
+		"cidr_block":       aws.ToString(apiObject.CidrBlock),
+		names.AttrProtocol: aws.ToString(apiObject.Protocol),
+		"rule_action":      apiObject.RuleAction,
+		"rule_number":      apiObject.RuleNumber,
 	}
 
 	if v := apiObject.PortRange; v != nil {
