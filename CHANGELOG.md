@@ -9,6 +9,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_iam_policy_document: Add `minified_json` attribute ([#35677](https://github.com/hashicorp/terraform-provider-aws/issues/35677))
 * resource/aws_dynamodb_table_export: Add plan-time validation of `table_arn` ([#37288](https://github.com/hashicorp/terraform-provider-aws/issues/37288))
 * resource/aws_kms_key: Add `rotation_period_in_days` argument ([#37140](https://github.com/hashicorp/terraform-provider-aws/issues/37140))
 * resource/aws_securitylake_subscriber_notification: Better handles importing resource ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
