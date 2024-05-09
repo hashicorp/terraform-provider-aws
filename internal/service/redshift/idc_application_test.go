@@ -33,7 +33,7 @@ func TestAccRedshiftIdcApplication_basic(t *testing.T) {
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdcApplicationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "idc_display_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "idc_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
@@ -89,7 +89,7 @@ func TestAccRedshiftIdcApplication_authorizedTokenIssuerList(t *testing.T) {
 					testAccCheckIdcApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer_list.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer_list.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer_list.0.authorized_audiences_list.0", "client_id"),
 				),
@@ -219,13 +219,14 @@ resource "aws_iam_role_policy_attachment" "test2" {
 func testAccIdcApplicationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
 
+
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_redshift_idc_application" "test" {
-  iam_role_arn = aws_iam_role.test.arn
-  idc_display_name = %[1]q
-  idc_instance_arn  = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  identity_namespace = %[1]q
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  identity_namespace            = %[1]q
   redshift_idc_application_name = %[1]q
 }
 `, rName))
@@ -252,14 +253,15 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_redshift_idc_application" "test" {
   authorized_token_issuer_list {
-	authorized_audiences_list = ["client_id"]
-	trusted_token_issuer_arn = aws_ssoadmin_trusted_token_issuer.test.arn
+    authorized_audiences_list = ["client_id"]
+    trusted_token_issuer_arn  = aws_ssoadmin_trusted_token_issuer.test.arn
   }
-  iam_role_arn = aws_iam_role.test.arn
-  idc_display_name = %[1]q
-  idc_instance_arn  = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   redshift_idc_application_name = %[1]q
 }
+
 
 `, rName))
 }
@@ -267,21 +269,23 @@ resource "aws_redshift_idc_application" "test" {
 func testAccIdcApplicationConfig_serviceIntegrations(rName string) string {
 	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
 
+
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_redshift_idc_application" "test" {
-	iam_role_arn = aws_iam_role.test.arn
-	idc_display_name = %[1]q
-	idc_instance_arn  = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-	redshift_idc_application_name = %[1]q
-	  service_integrations {
-		lake_formation {
-			lake_formation_query = {
-				authorization = "Enabled"
-			}
-		}
-	}
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  redshift_idc_application_name = %[1]q
+  service_integrations {
+    lake_formation {
+      lake_formation_query = {
+        authorization = "Enabled"
+      }
+    }
+  }
 }
+
 
 `, rName))
 }

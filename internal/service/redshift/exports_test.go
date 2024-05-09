@@ -41,6 +41,7 @@ var (
 	FindHSMClientCertificateByID                = findHSMClientCertificateByID
 	FindHSMConfigurationByID                    = findHSMConfigurationByID
 	FindIntegrationByARN                        = findIntegrationByARN
+	FindIdcApplicationByArn                     = findIdcApplicationByArn
 	FindLoggingByID                             = findLoggingByID
 	FindParameterGroupByName                    = findParameterGroupByName
 	FindPartnerByID                             = findPartnerByID
