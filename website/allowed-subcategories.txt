@@ -18,6 +18,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (Mgn)
 Athena
 Audit Manager
 Auto Scaling
