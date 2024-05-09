@@ -128,7 +128,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"vpc_security_group_ids": schema.SetAttribute{
+			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
