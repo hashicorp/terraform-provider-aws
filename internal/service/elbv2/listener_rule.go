@@ -180,7 +180,7 @@ func ResourceListenerRule() *schema.Resource {
 										Default:  "#{port}",
 									},
 
-									"protocol": {
+									names.AttrProtocol: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{protocol}",
