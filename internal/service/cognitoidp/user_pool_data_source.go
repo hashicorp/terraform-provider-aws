@@ -96,7 +96,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 						"recovery_mechanism": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										Computed: true,
 									},
 									"priority": schema.Int64Attribute{
@@ -186,7 +186,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 						"define_auth_challenge": schema.StringAttribute{
 							Computed: true,
 						},
-						"kms_key_id": schema.StringAttribute{
+						names.AttrKMSKeyID: schema.StringAttribute{
 							Computed: true,
 						},
 						"post_authentication": schema.StringAttribute{
@@ -267,7 +267,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 						"mutable": schema.BoolAttribute{
 							Computed: true,
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Computed: true,
 						},
 						"required": schema.BoolAttribute{

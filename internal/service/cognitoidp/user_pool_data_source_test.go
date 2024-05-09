@@ -39,7 +39,7 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 				Config: testAccUserPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "cognito-idp", regexache.MustCompile(`userpool/.*`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 				),
 			},
@@ -67,7 +67,7 @@ func TestAccCognitoIDPUserPoolDataSource_schemaAttributes(t *testing.T) {
 				Config: testAccUserPoolDataSourceConfig_schemaAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					testSchemaAttributes(ctx, dataSourceName),
 				),
 			},
