@@ -45,7 +45,7 @@ func resourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -789,7 +789,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	route := outputRaw.(*appmesh.RouteData)
 	arn := aws.StringValue(route.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
 	d.Set("mesh_owner", route.Metadata.MeshOwner)

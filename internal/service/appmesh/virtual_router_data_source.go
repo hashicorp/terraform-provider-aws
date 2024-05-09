@@ -28,7 +28,7 @@ func dataSourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -75,7 +75,7 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(aws.StringValue(vr.VirtualRouterName))
 	arn := aws.StringValue(vr.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", vr.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
 	meshOwner := aws.StringValue(vr.Metadata.MeshOwner)

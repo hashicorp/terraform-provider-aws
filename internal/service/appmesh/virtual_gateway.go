@@ -45,7 +45,7 @@ func resourceVirtualGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -702,7 +702,7 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(virtualGateway.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	d.Set("mesh_owner", virtualGateway.Metadata.MeshOwner)
