@@ -37,7 +37,7 @@ func (d *dataSourceUserPool) Metadata(_ context.Context, req datasource.Metadata
 func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"auto_verified_attributes": schema.ListAttribute{
@@ -60,7 +60,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			"estimated_number_of_users": schema.Int64Attribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
 			"last_modified_date": schema.StringAttribute{
@@ -69,7 +69,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			"mfa_configuration": schema.StringAttribute{
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
 			"sms_authentication_message": schema.StringAttribute{
