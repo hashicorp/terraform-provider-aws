@@ -61,7 +61,7 @@ func ResourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -235,7 +235,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
+	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("listener_id", out.Id)
 	d.Set(names.AttrName, out.Name)
