@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_acm_certificate")
@@ -25,7 +26,7 @@ func dataSourceCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +55,7 @@ func dataSourceCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +64,7 @@ func dataSourceCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -214,8 +215,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(aws.ToString(matchedCertificate.CertificateArn))
-	d.Set("arn", matchedCertificate.CertificateArn)
-	d.Set("status", matchedCertificate.Status)
+	d.Set(names.AttrARN, matchedCertificate.CertificateArn)
+	d.Set(names.AttrStatus, matchedCertificate.Status)
 
 	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
 
@@ -223,7 +224,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

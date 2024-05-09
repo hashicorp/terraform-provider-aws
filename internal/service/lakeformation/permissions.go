@@ -65,7 +65,7 @@ func ResourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -303,7 +303,7 @@ func ResourcePermissions() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -369,7 +369,7 @@ func ResourcePermissions() *schema.Resource {
 								"table_with_columns.0.wildcard",
 							},
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -867,7 +867,7 @@ func ExpandDataCellsFilter(in []interface{}) *awstypes.DataCellsFilterResource {
 	m := in[0].(map[string]interface{})
 	var out awstypes.DataCellsFilterResource
 
-	if v, ok := m["database_name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrDatabaseName].(string); ok && v != "" {
 		out.DatabaseName = aws.String(v)
 	}
 
@@ -892,10 +892,10 @@ func flattenDataCellsFilter(in *awstypes.DataCellsFilterResource) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"database_name":    aws.ToString(in.DatabaseName),
-		names.AttrName:     aws.ToString(in.Name),
-		"table_catalog_id": aws.ToString(in.TableCatalogId),
-		"table_name":       aws.ToString(in.TableName),
+		names.AttrDatabaseName: aws.ToString(in.DatabaseName),
+		names.AttrName:         aws.ToString(in.Name),
+		"table_catalog_id":     aws.ToString(in.TableCatalogId),
+		"table_name":           aws.ToString(in.TableName),
 	}
 
 	return []interface{}{m}
@@ -1109,7 +1109,7 @@ func ExpandTableResource(tfMap map[string]interface{}) *awstypes.TableResource {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -1135,7 +1135,7 @@ func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *awstyp
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -1158,7 +1158,7 @@ func flattenTableResource(apiObject *awstypes.TableResource) map[string]interfac
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -1191,7 +1191,7 @@ func expandTableColumnsResource(tfMap map[string]interface{}) *awstypes.TableWit
 		}
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -1228,7 +1228,7 @@ func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) m
 	tfMap["column_names"] = flex.FlattenStringValueSet(apiObject.ColumnNames)
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ColumnWildcard; v != nil {
@@ -1258,7 +1258,7 @@ func flattenTableColumnsResourceAsTable(apiObject *awstypes.TableWithColumnsReso
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil && aws.ToString(v) == TableNameAllTables && apiObject.ColumnWildcard != nil {

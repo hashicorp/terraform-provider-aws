@@ -55,7 +55,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				MaxItems: 5,
 				Optional: true,
@@ -98,7 +98,7 @@ func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.R
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		in.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -139,7 +139,7 @@ func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.Res
 	d.Set("created_by", out.CreatedBy)
 	d.Set("vpc_identifier", out.VpcId)
 	d.Set("service_network_identifier", out.ServiceNetworkId)
-	d.Set("security_group_ids", out.SecurityGroupIds)
+	d.Set(names.AttrSecurityGroupIDs, out.SecurityGroupIds)
 	d.Set(names.AttrStatus, out.Status)
 
 	return nil
@@ -152,8 +152,8 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 			ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("security_group_ids") {
-			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get("security_group_ids").([]interface{}))
+		if d.HasChange(names.AttrSecurityGroupIDs) {
+			in.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork VPC Association (%s): %#v", d.Id(), in)

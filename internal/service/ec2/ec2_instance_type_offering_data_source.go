@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_instance_type_offering")
@@ -27,7 +28,7 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": customFiltersSchema(),
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +110,7 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(resultInstanceType)
-	d.Set("instance_type", resultInstanceType)
+	d.Set(names.AttrInstanceType, resultInstanceType)
 
 	return diags
 }

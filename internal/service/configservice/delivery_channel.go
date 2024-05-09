@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_delivery_channel", name="Delivery Channel")
@@ -36,7 +37,7 @@ func resourceDeliveryChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -83,7 +84,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &configservice.PutDeliveryChannelInput{
 		DeliveryChannel: &types.DeliveryChannel{
 			Name:         aws.String(name),
@@ -144,7 +145,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Delivery Channel (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", channel.Name)
+	d.Set(names.AttrName, channel.Name)
 	d.Set("s3_bucket_name", channel.S3BucketName)
 	d.Set("s3_key_prefix", channel.S3KeyPrefix)
 	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)

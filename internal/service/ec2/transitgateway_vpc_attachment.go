@@ -74,7 +74,7 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -98,7 +98,7 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayID := d.Get("transit_gateway_id").(string)
+	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 	input := &ec2.CreateTransitGatewayVpcAttachmentInput{
 		Options: &ec2.CreateTransitGatewayVpcAttachmentRequestOptions{
 			ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
@@ -214,7 +214,7 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
-	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
 	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
@@ -259,7 +259,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	}
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
-		transitGatewayID := d.Get("transit_gateway_id").(string)
+		transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 		transitGateway, err := FindTransitGatewayByID(ctx, conn, transitGatewayID)
 
 		if err != nil {

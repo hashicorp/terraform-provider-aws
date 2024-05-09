@@ -37,7 +37,7 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", version),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
@@ -71,8 +71,8 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 				Config: testAccDocumentationVersionConfig_allFields(version, apiName, stageName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", version),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, version),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
@@ -85,8 +85,8 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 				Config: testAccDocumentationVersionConfig_allFields(version, apiName, stageName, uDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", version),
-					resource.TestCheckResourceAttr(resourceName, "description", uDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, version),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, uDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
@@ -129,7 +129,7 @@ func testAccCheckDocumentationVersionExists(ctx context.Context, n string, v *ap
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindDocumentationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["version"])
+		output, err := tfapigateway.FindDocumentationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrVersion])
 
 		if err != nil {
 			return err
@@ -150,7 +150,7 @@ func testAccCheckDocumentationVersionDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfapigateway.FindDocumentationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["version"])
+			_, err := tfapigateway.FindDocumentationVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrVersion])
 
 			if tfresource.NotFound(err) {
 				continue

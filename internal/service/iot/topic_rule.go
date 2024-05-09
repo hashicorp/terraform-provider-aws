@@ -678,7 +678,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -777,7 +777,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"database_name": {
+									names.AttrDatabaseName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1048,7 +1048,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1149,7 +1149,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1892,7 +1892,7 @@ func expandS3Action(tfList []interface{}) *awstypes.S3Action {
 	apiObject := &awstypes.S3Action{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -1988,7 +1988,7 @@ func expandTimestreamAction(tfList []interface{}) *awstypes.TimestreamAction {
 	apiObject := &awstypes.TimestreamAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -3086,7 +3086,7 @@ func flattenS3Action(apiObject *awstypes.S3Action) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	tfMap["canned_acl"] = apiObject.CannedAcl
@@ -3226,7 +3226,7 @@ func flattenTimestreamAction(apiObject *awstypes.TimestreamAction) []interface{}
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Dimensions; v != nil {

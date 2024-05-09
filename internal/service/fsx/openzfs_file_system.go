@@ -251,7 +251,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -427,7 +427,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.OpenZFSConfiguration.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		inputC.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		inputB.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -514,7 +514,8 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", openZFSConfig.WeeklyMaintenanceStartTime)
 
-	setTagsOut(ctx, filesystem.Tags)
+	// FS tags aren't set in the Describe response.
+	// setTagsOut(ctx, filesystem.Tags)
 
 	rootVolume, err := findOpenZFSVolumeByID(ctx, conn, rootVolumeID)
 

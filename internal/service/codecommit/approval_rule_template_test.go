@@ -34,7 +34,7 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
 					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "approval_rule_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -90,7 +90,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
 					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
 					testAccCheckApprovalRuleTemplateContent(resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
 				),
 			},
 			{
@@ -126,14 +126,14 @@ func TestAccCodeCommitApprovalRuleTemplate_updateName(t *testing.T) {
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccApprovalRuleTemplateConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
 			{

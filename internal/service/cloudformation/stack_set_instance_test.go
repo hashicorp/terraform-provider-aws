@@ -40,7 +40,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
@@ -50,7 +50,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),
 				),
 			},
 			{

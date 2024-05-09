@@ -197,7 +197,7 @@ func ResourceGateway() *schema.Resource {
 								),
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -546,7 +546,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	} else {
 		m := map[string]interface{}{
-			"domain_name":             aws.StringValue(smbSettingsOutput.DomainName),
+			names.AttrDomainName:      aws.StringValue(smbSettingsOutput.DomainName),
 			"active_directory_status": aws.StringValue(smbSettingsOutput.ActiveDirectoryStatus),
 			// The Storage Gateway API currently provides no way to read these values
 			// "password": ...,
@@ -817,7 +817,7 @@ func expandGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.Joi
 	}
 
 	domain := &storagegateway.JoinDomainInput{
-		DomainName:       aws.String(tfMap["domain_name"].(string)),
+		DomainName:       aws.String(tfMap[names.AttrDomainName].(string)),
 		GatewayARN:       aws.String(gatewayArn),
 		Password:         aws.String(tfMap["password"].(string)),
 		UserName:         aws.String(tfMap["username"].(string)),

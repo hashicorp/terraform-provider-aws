@@ -54,7 +54,7 @@ func dataSourceLayerVersion() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,7 +144,7 @@ func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, output.LayerVersionArn)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
-	d.Set("created_date", output.CreatedDate)
+	d.Set(names.AttrCreatedDate, output.CreatedDate)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("layer_arn", output.LayerArn)
 	d.Set("license_info", output.LicenseInfo)

@@ -41,7 +41,7 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_name", "aws_redshift_subnet_group.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrSet(resourceName, "address"),
 				),
 			},

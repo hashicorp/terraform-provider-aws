@@ -112,7 +112,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -210,7 +210,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
-	d.Set("security_group_ids", flattenSecurityGroupIdentifiers(vpce.Groups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
 	d.Set("service_name", serviceName)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(vpce.SubnetIds))

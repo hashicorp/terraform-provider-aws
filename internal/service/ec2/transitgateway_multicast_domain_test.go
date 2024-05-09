@@ -47,7 +47,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T, semaphore tfsync.S
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "static_sources_support", "disable"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayID),
 				),
 			},
 			{

@@ -66,7 +66,7 @@ func ResourceTopicRuleDestination() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -286,7 +286,7 @@ func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *awstypes.V
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
@@ -313,7 +313,7 @@ func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationPropertie
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = aws.StringSlice(v)
+		tfMap[names.AttrSecurityGroups] = aws.StringSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

@@ -32,7 +32,7 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 				Config: testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
-					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.maintenance_schedule", resourceName, "auto_tune_options.0.maintenance_schedule"),
@@ -94,7 +94,7 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
-					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "off_peak_window_options.#", resourceName, "off_peak_window_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),

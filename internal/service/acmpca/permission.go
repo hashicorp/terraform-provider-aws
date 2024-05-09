@@ -22,6 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -51,7 +52,7 @@ func resourcePermission() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +127,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("actions", flattenPermissionActions(permission.Actions))
 	d.Set("certificate_authority_arn", permission.CertificateAuthorityArn)
-	d.Set("policy", permission.Policy)
+	d.Set(names.AttrPolicy, permission.Policy)
 	d.Set("principal", permission.Principal)
 	d.Set("source_account", permission.SourceAccount)
 

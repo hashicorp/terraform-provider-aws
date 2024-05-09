@@ -51,7 +51,7 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -166,7 +166,7 @@ func ResourceKxEnvironment() *schema.Resource {
 											},
 										},
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 5),
@@ -189,7 +189,7 @@ func ResourceKxEnvironment() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 32),
@@ -273,7 +273,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("availability_zones", out.AvailabilityZoneIds)
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 	d.Set("infrastructure_account_id", out.DedicatedServiceAccountId)
 	d.Set("created_timestamp", out.CreationTimestamp.String())
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())
@@ -554,7 +554,7 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 
 	a := &types.TransitGatewayConfiguration{}
 
-	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
 		a.TransitGatewayID = aws.String(v)
 	}
 
@@ -600,7 +600,7 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
 		a.RuleNumber = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		a.Protocol = &v
 	}
 	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
@@ -695,7 +695,7 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 	m := map[string]interface{}{}
 
 	if v := apiObject.TransitGatewayID; v != nil {
-		m["transit_gateway_id"] = aws.ToString(v)
+		m[names.AttrTransitGatewayID] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoutableCIDRSpace; v != nil {
@@ -729,10 +729,10 @@ func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) 
 	}
 
 	m := map[string]interface{}{
-		"cidr_block":  aws.ToString(apiObject.CidrBlock),
-		"protocol":    aws.ToString(apiObject.Protocol),
-		"rule_action": apiObject.RuleAction,
-		"rule_number": apiObject.RuleNumber,
+		"cidr_block":       aws.ToString(apiObject.CidrBlock),
+		names.AttrProtocol: aws.ToString(apiObject.Protocol),
+		"rule_action":      apiObject.RuleAction,
+		"rule_number":      apiObject.RuleNumber,
 	}
 
 	if v := apiObject.PortRange; v != nil {

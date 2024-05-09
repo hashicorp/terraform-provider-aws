@@ -74,7 +74,7 @@ func ResourceStack() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -86,7 +86,7 @@ func ResourceStack() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -94,7 +94,7 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -122,7 +122,7 @@ func ResourceStack() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -221,13 +221,13 @@ func ResourceStack() *schema.Resource {
 				if stateApplicationSettings.IsKnown() && !stateApplicationSettings.IsNull() && stateApplicationSettings.LengthInt() > 0 {
 					setting := stateApplicationSettings.Index(cty.NumberIntVal(0))
 					if setting.IsKnown() && !setting.IsNull() {
-						enabled := setting.GetAttr("enabled")
+						enabled := setting.GetAttr(names.AttrEnabled)
 						if enabled.IsKnown() && !enabled.IsNull() && enabled.True() {
 							// Trigger a diff
 							return d.SetNew("application_settings", []map[string]any{
 								{
-									"enabled":        false,
-									"settings_group": "",
+									names.AttrEnabled: false,
+									"settings_group":  "",
 								},
 							})
 						}
@@ -257,7 +257,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appstream.CreateStackInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -271,7 +271,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ApplicationSettings = expandApplicationSettings(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -339,15 +339,15 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err = d.Set("application_settings", flattenApplicationSettings(stack.ApplicationSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting application_settings: %s", err)
 	}
-	d.Set("arn", stack.Arn)
+	d.Set(names.AttrARN, stack.Arn)
 	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
-	d.Set("description", stack.Description)
+	d.Set(names.AttrDescription, stack.Description)
 	d.Set("display_name", stack.DisplayName)
 	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
 	}
 	d.Set("feedback_url", stack.FeedbackURL)
-	d.Set("name", stack.Name)
+	d.Set(names.AttrName, stack.Name)
 	d.Set("redirect_url", stack.RedirectURL)
 	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
@@ -367,7 +367,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appstream.UpdateStackInput{
 			Name: aws.String(d.Id()),
 		}
@@ -380,8 +380,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("display_name") {
@@ -549,7 +549,7 @@ func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSetti
 	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &appstream.ApplicationSettings{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 	if v, ok := tfMap["settings_group"]; ok {
 		apiObject.SettingsGroup = aws.String(v.(string))
@@ -564,8 +564,8 @@ func flattenApplicationSetting(apiObject *appstream.ApplicationSettingsResponse)
 	}
 
 	return map[string]interface{}{
-		"enabled":        aws.BoolValue(apiObject.Enabled),
-		"settings_group": aws.StringValue(apiObject.SettingsGroup),
+		names.AttrEnabled: aws.BoolValue(apiObject.Enabled),
+		"settings_group":  aws.StringValue(apiObject.SettingsGroup),
 	}
 }
 

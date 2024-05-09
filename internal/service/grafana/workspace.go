@@ -166,7 +166,7 @@ func ResourceWorkspace() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 100,
@@ -463,7 +463,7 @@ func expandVPCConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration 
 
 	out := managedgrafana.VpcConfiguration{}
 
-	if v, ok := conf["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := conf[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		out.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
@@ -481,7 +481,7 @@ func flattenVPCConfiguration(rs *managedgrafana.VpcConfiguration) []interface{} 
 
 	m := make(map[string]interface{})
 	if rs.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(rs.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(rs.SecurityGroupIds)
 	}
 	if rs.SubnetIds != nil {
 		m[names.AttrSubnetIDs] = flex.FlattenStringSet(rs.SubnetIds)

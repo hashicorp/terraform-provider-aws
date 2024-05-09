@@ -46,11 +46,11 @@ func dataSourceWorkgroup() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"availability_zone": {
+												names.AttrAvailabilityZone: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"network_interface_id": {
+												names.AttrNetworkInterfaceID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -58,7 +58,7 @@ func dataSourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -91,7 +91,7 @@ func dataSourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -137,7 +137,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)
 	d.Set("namespace_name", resource.NamespaceName)
 	d.Set("publicly_accessible", resource.PubliclyAccessible)
-	d.Set("security_group_ids", resource.SecurityGroupIds)
+	d.Set(names.AttrSecurityGroupIDs, resource.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
 	d.Set("workgroup_id", resource.WorkgroupId)
 

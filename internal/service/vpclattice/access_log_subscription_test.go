@@ -93,7 +93,7 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -156,7 +156,7 @@ func TestAccVPCLatticeAccessLogSubscription_arn(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
 				),
 			},
@@ -247,7 +247,7 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 
 						return nil
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, names.AttrID),
 				),
 			},

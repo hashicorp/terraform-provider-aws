@@ -163,7 +163,7 @@ func ResourceInput() *schema.Resource {
 							MinItems: 2,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -704,7 +704,7 @@ func expandVPC(tfList []interface{}) *types.InputVpcRequest {
 	if val, ok := vpc[names.AttrSubnetIDs]; ok {
 		s.SubnetIds = flex.ExpandStringValueList(val.([]interface{}))
 	}
-	if val, ok := vpc["security_group_ids"]; ok {
+	if val, ok := vpc[names.AttrSecurityGroupIDs]; ok {
 		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]interface{}))
 	}
 

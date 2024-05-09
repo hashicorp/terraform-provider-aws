@@ -102,7 +102,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
@@ -121,7 +121,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -131,7 +131,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
@@ -143,7 +143,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -216,7 +216,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -269,7 +269,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("network_interface_options", flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interface_options: %s", err)
 	}
-	d.Set("security_group_ids", aws.StringSlice(ep.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
 	if err := d.Set("sse_specification", flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
 	}
@@ -387,7 +387,7 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap["protocol"] = v
+		tfmap[names.AttrProtocol] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
@@ -405,7 +405,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	tfmap := map[string]interface{}{}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfmap["network_interface_id"] = aws.ToString(v)
+		tfmap[names.AttrNetworkInterfaceID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -413,7 +413,7 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap["protocol"] = v
+		tfmap[names.AttrProtocol] = v
 	}
 
 	return []interface{}{tfmap}
@@ -452,7 +452,7 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
@@ -470,7 +470,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 
 	apiobject := &types.CreateVerifiedAccessEndpointEniOptions{}
 
-	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
 		apiobject.NetworkInterfaceId = aws.String(v)
 	}
 
@@ -478,7 +478,7 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiobject
@@ -495,7 +495,7 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
@@ -517,7 +517,7 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiObject

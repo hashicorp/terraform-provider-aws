@@ -51,7 +51,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_basicRDS(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
@@ -63,7 +63,7 @@ func testAccKnowledgeBase_basicRDS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.vector_field", "embedding"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.text_field", "chunks"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.metadata_field", "metadata"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.rds_configuration.0.field_mapping.0.primary_key_field", names.AttrID),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func testAccKnowledgeBase_basicOpenSearch(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_basicOpenSearch(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
@@ -243,8 +243,8 @@ func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_basicOpenSearch(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
@@ -268,9 +268,9 @@ func testAccKnowledgeBase_updateOpenSearch(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_updateOpenSearch(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),

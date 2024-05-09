@@ -462,7 +462,7 @@ func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
 
 			diff := mockChangesDiffer{
 				values: map[string]mockDiff{
-					"engine_version": {
+					names.AttrEngineVersion: {
 						old: testcase.versionOld,
 						new: testcase.versionNew,
 					},
@@ -882,7 +882,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 						new:       testcase.paramNew,
 						hasChange: testcase.paramHasChange,
 					},
-					"engine_version": {
+					names.AttrEngineVersion: {
 						old:       testcase.versionOld,
 						new:       testcase.versionNew,
 						hasChange: testcase.versionHasChange,

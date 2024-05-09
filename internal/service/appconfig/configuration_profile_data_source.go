@@ -30,7 +30,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +39,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,8 +59,8 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -114,14 +114,14 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 		Service:   "appconfig",
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("configuration_profile_id", profileId)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("kms_key_identifier", out.KmsKeyIdentifier)
 	d.Set("location_uri", out.LocationUri)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("retrieval_role_arn", out.RetrievalRoleArn)
-	d.Set("type", out.Type)
+	d.Set(names.AttrType, out.Type)
 
 	if err := d.Set("validator", flattenValidators(out.Validators)); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
@@ -136,7 +136,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 

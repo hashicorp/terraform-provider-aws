@@ -188,7 +188,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -199,7 +199,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -343,7 +343,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	input := &ec2.CreateNetworkInterfaceInput{
 		ClientToken: aws.String(id.UniqueId()),
-		SubnetId:    aws.String(d.Get("subnet_id").(string)),
+		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -412,7 +412,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.Groups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -553,11 +553,11 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
 	}
-	if err := d.Set("security_groups", flattenGroupIdentifiers(eni.Groups)); err != nil {
+	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
-	d.Set("subnet_id", eni.SubnetId)
+	d.Set(names.AttrSubnetID, eni.SubnetId)
 
 	setTagsOutV2(ctx, eni.TagSet)
 
@@ -1006,10 +1006,10 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
-			Groups:             flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+			Groups:             flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)

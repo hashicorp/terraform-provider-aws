@@ -77,7 +77,7 @@ func resourceSamplingRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -125,7 +125,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		HTTPMethod:    aws.String(d.Get("http_method").(string)),
 		Priority:      aws.Int32(int32(d.Get("priority").(int))),
 		ReservoirSize: int32(d.Get("reservoir_size").(int)),
-		ResourceARN:   aws.String(d.Get("resource_arn").(string)),
+		ResourceARN:   aws.String(d.Get(names.AttrResourceARN).(string)),
 		RuleName:      aws.String(name),
 		ServiceName:   aws.String(d.Get("service_name").(string)),
 		ServiceType:   aws.String(d.Get("service_type").(string)),
@@ -176,7 +176,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("http_method", samplingRule.HTTPMethod)
 	d.Set("priority", samplingRule.Priority)
 	d.Set("reservoir_size", samplingRule.ReservoirSize)
-	d.Set("resource_arn", samplingRule.ResourceARN)
+	d.Set(names.AttrResourceARN, samplingRule.ResourceARN)
 	d.Set("rule_name", samplingRule.RuleName)
 	d.Set("service_name", samplingRule.ServiceName)
 	d.Set("service_type", samplingRule.ServiceType)
@@ -197,7 +197,7 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			HTTPMethod:    aws.String(d.Get("http_method").(string)),
 			Priority:      aws.Int32(int32(d.Get("priority").(int))),
 			ReservoirSize: aws.Int32(int32(d.Get("reservoir_size").(int))),
-			ResourceARN:   aws.String(d.Get("resource_arn").(string)),
+			ResourceARN:   aws.String(d.Get(names.AttrResourceARN).(string)),
 			RuleName:      aws.String(d.Id()),
 			ServiceName:   aws.String(d.Get("service_name").(string)),
 			ServiceType:   aws.String(d.Get("service_type").(string)),

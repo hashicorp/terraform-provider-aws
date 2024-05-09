@@ -91,7 +91,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(networkmanager.TunnelProtocol_Values(), false),
@@ -103,7 +103,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -232,7 +232,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("options", nil)
 	}
 	d.Set("owner_account_id", a.OwnerAccountId)
-	d.Set("resource_arn", a.ResourceArn)
+	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set(names.AttrState, a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
@@ -388,7 +388,7 @@ func expandConnectOptions(o map[string]interface{}) *networkmanager.ConnectAttac
 
 	object := &networkmanager.ConnectAttachmentOptions{}
 
-	if v, ok := o["protocol"].(string); ok {
+	if v, ok := o[names.AttrProtocol].(string); ok {
 		object.Protocol = aws.String(v)
 	}
 
@@ -403,7 +403,7 @@ func flattenConnectOptions(apiObject *networkmanager.ConnectAttachmentOptions) m
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	return tfMap

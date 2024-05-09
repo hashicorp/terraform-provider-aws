@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_acmpca_certificate", name="Certificate")
@@ -19,7 +20,7 @@ func dataSourceCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -45,7 +46,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	certificateARN := d.Get("arn").(string)
+	certificateARN := d.Get(names.AttrARN).(string)
 	output, err := findCertificateByTwoPartKey(ctx, conn, certificateARN, d.Get("certificate_authority_arn").(string))
 
 	if err != nil {

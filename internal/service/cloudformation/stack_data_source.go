@@ -30,7 +30,7 @@ func dataSourceStack() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +42,7 @@ func dataSourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceStack() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -78,7 +78,7 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	stack, err := findStackByName(ctx, conn, name)
 
@@ -90,14 +90,14 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if len(stack.Capabilities) > 0 {
 		d.Set("capabilities", stack.Capabilities)
 	}
-	d.Set("description", stack.Description)
+	d.Set(names.AttrDescription, stack.Description)
 	d.Set("disable_rollback", stack.DisableRollback)
 	d.Set("iam_role_arn", stack.RoleARN)
 	if len(stack.NotificationARNs) > 0 {
 		d.Set("notification_arns", stack.NotificationARNs)
 	}
 	d.Set("outputs", flattenOutputs(stack.Outputs))
-	d.Set("parameters", flattenAllParameters(stack.Parameters))
+	d.Set(names.AttrParameters, flattenAllParameters(stack.Parameters))
 	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
 
 	setTagsOut(ctx, stack.Tags)

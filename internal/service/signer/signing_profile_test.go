@@ -42,7 +42,7 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "platform_display_name"),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", "0"),
@@ -110,7 +110,7 @@ func TestAccSignerSigningProfile_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "terraform_"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform_"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform_"),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func TestAccSignerSigningProfile_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf_acc_test_prefix_"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf_acc_test_prefix_"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf_acc_test_prefix_"),
 				),
 			},
 			{

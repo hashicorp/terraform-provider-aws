@@ -136,7 +136,7 @@ func resourceFileCache() *schema.Resource {
 								},
 							},
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -264,7 +264,7 @@ func resourceFileCache() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -326,7 +326,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.LustreConfiguration = expandCreateFileCacheLustreConfiguration(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -603,7 +603,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 			"file_cache_path":                dataRepositoryAssociation.FileCachePath,
 			"imported_file_chunk_size":       dataRepositoryAssociation.ImportedFileChunkSize,
 			"nfs":                            flattenNFSDataRepositoryConfiguration(dataRepositoryAssociation.NFS),
-			"resource_arn":                   dataRepositoryAssociation.ResourceARN,
+			names.AttrResourceARN:            dataRepositoryAssociation.ResourceARN,
 			names.AttrTags:                   tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
 		}
 		flattenedDataRepositoryAssociations = append(flattenedDataRepositoryAssociations, values)

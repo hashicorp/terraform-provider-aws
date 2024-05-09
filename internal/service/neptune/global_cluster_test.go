@@ -42,7 +42,7 @@ func TestAccNeptuneGlobalCluster_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -76,7 +76,7 @@ func TestAccNeptuneGlobalCluster_completeBasic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -197,7 +197,7 @@ func TestAccNeptuneGlobalCluster_EngineVersion(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, "1.2.0.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.2.0.0"),
 				),
 			},
 			{
@@ -209,7 +209,7 @@ func TestAccNeptuneGlobalCluster_EngineVersion(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, "1.2.0.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "1.2.0.1"),
 				),
 			},
 		},

@@ -62,7 +62,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -102,7 +102,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
@@ -110,7 +110,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			"subnet_id": schema.StringAttribute{
+			names.AttrSubnetID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

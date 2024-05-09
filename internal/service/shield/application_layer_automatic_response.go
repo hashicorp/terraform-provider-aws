@@ -71,7 +71,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 				Required:   true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{

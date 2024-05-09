@@ -59,7 +59,7 @@ func ResourceImageRecipe() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
@@ -479,7 +479,7 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 
 	apiObject := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
 
-	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -662,7 +662,7 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInsta
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Encrypted; v != nil {

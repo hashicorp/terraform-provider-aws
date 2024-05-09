@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
@@ -59,7 +60,7 @@ func dataSourceServiceAccount() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +88,7 @@ func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, m
 			AccountID: v,
 			Resource:  "root",
 		}.String()
-		d.Set("arn", arn)
+		d.Set(names.AttrARN, arn)
 
 		return diags
 	}

@@ -47,7 +47,7 @@ func testAccTransitGatewayPolicyTable_basic(t *testing.T, semaphore tfsync.Semap
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-policy-table/tgw-ptb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 			},
 			{

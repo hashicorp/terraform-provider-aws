@@ -35,7 +35,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@38e1018663fa5173f3968ea0777460d3de38f256 # v3.7.1
+        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v3.7.1
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci.yml
@@ -58,7 +58,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@38e1018663fa5173f3968ea0777460d3de38f256 # v3.7.1
+        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v3.7.1
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci2.yml

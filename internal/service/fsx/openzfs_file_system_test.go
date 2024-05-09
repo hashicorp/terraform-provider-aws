@@ -127,7 +127,7 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -217,7 +217,7 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -378,7 +378,7 @@ func TestAccFSxOpenZFSFileSystem_securityGroupIDs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -419,7 +419,7 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -473,7 +473,7 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -515,7 +515,7 @@ func TestAccFSxOpenZFSFileSystem_throughput(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -555,7 +555,7 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -587,7 +587,7 @@ func TestAccFSxOpenZFSFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -627,7 +627,7 @@ func TestAccFSxOpenZFSFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -674,7 +674,7 @@ func TestAccFSxOpenZFSFileSystem_kmsKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -706,7 +706,7 @@ func TestAccFSxOpenZFSFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -746,7 +746,7 @@ func TestAccFSxOpenZFSFileSystem_throughputCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -786,7 +786,7 @@ func TestAccFSxOpenZFSFileSystem_storageCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -827,7 +827,7 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},
@@ -941,7 +941,7 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
+					names.AttrSecurityGroupIDs,
 					"skip_final_backup",
 				},
 			},

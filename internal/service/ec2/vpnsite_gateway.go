@@ -48,7 +48,7 @@ func resourceVPNGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -71,7 +71,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnGatewayInput{
-		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpnGateway),
 		Type:              aws.String(ec2.GatewayTypeIpsec1),
 	}
@@ -131,7 +131,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	}.String()
 	d.Set(names.AttrARN, arn)
 	if aws.StringValue(vpnGateway.AvailabilityZone) != "" {
-		d.Set("availability_zone", vpnGateway.AvailabilityZone)
+		d.Set(names.AttrAvailabilityZone, vpnGateway.AvailabilityZone)
 	}
 	d.Set(names.AttrVPCID, nil)
 	for _, vpcAttachment := range vpnGateway.VpcAttachments {

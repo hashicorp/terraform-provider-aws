@@ -237,10 +237,10 @@ func ResourceLoadBalancer() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -254,7 +254,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -284,7 +284,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -338,7 +338,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
 	).Generate()
 	exist, err := findLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
@@ -374,7 +374,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.IpAddressType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -460,7 +460,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 			LoadBalancerArn: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("security_groups"); ok {
+		if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 			input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
@@ -508,8 +508,8 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	lbType := aws.StringValue(lb.Type)
 	d.Set("load_balancer_type", lbType)
 	d.Set(names.AttrName, lb.LoadBalancerName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
-	d.Set("security_groups", aws.StringValueSlice(lb.SecurityGroups))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(lb.SecurityGroups))
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
@@ -576,10 +576,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", "security_groups") {
+	if d.HasChanges("enforce_security_group_inbound_rules_on_private_link_traffic", names.AttrSecurityGroups) {
 		input := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
-			SecurityGroups:  flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups:  flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		if v := d.Get("load_balancer_type"); v == elbv2.LoadBalancerTypeEnumNetwork {
@@ -1045,8 +1045,8 @@ func flattenSubnetsFromAvailabilityZones(apiObjects []*elbv2.AvailabilityZone) [
 func flattenSubnetMappingsFromAvailabilityZones(apiObjects []*elbv2.AvailabilityZone) []map[string]interface{} {
 	return tfslices.ApplyToAll(apiObjects, func(apiObject *elbv2.AvailabilityZone) map[string]interface{} {
 		tfMap := map[string]interface{}{
-			"outpost_id": aws.StringValue(apiObject.OutpostId),
-			"subnet_id":  aws.StringValue(apiObject.SubnetId),
+			"outpost_id":       aws.StringValue(apiObject.OutpostId),
+			names.AttrSubnetID: aws.StringValue(apiObject.SubnetId),
 		}
 		if apiObjects := apiObject.LoadBalancerAddresses; len(apiObjects) > 0 {
 			apiObject := apiObjects[0]
@@ -1151,13 +1151,13 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 	}
 
 	// Get diff for security groups.
-	if diff.HasChange("security_groups") {
-		if v := config.GetAttr("security_groups"); v.IsWhollyKnown() {
-			o, n := diff.GetChange("security_groups")
+	if diff.HasChange(names.AttrSecurityGroups) {
+		if v := config.GetAttr(names.AttrSecurityGroups); v.IsWhollyKnown() {
+			o, n := diff.GetChange(names.AttrSecurityGroups)
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
 			if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-				if err := diff.ForceNew("security_groups"); err != nil {
+				if err := diff.ForceNew(names.AttrSecurityGroups); err != nil {
 					return err
 				}
 			}
@@ -1362,7 +1362,7 @@ func expandSubnetMapping(tfMap map[string]interface{}) *elbv2.SubnetMapping {
 		apiObject.PrivateIPv4Address = aws.String(v)
 	}
 
-	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
 	}
 

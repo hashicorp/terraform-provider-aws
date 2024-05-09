@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func filtersSchema() *schema.Schema {
@@ -146,7 +147,7 @@ func numericEqualityFilterSchema() *schema.Schema {
 				"aggregation_function": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 				"parameter_name":       parameterNameSchema(false),
 				"select_all_options":   stringSchema(false, validation.StringInSlice(quicksight.NumericFilterSelectAllOptions_Values(), false)),
-				"value": {
+				names.AttrValue: {
 					Type:     schema.TypeFloat,
 					Optional: true,
 				},
@@ -232,7 +233,7 @@ func timeEqualityFilterSchema() *schema.Schema {
 				"filter_id":        idSchema(),
 				"time_granularity": stringSchema(true, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
 				"parameter_name":   parameterNameSchema(false),
-				"value": {
+				names.AttrValue: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: verify.ValidUTCTimestamp,
@@ -316,8 +317,8 @@ func excludePeriodConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Required: true,
 				},
-				"granularity": stringSchema(true, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
-				"status":      stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+				"granularity":    stringSchema(true, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
+				names.AttrStatus: stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 			},
 		},
 	}
@@ -408,7 +409,7 @@ func drillDownFilterSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"column": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"value": {
+							names.AttrValue: {
 								Type:     schema.TypeFloat,
 								Required: true,
 							},
@@ -717,7 +718,7 @@ func expandNumericEqualityFilter(tfList []interface{}) *quicksight.NumericEquali
 	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
 		filter.SelectAllOptions = aws.String(v)
 	}
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		filter.Value = aws.Float64(v)
 	}
 	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
@@ -959,7 +960,7 @@ func expandExcludePeriodConfiguration(tfList []interface{}) *quicksight.ExcludeP
 	if v, ok := tfMap["granularity"].(string); ok && v != "" {
 		config.Granularity = aws.String(v)
 	}
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -990,7 +991,7 @@ func expandTimeEqualityFilter(tfList []interface{}) *quicksight.TimeEqualityFilt
 	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
 		filter.ParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
 		filter.Value = aws.Time(t)
 	}
@@ -1224,7 +1225,7 @@ func expandNumericEqualityDrillDownFilter(tfList []interface{}) *quicksight.Nume
 	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
 		filter.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		filter.Value = aws.Float64(v)
 	}
 
@@ -1432,7 +1433,7 @@ func flattenNumericEqualityFilter(apiObject *quicksight.NumericEqualityFilter) [
 		tfMap["select_all_options"] = aws.StringValue(apiObject.SelectAllOptions)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -1560,7 +1561,7 @@ func flattenExcludePeriodConfiguration(apiObject *quicksight.ExcludePeriodConfig
 		tfMap["granularity"] = aws.StringValue(apiObject.Granularity)
 	}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}
@@ -1585,7 +1586,7 @@ func flattenTimeEqualityFilter(apiObject *quicksight.TimeEqualityFilter) []inter
 		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = apiObject.Value.Format(time.RFC3339)
+		tfMap[names.AttrValue] = apiObject.Value.Format(time.RFC3339)
 	}
 
 	return []interface{}{tfMap}

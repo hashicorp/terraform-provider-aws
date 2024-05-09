@@ -60,7 +60,7 @@ func resourceCertificateAuthority() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -155,7 +155,7 @@ func resourceCertificateAuthority() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
-									"state": {
+									names.AttrState: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -187,7 +187,7 @@ func resourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -244,7 +244,7 @@ func resourceCertificateAuthority() *schema.Resource {
 											return true
 										},
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
@@ -296,7 +296,7 @@ func resourceCertificateAuthority() *schema.Resource {
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -317,7 +317,7 @@ func resourceCertificateAuthority() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -342,7 +342,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
-		CertificateAuthorityType:          types.CertificateAuthorityType(d.Get("type").(string)),
+		CertificateAuthorityType:          types.CertificateAuthorityType(d.Get(names.AttrType).(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 		Tags:                              getTagsIn(ctx),
@@ -390,11 +390,11 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", certificateAuthority.Arn)
+	d.Set(names.AttrARN, certificateAuthority.Arn)
 	if err := d.Set("certificate_authority_configuration", flattenCertificateAuthorityConfiguration(certificateAuthority.CertificateAuthorityConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority_configuration: %s", err)
 	}
-	d.Set("enabled", (certificateAuthority.Status != types.CertificateAuthorityStatusDisabled))
+	d.Set(names.AttrEnabled, (certificateAuthority.Status != types.CertificateAuthorityStatusDisabled))
 	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.ToTime(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.ToTime(certificateAuthority.NotBefore).Format(time.RFC3339))
@@ -402,7 +402,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
-	d.Set("type", certificateAuthority.Type)
+	d.Set(names.AttrType, certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
@@ -456,14 +456,14 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("enabled") {
+		if d.HasChange(names.AttrEnabled) {
 			input.Status = types.CertificateAuthorityStatusActive
-			if !d.Get("enabled").(bool) {
+			if !d.Get(names.AttrEnabled).(bool) {
 				input.Status = types.CertificateAuthorityStatusDisabled
 			}
 		}
@@ -652,7 +652,7 @@ func expandASN1Subject(l []interface{}) *types.ASN1Subject {
 	if v, ok := m["pseudonym"]; ok && v.(string) != "" {
 		subject.Pseudonym = aws.String(v.(string))
 	}
-	if v, ok := m["state"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrState]; ok && v.(string) != "" {
 		subject.State = aws.String(v.(string))
 	}
 	if v, ok := m["surname"]; ok && v.(string) != "" {
@@ -688,7 +688,7 @@ func expandCrlConfiguration(l []interface{}) *types.CrlConfiguration {
 
 	m := l[0].(map[string]interface{})
 
-	crlEnabled := m["enabled"].(bool)
+	crlEnabled := m[names.AttrEnabled].(bool)
 
 	config := &types.CrlConfiguration{
 		Enabled: aws.Bool(crlEnabled),
@@ -720,7 +720,7 @@ func expandOcspConfiguration(l []interface{}) *types.OcspConfiguration {
 	m := l[0].(map[string]interface{})
 
 	config := &types.OcspConfiguration{
-		Enabled: aws.Bool(m["enabled"].(bool)),
+		Enabled: aws.Bool(m[names.AttrEnabled].(bool)),
 	}
 
 	if v, ok := m["ocsp_custom_cname"]; ok && v.(string) != "" {
@@ -761,7 +761,7 @@ func flattenASN1Subject(subject *types.ASN1Subject) []interface{} {
 		"organization":                 aws.ToString(subject.Organization),
 		"organizational_unit":          aws.ToString(subject.OrganizationalUnit),
 		"pseudonym":                    aws.ToString(subject.Pseudonym),
-		"state":                        aws.ToString(subject.State),
+		names.AttrState:                aws.ToString(subject.State),
 		"surname":                      aws.ToString(subject.Surname),
 		"title":                        aws.ToString(subject.Title),
 	}
@@ -790,7 +790,7 @@ func flattenCrlConfiguration(config *types.CrlConfiguration) []interface{} {
 
 	m := map[string]interface{}{
 		"custom_cname":       aws.ToString(config.CustomCname),
-		"enabled":            aws.ToBool(config.Enabled),
+		names.AttrEnabled:    aws.ToBool(config.Enabled),
 		"expiration_in_days": int(aws.ToInt32(config.ExpirationInDays)),
 		"s3_bucket_name":     aws.ToString(config.S3BucketName),
 		"s3_object_acl":      string(config.S3ObjectAcl),
@@ -805,7 +805,7 @@ func flattenOcspConfiguration(config *types.OcspConfiguration) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"enabled":           aws.ToBool(config.Enabled),
+		names.AttrEnabled:   aws.ToBool(config.Enabled),
 		"ocsp_custom_cname": aws.ToString(config.OcspCustomCname),
 	}
 

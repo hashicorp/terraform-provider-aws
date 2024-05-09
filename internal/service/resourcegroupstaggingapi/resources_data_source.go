@@ -69,7 +69,7 @@ func dataSourceResources() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -174,8 +174,8 @@ func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMap
 
 	for _, i := range list {
 		l := map[string]interface{}{
-			"resource_arn": aws.ToString(i.ResourceARN),
-			names.AttrTags: KeyValueTags(ctx, i.Tags).Map(),
+			names.AttrResourceARN: aws.ToString(i.ResourceARN),
+			names.AttrTags:        KeyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {

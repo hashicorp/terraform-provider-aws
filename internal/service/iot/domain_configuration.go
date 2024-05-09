@@ -62,7 +62,7 @@ func ResourceDomainConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -139,7 +139,7 @@ func resourceDomainConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.AuthorizerConfig = expandAuthorizerConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("domain_name"); ok {
+	if v, ok := d.GetOk(names.AttrDomainName); ok {
 		input.DomainName = aws.String(v.(string))
 	}
 
@@ -194,7 +194,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("authorizer_config", nil)
 	}
-	d.Set("domain_name", output.DomainName)
+	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_type", output.DomainType)
 	d.Set(names.AttrName, output.DomainConfigurationName)
 	d.Set("server_certificate_arns", tfslices.ApplyToAll(output.ServerCertificates, func(v awstypes.ServerCertificateSummary) string {

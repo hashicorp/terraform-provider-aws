@@ -78,7 +78,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -128,7 +128,7 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -249,7 +249,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	if targetType != elbv2.TargetTypeEnumLambda {
 		d.Set(names.AttrPort, targetGroup.Port)
 		protocol = aws.StringValue(targetGroup.Protocol)
-		d.Set("protocol", protocol)
+		d.Set(names.AttrProtocol, protocol)
 		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
 	switch protocol {

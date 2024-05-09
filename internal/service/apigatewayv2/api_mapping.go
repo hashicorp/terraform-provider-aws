@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_api_mapping", name="API Mapping")
@@ -43,7 +44,7 @@ func resourceAPIMapping() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,7 +63,7 @@ func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		Stage:      aws.String(d.Get("stage").(string)),
 	}
 
@@ -85,7 +86,7 @@ func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findAPIMappingByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
+	output, err := findAPIMappingByTwoPartKey(ctx, conn, d.Id(), d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API Mapping (%s) not found, removing from state", d.Id())
@@ -111,7 +112,7 @@ func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		ApiMappingId: aws.String(d.Id()),
-		DomainName:   aws.String(d.Get("domain_name").(string)),
+		DomainName:   aws.String(d.Get(names.AttrDomainName).(string)),
 	}
 
 	if d.HasChange("api_mapping_key") {
@@ -138,7 +139,7 @@ func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API Mapping (%s)", d.Id())
 	_, err := conn.DeleteApiMapping(ctx, &apigatewayv2.DeleteApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
-		DomainName:   aws.String(d.Get("domain_name").(string)),
+		DomainName:   aws.String(d.Get(names.AttrDomainName).(string)),
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
@@ -159,7 +160,7 @@ func resourceAPIMappingImport(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(parts[0])
-	d.Set("domain_name", parts[1])
+	d.Set(names.AttrDomainName, parts[1])
 
 	return []*schema.ResourceData{d}, nil
 }
