@@ -274,8 +274,8 @@ github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.2 h1:C08TU/uiP+9lFaH/wxH9
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.2/go.mod h1:z/vZeXWTVU//C8fnX0JqhIykpNf9EqdmEIfNrU8nPyk=
 github.com/aws/aws-sdk-go-v2/service/oam v1.11.1 h1:JTj9z5gGzXhg4XoVdfd+RMUeg+DqvPKQa1yMpAnKJhs=
 github.com/aws/aws-sdk-go-v2/service/oam v1.11.1/go.mod h1:GNW8lL/rOjgXphUtGDvd9yikXGOfo51z2LBgct6XPTs=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4 h1:XHtavC0Lrm5MJMrmigvYUbZFJYASuBgFg5PCg08j4BQ=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4/go.mod h1:T7lBopPcIVR1EJOibce+6Z3cJmY8uWTEM8+i63a4rD0=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.5 h1:gYmHliliNlF5EpVIsEiOVaHDAz9DWJBHVA9p1iBZ0F0=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.5/go.mod h1:T7lBopPcIVR1EJOibce+6Z3cJmY8uWTEM8+i63a4rD0=
 github.com/aws/aws-sdk-go-v2/service/osis v1.8.4 h1:ZQyG9HtH9s6+U3rXPHaHq2ICArNtlqEy5HJIiqHChr4=
 github.com/aws/aws-sdk-go-v2/service/osis v1.8.4/go.mod h1:MHw9zAnU6CaZXqe/J1UNcxcEZLF5oXs21Efdxw0K5tY=
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.0 h1:sfVZeQi5tw/2ZZj7n0TyQATIovkxQ/sL2Sow8kBLXYA=
