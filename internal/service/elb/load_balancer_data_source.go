@@ -60,7 +60,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				},
 			},
 
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -250,7 +250,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		scheme = aws.StringValue(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
-	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
 	d.Set("instances", flattenInstances(lb.Instances))
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
 	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
