@@ -79,7 +79,7 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 								setplanmodifier.UseStateForUnknown(),
 							},
 						},
-						"database_name": schema.StringAttribute{
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
