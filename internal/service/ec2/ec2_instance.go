@@ -582,7 +582,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -829,7 +829,7 @@ func ResourceInstance() *schema.Resource {
 				Default:  false,
 			},
 			"volume_tags": tftags.TagsSchema(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -1685,7 +1685,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChanges("secondary_private_ips", "vpc_security_group_ids") && !d.IsNewResource() {
+	if d.HasChanges("secondary_private_ips", names.AttrVPCSecurityGroupIDs) && !d.IsNewResource() {
 		instance, err := FindInstanceByID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -1744,13 +1744,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
 			if primaryInterface.NetworkInterfaceId == nil {
 				return sdkdiag.AppendErrorf(diags, "Failed to update vpc_security_group_ids on %q, which does not contain a primary network interface",
 					d.Id())
 			}
 			var groups []*string
-			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 				for _, v := range v.List() {
 					groups = append(groups, aws.String(v.(string)))
 				}
@@ -2519,7 +2519,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 			ni.Ipv6Addresses = ipv6Addresses
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
 				ni.Groups = append(ni.Groups, aws.String(v.(string)))
 			}
@@ -2760,11 +2760,11 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 			sgs = append(sgs, aws.StringValue(sg.GroupId))
 		}
 		log.Printf("[DEBUG] Setting Security Group IDs: %#v", sgs)
-		if err := d.Set("vpc_security_group_ids", sgs); err != nil {
+		if err := d.Set(names.AttrVPCSecurityGroupIDs, sgs); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
-		if err := d.Set("vpc_security_group_ids", []string{}); err != nil {
+		if err := d.Set(names.AttrVPCSecurityGroupIDs, []string{}); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
@@ -3077,7 +3077,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 			opts.Ipv6Addresses = ipv6Addresses
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
 				opts.SecurityGroupIDs = append(opts.SecurityGroupIDs, aws.String(v.(string)))
 			}
