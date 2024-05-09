@@ -81,7 +81,7 @@ func resourceEndpointAccess() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"network_interface_id": {
+									names.AttrNetworkInterfaceID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -281,7 +281,7 @@ func flattenNetworkInterface(apiObject *redshift.NetworkInterface) map[string]in
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
