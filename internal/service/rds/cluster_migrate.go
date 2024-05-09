@@ -51,7 +51,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

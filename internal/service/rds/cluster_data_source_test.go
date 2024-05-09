@@ -29,7 +29,7 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_identifier", resourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrClusterIdentifier, resourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
@@ -64,7 +64,7 @@ func TestAccRDSClusterDataSource_ManagedMasterPassword_managed(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "backtrack_window", resourceName, "backtrack_window"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_identifier", resourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrClusterIdentifier, resourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),

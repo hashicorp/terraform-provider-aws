@@ -104,7 +104,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 259200),
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -118,7 +118,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validIdentifierPrefix,
-				ConflictsWith: []string{"cluster_identifier"},
+				ConflictsWith: []string{names.AttrClusterIdentifier},
 			},
 			"cluster_members": {
 				Type:     schema.TypeSet,
@@ -576,7 +576,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	identifier := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("cluster_identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -1172,7 +1172,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
