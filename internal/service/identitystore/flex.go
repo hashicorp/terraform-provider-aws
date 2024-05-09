@@ -36,7 +36,7 @@ func flattenAddress(apiObject *types.Address) map[string]interface{} {
 	m["primary"] = apiObject.Primary
 
 	if v := apiObject.Region; v != nil {
-		m["region"] = aws.ToString(v)
+		m[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObject.StreetAddress; v != nil {
@@ -75,7 +75,7 @@ func expandAddress(tfMap map[string]interface{}) *types.Address {
 
 	a.Primary = tfMap["primary"].(bool)
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		a.Region = aws.String(v)
 	}
 
