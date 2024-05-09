@@ -445,6 +445,30 @@ func (r *resourceRetriever) ModifyPlan(ctx context.Context, request resource.Mod
 	r.SetTagsAll(ctx, request, response)
 }
 
+func (r *resourceRetriever) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data resourceRetrieverData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !data.NativeIndexConfiguration.IsNull() && data.Type.ValueEnum() == awstypes.RetrieverTypeKendraIndex {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("native_index_configuration"),
+			"Invalid Attribute Configuration",
+			"'native_index_configuration' is not allowed when 'type' is 'KENDRA_INDEX'",
+		)
+	}
+
+	if !data.KendraIndexConfiguration.IsNull() && data.Type.ValueEnum() == awstypes.RetrieverTypeNativeIndex {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("kendra_index_configuration"),
+			"Invalid Attribute Configuration",
+			"'kendra_index_configuration' is not allowed when 'type' is 'NATIVE_INDEX'",
+		)
+	}
+}
+
 const (
 	retrieverResourceIDPartCount = 2
 )

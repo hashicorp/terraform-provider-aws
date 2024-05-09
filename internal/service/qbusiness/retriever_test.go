@@ -177,14 +177,54 @@ func testAccCheckRetrieverExists(ctx context.Context, n string, v *qbusiness.Get
 
 func testAccRetrieverConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_qbusiness_app" "test" {
+  iam_service_role_arn = aws_iam_role.test.arn
+  display_name         = %[1]q
+  
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "DISABLED"
+  }
+}
+
 resource "aws_qbusiness_retriever" "test" {
-  application_id = "3f8d08f8-5729-4096-94e8-142378ae83c0"
+  application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
   type           = "NATIVE_INDEX"
 
   native_index_configuration {
-    index_id = "61934168-bdba-4b28-9869-5564ee794e89"
+    index_id = aws_qbusiness_index.test.index_id
   }
+}
+
+resource "aws_qbusiness_index" "test" {
+  application_id = aws_qbusiness_app.test.id
+  capacity_configuration {
+    units = 1
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
 }
 `, rName)
 }
@@ -200,7 +240,7 @@ resource "aws_qbusiness_retriever" "test" {
     index_id = "61934168-bdba-4b28-9869-5564ee794e89"
 
     string_boost_override {
-      boost_key      = "_category"
+      boost_key      = "string"
       boosting_level = "HIGH"
 
       attribute_value_boosting = {
@@ -221,7 +261,7 @@ resource "aws_qbusiness_retriever" "test" {
     }
 
     number_boost_override {
-      boost_key      = "view_count"
+      boost_key      = "number"
       boosting_level = "HIGH"
       boosting_type  = "PRIORITIZE_LARGER_VALUES"
     }
