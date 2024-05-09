@@ -170,7 +170,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.6
-	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.0
+	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.25.4
