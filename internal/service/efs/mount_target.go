@@ -90,7 +90,7 @@ func ResourceMountTarget() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -107,7 +107,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
-	subnetID := d.Get("subnet_id").(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), subnetID)
 
 	if err != nil {
@@ -180,7 +180,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)
-	d.Set("subnet_id", mt.SubnetId)
+	d.Set(names.AttrSubnetID, mt.SubnetId)
 
 	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),

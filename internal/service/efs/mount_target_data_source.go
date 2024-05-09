@@ -74,7 +74,7 @@ func DataSourceMountTarget() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("mount_target_id", mt.MountTargetId)
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)
-	d.Set("subnet_id", mt.SubnetId)
+	d.Set(names.AttrSubnetID, mt.SubnetId)
 
 	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
