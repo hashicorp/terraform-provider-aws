@@ -98,7 +98,7 @@ func testAccCheckResourceAssociationExists(ctx context.Context, n string, v *ram
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
-		output, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["resource_arn"])
+		output, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 
 		if err != nil {
 			return err
@@ -119,7 +119,7 @@ func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["resource_arn"])
+			_, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 
 			if tfresource.NotFound(err) {
 				continue
