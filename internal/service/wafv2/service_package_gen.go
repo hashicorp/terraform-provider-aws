@@ -25,20 +25,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceIPSet,
+			Factory:  dataSourceIPSet,
 			TypeName: "aws_wafv2_ip_set",
+			Name:     "IP Set",
 		},
 		{
-			Factory:  DataSourceRegexPatternSet,
+			Factory:  dataSourceRegexPatternSet,
 			TypeName: "aws_wafv2_regex_pattern_set",
+			Name:     "Regex Pattern Set",
 		},
 		{
-			Factory:  DataSourceRuleGroup,
+			Factory:  dataSourceRuleGroup,
 			TypeName: "aws_wafv2_rule_group",
+			Name:     "Rule Group",
 		},
 		{
-			Factory:  DataSourceWebACL,
+			Factory:  dataSourceWebACL,
 			TypeName: "aws_wafv2_web_acl",
+			Name:     "Web ACL",
 		},
 	}
 }
@@ -46,7 +50,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceIPSet,
+			Factory:  resourceIPSet,
 			TypeName: "aws_wafv2_ip_set",
 			Name:     "IP Set",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRegexPatternSet,
+			Factory:  resourceRegexPatternSet,
 			TypeName: "aws_wafv2_regex_pattern_set",
 			Name:     "Regex Pattern Set",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,7 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRuleGroup,
+			Factory:  resourceRuleGroup,
 			TypeName: "aws_wafv2_rule_group",
 			Name:     "Rule Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWebACL,
+			Factory:  resourceWebACL,
 			TypeName: "aws_wafv2_web_acl",
 			Name:     "Web ACL",
 			Tags: &types.ServicePackageResourceTags{
@@ -78,12 +82,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWebACLAssociation,
+			Factory:  resourceWebACLAssociation,
 			TypeName: "aws_wafv2_web_acl_association",
+			Name:     "Web ACL Association",
 		},
 		{
-			Factory:  ResourceWebACLLoggingConfiguration,
+			Factory:  resourceWebACLLoggingConfiguration,
 			TypeName: "aws_wafv2_web_acl_logging_configuration",
+			Name:     "Web ACL Logging Configuration",
 		},
 	}
 }

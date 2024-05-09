@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,7 +68,7 @@ func sweepIPSets(region string) error {
 		}
 
 		for _, v := range page.IPSets {
-			r := ResourceIPSet()
+			r := resourceIPSet()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
@@ -81,7 +81,7 @@ func sweepIPSets(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 IPSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -117,7 +117,7 @@ func sweepRegexPatternSets(region string) error {
 		}
 
 		for _, v := range page.RegexPatternSets {
-			r := ResourceRegexPatternSet()
+			r := resourceRegexPatternSet()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
@@ -130,7 +130,7 @@ func sweepRegexPatternSets(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 RegexPatternSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -166,7 +166,7 @@ func sweepRuleGroups(region string) error {
 		}
 
 		for _, v := range page.RuleGroups {
-			r := ResourceRuleGroup()
+			r := resourceRuleGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
@@ -179,7 +179,7 @@ func sweepRuleGroups(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 RuleGroup sweep for %s: %s", region, err)
 		return nil
 	}
@@ -225,7 +225,7 @@ func sweepWebACLs(region string) error {
 				continue
 			}
 
-			r := ResourceWebACL()
+			r := resourceWebACL()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
@@ -238,7 +238,7 @@ func sweepWebACLs(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 WebACL sweep for %s: %s", region, err)
 		return nil
 	}

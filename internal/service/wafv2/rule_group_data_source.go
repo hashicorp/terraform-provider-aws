@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafv2_rule_group")
-func DataSourceRuleGroup() *schema.Resource {
+// @SDKDataSource("aws_wafv2_rule_group", name="Rule Group")
+func dataSourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleGroupRead,
 

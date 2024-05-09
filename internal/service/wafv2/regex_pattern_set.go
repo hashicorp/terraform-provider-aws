@@ -32,7 +32,7 @@ const (
 
 // @SDKResource("aws_wafv2_regex_pattern_set", name="Regex Pattern Set")
 // @Tags(identifierAttribute="arn")
-func ResourceRegexPatternSet() *schema.Resource {
+func resourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexPatternSetCreate,
 		ReadWithoutTimeout:   resourceRegexPatternSetRead,

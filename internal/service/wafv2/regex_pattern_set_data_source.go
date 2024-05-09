@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafv2_regex_pattern_set")
-func DataSourceRegexPatternSet() *schema.Resource {
+// @SDKDataSource("aws_wafv2_regex_pattern_set", name="Regex Pattern Set")
+func dataSourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegexPatternSetRead,
 

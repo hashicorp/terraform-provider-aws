@@ -37,7 +37,7 @@ const (
 
 // @SDKResource("aws_wafv2_rule_group", name="Rule Group")
 // @Tags(identifierAttribute="arn")
-func ResourceRuleGroup() *schema.Resource {
+func resourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,
 		ReadWithoutTimeout:   resourceRuleGroupRead,

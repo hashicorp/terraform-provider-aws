@@ -36,7 +36,7 @@ const (
 
 // @SDKResource("aws_wafv2_web_acl", name="Web ACL")
 // @Tags(identifierAttribute="arn")
-func ResourceWebACL() *schema.Resource {
+func resourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLCreate,
 		ReadWithoutTimeout:   resourceWebACLRead,

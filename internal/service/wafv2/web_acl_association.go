@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_wafv2_web_acl_association")
-func ResourceWebACLAssociation() *schema.Resource {
+// @SDKResource("aws_wafv2_web_acl_association", name="Web ACL Association")
+func resourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,
 		ReadWithoutTimeout:   resourceWebACLAssociationRead,

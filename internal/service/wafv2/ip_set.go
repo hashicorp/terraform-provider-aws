@@ -34,7 +34,7 @@ const (
 
 // @SDKResource("aws_wafv2_ip_set", name="IP Set")
 // @Tags(identifierAttribute="arn")
-func ResourceIPSet() *schema.Resource {
+func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,
