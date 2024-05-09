@@ -91,7 +91,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	webACL, err := FindWebACLByResourceARN(ctx, conn, resourceARN)
+	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL Association (%s) not found, removing from state", d.Id())
@@ -134,7 +134,7 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func FindWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.WebACL, error) {
+func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.WebACL, error) {
 	input := &wafv2.GetWebACLForResourceInput{
 		ResourceArn: aws.String(arn),
 	}

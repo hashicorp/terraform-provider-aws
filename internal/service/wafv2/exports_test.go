@@ -12,6 +12,12 @@ var (
 	ResourceWebACLAssociation          = resourceWebACLAssociation
 	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
 
-	ListRuleGroupsPages = listRuleGroupsPages
-	ListWebACLsPages    = listWebACLsPages
+	FindIPSetByThreePartKey           = findIPSetByThreePartKey
+	FindLoggingConfigurationByARN     = findLoggingConfigurationByARN
+	FindRegexPatternSetByThreePartKey = findRegexPatternSetByThreePartKey
+	FindRuleGroupByThreePartKey       = findRuleGroupByThreePartKey
+	FindWebACLByResourceARN           = findWebACLByResourceARN
+	FindWebACLByThreePartKey          = findWebACLByThreePartKey
+	ListRuleGroupsPages               = listRuleGroupsPages
+	ListWebACLsPages                  = listWebACLsPages
 )

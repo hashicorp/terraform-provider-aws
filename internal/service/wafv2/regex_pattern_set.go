@@ -141,7 +141,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := FindRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
@@ -223,7 +223,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func FindRegexPatternSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetRegexPatternSetOutput, error) {
+func findRegexPatternSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetRegexPatternSetOutput, error) {
 	input := &wafv2.GetRegexPatternSetInput{
 		Id:    aws.String(id),
 		Name:  aws.String(name),

@@ -216,7 +216,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	loggingConfig, err := FindLoggingConfigurationByARN(ctx, conn, d.Id())
+	loggingConfig, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL Logging Configuration (%s) not found, removing from state", d.Id())
@@ -262,7 +262,7 @@ func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func FindLoggingConfigurationByARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.LoggingConfiguration, error) {
+func findLoggingConfigurationByARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.LoggingConfiguration, error) {
 	input := &wafv2.GetLoggingConfigurationInput{
 		ResourceArn: aws.String(arn),
 	}

@@ -225,7 +225,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
@@ -283,7 +283,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
 		rules := expandWebACLRules(d.Get("rule").(*schema.Set).List())
 		if sr := findShieldRule(rules); len(sr) == 0 {
-			output, err := FindWebACLByThreePartKey(ctx, conn, aclID, aclName, aclScope)
+			output, err := findWebACLByThreePartKey(ctx, conn, aclID, aclName, aclScope)
 			if err != nil {
 				return diag.Errorf("reading WAFv2 WebACL (%s): %s", aclID, err)
 			}
@@ -332,7 +332,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func retryResourceWebACLUpdateOptmisticLockFailure(ctx context.Context, conn *wafv2.Client, id, name, scope, lockToken string, input *wafv2.UpdateWebACLInput) diag.Diagnostics {
-	webAcl, err := FindWebACLByThreePartKey(ctx, conn, id, name, scope)
+	webAcl, err := findWebACLByThreePartKey(ctx, conn, id, name, scope)
 	if err != nil {
 		return diag.Errorf("refreshing WAFv2 WebACL (%s), attempting to refresh WAFv2 WebACL to retrieve new LockToken: %s", id, err)
 	} else if aws.ToString(webAcl.LockToken) != lockToken {
@@ -384,7 +384,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func retryResourceWebACLDeleteOptmisticLockFailure(ctx context.Context, conn *wafv2.Client, id, name, scope, lockToken string) diag.Diagnostics {
-	webAcl, err := FindWebACLByThreePartKey(ctx, conn, id, name, scope)
+	webAcl, err := findWebACLByThreePartKey(ctx, conn, id, name, scope)
 	if err != nil {
 		return diag.Errorf("refreshing WAFv2 WebACL (%s), attempting to refresh WAFv2 WebACL to retrieve new LockToken: %s", id, err)
 	} else if aws.ToString(webAcl.LockToken) != lockToken {
@@ -407,7 +407,7 @@ func retryResourceWebACLDeleteOptmisticLockFailure(ctx context.Context, conn *wa
 	return nil
 }
 
-func FindWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {
+func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {
 	input := &wafv2.GetWebACLInput{
 		Id:    aws.String(id),
 		Name:  aws.String(name),

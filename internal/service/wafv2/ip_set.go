@@ -162,7 +162,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := FindIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 IPSet (%s) not found, removing from state", d.Id())
@@ -243,7 +243,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func FindIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetIPSetOutput, error) {
+func findIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetIPSetOutput, error) {
 	input := &wafv2.GetIPSetInput{
 		Id:    aws.String(id),
 		Name:  aws.String(name),

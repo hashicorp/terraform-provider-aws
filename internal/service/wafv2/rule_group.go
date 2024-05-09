@@ -193,7 +193,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := FindRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
@@ -284,7 +284,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func FindRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetRuleGroupOutput, error) {
+func findRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetRuleGroupOutput, error) {
 	input := &wafv2.GetRuleGroupInput{
 		Id:    aws.String(id),
 		Name:  aws.String(name),
