@@ -23,6 +23,7 @@ BUG FIXES:
 * data-source/aws_resourceexplorer2_search: Fix 401 unauthorized error due to missing `view_arn` in the AWS API request ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
 * data-source/aws_resourceexplorer2_search: Fix panic caused by bad mappping between Terraform and AWS schemas ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
 * data-source/aws_resourceexplorer2_search: Fix state persistence and data types ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
+* resource/aws_bedrockagent_agent: Fix to use the configured `prepare_agent` value (or default value of `true` when omitted) for all create and update operations ([#37405](https://github.com/hashicorp/terraform-provider-aws/issues/37405))
 * resource/aws_elasticsearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
 * resource/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
 * resource/aws_fsx_openzfs_file_system: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
