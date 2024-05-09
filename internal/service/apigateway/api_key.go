@@ -62,7 +62,7 @@ func resourceAPIKey() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)
 	d.Set(names.AttrEnabled, apiKey.Enabled)
-	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, apiKey.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, apiKey.Name)
 	d.Set(names.AttrValue, apiKey.Value)
 
