@@ -35,7 +35,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(TrafficPolicyDocEndpointType_values(), false),
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -186,7 +186,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -197,7 +197,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -214,7 +214,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -309,7 +309,7 @@ func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *TrafficPo
 	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
 		apiObject.Type = v.(string)
 	}
-	if v, ok := tfMap["region"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap[names.AttrValue]; ok && v.(string) != "" {
@@ -365,7 +365,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 	if v, ok := tfMap["geo_proximity_location"]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.GeoProximityLocations = expandDataTrafficPolicyProximitiesDoc(v.(*schema.Set).List())
 	}
-	if v, ok := tfMap["region"]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap[names.AttrRegion]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Regions = expandDataTrafficPolicyRegionsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["items"]; ok && len(v.(*schema.Set).List()) > 0 {
@@ -494,7 +494,7 @@ func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *TrafficP
 	if v, ok := tfMap["rule_reference"]; ok && v.(string) != "" {
 		apiObject.RuleReference = v.(string)
 	}
-	if v, ok := tfMap["region"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap["latitude"]; ok && v.(string) != "" {
@@ -551,7 +551,7 @@ func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *TrafficPoli
 	if v, ok := tfMap["rule_reference"]; ok && v.(string) != "" {
 		apiObject.RuleReference = v.(string)
 	}
-	if v, ok := tfMap["region"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
