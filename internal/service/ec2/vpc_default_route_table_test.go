@@ -256,7 +256,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "transit_gateway_id", tgwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
 				),
 			},
 			{

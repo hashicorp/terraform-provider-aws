@@ -416,7 +416,7 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexache.MustCompile(`tgw-attach-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 			},
 			{
@@ -1602,7 +1602,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test1", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test1", names.AttrID),
 				),
 			},
 			{
@@ -1617,7 +1617,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test2", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test2", names.AttrID),
 				),
 			},
 		},
@@ -1641,7 +1641,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", names.AttrID),
 				),
 			},
@@ -1656,7 +1656,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
 				),
 			},
@@ -1681,7 +1681,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn1),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, "aws_ec2_transit_gateway.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpn_gateway_id", ""),
 				),
 			},
@@ -1696,7 +1696,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn2),
 					testAccCheckVPNConnectionNotRecreated(&vpn1, &vpn2),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", names.AttrID),
 				),
 			},

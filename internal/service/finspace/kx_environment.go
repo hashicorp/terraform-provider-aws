@@ -189,7 +189,7 @@ func ResourceKxEnvironment() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 32),
@@ -554,7 +554,7 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 
 	a := &types.TransitGatewayConfiguration{}
 
-	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
 		a.TransitGatewayID = aws.String(v)
 	}
 
@@ -695,7 +695,7 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 	m := map[string]interface{}{}
 
 	if v := apiObject.TransitGatewayID; v != nil {
-		m["transit_gateway_id"] = aws.ToString(v)
+		m[names.AttrTransitGatewayID] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoutableCIDRSpace; v != nil {
