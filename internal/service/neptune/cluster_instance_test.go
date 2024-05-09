@@ -56,7 +56,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "neptune_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, strconv.Itoa(tfneptune.DefaultPort)),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "3"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
