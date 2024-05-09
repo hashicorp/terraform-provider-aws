@@ -154,10 +154,10 @@ func testAccFindingsFilter_complete(t *testing.T) {
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -176,10 +176,10 @@ func testAccFindingsFilter_complete(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -195,10 +195,10 @@ func testAccFindingsFilter_complete(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -238,7 +238,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -259,7 +259,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -318,7 +318,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -337,7 +337,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
@@ -389,7 +389,7 @@ func testAccFindingsFilter_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field": "region",
+						"field": names.AttrRegion,
 						"eq.#":  "1",
 						"eq.0":  acctest.Region(),
 					}),
