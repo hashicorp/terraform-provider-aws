@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.0
