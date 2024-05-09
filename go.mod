@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.0
