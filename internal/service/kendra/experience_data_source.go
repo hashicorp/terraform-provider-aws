@@ -87,7 +87,7 @@ func DataSourceExperience() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
