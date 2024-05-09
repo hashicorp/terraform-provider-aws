@@ -55,7 +55,7 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,7 +88,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk("transit_gateway_attachment_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayAttachmentID); ok {
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -121,7 +121,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set("resource_owner_id", resourceOwnerID)
 	d.Set("resource_type", transitGatewayAttachment.ResourceType)
 	d.Set(names.AttrState, transitGatewayAttachment.State)
-	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachmentID)
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 

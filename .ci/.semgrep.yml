@@ -1085,3 +1085,13 @@ rules:
       - pattern: '"cluster_identifier"'
     severity: ERROR
     fix: "names.AttrClusterIdentifier"
+  - id: literal-transit_gateway_attachment_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrTransitGatewayAttachmentID` for the string literal "transit_gateway_attachment_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"transit_gateway_attachment_id"'
+    severity: ERROR
+    fix: "names.AttrTransitGatewayAttachmentID"

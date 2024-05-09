@@ -83,7 +83,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -131,7 +131,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -141,23 +141,23 @@ func ResourceFlowLog() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TrafficType_Values(), false),
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", "subnet_id", names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
 
@@ -184,7 +184,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Type: ec2.FlowLogsResourceTypeTransitGateway,
 		},
 		{
-			ID:   d.Get("transit_gateway_attachment_id").(string),
+			ID:   d.Get(names.AttrTransitGatewayAttachmentID).(string),
 			Type: ec2.FlowLogsResourceTypeTransitGatewayAttachment,
 		},
 		{
@@ -305,7 +305,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set(names.AttrVPCID, resourceID)
 	case strings.HasPrefix(resourceID, "tgw-"):
 		if strings.HasPrefix(resourceID, "tgw-attach-") {
-			d.Set("transit_gateway_attachment_id", resourceID)
+			d.Set(names.AttrTransitGatewayAttachmentID, resourceID)
 		} else {
 			d.Set(names.AttrTransitGatewayID, resourceID)
 		}

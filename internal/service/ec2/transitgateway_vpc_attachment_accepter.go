@@ -55,7 +55,7 @@ func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
+	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	input := &ec2.AcceptTransitGatewayVpcAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 	}
@@ -184,7 +184,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(ctx context.Context, d *sch
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
-	d.Set("transit_gateway_attachment_id", transitGatewayVPCAttachment.TransitGatewayAttachmentId)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayVPCAttachment.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
 	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
