@@ -107,7 +107,7 @@ func ResourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Schema{
@@ -768,7 +768,7 @@ func convertCostFiltersToMap(costFilters map[string][]string) []map[string]inter
 		filterValues := make([]string, 0)
 		filterValues = append(filterValues, v...)
 
-		convertedCostFilter["values"] = filterValues
+		convertedCostFilter[names.AttrValues] = filterValues
 		convertedCostFilter[names.AttrName] = k
 		convertedCostFilters = append(convertedCostFilters, convertedCostFilter)
 	}
@@ -816,7 +816,7 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*awstypes.Budget, error) {
 		for _, v := range costFilter.(*schema.Set).List() {
 			element := v.(map[string]interface{})
 			key := element[names.AttrName].(string)
-			for _, filterValue := range element["values"].([]interface{}) {
+			for _, filterValue := range element[names.AttrValues].([]interface{}) {
 				budgetCostFilters[key] = append(budgetCostFilters[key], filterValue.(string))
 			}
 		}

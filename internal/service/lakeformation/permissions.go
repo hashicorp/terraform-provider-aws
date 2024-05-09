@@ -181,7 +181,7 @@ func ResourcePermissions() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -230,7 +230,7 @@ func ResourcePermissions() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										ForceNew: true,
@@ -1002,7 +1002,7 @@ func ExpandLFTagExpression(expression []interface{}) []awstypes.LFTag {
 
 		tag := awstypes.LFTag{
 			TagKey:    aws.String(elementMap[names.AttrKey].(string)),
-			TagValues: flex.ExpandStringValueSet(elementMap["values"].(*schema.Set)),
+			TagValues: flex.ExpandStringValueSet(elementMap[names.AttrValues].(*schema.Set)),
 		}
 
 		tagSlice = append(tagSlice, tag)
@@ -1044,7 +1044,7 @@ func flattenLFTagExpression(ts []awstypes.LFTag) []map[string]interface{} {
 			}
 
 			if v := flex.FlattenStringValueList(t.TagValues); v != nil {
-				tag["values"] = v
+				tag[names.AttrValues] = v
 			}
 
 			tagSlice[i] = tag
@@ -1069,7 +1069,7 @@ func ExpandLFTagKeyResource(tfMap map[string]interface{}) *awstypes.LFTagKeyReso
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v != nil {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v != nil {
 		apiObject.TagValues = flex.ExpandStringValueSet(v)
 	}
 
@@ -1092,7 +1092,7 @@ func flattenLFTagKeyResource(apiObject *awstypes.LFTagKeyResource) map[string]in
 	}
 
 	if v := apiObject.TagValues; v != nil {
-		tfMap["values"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrValues] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap
