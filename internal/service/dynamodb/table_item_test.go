@@ -401,7 +401,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	hashKey := "key"
+	hashKey := names.AttrKey
 	tmpl := `{
 	"key": {"S": "something"},
 	"value": {
@@ -429,7 +429,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemConfig_map(tableName, hashKey, oldItem),
+				Config: testAccTableItemConfig_map(tableName, names.AttrKey, oldItem),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(ctx, tableName, 1),
@@ -467,7 +467,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 						t.Fatalf("making out-of-band change: %s", err)
 					}
 				},
-				Config:   testAccTableItemConfig_map(tableName, hashKey, newItem),
+				Config:   testAccTableItemConfig_map(tableName, names.AttrKey, newItem),
 				PlanOnly: true,
 			},
 		},

@@ -34,12 +34,12 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
 					testAccCheckAMICopyAttributes(&image, rName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 				),
 			},
 		},
@@ -62,14 +62,14 @@ func TestAccEC2AMICopy_description(t *testing.T) {
 				Config: testAccAMICopyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccAMICopyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -116,7 +116,7 @@ func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 				Config: testAccAMICopyConfig_destOutpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
 		},

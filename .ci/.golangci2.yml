@@ -45,7 +45,7 @@ issues:
     - linters:
         - staticcheck
       path: "internal/service/cloudfront"
-      text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+      text: "SA1019: \\w+.(\\w+) is deprecated: This member has been deprecated"
     - linters:
         - staticcheck
       path: "internal/service/cloudtrail"
@@ -62,6 +62,10 @@ issues:
         - staticcheck
       path: "internal/service/firehose"
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/fsx"
+      text: "SA1019: \\w+.(\\w+) is deprecated: This property is deprecated"
     - linters:
         - staticcheck
       path: internal/service/globalaccelerator/
@@ -125,32 +129,31 @@ linters:
     - goconst
     - gocritic
     - gofmt
-    - gomnd
     - gosimple
+    - govet
     - ineffassign
     - makezero
     - misspell
+    - mnd
     - nakedret
     - nilerr
     - nolintlint
     - nosprintfhostport
     - paralleltest
-    # - perfsprint
     - predeclared
     - revive
     - staticcheck
     - stylecheck
     - tenv
-    # - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
-    - vet
-    - vetshadow
     - whitespace
+    # - perfsprint
+    # - thelper
 
 linters-settings:
   dogsled:
@@ -170,41 +173,39 @@ linters-settings:
       - performance
       - experimental
       - opinionated
-  gomnd:
-    settings:
-      mnd:
-        checks:
-          - argument
-        ignored-functions:
-          # AWS Go SDK
-          - aws.Int32
-          - aws.Int64
-          - request.ConstantWaiterDelay
-          - request.WithWaiterMaxAttempts
-          # AWS Provider
-          - nullable.*
-          - tfresource.Retry*
-          - tfresource.With*
-          # Terraform Plugin SDK
-          - retry.RetryContext
-          - schema.DefaultTimeout
-          - validation.*
-          # Terraform Plugin Framework
-          - int64validator.*
-          - listvalidator.*
-          - setvalidator.*
-          - stringvalidator.*
-          - SetDefaultCreateTimeout
-          - SetDefaultReadTimeout
-          - SetDefaultUpdateTimeout
-          - SetDefaultDeleteTimeout
-          # Go
-          - make
-          - strconv.FormatFloat
-          - strconv.FormatInt
-          - strconv.ParseFloat
-          - strconv.ParseInt
-          - strings.SplitN
+  mnd:
+    checks:
+      - argument
+    ignored-functions:
+      # AWS Go SDK
+      - aws.Int32
+      - aws.Int64
+      - request.ConstantWaiterDelay
+      - request.WithWaiterMaxAttempts
+      # AWS Provider
+      - nullable.*
+      - tfresource.Retry*
+      - tfresource.With*
+      # Terraform Plugin SDK
+      - retry.RetryContext
+      - schema.DefaultTimeout
+      - validation.*
+      # Terraform Plugin Framework
+      - int64validator.*
+      - listvalidator.*
+      - setvalidator.*
+      - stringvalidator.*
+      - SetDefaultCreateTimeout
+      - SetDefaultReadTimeout
+      - SetDefaultUpdateTimeout
+      - SetDefaultDeleteTimeout
+      # Go
+      - make
+      - strconv.FormatFloat
+      - strconv.FormatInt
+      - strconv.ParseFloat
+      - strconv.ParseInt
+      - strings.SplitN
   nolintlint:
     allow-unused: false
     allow-leading-space: false

@@ -35,7 +35,7 @@ func ResourceWorkflow() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,19 +57,19 @@ func ResourceWorkflow() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -81,7 +81,7 @@ func ResourceWorkflow() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -93,7 +93,7 @@ func ResourceWorkflow() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"data", "uri"},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -111,9 +111,9 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &imagebuilder.CreateWorkflowInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get("name").(string)),
-		SemanticVersion: aws.String(d.Get("version").(string)),
-		Type:            aws.String(d.Get("type").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
+		SemanticVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		Type:            aws.String(d.Get(names.AttrType).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -125,11 +125,11 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Data = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -174,19 +174,19 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	workflow := output.Workflow
 
-	d.Set("arn", workflow.Arn)
+	d.Set(names.AttrARN, workflow.Arn)
 	d.Set("change_description", workflow.ChangeDescription)
 	d.Set("data", workflow.Data)
 	d.Set("date_created", workflow.DateCreated)
-	d.Set("description", workflow.Description)
-	d.Set("name", workflow.Name)
-	d.Set("kms_key_id", workflow.KmsKeyId)
+	d.Set(names.AttrDescription, workflow.Description)
+	d.Set(names.AttrName, workflow.Name)
+	d.Set(names.AttrKMSKeyID, workflow.KmsKeyId)
 	d.Set("owner", workflow.Owner)
 
 	setTagsOut(ctx, workflow.Tags)
 
-	d.Set("type", workflow.Type)
-	d.Set("version", workflow.Version)
+	d.Set(names.AttrType, workflow.Type)
+	d.Set(names.AttrVersion, workflow.Version)
 
 	return diags
 }

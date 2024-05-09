@@ -29,10 +29,10 @@ func TestAccSFNAliasDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAliasDataSourceConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 				),
 			},
 		},

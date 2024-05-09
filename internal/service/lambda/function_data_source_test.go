@@ -28,10 +28,10 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "code_signing_config_arn", resourceName, "code_signing_config_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dead_letter_config.#", resourceName, "dead_letter_config.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.#", resourceName, "ephemeral_storage.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.0.size", resourceName, "ephemeral_storage.0.size"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
@@ -57,7 +57,7 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "timeout", resourceName, "timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tracing_config.#", resourceName, "tracing_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tracing_config.0.mode", resourceName, "tracing_config.0.mode"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, resourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -78,12 +78,12 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_version(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -104,11 +104,11 @@ func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_latestVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -129,11 +129,11 @@ func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_unpublishedVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", "$LATEST"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "$LATEST"),
 				),
 			},
 		},
@@ -155,10 +155,10 @@ func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_alias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", lambdaAliasResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", lambdaAliasResourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "version", lambdaAliasResourceName, "function_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", lambdaAliasResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", lambdaAliasResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, lambdaAliasResourceName, "function_version"),
 				),
 			},
 		},
@@ -179,7 +179,7 @@ func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_layers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "layers.#", resourceName, "layers.#"),
 				),
 			},
@@ -205,7 +205,7 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.#", resourceName, "vpc_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.security_group_ids.#", resourceName, "vpc_config.0.security_group_ids.#"),
@@ -231,7 +231,7 @@ func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_environment(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "environment.#", resourceName, "environment.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "environment.0.variables.%", resourceName, "environment.0.variables.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "environment.0.variables.key1", resourceName, "environment.0.variables.key1"),
@@ -260,7 +260,7 @@ func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_fileSystems(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_config.#", resourceName, "file_system_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_config.0.arn", resourceName, "file_system_config.0.arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_config.0.local_mount_path", resourceName, "file_system_config.0.local_mount_path"),
@@ -329,7 +329,7 @@ func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 			{
 				Config: testAccFunctionDataSourceConfig_ephemeralStorage(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.#", resourceName, "ephemeral_storage.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.0.size", resourceName, "ephemeral_storage.0.size"),
 				),
@@ -344,7 +344,7 @@ func TestAccLambdaFunctionDataSource_loggingConfig(t *testing.T) {
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
 	checkFunc := resource.ComposeAggregateTestCheckFunc(
-		resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.#", resourceName, "logging_config.#"),
 		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.application_log_level", resourceName, "logging_config.0.application_log_level"),
 		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.log_format", resourceName, "logging_config.0.log_format"),

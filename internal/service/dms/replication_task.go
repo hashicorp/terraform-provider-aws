@@ -108,7 +108,7 @@ func ResourceReplicationTask() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -212,7 +212,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
 	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
-	d.Set("status", task.Status)
+	d.Set(names.AttrStatus, task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
@@ -223,7 +223,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "replication_instance_arn", "start_replication_task") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "replication_instance_arn", "start_replication_task") {
 		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

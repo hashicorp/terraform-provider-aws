@@ -39,11 +39,11 @@ func ResourceQueue() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
@@ -52,7 +52,7 @@ func ResourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -62,7 +62,7 @@ func ResourceQueue() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -101,7 +101,7 @@ func ResourceQueue() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -118,15 +118,15 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -196,14 +196,14 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", resp.Queue.QueueArn)
-	d.Set("description", resp.Queue.Description)
+	d.Set(names.AttrARN, resp.Queue.QueueArn)
+	d.Set(names.AttrDescription, resp.Queue.Description)
 	d.Set("hours_of_operation_id", resp.Queue.HoursOfOperationId)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("max_contacts", resp.Queue.MaxContacts)
-	d.Set("name", resp.Queue.Name)
+	d.Set(names.AttrName, resp.Queue.Name)
 	d.Set("queue_id", resp.Queue.QueueId)
-	d.Set("status", resp.Queue.Status)
+	d.Set(names.AttrStatus, resp.Queue.Status)
 
 	// reading quick_connect_ids requires a separate API call
 	quickConnectIds, err := getQueueQuickConnectIDs(ctx, conn, instanceID, queueID)
@@ -267,12 +267,12 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// updates to name and/or description
-	if d.HasChanges("name", "description") {
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		input := &connect.UpdateQueueNameInput{
 			InstanceId:  aws.String(instanceID),
 			QueueId:     aws.String(queueID),
-			Name:        aws.String(d.Get("name").(string)),
-			Description: aws.String(d.Get("description").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 		}
 		_, err = conn.UpdateQueueNameWithContext(ctx, input)
 
@@ -296,11 +296,11 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// updates to status
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		input := &connect.UpdateQueueStatusInput{
 			InstanceId: aws.String(instanceID),
 			QueueId:    aws.String(queueID),
-			Status:     aws.String(d.Get("status").(string)),
+			Status:     aws.String(d.Get(names.AttrStatus).(string)),
 		}
 		_, err = conn.UpdateQueueStatusWithContext(ctx, input)
 

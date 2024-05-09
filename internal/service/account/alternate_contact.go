@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_account_alternate_contact")
@@ -46,7 +47,7 @@ func resourceAlternateContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -63,7 +64,7 @@ func resourceAlternateContact() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w+=,.-]+@[\w.-]+\.[\w]+`), "must be a valid email address"),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -87,13 +88,13 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	contactType := d.Get("alternate_contact_type").(string)
 	id := alternateContactCreateResourceID(accountID, contactType)
 	input := &account.PutAlternateContactInput{
 		AlternateContactType: types.AlternateContactType(contactType),
 		EmailAddress:         aws.String(d.Get("email_address").(string)),
-		Name:                 aws.String(d.Get("name").(string)),
+		Name:                 aws.String(d.Get(names.AttrName).(string)),
 		PhoneNumber:          aws.String(d.Get("phone_number").(string)),
 		Title:                aws.String(d.Get("title").(string)),
 	}
@@ -147,10 +148,10 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("alternate_contact_type", output.AlternateContactType)
 	d.Set("email_address", output.EmailAddress)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("phone_number", output.PhoneNumber)
 	d.Set("title", output.Title)
 
@@ -169,7 +170,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	email := d.Get("email_address").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	phone := d.Get("phone_number").(string)
 	title := d.Get("title").(string)
 

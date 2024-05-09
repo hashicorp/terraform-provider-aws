@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_wafv2_web_acl")
@@ -22,15 +23,15 @@ func DataSourceWebACL() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -47,7 +48,7 @@ func DataSourceWebACL() *schema.Resource {
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	var foundWebACL *wafv2.WebACLSummary
 	input := &wafv2.ListWebACLsInput{
@@ -83,8 +84,8 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(foundWebACL.Id))
-	d.Set("arn", foundWebACL.ARN)
-	d.Set("description", foundWebACL.Description)
+	d.Set(names.AttrARN, foundWebACL.ARN)
+	d.Set(names.AttrDescription, foundWebACL.Description)
 
 	return diags
 }

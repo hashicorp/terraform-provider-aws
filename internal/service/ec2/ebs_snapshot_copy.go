@@ -37,7 +37,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -68,7 +68,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -120,7 +120,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSnapshot),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -128,7 +128,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 

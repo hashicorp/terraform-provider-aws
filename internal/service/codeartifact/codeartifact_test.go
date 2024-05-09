@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeArtifact_serial(t *testing.T) {
@@ -23,7 +24,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"defaultEncryptionKey":          testAccDomain_defaultEncryptionKey,
 			"disappears":                    testAccDomain_disappears,
 			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
-			"tags":                          testAccDomain_tags,
+			names.AttrTags:                  testAccDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
 			"basic":            testAccDomainPermissionsPolicy_basic,
@@ -33,13 +34,13 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"ignoreEquivalent": testAccDomainPermissionsPolicy_ignoreEquivalent,
 		},
 		"Repository": {
-			"basic":              testAccRepository_basic,
-			"description":        testAccRepository_description,
-			"disappears":         testAccRepository_disappears,
-			"externalConnection": testAccRepository_externalConnection,
-			"owner":              testAccRepository_owner,
-			"tags":               testAccRepository_tags,
-			"upstreams":          testAccRepository_upstreams,
+			"basic":               testAccRepository_basic,
+			names.AttrDescription: testAccRepository_description,
+			"disappears":          testAccRepository_disappears,
+			"externalConnection":  testAccRepository_externalConnection,
+			"owner":               testAccRepository_owner,
+			names.AttrTags:        testAccRepository_tags,
+			"upstreams":           testAccRepository_upstreams,
 		},
 		"RepositoryEndpointDataSource": {
 			"basic": testAccRepositoryEndpointDataSource_basic,

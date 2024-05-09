@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
@@ -27,12 +28,12 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"arn", "url"},
+				ExactlyOneOf: []string{names.AttrARN, "url"},
 			},
 			"client_id_list": {
 				Type:     schema.TypeList,
@@ -44,14 +45,14 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ValidateFunc:     validOpenIDURL,
 				DiffSuppressFunc: suppressOpenIDURL,
-				ExactlyOneOf:     []string{"arn", "url"},
+				ExactlyOneOf:     []string{names.AttrARN, "url"},
 			},
 		},
 	}
@@ -65,7 +66,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 
 	input := &iam.GetOpenIDConnectProviderInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.OpenIDConnectProviderArn = aws.String(v.(string))
 	} else if v, ok := d.GetOk("url"); ok {
 		url := v.(string)
@@ -88,12 +89,12 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(aws.ToString(input.OpenIDConnectProviderArn))
-	d.Set("arn", input.OpenIDConnectProviderArn)
+	d.Set(names.AttrARN, input.OpenIDConnectProviderArn)
 	d.Set("url", resp.Url)
 	d.Set("client_id_list", flex.FlattenStringValueList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringValueList(resp.ThumbprintList))
 
-	if err := d.Set("tags", KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

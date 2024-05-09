@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codecommit_approval_rule_template", name="Approval Rule Template")
@@ -57,7 +58,7 @@ func resourceApprovalRuleTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -70,7 +71,7 @@ func resourceApprovalRuleTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -87,13 +88,13 @@ func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codecommit.CreateApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName:    aws.String(name),
 		ApprovalRuleTemplateContent: aws.String(d.Get("content").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ApprovalRuleTemplateDescription = aws.String(v.(string))
 	}
 
@@ -125,12 +126,12 @@ func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set("approval_rule_template_id", result.ApprovalRuleTemplateId)
-	d.Set("description", result.ApprovalRuleTemplateDescription)
+	d.Set(names.AttrDescription, result.ApprovalRuleTemplateDescription)
 	d.Set("content", result.ApprovalRuleTemplateContent)
 	d.Set("creation_date", result.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", result.LastModifiedDate.Format(time.RFC3339))
 	d.Set("last_modified_user", result.LastModifiedUser)
-	d.Set("name", result.ApprovalRuleTemplateName)
+	d.Set(names.AttrName, result.ApprovalRuleTemplateName)
 	d.Set("rule_content_sha256", result.RuleContentSha256)
 
 	return diags
@@ -140,9 +141,9 @@ func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &codecommit.UpdateApprovalRuleTemplateDescriptionInput{
-			ApprovalRuleTemplateDescription: aws.String(d.Get("description").(string)),
+			ApprovalRuleTemplateDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			ApprovalRuleTemplateName:        aws.String(d.Id()),
 		}
 
@@ -167,8 +168,8 @@ func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChange("name") {
-		newName := d.Get("name").(string)
+	if d.HasChange(names.AttrName) {
+		newName := d.Get(names.AttrName).(string)
 
 		input := &codecommit.UpdateApprovalRuleTemplateNameInput{
 			NewApprovalRuleTemplateName: aws.String(newName),

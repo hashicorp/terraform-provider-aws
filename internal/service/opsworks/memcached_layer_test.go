@@ -32,7 +32,7 @@ func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_memory", "512"),
-					resource.TestCheckResourceAttr(resourceName, "name", "Memcached"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Memcached"),
 				),
 			},
 		},

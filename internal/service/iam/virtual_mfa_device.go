@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
 // @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
 func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
@@ -43,7 +43,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vMFA.SerialNumber)
+	d.Set(names.AttrARN, vMFA.SerialNumber)
 
 	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {

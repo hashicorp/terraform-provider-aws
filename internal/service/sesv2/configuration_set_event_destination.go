@@ -88,7 +88,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 								},
 							},
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -325,7 +325,7 @@ func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.C
 
 func flattenEventDestination(apiObject types.EventDestination) map[string]interface{} {
 	m := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.CloudWatchDestination; v != nil {
@@ -452,7 +452,7 @@ func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinatio
 		a.CloudWatchDestination = expandCloudWatchDestination(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		a.Enabled = v
 	}
 

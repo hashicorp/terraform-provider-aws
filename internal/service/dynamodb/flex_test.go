@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestExpandTableItemAttributes(t *testing.T) {
@@ -106,7 +107,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 			input: `{"attr":{"S":"value"}}`,
 			expected: map[string]*dynamodb.AttributeValue{
 				"attr": {
-					S: aws.String("value"),
+					S: aws.String(names.AttrValue),
 				},
 			},
 		},
@@ -266,7 +267,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		"S": {
 			attrs: map[string]*dynamodb.AttributeValue{
 				"attr": {
-					S: aws.String("value"),
+					S: aws.String(names.AttrValue),
 				},
 			},
 			expected: `{"attr":{"S":"value"}}`,

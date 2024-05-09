@@ -40,18 +40,18 @@ func TestAccDAXCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexache.MustCompile("cache/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dax", regexache.MustCompile("cache/.+")),
 					resource.TestCheckResourceAttr(
 						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexache.MustCompile(`^tf-\w+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t3.small"),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "description", "test cluster"),
+						resourceName, names.AttrDescription, "test cluster"),
 					resource.TestMatchResourceAttr(
 						resourceName, "parameter_group_name", regexache.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
@@ -65,7 +65,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						resourceName, "cluster_address"),
 					resource.TestMatchResourceAttr(
-						resourceName, "port", regexache.MustCompile(`^\d+$`)),
+						resourceName, names.AttrPort, regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(
 						resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(

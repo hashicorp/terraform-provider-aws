@@ -43,11 +43,11 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -55,7 +55,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -77,7 +77,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
@@ -85,7 +85,7 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 		Vpc:              aws.String(d.Get("vpc").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -128,14 +128,14 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	arn := aws.StringValue(ns.Arn)
-	d.Set("arn", arn)
-	d.Set("description", ns.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
 		d.Set("hosted_zone", ns.Properties.DnsProperties.HostedZoneId)
 	} else {
 		d.Set("hosted_zone", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
 	return nil
 }
@@ -143,11 +143,11 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &servicediscovery.UpdatePrivateDnsNamespaceInput{
 			Id: aws.String(d.Id()),
 			Namespace: &servicediscovery.PrivateDnsNamespaceChange{
-				Description: aws.String(d.Get("description").(string)),
+				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
 			UpdaterRequestId: aws.String(id.UniqueId()),
 		}

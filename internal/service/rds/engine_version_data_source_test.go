@@ -36,13 +36,13 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 				Config: testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "version", version),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", version),
 					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),
 					resource.TestCheckResourceAttrSet(dataSourceName, "default_character_set"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
 					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_character_sets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_feature_names.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexache.MustCompile(`^[0-9]*`)),
@@ -92,14 +92,14 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred2(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
 				),
 			},
@@ -120,13 +120,13 @@ func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.37", "5.7.38", "5.7.39"`, `"8.0.34"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.39"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "5.7.39"),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.44"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "5.7.44"),
 				),
 			},
 		},
@@ -146,7 +146,7 @@ func TestAccRDSEngineVersionDataSource_preferredUpgradeTargetsVersion(t *testing
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(tfrds.InstanceEngineMySQL, "5.7", `"8.0.44", "8.0.35", "8.0.34"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^5\.7`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^5\.7`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^5\.7\.`)),
 				),
 			},
@@ -167,13 +167,13 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^5\.7\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^5\.7\.`)),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^15\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15\.`)),
 				),
 			},
 		},
@@ -193,7 +193,7 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnlyImplicit(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 				),
 			},
 		},
@@ -213,7 +213,7 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnlyExplicit(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
@@ -234,7 +234,7 @@ func TestAccRDSEngineVersionDataSource_includeAll(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_includeAll(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.20"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.20"),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.20"),
 				),
 			},
@@ -255,14 +255,14 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_filter(tfrds.ClusterEngineAuroraPostgreSQL, "serverless"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_filter(tfrds.ClusterEngineAuroraPostgreSQL, "global"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "global"),
 				),
 			},
@@ -283,26 +283,26 @@ func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_latest(true, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "15.4"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "15.4"),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_latest(false, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "13.9"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "13.9"),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^15`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^15\.[0-9]`)),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineMySQL, "8.0"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
 				),
 			},

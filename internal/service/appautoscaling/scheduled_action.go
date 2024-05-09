@@ -18,9 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appautoscaling_scheduled_action", namae="Scheduled Action")
@@ -32,7 +33,7 @@ func resourceScheduledAction() *schema.Resource {
 		DeleteWithoutTimeout: resourceScheduledActionDelete,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +43,7 @@ func resourceScheduledAction() *schema.Resource {
 				ValidateFunc:     validation.IsRFC3339Time,
 				DiffSuppressFunc: suppressEquivalentTime,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -114,7 +115,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	name, serviceNamespace, resourceID := d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string)
+	name, serviceNamespace, resourceID := d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string)
 	id := strings.Join([]string{name, serviceNamespace, resourceID}, "-")
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ResourceId:          aws.String(resourceID),
@@ -177,7 +178,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
+	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
@@ -189,7 +190,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Application Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", scheduledAction.ScheduledActionARN)
+	d.Set(names.AttrARN, scheduledAction.ScheduledActionARN)
 	if scheduledAction.EndTime != nil {
 		d.Set("end_time", scheduledAction.EndTime.Format(time.RFC3339))
 	}
@@ -213,7 +214,7 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.DeleteScheduledActionWithContext(ctx, &applicationautoscaling.DeleteScheduledActionInput{
 		ResourceId:          aws.String(d.Get("resource_id").(string)),
 		ScalableDimension:   aws.String(d.Get("scalable_dimension").(string)),
-		ScheduledActionName: aws.String(d.Get("name").(string)),
+		ScheduledActionName: aws.String(d.Get(names.AttrName).(string)),
 		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
 	})
 
@@ -285,12 +286,12 @@ func expandScalableTargetAction(l []interface{}) *applicationautoscaling.Scalabl
 	result := &applicationautoscaling.ScalableTargetAction{}
 
 	if v, ok := m["max_capacity"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Int(v.(string)).ValueInt64(); !null {
 			result.MaxCapacity = aws.Int64(v)
 		}
 	}
 	if v, ok := m["min_capacity"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
+		if v, null, _ := nullable.Int(v.(string)).ValueInt64(); !null {
 			result.MinCapacity = aws.Int64(v)
 		}
 	}

@@ -42,7 +42,7 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),

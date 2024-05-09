@@ -40,18 +40,18 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceSimpleName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "300"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "name", rName+"-simple"),
+					resource.TestCheckResourceAttr(resourceSimpleName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceSimpleName, names.AttrName, rName+"-simple"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "scaling_adjustment", "2"),
 
 					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v),
 					resource.TestCheckResourceAttr(resourceStepName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceStepName, "autoscaling_group_name", rName),
-					resource.TestCheckResourceAttr(resourceStepName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceStepName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr(resourceStepName, "metric_aggregation_type", "Minimum"),
-					resource.TestCheckResourceAttr(resourceStepName, "name", rName+"-step"),
+					resource.TestCheckResourceAttr(resourceStepName, names.AttrName, rName+"-step"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
 						"scaling_adjustment": "1",
@@ -59,8 +59,8 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 
 					testAccCheckScalingPolicyExists(ctx, resourceTargetTrackingName, &v),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "autoscaling_group_name", rName),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "name", rName+"-tracking"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, names.AttrName, rName+"-tracking"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "0"),
@@ -92,11 +92,11 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "30"),
-					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceSimpleName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 
 					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v),
-					resource.TestCheckResourceAttr(resourceStepName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceStepName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "20"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceStepName, "step_adjustment.*", map[string]string{
@@ -104,7 +104,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					}),
 
 					testAccCheckScalingPolicyExists(ctx, resourceTargetTrackingName, &v),
-					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceTargetTrackingName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.0.customized_metric_specification.#", "1"),

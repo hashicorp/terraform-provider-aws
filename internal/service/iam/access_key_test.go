@@ -132,7 +132,7 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeInactive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
 				),
 			},
 			{
@@ -145,14 +145,14 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeActive)),
 				),
 			},
 			{
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeInactive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
 				),
 			},
 		},

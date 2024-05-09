@@ -59,7 +59,7 @@ func (r *resourceRefreshSchedule) Metadata(_ context.Context, _ resource.Metadat
 func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"aws_account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -74,7 +74,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"schedule_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -406,7 +406,7 @@ func (r *resourceRefreshSchedule) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceRefreshSchedule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {

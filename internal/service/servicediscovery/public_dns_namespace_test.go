@@ -39,8 +39,8 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexache.MustCompile(`namespace/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -100,14 +100,14 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 				),
 			},
 			{
 				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 				),
 			},
 		},

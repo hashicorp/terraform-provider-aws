@@ -40,7 +40,7 @@ func ResourceDataSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -79,7 +79,7 @@ func ResourceDataSet() *schema.Resource {
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(quicksight.GeoSpatialCountryCode_Values(), false),
 										},
-										"name": {
+										names.AttrName: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 64),
@@ -153,7 +153,7 @@ func ResourceDataSet() *schema.Resource {
 								MaxItems: 5000,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"description": {
+							names.AttrDescription: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 500),
@@ -173,7 +173,7 @@ func ResourceDataSet() *schema.Resource {
 					MaxItems: 64,
 					Elem:     logicalTableMapSchema(),
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
@@ -183,15 +183,15 @@ func ResourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"description": {
+							names.AttrDescription: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"type": {
+							names.AttrType: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -232,7 +232,7 @@ func ResourceDataSet() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
+							names.AttrARN: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: verify.ValidARN,
@@ -252,7 +252,7 @@ func ResourceDataSet() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionPolicy_Values(), false),
 							},
-							"status": {
+							names.AttrStatus: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
@@ -266,7 +266,7 @@ func ResourceDataSet() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"status": {
+							names.AttrStatus: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
@@ -512,7 +512,7 @@ func logicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"tags": {
+									names.AttrTags: {
 										Type:     schema.TypeList,
 										Required: true,
 										MinItems: 1,
@@ -640,7 +640,7 @@ func logicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 64),
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.JoinType_Values(), false),
@@ -677,12 +677,12 @@ func physicalTableMapSchema() *schema.Resource {
 							MaxItems: 2048,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.InputColumnDataType_Values(), false),
@@ -695,7 +695,7 @@ func physicalTableMapSchema() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
@@ -735,12 +735,12 @@ func physicalTableMapSchema() *schema.Resource {
 							MaxItems: 2048,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.InputColumnDataType_Values(), false),
@@ -748,7 +748,7 @@ func physicalTableMapSchema() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
@@ -779,12 +779,12 @@ func physicalTableMapSchema() *schema.Resource {
 							MaxItems: 2048,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(quicksight.InputColumnDataType_Values(), false),
@@ -853,7 +853,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DataSetId:        aws.String(dataSetID),
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
 		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -941,10 +941,10 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	dataSet := output.DataSet
 
-	d.Set("arn", dataSet.Arn)
+	d.Set(names.AttrARN, dataSet.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("data_set_id", dataSet.DataSetId)
-	d.Set("name", dataSet.Name)
+	d.Set(names.AttrName, dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
@@ -1017,7 +1017,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all", "refresh_properties") {
+	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll, "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -1028,7 +1028,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			DataSetId:        aws.String(dataSetId),
 			ImportMode:       aws.String(d.Get("import_mode").(string)),
 			PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
-			Name:             aws.String(d.Get("name").(string)),
+			Name:             aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		params.ColumnGroups = expandDataSetColumnGroups(d.Get("column_groups").([]interface{}))
@@ -1191,7 +1191,7 @@ func expandDataSetGeoSpatialColumnGroup(tfMap map[string]interface{}) *quicksigh
 	if v, ok := tfMap["country_code"].(string); ok && v != "" {
 		geoSpatialColumnGroup.CountryCode = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		geoSpatialColumnGroup.Name = aws.String(v)
 	}
 
@@ -1265,7 +1265,7 @@ func expandDataSetFieldFolders(tfList []interface{}) map[string]*quicksight.Fiel
 
 			fieldFolder.Columns = aws.StringSlice(fin)
 		}
-		if v, ok := tfMap["description"].(string); ok {
+		if v, ok := tfMap[names.AttrDescription].(string); ok {
 			fieldFolder.Description = aws.String(v)
 		}
 
@@ -1341,7 +1341,7 @@ func expandDataSetJoinInstruction(tfMap map[string]interface{}) *quicksight.Join
 	if v, ok := tfMap["right_operand"].(string); ok {
 		joinInstruction.RightOperand = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok {
+	if v, ok := tfMap[names.AttrType].(string); ok {
 		joinInstruction.Type = aws.String(v)
 	}
 	if v, ok := tfMap["left_join_key_properties"].(map[string]interface{}); ok {
@@ -1570,7 +1570,7 @@ func expandDataSetTagColumnOperation(tfList []interface{}) *quicksight.TagColumn
 	if v, ok := tfMap["column_name"].(string); ok {
 		tagColumnOperation.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["tags"].([]interface{}); ok {
+	if v, ok := tfMap[names.AttrTags].([]interface{}); ok {
 		tagColumnOperation.Tags = expandDataSetTags(v)
 	}
 
@@ -1694,7 +1694,7 @@ func expandDataSetCustomSQL(tfMap map[string]interface{}) *quicksight.CustomSql 
 	if v, ok := tfMap["data_source_arn"].(string); ok {
 		customSQL.DataSourceArn = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		customSQL.Name = aws.String(v)
 	}
 	if v, ok := tfMap["sql_query"].(string); ok {
@@ -1732,10 +1732,10 @@ func expandDataSetInputColumn(tfMap map[string]interface{}) *quicksight.InputCol
 	}
 
 	inputColumn := &quicksight.InputColumn{}
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		inputColumn.Name = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok {
+	if v, ok := tfMap[names.AttrType].(string); ok {
 		inputColumn.Type = aws.String(v)
 	}
 
@@ -1757,7 +1757,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap["data_source_arn"].(string); ok {
 		relationalTable.DataSourceArn = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
 	if v, ok := tfMap["schema"].(string); ok {
@@ -1821,7 +1821,7 @@ func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.Ro
 	}
 
 	rowLevelPermission := &quicksight.RowLevelPermissionDataSet{}
-	if v, ok := tfMap["arn"].(string); ok {
+	if v, ok := tfMap[names.AttrARN].(string); ok {
 		rowLevelPermission.Arn = aws.String(v)
 	}
 	if v, ok := tfMap["permission_policy"].(string); ok {
@@ -1833,7 +1833,7 @@ func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.Ro
 	if v, ok := tfMap["namespace"].(string); ok {
 		rowLevelPermission.Namespace = aws.String(v)
 	}
-	if v, ok := tfMap["status"].(string); ok {
+	if v, ok := tfMap[names.AttrStatus].(string); ok {
 		rowLevelPermission.Status = aws.String(v)
 	}
 
@@ -1853,7 +1853,7 @@ func expandDataSetRowLevelPermissionTagConfigurations(tfList []interface{}) *qui
 	if v, ok := tfMap["tag_rules"].([]interface{}); ok {
 		rowLevelPermissionTagConfiguration.TagRules = expandDataSetTagRules(v)
 	}
-	if v, ok := tfMap["status"].(string); ok {
+	if v, ok := tfMap[names.AttrStatus].(string); ok {
 		rowLevelPermissionTagConfiguration.Status = aws.String(v)
 	}
 
@@ -2011,13 +2011,13 @@ func flattenOutputColumns(apiObject []*quicksight.OutputColumn) []interface{} {
 		item := map[string]interface{}{}
 
 		if column.Description != nil {
-			item["description"] = aws.StringValue(column.Description)
+			item[names.AttrDescription] = aws.StringValue(column.Description)
 		}
 		if column.Name != nil {
-			item["name"] = aws.StringValue(column.Name)
+			item[names.AttrName] = aws.StringValue(column.Name)
 		}
 		if column.Type != nil {
-			item["type"] = aws.StringValue(column.Type)
+			item[names.AttrType] = aws.StringValue(column.Type)
 		}
 
 		tfList = append(tfList, item)
@@ -2039,7 +2039,7 @@ func flattenGeoSpatialColumnGroup(apiObject *quicksight.GeoSpatialColumnGroup) [
 		tfMap["country_code"] = aws.StringValue(apiObject.CountryCode)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 
 	return []interface{}{tfMap}
@@ -2103,7 +2103,7 @@ func flattenFieldFolders(apiObject map[string]*quicksight.FieldFolder) *schema.S
 			tfMap["columns"] = flex.FlattenStringList(value.Columns)
 		}
 		if value.Description != nil {
-			tfMap["description"] = aws.StringValue(value.Description)
+			tfMap[names.AttrDescription] = aws.StringValue(value.Description)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2120,7 +2120,7 @@ func fieldFoldersHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", sl))
 		}
 	}
-	if v, ok := m["description"]; ok {
+	if v, ok := m[names.AttrDescription]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -2307,7 +2307,7 @@ func flattenTagColumnOperation(apiObject *quicksight.TagColumnOperation) []inter
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Tags != nil {
-		tfMap["tags"] = flattenTags(apiObject.Tags)
+		tfMap[names.AttrTags] = flattenTags(apiObject.Tags)
 	}
 
 	return []interface{}{tfMap}
@@ -2408,7 +2408,7 @@ func flattenJoinInstruction(apiObject *quicksight.JoinInstruction) []interface{}
 		tfMap["right_operand"] = aws.StringValue(apiObject.RightOperand)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}
@@ -2465,7 +2465,7 @@ func flattenCustomSQL(apiObject *quicksight.CustomSql) []interface{} {
 		tfMap["data_source_arn"] = aws.StringValue(apiObject.DataSourceArn)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.SqlQuery != nil {
 		tfMap["sql_query"] = aws.StringValue(apiObject.SqlQuery)
@@ -2487,10 +2487,10 @@ func flattenInputColumns(apiObject []*quicksight.InputColumn) []interface{} {
 
 		tfMap := map[string]interface{}{}
 		if column.Name != nil {
-			tfMap["name"] = aws.StringValue(column.Name)
+			tfMap[names.AttrName] = aws.StringValue(column.Name)
 		}
 		if column.Type != nil {
-			tfMap["type"] = aws.StringValue(column.Type)
+			tfMap[names.AttrType] = aws.StringValue(column.Type)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2514,7 +2514,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{}
 		tfMap["input_columns"] = flattenInputColumns(apiObject.InputColumns)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Schema != nil {
 		tfMap["schema"] = aws.StringValue(apiObject.Schema)
@@ -2575,7 +2575,7 @@ func flattenRowLevelPermissionDataSet(apiObject *quicksight.RowLevelPermissionDa
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Arn != nil {
-		tfMap["arn"] = aws.StringValue(apiObject.Arn)
+		tfMap[names.AttrARN] = aws.StringValue(apiObject.Arn)
 	}
 	if apiObject.FormatVersion != nil {
 		tfMap["format_version"] = aws.StringValue(apiObject.FormatVersion)
@@ -2587,7 +2587,7 @@ func flattenRowLevelPermissionDataSet(apiObject *quicksight.RowLevelPermissionDa
 		tfMap["permission_policy"] = aws.StringValue(apiObject.PermissionPolicy)
 	}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}
@@ -2600,7 +2600,7 @@ func flattenRowLevelPermissionTagConfiguration(apiObject *quicksight.RowLevelPer
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 	if apiObject.TagRules != nil {
 		tfMap["tag_rules"] = flattenTagRules(apiObject.TagRules)

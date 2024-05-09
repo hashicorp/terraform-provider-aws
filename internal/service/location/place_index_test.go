@@ -39,7 +39,7 @@ func TestAccLocationPlaceIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseSingleUse),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "index_arn", "geo", fmt.Sprintf("place-index/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -129,7 +129,7 @@ func TestAccLocationPlaceIndex_description(t *testing.T) {
 				Config: testAccPlaceIndexConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func TestAccLocationPlaceIndex_description(t *testing.T) {
 				Config: testAccPlaceIndexConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},

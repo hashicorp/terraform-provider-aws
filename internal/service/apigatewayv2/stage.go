@@ -66,7 +66,7 @@ func resourceStage() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func resourceStage() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -132,7 +132,7 @@ func resourceStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -199,7 +199,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiID, err)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	protocolType := outputGA.ProtocolType
 	input := &apigatewayv2.CreateStageInput{
 		ApiId:      aws.String(apiID),
@@ -224,7 +224,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DeploymentId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -268,16 +268,16 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(outputGS.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set("arn", stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("auto_deploy", outputGS.AutoDeploy)
 	d.Set("client_certificate_id", outputGS.ClientCertificateId)
 	if err := d.Set("default_route_settings", flattenDefaultRouteSettings(outputGS.DefaultRouteSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_route_settings: %s", err)
 	}
 	d.Set("deployment_id", outputGS.DeploymentId)
-	d.Set("description", outputGS.Description)
+	d.Set(names.AttrDescription, outputGS.Description)
 	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
-	d.Set("name", stageName)
+	d.Set(names.AttrName, stageName)
 	if err := d.Set("route_settings", flattenRouteSettings(outputGS.RouteSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_settings: %s", err)
 	}
@@ -301,7 +301,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
-		"default_route_settings", "deployment_id", "description",
+		"default_route_settings", "deployment_id", names.AttrDescription,
 		"route_settings", "stage_variables") {
 		apiID := d.Get("api_id").(string)
 		outputGA, err := findAPIByID(ctx, conn, apiID)
@@ -336,8 +336,8 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.DeploymentId = aws.String(d.Get("deployment_id").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("route_settings") {

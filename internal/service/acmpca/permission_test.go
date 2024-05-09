@@ -38,7 +38,7 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
 					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
 				),

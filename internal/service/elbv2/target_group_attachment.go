@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_alb_target_group_attachment")
@@ -30,7 +31,7 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -45,7 +46,7 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				ForceNew: true,
 				Optional: true,
@@ -66,11 +67,11 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}},
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 
@@ -102,11 +103,11 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 		}},
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 
@@ -137,11 +138,11 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}},
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Targets[0].Port = aws.Int64(int64(v.(int)))
 	}
 

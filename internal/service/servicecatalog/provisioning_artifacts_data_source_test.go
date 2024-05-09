@@ -30,7 +30,7 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 				Config: testAccProvisioningArtifactsDataSourceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.active", "true"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "provisioning_artifact_details.0.description"),

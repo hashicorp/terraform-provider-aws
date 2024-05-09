@@ -52,7 +52,7 @@ func ResourceZone() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func ResourceZone() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				// AWS Provider 3.0.0 - trailing period removed from name
 				// returned from API, no longer requiring custom DiffSuppressFunc;
 				// instead a StateFunc allows input to be provided
@@ -103,7 +103,7 @@ func ResourceZone() *schema.Resource {
 				ConflictsWith: []string{"delegation_set_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -133,7 +133,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	input := &route53.CreateHostedZoneInput{
 		CallerReference: aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 		HostedZoneConfig: &route53.HostedZoneConfig{
 			Comment: aws.String(d.Get("comment").(string)),
 		},
@@ -204,12 +204,12 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Service:   "route53",
 		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("comment", "")
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", NormalizeZoneName(aws.StringValue(output.HostedZone.Name)))
+	d.Set(names.AttrName, NormalizeZoneName(aws.StringValue(output.HostedZone.Name)))
 	d.Set("zone_id", CleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	var nameServers []string
@@ -225,7 +225,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 		if aws.BoolValue(output.HostedZone.Config.PrivateZone) {
 			var err error
-			nameServers, err = findNameServers(ctx, conn, d.Id(), d.Get("name").(string))
+			nameServers, err = findNameServers(ctx, conn, d.Id(), d.Get(names.AttrName).(string))
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s) name servers: %s", d.Id(), err)
@@ -304,7 +304,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.Get("force_destroy").(bool) {
-		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get("name").(string)); err != nil {
+		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
@@ -614,7 +614,7 @@ func expandVPCs(l []interface{}, currentRegion string) []*route53.VPC {
 
 func expandVPC(m map[string]interface{}, currentRegion string) *route53.VPC {
 	vpc := &route53.VPC{
-		VPCId:     aws.String(m["vpc_id"].(string)),
+		VPCId:     aws.String(m[names.AttrVPCID].(string)),
 		VPCRegion: aws.String(currentRegion),
 	}
 
@@ -634,8 +634,8 @@ func flattenVPCs(vpcs []*route53.VPC) []interface{} {
 		}
 
 		m := map[string]interface{}{
-			"vpc_id":     aws.StringValue(vpc.VPCId),
-			"vpc_region": aws.StringValue(vpc.VPCRegion),
+			names.AttrVPCID: aws.StringValue(vpc.VPCId),
+			"vpc_region":    aws.StringValue(vpc.VPCRegion),
 		}
 
 		l = append(l, m)
@@ -685,7 +685,7 @@ func hostedZoneDisassociateVPC(ctx context.Context, conn *route53.Route53, zoneI
 func hostedZoneVPCHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["vpc_id"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVPCID].(string)))
 
 	return create.StringHashcode(buf.String())
 }

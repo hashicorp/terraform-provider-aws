@@ -36,8 +36,8 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`anomalymonitor/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalymonitor/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
 				),
@@ -92,7 +92,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -176,7 +176,7 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_dimensional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "DIMENSIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_dimension", "SERVICE"),
 				),

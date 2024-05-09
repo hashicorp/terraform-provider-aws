@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc)
@@ -129,11 +130,11 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
 	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
 		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
-		Source:                  aws.String(d.Get("arn").(string)),
+		Source:                  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange("engine_version") {
-		input.TargetEngineVersion = aws.String(d.Get("engine_version").(string))
+	if d.HasChange(names.AttrEngineVersion) {
+		input.TargetEngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 	}
 	if d.HasChange("parameter_group_name") {
 		input.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))

@@ -44,7 +44,7 @@ func ResourceCACertificate() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func ResourceCACertificate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -193,7 +193,7 @@ func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	certificateDescription := output.CertificateDescription
 	d.Set("active", aws.StringValue(certificateDescription.Status) == iot.CACertificateStatusActive)
 	d.Set("allow_auto_registration", aws.StringValue(certificateDescription.AutoRegistrationStatus) == iot.AutoRegistrationStatusEnable)
-	d.Set("arn", certificateDescription.CertificateArn)
+	d.Set(names.AttrARN, certificateDescription.CertificateArn)
 	d.Set("ca_certificate_pem", certificateDescription.CertificatePem)
 	d.Set("certificate_mode", certificateDescription.CertificateMode)
 	d.Set("customer_version", certificateDescription.CustomerVersion)
@@ -220,7 +220,7 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iot.UpdateCACertificateInput{
 			CertificateId: aws.String(d.Id()),
 		}
@@ -325,7 +325,7 @@ func expandRegistrationConfig(tfMap map[string]interface{}) *iot.RegistrationCon
 
 	apiObject := &iot.RegistrationConfig{}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -348,7 +348,7 @@ func flattenRegistrationConfig(apiObject *iot.RegistrationConfig) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TemplateBody; v != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_rule")
@@ -21,25 +22,25 @@ func DataSourceRule() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRuleRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  validation.StringLenBetween(1, 256),
 				ConflictsWith: []string{"resolver_rule_id"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  validResolverName,
 				ConflictsWith: []string{"resolver_rule_id"},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +54,7 @@ func DataSourceRule() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"domain_name", "name", "resolver_endpoint_id", "rule_type"},
+				ConflictsWith: []string{names.AttrDomainName, names.AttrName, "resolver_endpoint_id", "rule_type"},
 			},
 			"rule_type": {
 				Type:          schema.TypeString,
@@ -66,7 +67,7 @@ func DataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -87,8 +88,8 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		input := &route53resolver.ListResolverRulesInput{
 			Filters: buildAttributeFilterList(map[string]string{
-				"DOMAIN_NAME":          d.Get("domain_name").(string),
-				"NAME":                 d.Get("name").(string),
+				"DOMAIN_NAME":          d.Get(names.AttrDomainName).(string),
+				"NAME":                 d.Get(names.AttrName).(string),
 				"RESOLVER_ENDPOINT_ID": d.Get("resolver_endpoint_id").(string),
 				"TYPE":                 d.Get("rule_type").(string),
 			}),
@@ -115,12 +116,12 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(rule.Id))
 	arn := aws.StringValue(rule.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
-	d.Set("name", rule.Name)
-	d.Set("owner_id", rule.OwnerId)
+	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.StringValue(rule.DomainName)))
+	d.Set(names.AttrName, rule.Name)
+	d.Set(names.AttrOwnerID, rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("resolver_rule_id", rule.Id)
 	d.Set("rule_type", rule.RuleType)
@@ -134,7 +135,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return diag.Errorf("listing tags for Route53 Resolver Rule (%s): %s", arn, err)
 		}
 
-		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return diag.Errorf("setting tags: %s", err)
 		}
 	}

@@ -38,7 +38,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					//workaround for region being based on s3 bucket region
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", reportName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
@@ -59,7 +59,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					//workaround for region being based on s3 bucket region
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", reportName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),

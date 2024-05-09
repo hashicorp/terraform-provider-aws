@@ -49,7 +49,7 @@ func resourceFargateProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,11 +93,11 @@ func resourceFargateProfile() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -123,7 +123,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
 		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
-		Subnets:             flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		Subnets:             flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -172,15 +172,15 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EKS Fargate Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", fargateProfile.FargateProfileArn)
+	d.Set(names.AttrARN, fargateProfile.FargateProfileArn)
 	d.Set("cluster_name", fargateProfile.ClusterName)
 	d.Set("fargate_profile_name", fargateProfile.FargateProfileName)
 	d.Set("pod_execution_role_arn", fargateProfile.PodExecutionRoleArn)
 	if err := d.Set("selector", flattenFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting selector: %s", err)
 	}
-	d.Set("status", fargateProfile.Status)
-	d.Set("subnet_ids", fargateProfile.Subnets)
+	d.Set(names.AttrStatus, fargateProfile.Status)
+	d.Set(names.AttrSubnetIDs, fargateProfile.Subnets)
 
 	setTagsOut(ctx, fargateProfile.Tags)
 

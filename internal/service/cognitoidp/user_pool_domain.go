@@ -73,7 +73,7 @@ func resourceUserPoolDomain() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +146,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("domain", d.Id())
 	d.Set("s3_bucket", desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)
-	d.Set("version", desc.Version)
+	d.Set(names.AttrVersion, desc.Version)
 
 	return diags
 }

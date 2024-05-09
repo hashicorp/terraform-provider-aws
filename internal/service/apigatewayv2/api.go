@@ -56,7 +56,7 @@ func resourceAPI() *schema.Resource {
 					"$request.header.x-api-key",
 				}, false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,7 @@ func resourceAPI() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -130,7 +130,7 @@ func resourceAPI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -158,7 +158,7 @@ func resourceAPI() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -173,7 +173,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigatewayv2.CreateApiInput{
 		Name:         aws.String(name),
 		ProtocolType: awstypes.ProtocolType(d.Get("protocol_type").(string)),
@@ -192,7 +192,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.CredentialsArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -212,7 +212,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Target = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -251,17 +251,17 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("api_endpoint", output.ApiEndpoint)
 	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
-	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(output.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
 	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("protocol_type", output.ProtocolType)
 	d.Set("route_selection_expression", output.RouteSelectionExpression)
-	d.Set("version", output.Version)
+	d.Set(names.AttrVersion, output.Version)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -287,7 +287,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if d.HasChanges("api_key_selection_expression", "description", "disable_execute_api_endpoint", "name", "route_selection_expression", "version") ||
+	if d.HasChanges("api_key_selection_expression", names.AttrDescription, "disable_execute_api_endpoint", names.AttrName, "route_selection_expression", names.AttrVersion) ||
 		(d.HasChange("cors_configuration") && !corsConfigurationDeleted) {
 		input := &apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
@@ -301,24 +301,24 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			input.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("disable_execute_api_endpoint") {
 			input.DisableExecuteApiEndpoint = aws.Bool(d.Get("disable_execute_api_endpoint").(bool))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("route_selection_expression") {
 			input.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
 		}
 
-		if d.HasChange("version") {
-			input.Version = aws.String(d.Get("version").(string))
+		if d.HasChange(names.AttrVersion) {
+			input.Version = aws.String(d.Get(names.AttrVersion).(string))
 		}
 
 		_, err := conn.UpdateApi(ctx, input)
@@ -386,9 +386,9 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 
 		inputU := &apigatewayv2.UpdateApiInput{
 			ApiId:       aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
-			Description: aws.String(d.Get("description").(string)),
-			Version:     aws.String(d.Get("version").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
+			Version:     aws.String(d.Get(names.AttrVersion).(string)),
 		}
 
 		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
@@ -405,7 +405,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		if err := updateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
+		if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), d.Get(names.AttrTagsAll), KeyValueTags(ctx, getTagsIn(ctx))); err != nil {
 			return fmt.Errorf("updating API Gateway v2 API (%s) tags: %w", d.Id(), err)
 		}
 

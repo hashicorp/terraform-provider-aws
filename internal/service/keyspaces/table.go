@@ -69,7 +69,7 @@ func resourceTable() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ClientSideTimestampsStatus](),
@@ -147,7 +147,7 @@ func resourceTable() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -172,7 +172,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -193,7 +193,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -216,7 +216,7 @@ func resourceTable() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
@@ -224,7 +224,7 @@ func resourceTable() *schema.Resource {
 											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
@@ -241,7 +241,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -259,7 +259,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -291,7 +291,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.TimeToLiveStatus](),
@@ -387,7 +387,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", table.ResourceArn)
+	d.Set(names.AttrARN, table.ResourceArn)
 	if table.CapacitySpecification != nil {
 		if err := d.Set("capacity_specification", []interface{}{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting capacity_specification: %s", err)
@@ -455,7 +455,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// https://docs.aws.amazon.com/keyspaces/latest/APIReference/API_UpdateTable.html
 		// Note that you can only update one specific table setting per update operation.
 		if d.HasChange("capacity_specification") {
@@ -797,7 +797,7 @@ func expandClientSideTimestamps(tfMap map[string]interface{}) *types.ClientSideT
 
 	apiObject := &types.ClientSideTimestamps{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.ClientSideTimestampsStatus(v)
 	}
 
@@ -829,7 +829,7 @@ func expandEncryptionSpecification(tfMap map[string]interface{}) *types.Encrypti
 		apiObject.KmsKeyIdentifier = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.EncryptionType(v)
 	}
 
@@ -843,7 +843,7 @@ func expandPointInTimeRecovery(tfMap map[string]interface{}) *types.PointInTimeR
 
 	apiObject := &types.PointInTimeRecovery{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.PointInTimeRecoveryStatus(v)
 	}
 
@@ -883,7 +883,7 @@ func expandTimeToLive(tfMap map[string]interface{}) *types.TimeToLive {
 
 	apiObject := &types.TimeToLive{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.TimeToLiveStatus(v)
 	}
 
@@ -897,11 +897,11 @@ func expandColumnDefinition(tfMap map[string]interface{}) *types.ColumnDefinitio
 
 	apiObject := &types.ColumnDefinition{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -941,7 +941,7 @@ func expandClusteringKey(tfMap map[string]interface{}) *types.ClusteringKey {
 
 	apiObject := &types.ClusteringKey{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -985,7 +985,7 @@ func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
 
 	apiObject := &types.PartitionKey{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1025,7 +1025,7 @@ func expandStaticColumn(tfMap map[string]interface{}) *types.StaticColumn {
 
 	apiObject := &types.StaticColumn{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1084,7 +1084,7 @@ func flattenClientSideTimestamps(apiObject *types.ClientSideTimestamps) map[stri
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
@@ -1110,7 +1110,7 @@ func flattenEncryptionSpecification(apiObject *types.EncryptionSpecification) ma
 	}
 
 	tfMap := map[string]interface{}{
-		"type": apiObject.Type,
+		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.KmsKeyIdentifier; v != nil {
@@ -1126,7 +1126,7 @@ func flattenPointInTimeRecoverySummary(apiObject *types.PointInTimeRecoverySumma
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
@@ -1164,7 +1164,7 @@ func flattenTimeToLive(apiObject *types.TimeToLive) map[string]interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
@@ -1178,11 +1178,11 @@ func flattenColumnDefinition(apiObject *types.ColumnDefinition) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1212,7 +1212,7 @@ func flattenClusteringKey(apiObject *types.ClusteringKey) map[string]interface{}
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1240,7 +1240,7 @@ func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1268,7 +1268,7 @@ func flattenStaticColumn(apiObject *types.StaticColumn) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap

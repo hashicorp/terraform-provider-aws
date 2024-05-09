@@ -41,7 +41,7 @@ func TestAccEC2InstanceTypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "hibernation_supported", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "hypervisor", "nitro"),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_storage_supported", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_type", "m5.large"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "m5.large"),
 					resource.TestCheckResourceAttr(dataSourceName, "ipv6_supported", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "maximum_ipv4_addresses_per_interface", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "maximum_ipv6_addresses_per_interface", "10"),

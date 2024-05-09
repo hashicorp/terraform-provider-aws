@@ -37,7 +37,7 @@ func testAccAccessGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
 					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_scope"),
 					resource.TestCheckResourceAttr(resourceName, "permission", "READ"),
 					resource.TestCheckNoResourceAttr(resourceName, "s3_prefix_type"),
@@ -160,7 +160,7 @@ func testAccCheckAccessGrantDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["access_grant_id"])
+			_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grant_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -186,7 +186,7 @@ func testAccCheckAccessGrantExists(ctx context.Context, n string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["access_grant_id"])
+		_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grant_id"])
 
 		return err
 	}

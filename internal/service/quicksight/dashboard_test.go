@@ -42,8 +42,8 @@ func TestAccQuickSightDashboard_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
 				),
 			},
 			{
@@ -106,8 +106,8 @@ func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
@@ -144,8 +144,8 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
@@ -154,8 +154,8 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboardV1),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 					testAccCheckDashboardVersionExists(ctx, resourceName, 1, &dashboardV1),
 					testAccCheckDashboardName(&dashboardV1, rName),
@@ -186,7 +186,7 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_publish_options.0.ad_hoc_filtering_option.0.availability_status", quicksight.StatusDisabled),
 				),
 			},
@@ -194,7 +194,7 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameters"},
+				ImportStateVerifyIgnore: []string{names.AttrParameters},
 			},
 		},
 	})

@@ -21,7 +21,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -106,7 +106,7 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 	arn := emailIdentityNameToARN(meta, name)
 
 	d.SetId(name)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", name)
 

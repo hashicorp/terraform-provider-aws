@@ -38,9 +38,9 @@ func TestAccQuickSightVPCConnection_basic(t *testing.T) {
 				Config: testAccVPCConnectionConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("vpcConnection/%[1]s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("vpcConnection/%[1]s", rId)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
@@ -97,7 +97,7 @@ func TestAccQuickSightVPCConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -112,7 +112,7 @@ func TestAccQuickSightVPCConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -123,7 +123,7 @@ func TestAccQuickSightVPCConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcConnection),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

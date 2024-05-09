@@ -32,7 +32,7 @@ func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "description", "Copy Snapshot Acceptance Test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Copy Snapshot Acceptance Test"),
 				),
 			},
 		},
@@ -170,7 +170,7 @@ func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},

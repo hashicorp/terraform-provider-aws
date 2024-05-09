@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_organizations_access")
@@ -27,7 +28,7 @@ func ResourceOrganizationsAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 				ForceNew: true,
@@ -45,7 +46,7 @@ func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceDa
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
 
-	if _, ok := d.GetOk("enabled"); ok {
+	if _, ok := d.GetOk(names.AttrEnabled); ok {
 		_, err := conn.EnableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {
@@ -86,11 +87,11 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if output == servicecatalog.AccessStatusEnabled {
-		d.Set("enabled", true)
+		d.Set(names.AttrEnabled, true)
 		return diags
 	}
 
-	d.Set("enabled", false)
+	d.Set(names.AttrEnabled, false)
 	return diags
 }
 
@@ -101,7 +102,7 @@ func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceDa
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
 
-	if _, ok := d.GetOk("enabled"); !ok {
+	if _, ok := d.GetOk(names.AttrEnabled); !ok {
 		_, err := conn.EnableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {

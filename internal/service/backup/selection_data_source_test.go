@@ -27,7 +27,7 @@ func TestAccBackupSelectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSelectionDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "iam_role_arn", resourceName, "iam_role_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "resources.#", resourceName, "resources.#"),
 				),

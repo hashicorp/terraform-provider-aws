@@ -45,7 +45,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -71,7 +71,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 					verify.ValidARN,
 					validation.StringLenBetween(1, 256)),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -83,7 +83,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -106,7 +106,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 							),
 							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ValidatorType](),
@@ -124,7 +124,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	appId := d.Get("application_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appconfig.CreateConfigurationProfileInput{
 		ApplicationId: aws.String(appId),
 		LocationUri:   aws.String(d.Get("location_uri").(string)),
@@ -132,7 +132,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -144,7 +144,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 		input.RetrievalRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
+	if v, ok := d.GetOk(names.AttrType); ok {
 		input.Type = aws.String(v.(string))
 	}
 
@@ -200,12 +200,12 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("application_id", output.ApplicationId)
 	d.Set("configuration_profile_id", output.Id)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("location_uri", output.LocationUri)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 
 	if err := d.Set("validator", flattenValidators(output.Validators)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting validator: %s", err)
@@ -218,7 +218,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appID, confProfID),
 		Service:   "appconfig",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
@@ -227,7 +227,7 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 		if err != nil {
@@ -239,16 +239,16 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 			ConfigurationProfileId: aws.String(confProfID),
 		}
 
-		if d.HasChange("description") {
-			updateInput.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			updateInput.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("kms_key_identifier") {
 			updateInput.KmsKeyIdentifier = aws.String(d.Get("kms_key_identifier").(string))
 		}
 
-		if d.HasChange("name") {
-			updateInput.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			updateInput.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("retrieval_role_arn") {
@@ -313,7 +313,7 @@ func expandValidator(tfMap map[string]interface{}) awstypes.Validator {
 		validator.Content = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		validator.Type = awstypes.ValidatorType(v)
 	}
 
@@ -346,7 +346,7 @@ func flattenValidator(validator awstypes.Validator) map[string]interface{} {
 		tfMap["content"] = aws.ToString(v)
 	}
 
-	tfMap["type"] = string(validator.Type)
+	tfMap[names.AttrType] = string(validator.Type)
 
 	return tfMap
 }

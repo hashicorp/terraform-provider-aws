@@ -37,8 +37,8 @@ func TestAccEC2OutpostsLocalGatewayRoute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidrBlock),
-					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_route_table_id", localGatewayRouteTableDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroupDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_route_table_id", localGatewayRouteTableDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroupDataSourceName, names.AttrID),
 				),
 			},
 			{

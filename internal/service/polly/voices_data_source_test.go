@@ -33,7 +33,7 @@ func TestAccPollyVoicesDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "voices.*", map[string]string{
 						"gender":        "Female",
 						"language_code": "en-US",
-						"name":          "Kendra",
+						names.AttrName:  "Kendra",
 					}),
 				),
 			},
@@ -61,7 +61,7 @@ func TestAccPollyVoicesDataSource_languageCode(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "voices.*", map[string]string{
 						"gender":        "Female",
 						"language_code": "en-US",
-						"name":          "Kendra",
+						names.AttrName:  "Kendra",
 					}),
 				),
 			},

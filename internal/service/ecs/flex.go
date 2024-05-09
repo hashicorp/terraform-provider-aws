@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
@@ -174,7 +175,7 @@ func expandServiceRegistries(l []interface{}) []*ecs.ServiceRegistry {
 		if raw, ok := m["container_port"].(int); ok && raw > 0 {
 			sr.ContainerPort = aws.Int64(int64(raw))
 		}
-		if raw, ok := m["port"].(int); ok && raw > 0 {
+		if raw, ok := m[names.AttrPort].(int); ok && raw > 0 {
 			sr.Port = aws.Int64(int64(raw))
 		}
 		result = append(result, sr)
@@ -201,7 +202,7 @@ func expandScale(l []interface{}) *ecs.Scale {
 		result.Unit = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		result.Value = aws.Float64(v)
 	}
 
@@ -216,7 +217,7 @@ func flattenScale(scale *ecs.Scale) []map[string]interface{} {
 
 	m := make(map[string]interface{})
 	m["unit"] = aws.StringValue(scale.Unit)
-	m["value"] = aws.Float64Value(scale.Value)
+	m[names.AttrValue] = aws.Float64Value(scale.Value)
 
 	return []map[string]interface{}{m}
 }

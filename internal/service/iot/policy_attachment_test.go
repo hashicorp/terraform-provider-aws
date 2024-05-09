@@ -70,7 +70,7 @@ func testAccCheckPolicyAttchmentDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy"], rs.Primary.Attributes["target"])
+			_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrPolicy], rs.Primary.Attributes["target"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -96,7 +96,7 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
-		_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["policy"], rs.Primary.Attributes["target"])
+		_, err := tfiot.FindAttachedPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrPolicy], rs.Primary.Attributes["target"])
 
 		return err
 	}

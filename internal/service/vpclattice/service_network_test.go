@@ -110,8 +110,8 @@ func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 				Config: testAccServiceNetworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &servicenetwork),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
 				),
 			},
 			{
@@ -171,9 +171,9 @@ func TestAccVPCLatticeServiceNetwork_full(t *testing.T) {
 				Config: testAccServiceNetworkConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &servicenetwork),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "AWS_IAM"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
 				),
 			},
 			{

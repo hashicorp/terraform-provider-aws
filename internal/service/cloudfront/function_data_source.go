@@ -7,13 +7,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_function", name="Function")
@@ -22,7 +24,7 @@ func dataSourceFunction() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +51,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -58,11 +60,11 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"stage": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloudfront.FunctionStage_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FunctionStage](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,31 +74,31 @@ func dataSourceFunction() *schema.Resource {
 
 func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
-	stage := d.Get("stage").(string)
+	name := d.Get(names.AttrName).(string)
+	stage := awstypes.FunctionStage(d.Get("stage").(string))
 	outputDF, err := findFunctionByTwoPartKey(ctx, conn, name, stage)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) %s stage: %s", name, stage, err)
 	}
 
-	d.SetId(aws.StringValue(outputDF.FunctionSummary.Name))
-	d.Set("arn", outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
+	d.SetId(aws.ToString(outputDF.FunctionSummary.Name))
+	d.Set(names.AttrARN, outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set("comment", outputDF.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", outputDF.ETag)
 	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(outputDF.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting key_value_store_associations: %s", err)
 	}
 	d.Set("last_modified_time", outputDF.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
-	d.Set("name", outputDF.FunctionSummary.Name)
+	d.Set(names.AttrName, outputDF.FunctionSummary.Name)
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("status", outputDF.FunctionSummary.Status)
+	d.Set(names.AttrStatus, outputDF.FunctionSummary.Status)
 
-	outputGF, err := conn.GetFunctionWithContext(ctx, &cloudfront.GetFunctionInput{
+	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
 		Name:  aws.String(name),
-		Stage: aws.String(stage),
+		Stage: stage,
 	})
 
 	if err != nil {

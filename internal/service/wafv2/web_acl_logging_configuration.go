@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafv2_web_acl_logging_configuration")
@@ -141,7 +142,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
@@ -160,7 +161,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 					Description:      "Parts of the request to exclude from logs",
 					DiffSuppressFunc: suppressRedactedFieldsDiff,
 				},
-				"resource_arn": {
+				names.AttrResourceARN: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -176,7 +177,7 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	resourceARN := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
 	config := &wafv2.LoggingConfiguration{
 		LogDestinationConfigs: flex.ExpandStringSet(d.Get("log_destination_configs").(*schema.Set)),
 		ResourceArn:           aws.String(resourceARN),
@@ -234,7 +235,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("redacted_fields", flattenRedactedFields(loggingConfig.RedactedFields)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting redacted_fields: %s", err)
 	}
-	d.Set("resource_arn", loggingConfig.ResourceArn)
+	d.Set(names.AttrResourceARN, loggingConfig.ResourceArn)
 
 	return diags
 }
@@ -586,7 +587,7 @@ func redactedFieldsHash(v interface{}) int {
 	if v, ok := m["single_header"].([]interface{}); ok && len(v) > 0 {
 		sh, ok := v[0].(map[string]interface{})
 		if ok {
-			if name, ok := sh["name"].(string); ok {
+			if name, ok := sh[names.AttrName].(string); ok {
 				buf.WriteString(fmt.Sprintf("%s-", name))
 			}
 		}
