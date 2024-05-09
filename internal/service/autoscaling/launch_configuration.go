@@ -60,7 +60,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -235,7 +235,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 					// Termination flag on the block device mapping entry for the root
 					// device volume." - bit.ly/ec2bdmap
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -546,7 +546,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
 		apiObject.NoDevice = aws.Bool(v)
-	} else if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	} else if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -600,7 +600,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		Ebs: &awstypes.Ebs{},
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -660,14 +660,14 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 
 		if v := apiObject.NoDevice; v != nil {
 			if v, ok := configuredEBSBlockDevices[aws.ToString(apiObject.DeviceName)]; ok {
-				tfMap["delete_on_termination"] = v["delete_on_termination"].(bool)
+				tfMap[names.AttrDeleteOnTermination] = v[names.AttrDeleteOnTermination].(bool)
 			} else {
 				// Keep existing value in place to avoid spurious diff.
-				tfMap["delete_on_termination"] = true
+				tfMap[names.AttrDeleteOnTermination] = true
 			}
 		} else if v := apiObject.Ebs; v != nil {
 			if v := v.DeleteOnTermination; v != nil {
-				tfMap["delete_on_termination"] = aws.ToBool(v)
+				tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
 			}
 		}
 
