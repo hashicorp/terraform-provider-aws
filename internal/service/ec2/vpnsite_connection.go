@@ -130,7 +130,7 @@ func resourceVPNConnection() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -754,10 +754,10 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
 
-		d.Set("transit_gateway_attachment_id", output.TransitGatewayAttachmentId)
+		d.Set(names.AttrTransitGatewayAttachmentID, output.TransitGatewayAttachmentId)
 		d.Set(names.AttrTransitGatewayID, v)
 	} else {
-		d.Set("transit_gateway_attachment_id", nil)
+		d.Set(names.AttrTransitGatewayAttachmentID, nil)
 		d.Set(names.AttrTransitGatewayID, nil)
 	}
 

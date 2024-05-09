@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_multicast_domain_association")
@@ -38,7 +39,7 @@ func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,7 +59,7 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
-	attachmentID := d.Get("transit_gateway_attachment_id").(string)
+	attachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	subnetID := d.Get("subnet_id").(string)
 	id := TransitGatewayMulticastDomainAssociationCreateResourceID(multicastDomainID, attachmentID, subnetID)
 	input := &ec2.AssociateTransitGatewayMulticastDomainInput{
@@ -107,7 +108,7 @@ func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d
 	}
 
 	d.Set("subnet_id", multicastDomainAssociation.Subnet.SubnetId)
-	d.Set("transit_gateway_attachment_id", multicastDomainAssociation.TransitGatewayAttachmentId)
+	d.Set(names.AttrTransitGatewayAttachmentID, multicastDomainAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_multicast_domain_id", multicastDomainID)
 
 	return diags
