@@ -102,7 +102,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:      engineDocDB,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -278,7 +278,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 	d.Set("engine", db.Engine)
-	d.Set("engine_version", db.EngineVersion)
+	d.Set(names.AttrEngineVersion, db.EngineVersion)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
