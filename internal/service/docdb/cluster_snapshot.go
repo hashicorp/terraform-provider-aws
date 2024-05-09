@@ -36,7 +36,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -138,7 +138,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
