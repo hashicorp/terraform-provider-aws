@@ -1255,3 +1255,13 @@ rules:
       - pattern: '"endpoint"'
     severity: ERROR
     fix: "names.AttrEndpoint"
+  - id: literal-session-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSession` for the string literal "session"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"session"'
+    severity: ERROR
+    fix: "names.AttrSession"    
