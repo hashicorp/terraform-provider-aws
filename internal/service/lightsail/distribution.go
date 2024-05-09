@@ -217,7 +217,7 @@ func ResourceDistribution() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The domain name of the distribution.",
@@ -436,7 +436,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
-	d.Set("domain_name", out.DomainName)
+	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})

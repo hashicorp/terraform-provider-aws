@@ -275,7 +275,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -622,7 +622,7 @@ func resourceDistribution() *schema.Resource {
 								},
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -919,7 +919,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting default_cache_behavior: %s", err)
 	}
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
-	d.Set("domain_name", output.Distribution.DomainName)
+	d.Set(names.AttrDomainName, output.Distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
@@ -2000,7 +2000,7 @@ func flattenOrigins(apiObject *awstypes.Origins) []interface{} {
 
 func expandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 	apiObject := &awstypes.Origin{
-		DomainName: aws.String(tfMap["domain_name"].(string)),
+		DomainName: aws.String(tfMap[names.AttrDomainName].(string)),
 		Id:         aws.String(tfMap["origin_id"].(string)),
 	}
 
@@ -2059,7 +2059,7 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 	}
 
 	tfMap := make(map[string]interface{})
-	tfMap["domain_name"] = aws.ToString(apiObject.DomainName)
+	tfMap[names.AttrDomainName] = aws.ToString(apiObject.DomainName)
 	tfMap["origin_id"] = aws.ToString(apiObject.Id)
 
 	if apiObject.ConnectionAttempts != nil {

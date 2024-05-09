@@ -69,7 +69,7 @@ func ResourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -176,7 +176,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	input := &customerprofiles.CreateProfileInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	}
 
 	if v, ok := d.GetOk("account_number"); ok {
@@ -272,7 +272,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.ToString(output.ProfileId))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindProfileByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
+		return FindProfileByTwoPartKey(ctx, conn, d.Id(), d.Get(names.AttrDomainName).(string))
 	})
 
 	if err != nil {
@@ -286,7 +286,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	output, err := FindProfileByTwoPartKey(ctx, conn, d.Id(), domainName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -330,7 +330,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	input := &customerprofiles.UpdateProfileInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		ProfileId:  aws.String(d.Id()),
 	}
 
@@ -437,7 +437,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
 	_, err := conn.DeleteProfile(ctx, &customerprofiles.DeleteProfileInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		ProfileId:  aws.String(d.Id()),
 	})
 
@@ -459,7 +459,7 @@ func resourceProfileImport(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(parts[1])
-	d.Set("domain_name", parts[0])
+	d.Set(names.AttrDomainName, parts[0])
 
 	return []*schema.ResourceData{d}, nil
 }

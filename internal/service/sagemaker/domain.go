@@ -856,7 +856,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -1007,7 +1007,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.CreateDomainInput{
-		DomainName:           aws.String(d.Get("domain_name").(string)),
+		DomainName:           aws.String(d.Get(names.AttrDomainName).(string)),
 		AuthMode:             aws.String(d.Get("auth_mode").(string)),
 		VpcId:                aws.String(d.Get(names.AttrVPCID).(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
@@ -1072,7 +1072,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("app_security_group_management", domain.AppSecurityGroupManagement)
 	d.Set(names.AttrARN, arn)
 	d.Set("auth_mode", domain.AuthMode)
-	d.Set("domain_name", domain.DomainName)
+	d.Set(names.AttrDomainName, domain.DomainName)
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
 	d.Set(names.AttrKMSKeyID, domain.KmsKeyId)
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)

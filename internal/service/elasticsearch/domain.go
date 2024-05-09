@@ -52,7 +52,7 @@ func ResourceDomain() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIf("elasticsearch_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
-				domainName := d.Get("domain_name").(string)
+				domainName := d.Get(names.AttrDomainName).(string)
 
 				conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 				resp, err := conn.GetCompatibleElasticsearchVersionsWithContext(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
@@ -335,7 +335,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -545,7 +545,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state.
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 	_, err := FindDomainByName(ctx, conn, name)
 
 	if err == nil {
@@ -719,7 +719,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 	ds, err := FindDomainByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -758,7 +758,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("domain_id", ds.DomainId)
-	d.Set("domain_name", ds.DomainName)
+	d.Set(names.AttrDomainName, ds.DomainName)
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
@@ -847,7 +847,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		name := d.Get("domain_name").(string)
+		name := d.Get(names.AttrDomainName).(string)
 		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),
 		}
@@ -988,7 +988,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	name := d.Get("domain_name").(string)
+	name := d.Get(names.AttrDomainName).(string)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
 	_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
@@ -1013,9 +1013,9 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if err != nil {
 		return nil, err

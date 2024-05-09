@@ -32,7 +32,7 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 				Config: testAccVPCDHCPOptionsDataSourceConfig_id,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.#", resourceName, "domain_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.0", resourceName, "domain_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.1", resourceName, "domain_name_servers.1"),
@@ -67,7 +67,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 				Config: testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.#", resourceName, "domain_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.0", resourceName, "domain_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.1", resourceName, "domain_name_servers.1"),

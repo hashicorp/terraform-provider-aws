@@ -52,7 +52,7 @@ func ResourceDomain() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIf(names.AttrEngineVersion, func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get(names.AttrEngineVersion).(string)
-				domainName := d.Get("domain_name").(string)
+				domainName := d.Get(names.AttrDomainName).(string)
 
 				conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 				resp, err := conn.GetCompatibleVersionsWithContext(ctx, &opensearchservice.GetCompatibleVersionsInput{
@@ -390,7 +390,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -620,7 +620,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainImport(ctx context.Context,
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -631,13 +631,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state
-	resp, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	resp, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain %q already exists", aws.StringValue(resp.DomainName))
 	}
 
 	input := &opensearchservice.CreateDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		TagList:    getTagsIn(ctx),
 	}
 
@@ -776,7 +776,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be created", d.Id())
-	if err := WaitForDomainCreation(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := WaitForDomainCreation(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -786,7 +786,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
 
 		input := &opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		input.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
@@ -807,7 +807,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
@@ -820,7 +820,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	outDescribeDomainConfig, err := conn.DescribeDomainConfigWithContext(ctx, &opensearchservice.DescribeDomainConfigInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	})
 
 	if err != nil {
@@ -847,7 +847,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(ds.ARN))
 	d.Set(names.AttrARN, ds.ARN)
 	d.Set("domain_id", ds.DomainId)
-	d.Set("domain_name", ds.DomainName)
+	d.Set(names.AttrDomainName, ds.DomainName)
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
@@ -945,7 +945,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
+			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
 		if d.HasChange("access_policies") {
@@ -1077,13 +1077,13 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 		}
 
 		if d.HasChange(names.AttrEngineVersion) {
 			upgradeInput := opensearchservice.UpgradeDomainInput{
-				DomainName:    aws.String(d.Get("domain_name").(string)),
+				DomainName:    aws.String(d.Get(names.AttrDomainName).(string)),
 				TargetVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			}
 
@@ -1092,7 +1092,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: %s", d.Id(), err)
 			}
 
-			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: waiting for completion: %s", d.Id(), err)
 			}
 		}
@@ -1104,7 +1104,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
 	_, err := conn.DeleteDomainWithContext(ctx, &opensearchservice.DeleteDomainInput{
@@ -1118,7 +1118,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be deleted", domainName)
-	if err := waitForDomainDelete(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForDomainDelete(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 

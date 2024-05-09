@@ -9,6 +9,7 @@ const (
 	AttrAvailabilityZones  = "availability_zones"
 	AttrBucket             = "bucket"
 	AttrDescription        = "description"
+	AttrDomainName         = "domain_name"
 	AttrEnabled            = "enabled"
 	AttrEngineVersion      = "engine_version"
 	AttrID                 = "id" // Should be explicitly declared only for Framework resources

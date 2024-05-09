@@ -82,20 +82,20 @@ func resourceCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				RequiredWith:  []string{"private_key"},
-				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
+				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
 			"certificate_chain": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
+				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-				ExactlyOneOf:  []string{"domain_name", "private_key"},
+				ExactlyOneOf:  []string{names.AttrDomainName, "private_key"},
 				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key"},
 			},
 			"domain_validation_options": {
@@ -103,7 +103,7 @@ func resourceCertificate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -170,7 +170,7 @@ func resourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ExactlyOneOf: []string{"domain_name", "private_key"},
+				ExactlyOneOf: []string{names.AttrDomainName, "private_key"},
 			},
 			"renewal_eligibility": {
 				Type:     schema.TypeString,
@@ -239,7 +239,7 @@ func resourceCertificate() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -258,9 +258,9 @@ func resourceCertificate() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 				// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
-				if diff.Get("validation_method").(string) == string(types.ValidationMethodDns) && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
+				if diff.Get("validation_method").(string) == string(types.ValidationMethodDns) && (diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names")) {
 					domainValidationOptionsList := []interface{}{map[string]interface{}{
-						"domain_name": diff.Get("domain_name").(string),
+						names.AttrDomainName: diff.Get(names.AttrDomainName).(string),
 					}}
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
@@ -272,7 +272,7 @@ func resourceCertificate() *schema.Resource {
 							}
 
 							m := map[string]interface{}{
-								"domain_name": san,
+								names.AttrDomainName: san,
 							}
 
 							domainValidationOptionsList = append(domainValidationOptionsList, m)
@@ -286,8 +286,8 @@ func resourceCertificate() *schema.Resource {
 
 				// ACM automatically adds the domain_name value to the list of SANs. Mimic ACM's behavior
 				// so that the user doesn't need to explicitly set it themselves.
-				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domainName := diff.Get("domain_name").(string)
+				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
+					domainName := diff.Get(names.AttrDomainName).(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domainName)
@@ -333,7 +333,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	if _, ok := d.GetOk("domain_name"); ok {
+	if _, ok := d.GetOk(names.AttrDomainName); ok {
 		_, v1 := d.GetOk("certificate_authority_arn")
 		_, v2 := d.GetOk("validation_method")
 
@@ -341,7 +341,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
 		}
 
-		domainName := d.Get("domain_name").(string)
+		domainName := d.Get(names.AttrDomainName).(string)
 		input := &acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
 			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
@@ -427,7 +427,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, certificate.CertificateArn)
 	d.Set("certificate_authority_arn", certificate.CertificateAuthorityArn)
-	d.Set("domain_name", certificate.DomainName)
+	d.Set(names.AttrDomainName, certificate.DomainName)
 	d.Set("early_renewal_duration", d.Get("early_renewal_duration"))
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting domain_validation_options: %s", err)
@@ -576,7 +576,7 @@ func domainValidationOptionsHash(v interface{}) int {
 		return 0
 	}
 
-	if v, ok := m["domain_name"].(string); ok {
+	if v, ok := m[names.AttrDomainName].(string); ok {
 		return create.StringHashcode(v)
 	}
 
@@ -643,7 +643,7 @@ func expandDomainValidationOption(tfMap map[string]interface{}) *types.DomainVal
 
 	apiObject := &types.DomainValidationOption{}
 
-	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDomainName].(string); ok && v != "" {
 		apiObject.DomainName = aws.String(v)
 	}
 
@@ -686,7 +686,7 @@ func flattenDomainValidation(apiObject types.DomainValidation) (map[string]inter
 
 	if v := apiObject.ResourceRecord; v != nil {
 		if v := apiObject.DomainName; v != nil {
-			tfMap["domain_name"] = aws.ToString(v)
+			tfMap[names.AttrDomainName] = aws.ToString(v)
 		}
 
 		if v := v.Name; v != nil {

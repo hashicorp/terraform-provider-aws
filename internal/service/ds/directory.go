@@ -235,8 +235,8 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
 				if use.State == directoryservice.DirectoryStageFailed {
 					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
-						"directory_id": d.Id(),
-						"domain_name":  name,
+						"directory_id":       d.Id(),
+						names.AttrDomainName: name,
 					})
 					_, deleteErr := conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
 						DirectoryId: aws.String(d.Id()),

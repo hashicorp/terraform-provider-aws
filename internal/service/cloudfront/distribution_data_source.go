@@ -31,7 +31,7 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("aliases", aliases.Items)
 	}
 	d.Set(names.AttrARN, distribution.ARN)
-	d.Set("domain_name", distribution.DomainName)
+	d.Set(names.AttrDomainName, distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))

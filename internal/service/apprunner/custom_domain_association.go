@@ -66,7 +66,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,7 +97,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	serviceARN := d.Get("service_arn").(string)
 	id := customDomainAssociationCreateResourceID(domainName, serviceARN)
 	input := &apprunner.AssociateCustomDomainInput{
@@ -147,7 +147,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_validation_records: %s", err)
 	}
-	d.Set("domain_name", customDomain.DomainName)
+	d.Set(names.AttrDomainName, customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
 	d.Set("service_arn", serviceArn)
 	d.Set(names.AttrStatus, customDomain.Status)

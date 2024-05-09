@@ -146,7 +146,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"domain_name": {
+												names.AttrDomainName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
@@ -1711,7 +1711,7 @@ func expandCustomerProfilesDestinationProperties(tfMap map[string]interface{}) *
 
 	a := &types.CustomerProfilesDestinationProperties{}
 
-	if v, ok := tfMap["domain_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDomainName].(string); ok && v != "" {
 		a.DomainName = aws.String(v)
 	}
 
@@ -2805,7 +2805,7 @@ func flattenCustomerProfilesDestinationProperties(customerProfilesDestinationPro
 	m := map[string]interface{}{}
 
 	if v := customerProfilesDestinationProperties.DomainName; v != nil {
-		m["domain_name"] = aws.ToString(v)
+		m[names.AttrDomainName] = aws.ToString(v)
 	}
 
 	if v := customerProfilesDestinationProperties.ObjectTypeName; v != nil {
