@@ -138,6 +138,7 @@ The `filter` block supports the following arguments:
 
 * `behavior` - (Required) Parameter that determines how to handle logs that meet the conditions and requirements of the filter. The valid values for `behavior` are `KEEP` or `DROP`.
 * `condition` - (Required) Match condition(s) for the filter. See [Condition](#condition) below for more details.
+* `priority` - (Optional) Parameter that controls the order in which the filters are applied (lowest first).
 * `requirement` - (Required) Logic to apply to the filtering conditions. You can specify that a log must match all conditions or at least one condition in order to satisfy the filter. Valid values for `requirement` are `MEETS_ALL` or `MEETS_ANY`.
 
 ### Condition

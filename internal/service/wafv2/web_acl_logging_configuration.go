@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
@@ -68,6 +69,11 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 								Required: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"priority": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
 										"behavior": {
 											Type:         schema.TypeString,
 											Required:     true,
@@ -316,6 +322,12 @@ func expandFilters(l []interface{}) []*wafv2.Filter {
 
 	var filters []*wafv2.Filter
 
+	sort.SliceStable(l, func(i, j int) bool {
+		prio1, _ := l[i].(map[string]interface{})["priority"].(int)
+		prio2, _ := l[j].(map[string]interface{})["priority"].(int)
+		return prio1 < prio2
+	})
+
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -465,7 +477,7 @@ func flattenFilters(f []*wafv2.Filter) []interface{} {
 
 	var filters []interface{}
 
-	for _, filter := range f {
+	for p, filter := range f {
 		if filter == nil {
 			continue
 		}
@@ -474,6 +486,7 @@ func flattenFilters(f []*wafv2.Filter) []interface{} {
 			"behavior":    aws.StringValue(filter.Behavior),
 			"condition":   flattenFilterConditions(filter.Conditions),
 			"requirement": aws.StringValue(filter.Requirement),
+			"priority":    p,
 		}
 
 		filters = append(filters, m)

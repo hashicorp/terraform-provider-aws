@@ -550,9 +550,9 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerifyIgnore: []string{"logging_filter.*.filter.*.priority"},
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateFilterTwoFilters(rName),
@@ -586,6 +586,39 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccWebACLLoggingConfigurationConfig_updateFilterTwoFiltersWithPriority(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.default_behavior", "DROP"),
+					resource.TestCheckResourceAttr(resourceName, "logging_filter.0.filter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
+						"behavior":    wafv2.FilterBehaviorKeep,
+						"condition.#": "1",
+						"requirement": wafv2.FilterRequirementMeetsAll,
+						"priority":    "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"action_condition.#":        "1",
+						"action_condition.0.action": wafv2.ActionValueAllow,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*", map[string]string{
+						"behavior":    wafv2.FilterBehaviorDrop,
+						"condition.#": "2",
+						"requirement": wafv2.FilterRequirementMeetsAny,
+						"priority":    "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"action_condition.#":        "1",
+						"action_condition.0.action": wafv2.ActionValueBlock,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_filter.0.filter.*.condition.*", map[string]string{
+						"label_name_condition.#":            "1",
+						"label_name_condition.0.label_name": fmt.Sprintf("prefix:test:%s", rName),
+					}),
+				),
+			},
+			{
 				Config: testAccWebACLLoggingConfigurationConfig_updateFilterOneFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
@@ -604,9 +637,10 @@ func TestAccWAFV2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"logging_filter.*.filter.*.priority"},
 			},
 			{
 				Config: testAccWebACLLoggingConfigurationConfig_basic(rName),
@@ -941,6 +975,44 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 }
 `
 
+const testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFiltersWithPriority = `
+resource "aws_wafv2_web_acl_logging_configuration" "test" {
+  resource_arn            = aws_wafv2_web_acl.test.arn
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
+
+  logging_filter {
+    default_behavior = "DROP"
+
+    filter {
+      behavior = "KEEP"
+      priority = 0
+      condition {
+        action_condition {
+          action = "ALLOW"
+        }
+      }
+      requirement = "MEETS_ALL"
+    }
+
+    filter {
+      behavior = "DROP"
+      priority = 1
+      condition {
+        action_condition {
+          action = "BLOCK"
+        }
+      }
+      condition {
+        label_name_condition {
+          label_name = "prefix:test:${aws_wafv2_web_acl.test.name}"
+        }
+      }
+      requirement = "MEETS_ANY"
+    }
+  }
+}
+`
+
 const testAccWebACLLoggingConfigurationResource_loggingFilterConfig_oneFilter = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn            = aws_wafv2_web_acl.test.arn
@@ -1030,6 +1102,13 @@ func testAccWebACLLoggingConfigurationConfig_updateFilterTwoFilters(rName string
 		testAccWebACLLoggingConfigurationConfig_base(rName),
 		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFilters)
+}
+
+func testAccWebACLLoggingConfigurationConfig_updateFilterTwoFiltersWithPriority(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
+		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFiltersWithPriority)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateFilterOneFilter(rName string) string {
