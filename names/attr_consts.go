@@ -8,6 +8,7 @@ const (
 	AttrAvailabilityZone   = "availability_zone"
 	AttrAvailabilityZones  = "availability_zones"
 	AttrBucket             = "bucket"
+	AttrDatabaseName       = "database_name"
 	AttrDescription        = "description"
 	AttrDomainName         = "domain_name"
 	AttrEnabled            = "enabled"
