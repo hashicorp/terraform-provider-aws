@@ -135,7 +135,7 @@ func ResourceResourceSet() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -273,7 +273,7 @@ func expandResourceSetResources(rs []interface{}) []*route53recoveryreadiness.Re
 	for _, r := range rs {
 		r := r.(map[string]interface{})
 		resource := &route53recoveryreadiness.Resource{}
-		if v, ok := r["resource_arn"]; ok && v.(string) != "" {
+		if v, ok := r[names.AttrResourceARN]; ok && v.(string) != "" {
 			resource.ResourceArn = aws.String(v.(string))
 		}
 		if v, ok := r["readiness_scopes"]; ok {
@@ -295,7 +295,7 @@ func flattenResourceSetResources(resources []*route53recoveryreadiness.Resource)
 	for _, resource := range resources {
 		r := map[string]interface{}{}
 		if v := resource.ResourceArn; v != nil {
-			r["resource_arn"] = v
+			r[names.AttrResourceARN] = v
 		}
 		if v := resource.ReadinessScopes; v != nil {
 			r["readiness_scopes"] = v
