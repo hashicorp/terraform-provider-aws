@@ -173,7 +173,7 @@ func resourceTrail() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(resourceType_Values(), false),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
@@ -694,7 +694,7 @@ func expandEventSelectorDataResource(configured []interface{}) []types.DataResou
 
 		dataResource := types.DataResource{
 			Type:   aws.String(data[names.AttrType].(string)),
-			Values: flex.ExpandStringValueList(data["values"].([]interface{})),
+			Values: flex.ExpandStringValueList(data[names.AttrValues].([]interface{})),
 		}
 
 		dataResources = append(dataResources, dataResource)
@@ -730,7 +730,7 @@ func flattenEventSelectorDataResource(configured []types.DataResource) []map[str
 	for _, raw := range configured {
 		item := make(map[string]interface{})
 		item[names.AttrType] = aws.ToString(raw.Type)
-		item["values"] = raw.Values
+		item[names.AttrValues] = raw.Values
 
 		dataResources = append(dataResources, item)
 	}
@@ -1010,7 +1010,7 @@ func resourceTrailV0() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
