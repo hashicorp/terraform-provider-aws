@@ -34,7 +34,7 @@ func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,7 +60,7 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	attachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
-	subnetID := d.Get("subnet_id").(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	id := TransitGatewayMulticastDomainAssociationCreateResourceID(multicastDomainID, attachmentID, subnetID)
 	input := &ec2.AssociateTransitGatewayMulticastDomainInput{
 		SubnetIds:                       aws.StringSlice([]string{subnetID}),
@@ -107,7 +107,7 @@ func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Multicast Domain Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("subnet_id", multicastDomainAssociation.Subnet.SubnetId)
+	d.Set(names.AttrSubnetID, multicastDomainAssociation.Subnet.SubnetId)
 	d.Set(names.AttrTransitGatewayAttachmentID, multicastDomainAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_multicast_domain_id", multicastDomainID)
 

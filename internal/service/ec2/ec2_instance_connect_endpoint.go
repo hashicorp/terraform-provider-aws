@@ -110,7 +110,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			"subnet_id": schema.StringAttribute{
+			names.AttrSubnetID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

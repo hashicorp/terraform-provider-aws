@@ -369,7 +369,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -501,7 +501,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set("subnet_id", ni.SubnetId)
+				d.Set(names.AttrSubnetID, ni.SubnetId)
 				d.Set(names.AttrNetworkInterfaceID, ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 
@@ -525,7 +525,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else {
-		d.Set("subnet_id", instance.SubnetId)
+		d.Set(names.AttrSubnetID, instance.SubnetId)
 		d.Set(names.AttrNetworkInterfaceID, "")
 	}
 

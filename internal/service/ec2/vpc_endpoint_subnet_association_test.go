@@ -106,7 +106,7 @@ func testAccCheckVPCEndpointSubnetAssociationDestroy(ctx context.Context) resour
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+			err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes[names.AttrSubnetID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -142,7 +142,7 @@ func testAccCheckVPCEndpointSubnetAssociationExists(ctx context.Context, n strin
 			return err
 		}
 
-		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes[names.AttrSubnetID])
 
 		if err != nil {
 			return err
@@ -230,7 +230,7 @@ func testAccVPCEndpointSubnetAssociationImportStateIdFunc(n string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes[names.AttrSubnetID])
 		return id, nil
 	}
 }
