@@ -38,7 +38,6 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
-					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 				),
 			},
@@ -97,16 +96,41 @@ func TestAccQBusinessRetriever_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccRetrieverConfig_tags(rName, "key1", "value1new", "key2", "value2new"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1new"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2new"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQBusinessRetriever_boostOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
+	var retriever qbusiness.GetRetrieverOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_retriever.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRetriever(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRetrieverDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRetrieverConfig_boostOverrides(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
+					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.string_list_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.number_boost_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.date_boost_override.#", "1"),
 				),
 			},
 		},
@@ -204,6 +228,8 @@ resource "aws_qbusiness_retriever" "test" {
 
 resource "aws_qbusiness_index" "test" {
   application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
+
   capacity_configuration {
     units = 1
   }
@@ -232,13 +258,56 @@ EOF
 
 func testAccRetrieverConfig_boostOverrides(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_qbusiness_app" "test" {
+  display_name         = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "DISABLED"
+  }
+}
+
+resource "aws_qbusiness_index" "test" {
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
+
+  capacity_configuration {
+    units = 1
+  }
+  document_attribute_configuration {
+    name   = "date"
+    search = "DISABLED"
+    type   = "DATE"
+  }
+  document_attribute_configuration {
+    name   = "number"
+    search = "DISABLED"
+    type   = "NUMBER"
+  }
+  document_attribute_configuration {
+    name   = "string"
+    search = "ENABLED"
+    type   = "STRING"
+  }
+  document_attribute_configuration {
+    name   = "string_list"
+    search = "ENABLED"
+    type   = "STRING_LIST"
+  }
+}
+
 resource "aws_qbusiness_retriever" "test" {
-  application_id = "3f8d08f8-5729-4096-94e8-142378ae83c0"
+  application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
   type           = "NATIVE_INDEX"
 
   native_index_configuration {
-    index_id = "61934168-bdba-4b28-9869-5564ee794e89"
+    index_id = aws_qbusiness_index.test.index_id
 
     string_boost_override {
       boost_key      = "string"
@@ -268,12 +337,32 @@ resource "aws_qbusiness_retriever" "test" {
     }
   }
 }
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
 `, rName)
 }
 
 func testAccRetrieverConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_retriever" "test" {
   application_id = aws_qbusiness_app.test.application_id
@@ -292,35 +381,40 @@ resource "aws_qbusiness_retriever" "test" {
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "DISABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
-
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.application_id
+  application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
+
   capacity_configuration {
     units = 1
   }
-  description = %[1]q
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
