@@ -84,7 +84,7 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -101,7 +101,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
 		SecurityGroupId: aws.String(d.Get("security_group_id").(string)),
-		SubnetId:        aws.String(d.Get("subnet_id").(string)),
+		SubnetId:        aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
 	if v, ok := d.GetOk("access_type"); ok {
@@ -201,7 +201,7 @@ func resourceEndpointImportState(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(endpointArn)
 	d.Set("security_group_id", securityGroupId)
-	d.Set("subnet_id", subnetId)
+	d.Set(names.AttrSubnetID, subnetId)
 
 	return []*schema.ResourceData{d}, nil
 }
