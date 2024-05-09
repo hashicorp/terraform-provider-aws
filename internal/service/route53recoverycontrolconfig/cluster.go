@@ -42,7 +42,7 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -187,7 +187,7 @@ func flattenClusterEndpoint(ce *r53rcc.ClusterEndpoint) map[string]interface{} {
 	}
 
 	if v := ce.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap
