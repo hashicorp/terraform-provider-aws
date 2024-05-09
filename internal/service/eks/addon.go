@@ -82,7 +82,7 @@ func resourceAddon() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -224,7 +224,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, addon.AddonArn)
 	d.Set("cluster_name", addon.ClusterName)
 	d.Set("configuration_values", addon.ConfigurationValues)
-	d.Set("created_at", aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
