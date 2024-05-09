@@ -1116,7 +1116,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"database_name": {
+												names.AttrDatabaseName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -2069,7 +2069,7 @@ func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.R
 		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
 		RoleArn:           aws.String(m[names.AttrRoleARN].(string)),
 		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
-		DatabaseName:      aws.String(m["database_name"].(string)),
+		DatabaseName:      aws.String(m[names.AttrDatabaseName].(string)),
 	}
 
 	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
@@ -2307,7 +2307,7 @@ func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnect
 	m[names.AttrRoleARN] = aws.ToString(properties.RoleArn)
 	m["cluster_identifier"] = aws.ToString(properties.ClusterIdentifier)
 	m["data_api_role_arn"] = aws.ToString(properties.DataApiRoleArn)
-	m["database_name"] = aws.ToString(properties.DatabaseName)
+	m[names.AttrDatabaseName] = aws.ToString(properties.DatabaseName)
 
 	return []interface{}{m}
 }
