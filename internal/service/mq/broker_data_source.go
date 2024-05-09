@@ -212,7 +212,7 @@ func dataSourceBroker() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -298,7 +298,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("publicly_accessible", output.PubliclyAccessible)
-	d.Set("security_groups", output.SecurityGroups)
+	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
