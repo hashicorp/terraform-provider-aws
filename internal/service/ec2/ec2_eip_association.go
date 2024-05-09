@@ -43,7 +43,7 @@ func resourceEIPAssociation() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -85,7 +85,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.AllowReassociation = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		input.InstanceId = aws.String(v.(string))
 	}
 
@@ -155,7 +155,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("allocation_id", address.AllocationId)
-	d.Set("instance_id", address.InstanceId)
+	d.Set(names.AttrInstanceID, address.InstanceId)
 	d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 	d.Set("private_ip_address", address.PrivateIpAddress)
 	d.Set("public_ip", address.PublicIp)

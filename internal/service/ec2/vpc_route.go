@@ -160,7 +160,7 @@ func resourceRoute() *schema.Resource {
 			//
 			// Computed attributes.
 			//
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -332,7 +332,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
-	d.Set("instance_id", route.InstanceId)
+	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
 	d.Set("origin", route.Origin)

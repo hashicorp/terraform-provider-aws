@@ -5710,7 +5710,7 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 				r := tfec2.ResourceVolumeAttachment()
 				d := r.Data(nil)
 				d.Set("device_name", deviceName)
-				d.Set("instance_id", instanceID)
+				d.Set(names.AttrInstanceID, instanceID)
 				d.Set("volume_id", volumeID)
 
 				if err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta()); err != nil {

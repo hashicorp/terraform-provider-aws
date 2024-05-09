@@ -99,7 +99,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -323,7 +323,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 			m["local_gateway_id"] = aws.StringValue(r.LocalGatewayId)
 		}
 		if r.InstanceId != nil {
-			m["instance_id"] = aws.StringValue(r.InstanceId)
+			m[names.AttrInstanceID] = aws.StringValue(r.InstanceId)
 		}
 		if r.TransitGatewayId != nil {
 			m["transit_gateway_id"] = aws.StringValue(r.TransitGatewayId)

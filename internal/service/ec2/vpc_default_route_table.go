@@ -101,7 +101,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

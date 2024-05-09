@@ -147,7 +147,7 @@ func TestAccEC2EIPDataSource_instance(t *testing.T) {
 				Config: testAccEIPDataSourceConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_id", resourceName, "instance"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceID, resourceName, "instance"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "association_id", resourceName, "association_id"),
 				),
 			},
