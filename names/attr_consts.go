@@ -6,6 +6,7 @@ package names
 const (
 	AttrARN                        = "arn"
 	AttrAccountID                  = "account_id"
+	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
 	AttrAvailabilityZone           = "availability_zone"
 	AttrAvailabilityZones          = "availability_zones"
 	AttrBucket                     = "bucket"
