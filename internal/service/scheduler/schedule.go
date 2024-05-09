@@ -221,7 +221,7 @@ func resourceSchedule() *schema.Resource {
 													Optional: true,
 													Default:  false,
 												},
-												"security_groups": {
+												names.AttrSecurityGroups: {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
