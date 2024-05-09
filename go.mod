@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.7
-	github.com/aws/aws-sdk-go-v2/service/swf v1.22.4
+	github.com/aws/aws-sdk-go-v2/service/swf v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.0
