@@ -601,7 +601,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"format": {
+													names.AttrFormat: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -1098,7 +1098,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+				if vFormat, ok := mFile[names.AttrFormat].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
 					format := &appmesh.LoggingFormat{}
 
 					mFormat := vFormat[0].(map[string]interface{})
@@ -1458,7 +1458,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 						mFormat["text"] = aws.StringValue(text)
 					}
 
-					mFile["format"] = []interface{}{mFormat}
+					mFile[names.AttrFormat] = []interface{}{mFormat}
 				}
 
 				mFile[names.AttrPath] = aws.StringValue(file.Path)
