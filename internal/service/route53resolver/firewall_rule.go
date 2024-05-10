@@ -77,7 +77,7 @@ func ResourceFirewallRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validResolverName,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -98,7 +98,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		Name:                 aws.String(name),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
@@ -157,7 +157,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
 	d.Set("firewall_domain_list_id", firewallRule.FirewallDomainListId)
 	d.Set(names.AttrName, firewallRule.Name)
-	d.Set("priority", firewallRule.Priority)
+	d.Set(names.AttrPriority, firewallRule.Priority)
 
 	return nil
 }
@@ -176,7 +176,7 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {

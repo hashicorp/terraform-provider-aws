@@ -77,14 +77,14 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -101,7 +101,7 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 			return false
 		}
 
-		if v, ok := d.GetOk("priority"); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
+		if v, ok := d.GetOk(names.AttrPriority); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
 			return false
 		}
 
@@ -185,7 +185,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Priority != nil {
-		tfMap["priority"] = aws.Int64Value(apiObject.Priority)
+		tfMap[names.AttrPriority] = aws.Int64Value(apiObject.Priority)
 	}
 	return tfMap
 }
