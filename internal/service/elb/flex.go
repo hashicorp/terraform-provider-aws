@@ -27,7 +27,7 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 	}
 
 	if l.S3BucketPrefix != nil {
-		r["bucket_prefix"] = aws.StringValue(l.S3BucketPrefix)
+		r[names.AttrBucketPrefix] = aws.StringValue(l.S3BucketPrefix)
 	}
 
 	if l.EmitInterval != nil {
