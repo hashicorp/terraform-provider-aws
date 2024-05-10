@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_instance_profiles", name="Instance Profiles")
@@ -24,7 +25,7 @@ func dataSourceInstanceProfiles() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstanceProfilesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -69,7 +70,7 @@ func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(roleName)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("names", names)
 	d.Set("paths", paths)
 

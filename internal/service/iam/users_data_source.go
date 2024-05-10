@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_users", name="Users")
@@ -19,7 +20,7 @@ func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -68,7 +69,7 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
-	if err := d.Set("arns", arns); err != nil {
+	if err := d.Set(names.AttrARNs, arns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
