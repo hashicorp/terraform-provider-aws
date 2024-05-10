@@ -245,7 +245,7 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

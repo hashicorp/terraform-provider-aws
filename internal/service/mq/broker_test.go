@@ -126,7 +126,7 @@ func TestDiffUsers(t *testing.T) {
 			NewUsers: []interface{}{
 				map[string]interface{}{
 					"console_access":   false,
-					"username":         "second",
+					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
 					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
 					"replication_user": false,
@@ -149,7 +149,7 @@ func TestDiffUsers(t *testing.T) {
 			OldUsers: []interface{}{
 				map[string]interface{}{
 					"console_access":   true,
-					"username":         "first",
+					names.AttrUsername: "first",
 					names.AttrPassword: "TestTest1111",
 					"replication_user": false,
 				},
@@ -157,7 +157,7 @@ func TestDiffUsers(t *testing.T) {
 			NewUsers: []interface{}{
 				map[string]interface{}{
 					"console_access":   false,
-					"username":         "second",
+					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
 					"replication_user": false,
 				},
@@ -180,13 +180,13 @@ func TestDiffUsers(t *testing.T) {
 			OldUsers: []interface{}{
 				map[string]interface{}{
 					"console_access":   true,
-					"username":         "first",
+					names.AttrUsername: "first",
 					names.AttrPassword: "TestTest1111updated",
 					"replication_user": false,
 				},
 				map[string]interface{}{
 					"console_access":   false,
-					"username":         "second",
+					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
 					"replication_user": false,
 				},
@@ -194,7 +194,7 @@ func TestDiffUsers(t *testing.T) {
 			NewUsers: []interface{}{
 				map[string]interface{}{
 					"console_access":   false,
-					"username":         "second",
+					names.AttrUsername: "second",
 					names.AttrPassword: "TestTest2222",
 					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
 					"replication_user": false,
@@ -310,7 +310,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "Test",
+						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
 				),
@@ -462,7 +462,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "Test",
+						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
@@ -544,7 +544,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "true",
 						"groups.#":         "3",
-						"username":         "SecondTest",
+						names.AttrUsername: "SecondTest",
 						names.AttrPassword: "SecondTestTest1234",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "first"),
@@ -553,7 +553,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "Test",
+						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
@@ -673,7 +673,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "true",
 						"groups.#":         "3",
-						"username":         "SecondTest",
+						names.AttrUsername: "SecondTest",
 						names.AttrPassword: "SecondTestTest1234",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "first"),
@@ -682,7 +682,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "Test",
+						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),
@@ -889,7 +889,7 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "first",
+						names.AttrUsername: "first",
 						names.AttrPassword: "TestTest1111",
 					}),
 				),
@@ -909,13 +909,13 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "second",
+						names.AttrUsername: "second",
 						names.AttrPassword: "TestTest2222",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "true",
 						"groups.#":         "0",
-						"username":         "first",
+						names.AttrUsername: "first",
 						names.AttrPassword: "TestTest1111updated",
 					}),
 				),
@@ -929,7 +929,7 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "1",
-						"username":         "second",
+						names.AttrUsername: "second",
 						names.AttrPassword: "TestTest2222",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "user.*.groups.*", "admin"),
@@ -988,7 +988,7 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"username":         "Test",
+						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest9999",
 					}),
 				),
@@ -1305,7 +1305,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access":   "false",
 						"groups.#":         "0",
-						"username":         "Test",
+						names.AttrUsername: "Test",
 						names.AttrPassword: "TestTest1234",
 					}),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mq", regexache.MustCompile(`broker:+.`)),

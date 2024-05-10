@@ -363,7 +363,7 @@ func resourceBroker() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(2, 100),
@@ -800,7 +800,7 @@ func resourceUserHash(v interface{}) int {
 	if p, ok := m[names.AttrPassword]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m["username"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrUsername].(string)))
 
 	return create.StringHashcode(buf.String())
 }
@@ -843,7 +843,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 	existingUsers := make(map[string]interface{})
 	for _, ou := range oldUsers {
 		u := ou.(map[string]interface{})
-		username := u["username"].(string)
+		username := u[names.AttrUsername].(string)
 		// Convert Set to slice to allow easier comparison
 		if g, ok := u["groups"]; ok {
 			groups := g.(*schema.Set).List()
@@ -866,7 +866,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 		}
 
 		newUserMap := newUser.(map[string]interface{})
-		username := newUserMap["username"].(string)
+		username := newUserMap[names.AttrUsername].(string)
 
 		// Convert Set to slice to allow easier comparison
 		var ng []interface{}
@@ -977,7 +977,7 @@ func expandUsers(cfg []interface{}) []types.User {
 	for i, m := range cfg {
 		u := m.(map[string]interface{})
 		user := types.User{
-			Username: aws.String(u["username"].(string)),
+			Username: aws.String(u[names.AttrUsername].(string)),
 			Password: aws.String(u[names.AttrPassword].(string)),
 		}
 		if v, ok := u["console_access"]; ok {
@@ -1025,14 +1025,14 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
 		user := u.(map[string]interface{})
-		username := user["username"].(string)
+		username := user[names.AttrUsername].(string)
 		existingPairs[username] = user[names.AttrPassword].(string)
 	}
 
 	out := make([]interface{}, 0)
 	for _, u := range users {
 		m := map[string]interface{}{
-			"username": aws.ToString(u.Username),
+			names.AttrUsername: aws.ToString(u.Username),
 		}
 		password := ""
 		if p, ok := existingPairs[aws.ToString(u.Username)]; ok {
