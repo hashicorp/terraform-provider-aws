@@ -86,7 +86,7 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 										Default:          types.StorageClassAnalysisSchemaVersionV1,
 										ValidateDiagFunc: enum.Validate[types.StorageClassAnalysisSchemaVersion](),
 									},
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -320,7 +320,7 @@ func expandStorageClassAnalysis(l []interface{}) *types.StorageClassAnalysis {
 				dataExport.OutputSchemaVersion = types.StorageClassAnalysisSchemaVersion(v.(string))
 			}
 
-			dataExport.Destination = expandAnalyticsExportDestination(bar["destination"].([]interface{}))
+			dataExport.Destination = expandAnalyticsExportDestination(bar[names.AttrDestination].([]interface{}))
 		}
 	}
 
@@ -392,7 +392,7 @@ func flattenStorageClassAnalysis(storageClassAnalysis *types.StorageClassAnalysi
 		"output_schema_version": dataExport.OutputSchemaVersion,
 	}
 	if dataExport.Destination != nil {
-		de["destination"] = flattenAnalyticsExportDestination(dataExport.Destination)
+		de[names.AttrDestination] = flattenAnalyticsExportDestination(dataExport.Destination)
 	}
 	result := map[string]interface{}{
 		"data_export": []interface{}{de},

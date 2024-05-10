@@ -422,7 +422,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
 									},
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										MinItems: 1,
@@ -2455,7 +2455,7 @@ func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.
 			continue
 		}
 
-		if v, ok := tfRuleMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfRuleMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Destination = expandBucketDestination(v)
 		} else {
 			rule.Destination = &types.Destination{}
@@ -2638,7 +2638,7 @@ func flattenBucketReplicationRules(ctx context.Context, rules []types.Replicatio
 		}
 
 		if rule.Destination != nil {
-			m["destination"] = flattenBucketDestination(rule.Destination)
+			m[names.AttrDestination] = flattenBucketDestination(rule.Destination)
 		}
 
 		if rule.Filter != nil {

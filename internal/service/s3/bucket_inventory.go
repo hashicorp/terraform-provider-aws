@@ -44,7 +44,7 @@ func resourceBucketInventory() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -183,7 +183,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		IsEnabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
-	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDestination); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})[names.AttrBucket].([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Destination = &types.InventoryDestination{
 			S3BucketDestination: expandInventoryBucketDestination(tfMap),
@@ -269,7 +269,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		tfMap := map[string]interface{}{
 			names.AttrBucket: flattenInventoryBucketDestination(v.S3BucketDestination),
 		}
-		if err := d.Set("destination", []map[string]interface{}{tfMap}); err != nil {
+		if err := d.Set(names.AttrDestination, []map[string]interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 		}
 	}
