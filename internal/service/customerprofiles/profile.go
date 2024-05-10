@@ -44,7 +44,7 @@ func ResourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"address": customerProfileAddressSchema(),
+			names.AttrAddress: customerProfileAddressSchema(),
 			"attributes": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -187,7 +187,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AdditionalInformation = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("address"); ok {
+	if v, ok := d.GetOk(names.AttrAddress); ok {
 		input.Address = expandAddress(v.([]interface{}))
 	}
 
@@ -301,7 +301,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("account_number", output.AccountNumber)
 	d.Set("additional_information", output.AdditionalInformation)
-	d.Set("address", flattenAddress(output.Address))
+	d.Set(names.AttrAddress, flattenAddress(output.Address))
 	d.Set("account_number", output.AccountNumber)
 	d.Set("attributes", output.Attributes)
 	d.Set("billing_address", flattenAddress(output.BillingAddress))
@@ -342,8 +342,8 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AdditionalInformation = aws.String(d.Get("additional_information").(string))
 	}
 
-	if d.HasChange("address") {
-		input.Address = expandUpdateAddress(d.Get("address").([]interface{}))
+	if d.HasChange(names.AttrAddress) {
+		input.Address = expandUpdateAddress(d.Get(names.AttrAddress).([]interface{}))
 	}
 
 	if d.HasChange("attributes") {
