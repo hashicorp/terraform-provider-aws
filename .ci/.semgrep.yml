@@ -1395,3 +1395,13 @@ rules:
       - pattern: '"priority"'
     severity: ERROR
     fix: "names.AttrPriority"
+  - id: literal-path-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPath` for the string literal "path"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"path"'
+    severity: ERROR
+    fix: "names.AttrPath"
