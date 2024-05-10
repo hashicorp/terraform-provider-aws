@@ -1405,3 +1405,13 @@ rules:
       - pattern: '"path"'
     severity: ERROR
     fix: "names.AttrPath"
+  - id: literal-url-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrURL` for the string literal "url"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"url"'
+    severity: ERROR
+    fix: "names.AttrURL"
