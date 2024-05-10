@@ -220,7 +220,7 @@ func ResourceRuleGroup() *schema.Resource {
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"priority": {
+															names.AttrPriority: {
 																Type:     schema.TypeInt,
 																Required: true,
 															},
@@ -1056,7 +1056,7 @@ func expandStatelessRules(l []interface{}) []*networkfirewall.StatelessRule {
 			continue
 		}
 		statelessRule := &networkfirewall.StatelessRule{}
-		if v, ok := tfMap["priority"].(int); ok && v > 0 {
+		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
 			statelessRule.Priority = aws.Int64(int64(v))
 		}
 		if v, ok := tfMap["rule_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1307,8 +1307,8 @@ func flattenStatelessRules(sr []*networkfirewall.StatelessRule) []interface{} {
 	rules := make([]interface{}, 0, len(sr))
 	for _, s := range sr {
 		rule := map[string]interface{}{
-			"priority":        int(aws.Int64Value(s.Priority)),
-			"rule_definition": flattenRuleDefinition(s.RuleDefinition),
+			names.AttrPriority: int(aws.Int64Value(s.Priority)),
+			"rule_definition":  flattenRuleDefinition(s.RuleDefinition),
 		}
 		rules = append(rules, rule)
 	}
