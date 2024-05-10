@@ -20,7 +20,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResolverFirewallFirewallRulesRead,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -33,7 +33,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -97,7 +97,7 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
 	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
-		if v, ok := d.GetOk("action"); ok && aws.StringValue(rule.Action) != v.(string) {
+		if v, ok := d.GetOk(names.AttrAction); ok && aws.StringValue(rule.Action) != v.(string) {
 			return false
 		}
 
@@ -152,7 +152,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Action != nil {
-		tfMap["action"] = aws.StringValue(apiObject.Action)
+		tfMap[names.AttrAction] = aws.StringValue(apiObject.Action)
 	}
 	if apiObject.BlockOverrideDnsType != nil {
 		tfMap["block_override_dns_type"] = aws.StringValue(apiObject.BlockOverrideDnsType)
