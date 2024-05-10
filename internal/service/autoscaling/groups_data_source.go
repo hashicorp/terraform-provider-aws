@@ -29,7 +29,7 @@ func dataSourceGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -93,7 +93,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
