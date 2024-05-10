@@ -911,7 +911,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
+		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),

@@ -640,7 +640,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1677,7 +1677,7 @@ func flattenAnalysisLoadBalancerTarget(apiObject *ec2.AnalysisLoadBalancerTarget
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.AvailabilityZone; v != nil {
@@ -1821,7 +1821,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Addresses; v != nil {
