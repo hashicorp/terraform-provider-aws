@@ -284,7 +284,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								),
 							},
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -371,7 +371,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		var shareWith, shareWithExcept interface{}
 
 		if action == "share" {
-			if mode, ok := cfgSA["mode"]; ok {
+			if mode, ok := cfgSA[names.AttrMode]; ok {
 				sgmtAction.Mode = mode.(string)
 			}
 
@@ -395,7 +395,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		if action == "create-route" {
-			if mode := cfgSA["mode"]; mode != "" {
+			if mode := cfgSA[names.AttrMode]; mode != "" {
 				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\". See segment_actions[%s].", strconv.Itoa(i))
 			}
 
