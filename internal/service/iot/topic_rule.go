@@ -496,7 +496,7 @@ func ResourceTopicRule() *schema.Resource {
 											},
 										},
 									},
-									"url": {
+									names.AttrURL: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.IsURLWithHTTPS,
@@ -874,7 +874,7 @@ func ResourceTopicRule() *schema.Resource {
 								},
 							},
 						},
-						"url": {
+						names.AttrURL: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsURLWithHTTPS,
@@ -1630,7 +1630,7 @@ func expandHTTPAction(tfList []interface{}) *iot.HttpAction {
 	apiObject := &iot.HttpAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
@@ -2771,7 +2771,7 @@ func flattenHTTPAction(apiObject *iot.HttpAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Url; v != nil {
-		tfMap["url"] = aws.StringValue(v)
+		tfMap[names.AttrURL] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ConfirmationUrl; v != nil {

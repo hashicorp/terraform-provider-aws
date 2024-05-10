@@ -927,7 +927,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
 						"confirmation_url": "",
 						"http_header.#":    "0",
-						"url":              "https://example.com/ingress",
+						names.AttrURL:      "https://example.com/ingress",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
@@ -963,7 +963,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
 						"confirmation_url": "https://example.com/",
 						"http_header.#":    "0",
-						"url":              "https://example.com/ingress",
+						names.AttrURL:      "https://example.com/ingress",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
@@ -998,7 +998,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 						"http_header.0.value": "v1",
 						"http_header.1.key":   "X-Header-2",
 						"http_header.1.value": "v2",
-						"url":                 "https://example.com/ingress",
+						names.AttrURL:         "https://example.com/ingress",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
@@ -1049,7 +1049,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "http.*", map[string]string{
 						"confirmation_url": "",
 						"http_header.#":    "0",
-						"url":              "https://example.com/ingress",
+						names.AttrURL:      "https://example.com/ingress",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
