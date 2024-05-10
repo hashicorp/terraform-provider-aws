@@ -262,26 +262,3 @@ func findSamplingRuleByName(ctx context.Context, conn *xray.Client, name string)
 
 	return nil, &retry.NotFoundError{}
 }
-
-/*
-func GetSamplingRule(ctx context.Context, conn *xray.XRay, ruleName string) (*xray.SamplingRule, error) {
-	params := &xray.GetSamplingRulesInput{}
-	for {
-		out, err := conn.GetSamplingRulesWithContext(ctx, params)
-		if err != nil {
-			return nil, err
-		}
-		for _, samplingRuleRecord := range out.SamplingRuleRecords {
-			samplingRule := samplingRuleRecord.SamplingRule
-			if aws.StringValue(samplingRule.RuleName) == ruleName {
-				return samplingRule, nil
-			}
-		}
-		if aws.StringValue(out.NextToken) == "" {
-			break
-		}
-		params.NextToken = out.NextToken
-	}
-	return nil, nil
-}
-*/
