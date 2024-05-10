@@ -13,15 +13,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,7 +73,7 @@ func TestAccWAFIPSet_disappears(t *testing.T) {
 				Config: testAccIPSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					testAccCheckIPSetDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -384,48 +383,6 @@ func TestAccWAFIPSet_ipv6(t *testing.T) {
 	})
 }
 
-func testAccCheckIPSetDisappears(ctx context.Context, v *awstypes.IPSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-
-		wr := tfwaf.NewRetryer(conn)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateIPSetInput{
-				ChangeToken: token,
-				IPSetId:     v.IPSetId,
-			}
-
-			for _, IPSetDescriptor := range v.IPSetDescriptors {
-				IPSetUpdate := awstypes.IPSetUpdate{
-					Action: awstypes.ChangeAction("DELETE"),
-					IPSetDescriptor: &awstypes.IPSetDescriptor{
-						Type:  IPSetDescriptor.Type,
-						Value: IPSetDescriptor.Value,
-					},
-				}
-				req.Updates = append(req.Updates, IPSetUpdate)
-			}
-
-			return conn.UpdateIPSet(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteIPSetInput{
-				ChangeToken: token,
-				IPSetId:     v.IPSetId,
-			}
-			return conn.DeleteIPSet(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF IPSet: %s", err)
-		}
-		return nil
-	}
-}
-
 func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -434,22 +391,18 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetIPSet(ctx, &waf.GetIPSetInput{
-				IPSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.IPSet.IPSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF IPSet %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwaf.FindIPSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the IPSet is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF IPSet %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -463,25 +416,17 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF IPSet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetIPSet(ctx, &waf.GetIPSetInput{
-			IPSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindIPSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.IPSet.IPSetId == rs.Primary.ID {
-			*v = *resp.IPSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF IPSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 

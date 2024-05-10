@@ -302,7 +302,7 @@ func sweepIPSet(region string) error {
 		}
 
 		for _, ipSet := range page.IPSets {
-			r := ResourceIPSet()
+			r := resourceIPSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(ipSet.IPSetId)
