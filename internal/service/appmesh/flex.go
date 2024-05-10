@@ -174,7 +174,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 
 	grpcRoute := &appmesh.GrpcRoute{}
 
-	if vGrpcRouteAction, ok := mGrpcRoute["action"].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
+	if vGrpcRouteAction, ok := mGrpcRoute[names.AttrAction].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
 		mGrpcRouteAction := vGrpcRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mGrpcRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -346,7 +346,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 
 	httpRoute := &appmesh.HttpRoute{}
 
-	if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
+	if vHttpRouteAction, ok := mHttpRoute[names.AttrAction].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
 		mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -618,7 +618,7 @@ func expandTCPRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 
 	tcpRoute := &appmesh.TcpRoute{}
 
-	if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
+	if vTcpRouteAction, ok := mTcpRoute[names.AttrAction].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
 		mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -1329,7 +1329,7 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mGrpcRoute["action"] = []interface{}{
+			mGrpcRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1430,7 +1430,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mHttpRoute["action"] = []interface{}{
+			mHttpRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1604,7 +1604,7 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mTcpRoute["action"] = []interface{}{
+			mTcpRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},

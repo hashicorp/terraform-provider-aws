@@ -126,7 +126,7 @@ func resourcePipeline() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
@@ -785,7 +785,7 @@ func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaratio
 
 	apiObject := &types.StageDeclaration{}
 
-	if v, ok := tfMap["action"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrAction].([]interface{}); ok && len(v) > 0 {
 		apiObject.Actions = expandActionDeclarations(v)
 	}
 
@@ -1273,7 +1273,7 @@ func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.Stag
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["action"] = flattenActionDeclarations(d, i, v)
+		tfMap[names.AttrAction] = flattenActionDeclarations(d, i, v)
 	}
 
 	if v := apiObject.Name; v != nil {

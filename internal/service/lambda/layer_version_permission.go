@@ -44,7 +44,7 @@ func resourceLayerVersionPermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -104,7 +104,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 	versionNumber := d.Get("version_number").(int)
 	id := errs.Must(flex.FlattenResourceId([]string{layerName, strconv.FormatInt(int64(versionNumber), 10)}, layerVersionPermissionResourceIDPartCount, true))
 	input := &lambda.AddLayerVersionPermissionInput{
-		Action:        aws.String(d.Get("action").(string)),
+		Action:        aws.String(d.Get(names.AttrAction).(string)),
 		LayerName:     aws.String(layerName),
 		Principal:     aws.String(d.Get("principal").(string)),
 		StatementId:   aws.String(d.Get("statement_id").(string)),
@@ -169,7 +169,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 				action = actions.(string)
 			}
 
-			d.Set("action", action)
+			d.Set(names.AttrAction, action)
 		}
 
 		if len(policyDoc.Statements[0].Conditions) > 0 {

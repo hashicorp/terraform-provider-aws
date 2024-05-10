@@ -102,7 +102,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"action": {
+					names.AttrAction: {
 						Type:     schema.TypeList,
 						Required: true,
 						MinItems: 1,
@@ -396,7 +396,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					ConflictsWith: []string{"spec.0.http2_route", "spec.0.http_route", "spec.0.tcp_route"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -653,7 +653,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					ConflictsWith: []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.http_route"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,

@@ -262,7 +262,7 @@ func FlattenActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
 			names.AttrType: aws.StringValue(ar.Type),
 		}
 		if ar.Action != nil {
-			rule["action"] = []interface{}{
+			rule[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					names.AttrType: aws.StringValue(ar.Action.Type),
 				},
@@ -280,7 +280,7 @@ func ExpandActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 		Type:     aws.String(rule[names.AttrType].(string)),
 	}
 
-	if a, ok := rule["action"].([]interface{}); ok && len(a) > 0 {
+	if a, ok := rule[names.AttrAction].([]interface{}); ok && len(a) > 0 {
 		m := a[0].(map[string]interface{})
 		r.Action = &waf.WafAction{
 			Type: aws.String(m[names.AttrType].(string)),

@@ -1325,3 +1325,13 @@ rules:
       - pattern: '"file_system_id"'
     severity: ERROR
     fix: "names.AttrFileSystemID"
+  - id: literal-action-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAction` for the string literal "action"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"action"'
+    severity: ERROR
+    fix: "names.AttrAction"

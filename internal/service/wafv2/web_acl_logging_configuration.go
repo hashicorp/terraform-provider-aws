@@ -87,7 +87,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"action": {
+																names.AttrAction: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.ActionValue](),
@@ -385,7 +385,7 @@ func expandActionCondition(l []interface{}) *awstypes.ActionCondition {
 
 	condition := &awstypes.ActionCondition{}
 
-	if v, ok := tfMap["action"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 		condition.Action = awstypes.ActionValue(v)
 	}
 
@@ -505,7 +505,7 @@ func flattenActionCondition(a *awstypes.ActionCondition) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"action": string(a.Action),
+		names.AttrAction: string(a.Action),
 	}
 
 	return []interface{}{m}

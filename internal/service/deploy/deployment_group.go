@@ -154,7 +154,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.GreenFleetProvisioningAction](),
@@ -168,7 +168,7 @@ func resourceDeploymentGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.InstanceAction](),
@@ -1064,7 +1064,7 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 			m := a[0].(map[string]interface{})
 
 			greenFleetProvisioningOption := &types.GreenFleetProvisioningOption{}
-			if v, ok := m["action"]; ok {
+			if v, ok := m[names.AttrAction]; ok {
 				greenFleetProvisioningOption.Action = types.GreenFleetProvisioningAction(v.(string))
 			}
 			blueGreenDeploymentConfig.GreenFleetProvisioningOption = greenFleetProvisioningOption
@@ -1078,7 +1078,7 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 			m := a[0].(map[string]interface{})
 
 			blueInstanceTerminationOption := &types.BlueInstanceTerminationOption{}
-			if v, ok := m["action"]; ok {
+			if v, ok := m[names.AttrAction]; ok {
 				blueInstanceTerminationOption.Action = types.InstanceAction(v.(string))
 			}
 			if v, ok := m["termination_wait_time_in_minutes"]; ok {
@@ -1326,7 +1326,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		greenFleetProvisioningOption := make(map[string]interface{})
 
 		if v := string(config.GreenFleetProvisioningOption.Action); v != "" {
-			greenFleetProvisioningOption["action"] = v
+			greenFleetProvisioningOption[names.AttrAction] = v
 		}
 
 		m["green_fleet_provisioning_option"] = append(b, greenFleetProvisioningOption)
@@ -1337,7 +1337,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		blueInstanceTerminationOption := make(map[string]interface{})
 
 		if v := string(config.TerminateBlueInstancesOnDeploymentSuccess.Action); v != "" {
-			blueInstanceTerminationOption["action"] = v
+			blueInstanceTerminationOption[names.AttrAction] = v
 		}
 		if v := config.TerminateBlueInstancesOnDeploymentSuccess.TerminationWaitTimeInMinutes; v != 0 {
 			blueInstanceTerminationOption["termination_wait_time_in_minutes"] = v

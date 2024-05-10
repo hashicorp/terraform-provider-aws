@@ -102,7 +102,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"action": {
+					names.AttrAction: {
 						Type:     schema.TypeList,
 						Required: true,
 						MinItems: 1,
@@ -426,7 +426,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -760,7 +760,7 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 
 	mGrpcRoute := vGrpcRoute[0].(map[string]interface{})
 
-	if vRouteAction, ok := mGrpcRoute["action"].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
+	if vRouteAction, ok := mGrpcRoute[names.AttrAction].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
 		routeAction := &appmesh.GrpcGatewayRouteAction{}
 
 		mRouteAction := vRouteAction[0].(map[string]interface{})
@@ -971,7 +971,7 @@ func expandHTTPGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewayRoute 
 
 	mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
-	if vRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
+	if vRouteAction, ok := mHttpRoute[names.AttrAction].([]interface{}); ok && len(vRouteAction) > 0 && vRouteAction[0] != nil {
 		routeAction := &appmesh.HttpGatewayRouteAction{}
 
 		mRouteAction := vRouteAction[0].(map[string]interface{})
@@ -1041,7 +1041,7 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 			"target": flattenGatewayRouteTarget(routeAction.Target),
 		}
 
-		mGrpcRoute["action"] = []interface{}{mRouteAction}
+		mGrpcRoute[names.AttrAction] = []interface{}{mRouteAction}
 	}
 
 	if routeMatch := grpcRoute.Match; routeMatch != nil {
@@ -1202,7 +1202,7 @@ func flattenHTTPGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []interface{} 
 			"rewrite": flattenHTTPGatewayRouteRewrite(routeAction.Rewrite),
 		}
 
-		mHttpRoute["action"] = []interface{}{mRouteAction}
+		mHttpRoute[names.AttrAction] = []interface{}{mRouteAction}
 	}
 
 	if routeMatch := httpRoute.Match; routeMatch != nil {

@@ -222,7 +222,7 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", "action"),
+					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", names.AttrAction),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, names.AttrName),

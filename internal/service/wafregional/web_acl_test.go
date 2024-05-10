@@ -416,7 +416,7 @@ func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, acti
 			"rule_id":         **ruleId,
 			names.AttrType:    ruleType,
 			"priority":        priority,
-			"action":          []interface{}{actionMap},
+			names.AttrAction:  []interface{}{actionMap},
 			"override_action": []interface{}{},
 		}
 
