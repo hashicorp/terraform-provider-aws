@@ -156,10 +156,12 @@ func TestAccIAMUser_tags_null(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/User/tagsNull/"),
+				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":   config.StringVariable(rName),
-					"tagKey1": config.StringVariable("key1"),
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": nil,
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -167,10 +169,12 @@ func TestAccIAMUser_tags_null(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/User/tagsNull/"),
+				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":   config.StringVariable(rName),
-					"tagKey1": config.StringVariable("key1"),
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": nil,
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1059,13 +1063,15 @@ func TestAccIAMUser_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsNull_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("providervalue1"),
 					}),
-					"tagKey1": config.StringVariable("key1"),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": nil,
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -1076,13 +1082,15 @@ func TestAccIAMUser_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsNull_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("providervalue1"),
 					}),
-					"tagKey1": config.StringVariable("key1"),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": nil,
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1108,13 +1116,15 @@ func TestAccIAMUser_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsNull_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"tagKey1": config.StringVariable("resourcekey1"),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": nil,
+					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -1125,13 +1135,15 @@ func TestAccIAMUser_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsNull_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"tagKey1": config.StringVariable("resourcekey1"),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": nil,
+					}),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

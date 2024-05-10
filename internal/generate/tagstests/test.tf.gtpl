@@ -5,10 +5,6 @@
 {{ if eq . "tags0" -}}
 {{- else if eq . "tags" }}
   tags = var.tags
-{{- else if eq . "tagsNull" }}
-  tags = {
-    (var.tagKey1) = null
-  }
 {{- else if eq . "tagsComputed1"}}
   tags = {
     (var.unknownTagKey) = null_resource.test.id
@@ -51,11 +47,6 @@ variable "rName" {
 {{ else if eq .Tags "tags" }}
 variable "tags" {
   type     = map(string)
-  nullable = false
-}
-{{ else if eq .Tags "tagsNull" }}
-variable "tagKey1" {
-  type     = string
   nullable = false
 }
 {{ else if eq .Tags "tagsComputed1" }}
