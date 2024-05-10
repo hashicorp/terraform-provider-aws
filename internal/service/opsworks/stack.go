@@ -102,7 +102,7 @@ func ResourceStack() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(opsworks.SourceType_Values(), false),
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -621,7 +621,7 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 		apiObject.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
@@ -656,7 +656,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	}
 
 	if v := apiObject.Url; v != nil {
-		tfMap["url"] = aws.StringValue(v)
+		tfMap[names.AttrURL] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Username; v != nil {

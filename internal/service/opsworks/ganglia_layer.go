@@ -23,7 +23,7 @@ func ResourceGangliaLayer() *schema.Resource {
 				Required:  true,
 				WriteOnly: true,
 			},
-			"url": {
+			names.AttrURL: {
 				AttrName: opsworks.LayerAttributesKeysGangliaUrl,
 				Type:     schema.TypeString,
 				Default:  "/ganglia",
