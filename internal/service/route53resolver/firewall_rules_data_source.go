@@ -53,7 +53,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"creation_time": {
+						names.AttrCreationTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -167,7 +167,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 		tfMap["block_response"] = aws.StringValue(apiObject.BlockResponse)
 	}
 	if apiObject.CreationTime != nil {
-		tfMap["creation_time"] = aws.StringValue(apiObject.CreationTime)
+		tfMap[names.AttrCreationTime] = aws.StringValue(apiObject.CreationTime)
 	}
 	if apiObject.CreatorRequestId != nil {
 		tfMap["creator_request_id"] = aws.StringValue(apiObject.CreatorRequestId)
