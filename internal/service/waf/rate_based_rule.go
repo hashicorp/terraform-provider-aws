@@ -144,6 +144,16 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading WAF Rate Based Rule (%s): %s", d.Id(), err)
 	}
 
+	var predicates []map[string]interface{}
+
+	for _, predicateSet := range rule.MatchPredicates {
+		predicates = append(predicates, map[string]interface{}{
+			"data_id":      aws.ToString(predicateSet.DataId),
+			"negated":      aws.ToBool(predicateSet.Negated),
+			names.AttrType: predicateSet.Type,
+		})
+	}
+
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
@@ -153,23 +163,11 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, arn)
 	d.Set("metric_name", rule.MetricName)
 	d.Set(names.AttrName, rule.Name)
-	d.Set("rate_key", rule.RateKey)
-	d.Set("rate_limit", rule.RateLimit)
-
-	var predicates []map[string]interface{}
-
-	for _, predicateSet := range rule.MatchPredicates {
-		predicate := map[string]interface{}{
-			"negated":      *predicateSet.Negated,
-			names.AttrType: predicateSet.Type,
-			"data_id":      *predicateSet.DataId,
-		}
-		predicates = append(predicates, predicate)
-	}
-
 	if err := d.Set("predicates", predicates); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predicates: %s", err)
 	}
+	d.Set("rate_key", rule.RateKey)
+	d.Set("rate_limit", rule.RateLimit)
 
 	return diags
 }
@@ -222,26 +220,6 @@ func resourceRateBasedRuleDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func updateRateBasedRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []interface{}, rateLimit interface{}) error {
-	input := &waf.UpdateRateBasedRuleInput{
-		RateLimit: aws.Int64(int64(rateLimit.(int))),
-		RuleId:    aws.String(id),
-		Updates:   diffRulePredicates(oldP, newP),
-	}
-
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input.ChangeToken = token
-
-		return conn.UpdateRateBasedRule(ctx, input)
-	})
-
-	if err != nil {
-		return fmt.Errorf("updating WAF Rate Based Rule (%s): %w", id, err)
-	}
-
-	return nil
-}
-
 func findRateBasedRuleByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.RateBasedRule, error) {
 	input := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(id),
@@ -265,4 +243,24 @@ func findRateBasedRuleByID(ctx context.Context, conn *waf.Client, id string) (*a
 	}
 
 	return output.Rule, nil
+}
+
+func updateRateBasedRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []interface{}, rateLimit interface{}) error {
+	input := &waf.UpdateRateBasedRuleInput{
+		RateLimit: aws.Int64(int64(rateLimit.(int))),
+		RuleId:    aws.String(id),
+		Updates:   diffRulePredicates(oldP, newP),
+	}
+
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input.ChangeToken = token
+
+		return conn.UpdateRateBasedRule(ctx, input)
+	})
+
+	if err != nil {
+		return fmt.Errorf("updating WAF Rate Based Rule (%s): %w", id, err)
+	}
+
+	return nil
 }

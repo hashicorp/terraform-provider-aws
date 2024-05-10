@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -296,22 +294,18 @@ func testAccCheckRateBasedRuleDestroy(ctx context.Context) resource.TestCheckFun
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetRateBasedRule(ctx, &wafregional.GetRateBasedRuleInput{
-				RuleId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.Rule.RuleId == rs.Primary.ID {
-					return fmt.Errorf("WAF Rule %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the Rule is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional Rate Based Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -325,25 +319,17 @@ func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Rule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetRateBasedRule(ctx, &wafregional.GetRateBasedRuleInput{
-			RuleId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.Rule.RuleId == rs.Primary.ID {
-			*v = *resp.Rule
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Regional Rule (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -515,10 +501,10 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 func testAccRateBasedRuleConfig_limit(name string, limit string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
-  rate_limit  = %s
+  rate_limit  = %[2]q
 }
-`, name, name, limit)
+`, name, limit)
 }
