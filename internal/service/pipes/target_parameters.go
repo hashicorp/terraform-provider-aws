@@ -414,7 +414,7 @@ func targetParametersSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"device_name": {
+													names.AttrDeviceName: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -1529,7 +1529,7 @@ func expandECSInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.
 
 	apiObject := &types.EcsInferenceAcceleratorOverride{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -2398,7 +2398,7 @@ func flattenECSInferenceAcceleratorOverride(apiObject types.EcsInferenceAccelera
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.ToString(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.DeviceType; v != nil {
