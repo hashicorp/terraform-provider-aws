@@ -40,14 +40,14 @@ func ExpandWebACLUpdate(updateAction string, aclRule map[string]interface{}) *wa
 	case waf.WafRuleTypeGroup:
 		rule = &waf.ActivatedRule{
 			OverrideAction: expandOverrideAction(aclRule["override_action"].([]interface{})),
-			Priority:       aws.Int64(int64(aclRule["priority"].(int))),
+			Priority:       aws.Int64(int64(aclRule[names.AttrPriority].(int))),
 			RuleId:         aws.String(aclRule["rule_id"].(string)),
 			Type:           aws.String(aclRule[names.AttrType].(string)),
 		}
 	default:
 		rule = &waf.ActivatedRule{
 			Action:   ExpandAction(aclRule[names.AttrAction].([]interface{})),
-			Priority: aws.Int64(int64(aclRule["priority"].(int))),
+			Priority: aws.Int64(int64(aclRule[names.AttrPriority].(int))),
 			RuleId:   aws.String(aclRule["rule_id"].(string)),
 			Type:     aws.String(aclRule[names.AttrType].(string)),
 		}
@@ -91,7 +91,7 @@ func FlattenWebACLRules(ts []*waf.ActivatedRule) []map[string]interface{} {
 			m[names.AttrAction] = []map[string]interface{}{actionMap}
 		}
 
-		m["priority"] = int(aws.Int64Value(r.Priority))
+		m[names.AttrPriority] = int(aws.Int64Value(r.Priority))
 		m["rule_id"] = aws.StringValue(r.RuleId)
 		m[names.AttrType] = aws.StringValue(r.Type)
 		out[i] = m
