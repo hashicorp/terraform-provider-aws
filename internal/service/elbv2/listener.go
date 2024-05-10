@@ -353,7 +353,7 @@ func ResourceListener() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
@@ -896,7 +896,7 @@ func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthe
 		return nil
 	}
 
-	switch mode := tfMap["mode"].(string); mode {
+	switch mode := tfMap[names.AttrMode].(string); mode {
 	case mutualAuthenticationOff:
 		return &awstypes.MutualAuthenticationAttributes{
 			Mode: aws.String(mode),
@@ -1057,13 +1057,13 @@ func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthentic
 	if mode == mutualAuthenticationOff {
 		return []interface{}{
 			map[string]interface{}{
-				"mode": mode,
+				names.AttrMode: mode,
 			},
 		}
 	}
 
 	m := map[string]interface{}{
-		"mode":                             aws.ToString(description.Mode),
+		names.AttrMode:                     aws.ToString(description.Mode),
 		"trust_store_arn":                  aws.ToString(description.TrustStoreArn),
 		"ignore_client_certificate_expiry": aws.ToBool(description.IgnoreClientCertificateExpiry),
 	}
