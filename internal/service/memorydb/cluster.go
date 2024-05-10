@@ -258,7 +258,7 @@ func endpointSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"address": {
+				names.AttrAddress: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -600,7 +600,7 @@ func flattenEndpoint(endpoint *memorydb.Endpoint) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := aws.StringValue(endpoint.Address); v != "" {
-		m["address"] = v
+		m[names.AttrAddress] = v
 	}
 
 	if v := aws.Int64Value(endpoint.Port); v != 0 {
