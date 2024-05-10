@@ -46,7 +46,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -65,7 +65,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				AtLeastOneOf:  []string{"engine", "source_db_cluster_identifier"},
 				ConflictsWith: []string{"source_db_cluster_identifier"},
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -128,7 +128,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	if v, ok := d.GetOk("database_name"); ok {
+	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 		input.DatabaseName = aws.String(v.(string))
 	}
 
@@ -140,7 +140,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -185,10 +185,10 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
-	d.Set("database_name", globalCluster.DatabaseName)
+	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
 	d.Set("deletion_protection", globalCluster.DeletionProtection)
 	d.Set("engine", globalCluster.Engine)
-	d.Set("engine_version", globalCluster.EngineVersion)
+	d.Set(names.AttrEngineVersion, globalCluster.EngineVersion)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
@@ -225,8 +225,8 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("engine_version") {
-		engineVersion := d.Get("engine_version").(string)
+	if d.HasChange(names.AttrEngineVersion) {
+		engineVersion := d.Get(names.AttrEngineVersion).(string)
 
 		for _, tfMapRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})

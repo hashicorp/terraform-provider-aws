@@ -173,7 +173,7 @@ func resourceTarget() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"security_groups": {
+									names.AttrSecurityGroups: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -430,7 +430,7 @@ func resourceTarget() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -889,7 +889,7 @@ func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters
 		param := c.(map[string]interface{})
 		command := types.RunCommandTarget{
 			Key:    aws.String(param[names.AttrKey].(string)),
-			Values: flex.ExpandStringValueList(param["values"].([]interface{})),
+			Values: flex.ExpandStringValueList(param[names.AttrValues].([]interface{})),
 		}
 		commands = append(commands, command)
 	}
@@ -1018,7 +1018,7 @@ func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *types.Netw
 	}
 	awsVpcConfig := &types.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
-	if val, ok := raw["security_groups"]; ok {
+	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
 	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw["subnets"].(*schema.Set))
@@ -1167,7 +1167,7 @@ func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[st
 		config := make(map[string]interface{})
 
 		config[names.AttrKey] = aws.ToString(x.Key)
-		config["values"] = x.Values
+		config[names.AttrValues] = x.Values
 
 		result = append(result, config)
 	}
@@ -1235,7 +1235,7 @@ func flattenTargetECSParametersNetworkConfiguration(nc *types.NetworkConfigurati
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = nc.AwsvpcConfiguration.SecurityGroups
+	result[names.AttrSecurityGroups] = nc.AwsvpcConfiguration.SecurityGroups
 	result["subnets"] = nc.AwsvpcConfiguration.Subnets
 	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == types.AssignPublicIpEnabled
 

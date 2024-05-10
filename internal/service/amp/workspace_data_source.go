@@ -29,7 +29,7 @@ func dataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(workspaceID)
 	d.Set("alias", workspace.Alias)
 	d.Set(names.AttrARN, workspace.Arn)
-	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, workspace.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrKMSKeyARN, workspace.KmsKeyArn)
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
 	d.Set(names.AttrStatus, workspace.Status.StatusCode)

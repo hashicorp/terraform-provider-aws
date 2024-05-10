@@ -52,7 +52,7 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

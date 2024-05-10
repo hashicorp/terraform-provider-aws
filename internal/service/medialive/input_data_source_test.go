@@ -46,7 +46,7 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "input_devices", dataSourceName, "input_devices"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_partner_ids", dataSourceName, "input_partner_ids"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_source_type", dataSourceName, "input_source_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_groups", dataSourceName, "security_groups"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSecurityGroups, dataSourceName, names.AttrSecurityGroups),
 					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, "sources"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(resourceName, "tag_all", dataSourceName, names.AttrTags),

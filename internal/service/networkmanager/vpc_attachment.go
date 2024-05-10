@@ -125,7 +125,7 @@ func ResourceVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -229,7 +229,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("options", nil)
 	}
 	d.Set("owner_account_id", a.OwnerAccountId)
-	d.Set("resource_arn", a.ResourceArn)
+	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set(names.AttrState, a.State)
 	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))

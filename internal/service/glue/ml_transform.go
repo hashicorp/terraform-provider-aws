@@ -47,7 +47,7 @@ func ResourceMLTransform() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -55,7 +55,7 @@ func ResourceMLTransform() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -384,7 +384,7 @@ func expandMLTransformInputRecordTables(l []interface{}) []*glue.Table {
 			table.TableName = aws.String(v)
 		}
 
-		if v, ok := m["database_name"].(string); ok {
+		if v, ok := m[names.AttrDatabaseName].(string); ok {
 			table.DatabaseName = aws.String(v)
 		}
 
@@ -392,7 +392,7 @@ func expandMLTransformInputRecordTables(l []interface{}) []*glue.Table {
 			table.ConnectionName = aws.String(v)
 		}
 
-		if v, ok := m["catalog_id"].(string); ok && v != "" {
+		if v, ok := m[names.AttrCatalogID].(string); ok && v != "" {
 			table.CatalogId = aws.String(v)
 		}
 
@@ -407,8 +407,8 @@ func flattenMLTransformInputRecordTables(tables []*glue.Table) []interface{} {
 
 	for _, table := range tables {
 		m := map[string]interface{}{
-			"table_name":    aws.StringValue(table.TableName),
-			"database_name": aws.StringValue(table.DatabaseName),
+			"table_name":           aws.StringValue(table.TableName),
+			names.AttrDatabaseName: aws.StringValue(table.DatabaseName),
 		}
 
 		if table.ConnectionName != nil {
@@ -416,7 +416,7 @@ func flattenMLTransformInputRecordTables(tables []*glue.Table) []interface{} {
 		}
 
 		if table.CatalogId != nil {
-			m["catalog_id"] = aws.StringValue(table.CatalogId)
+			m[names.AttrCatalogID] = aws.StringValue(table.CatalogId)
 		}
 
 		l = append(l, m)

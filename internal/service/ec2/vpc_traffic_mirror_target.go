@@ -54,17 +54,17 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 				ForceNew: true,
 				ExactlyOneOf: []string{
 					"gateway_load_balancer_endpoint_id",
-					"network_interface_id",
+					names.AttrNetworkInterfaceID,
 					"network_load_balancer_arn",
 				},
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				ExactlyOneOf: []string{
 					"gateway_load_balancer_endpoint_id",
-					"network_interface_id",
+					names.AttrNetworkInterfaceID,
 					"network_load_balancer_arn",
 				},
 			},
@@ -74,7 +74,7 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 				ForceNew: true,
 				ExactlyOneOf: []string{
 					"gateway_load_balancer_endpoint_id",
-					"network_interface_id",
+					names.AttrNetworkInterfaceID,
 					"network_load_balancer_arn",
 				},
 				ValidateFunc: verify.ValidARN,
@@ -106,7 +106,7 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 		input.GatewayLoadBalancerEndpointId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("network_interface_id"); ok {
+	if v, ok := d.GetOk(names.AttrNetworkInterfaceID); ok {
 		input.NetworkInterfaceId = aws.String(v.(string))
 	}
 
@@ -152,7 +152,7 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, target.Description)
 	d.Set("gateway_load_balancer_endpoint_id", target.GatewayLoadBalancerEndpointId)
-	d.Set("network_interface_id", target.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, target.NetworkInterfaceId)
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 	d.Set(names.AttrOwnerID, ownerID)
 

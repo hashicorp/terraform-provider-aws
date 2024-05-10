@@ -52,7 +52,7 @@ func resourceDomainAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -103,7 +103,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	id := domainAssociationCreateResourceID(appID, domainName)
 	input := &amplify.CreateDomainAssociationInput{
 		AppId:               aws.String(appID),
@@ -157,7 +157,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("app_id", appID)
 	d.Set(names.AttrARN, domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
-	d.Set("domain_name", domainAssociation.DomainName)
+	d.Set(names.AttrDomainName, domainAssociation.DomainName)
 	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)

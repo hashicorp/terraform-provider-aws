@@ -73,7 +73,7 @@ func resourceBroker() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -163,7 +163,7 @@ func resourceBroker() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -180,7 +180,7 @@ func resourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -301,7 +301,7 @@ func resourceBroker() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 5,
@@ -398,11 +398,11 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
 	input := &mq.CreateBrokerInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
-		EngineVersion:           aws.String(d.Get("engine_version").(string)),
+		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		Tags:                    getTagsIn(ctx),
@@ -436,7 +436,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("storage_type"); ok {
@@ -481,17 +481,17 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
-	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set("engine_version", output.EngineVersion)
+	d.Set(names.AttrEngineVersion, output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
 	d.Set("publicly_accessible", output.PubliclyAccessible)
-	d.Set("security_groups", output.SecurityGroups)
+	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
@@ -542,10 +542,10 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	requiresReboot := false
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:       aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
@@ -555,11 +555,11 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("configuration", "logs", "engine_version") {
+	if d.HasChanges("configuration", "logs", names.AttrEngineVersion) {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandConfigurationId(d.Get("configuration").([]interface{})),
-			EngineVersion: aws.String(d.Get("engine_version").(string)),
+			EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
 		}
 
@@ -604,9 +604,9 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
-	if d.HasChange("auto_minor_version_upgrade") {
+	if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
 		input := &mq.UpdateBrokerInput{
-			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BrokerId:                aws.String(d.Id()),
 		}
 
@@ -1125,7 +1125,7 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m["endpoints"] = instance.Endpoints
+			m[names.AttrEndpoints] = instance.Endpoints
 		}
 		if instance.IpAddress != nil {
 			m["ip_address"] = aws.ToString(instance.IpAddress)

@@ -47,7 +47,7 @@ func testAccUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", "example"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", "example2"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName5),
 					resource.TestCheckResourceAttr(resourceName, "password", "Password123"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),

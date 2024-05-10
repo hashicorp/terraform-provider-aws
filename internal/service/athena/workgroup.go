@@ -65,7 +65,7 @@ func resourceWorkGroup() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"engine_version": {
+						names.AttrEngineVersion: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -352,7 +352,7 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -410,7 +410,7 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -525,7 +525,7 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 	m := map[string]interface{}{
 		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"execution_role":                     aws.ToString(configuration.ExecutionRole),
 		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),

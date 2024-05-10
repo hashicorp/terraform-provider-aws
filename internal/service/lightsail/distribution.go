@@ -196,7 +196,7 @@ func ResourceDistribution() *schema.Resource {
 				Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The timestamp when the distribution was created.",
@@ -217,7 +217,7 @@ func ResourceDistribution() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The domain name of the distribution.",
@@ -235,7 +235,7 @@ func ResourceDistribution() *schema.Resource {
 				Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "The Availability Zone.",
@@ -431,12 +431,12 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("certificate_name", out.CertificateName)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 
 	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
-	d.Set("domain_name", out.DomainName)
+	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set("ip_address_type", out.IpAddressType)
 	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})

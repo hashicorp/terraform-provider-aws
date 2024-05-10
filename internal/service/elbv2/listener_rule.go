@@ -180,7 +180,7 @@ func ResourceListenerRule() *schema.Resource {
 										Default:  "#{port}",
 									},
 
-									"protocol": {
+									names.AttrProtocol: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{protocol}",
@@ -367,7 +367,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -391,7 +391,7 @@ func ResourceListenerRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
 									},
-									"values": {
+									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -409,7 +409,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -427,7 +427,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -462,7 +462,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -627,7 +627,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		case "host-header":
 			conditionMap["host_header"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
 				},
 			}
 
@@ -635,21 +635,21 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			conditionMap["http_header"] = []interface{}{
 				map[string]interface{}{
 					"http_header_name": aws.ToString(condition.HttpHeaderConfig.HttpHeaderName),
-					"values":           flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
+					names.AttrValues:   flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
 				},
 			}
 
 		case "http-request-method":
 			conditionMap["http_request_method"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.HttpRequestMethodConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.HttpRequestMethodConfig.Values),
 				},
 			}
 
 		case "path-pattern":
 			conditionMap["path_pattern"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
 				},
 			}
 
@@ -666,7 +666,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		case "source-ip":
 			conditionMap["source_ip"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
 				},
 			}
 		}
@@ -872,7 +872,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if hostHeader, ok := conditionMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
 			field = "host-header"
 			attrs += 1
-			values := hostHeader[0].(map[string]interface{})["values"].(*schema.Set)
+			values := hostHeader[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -883,7 +883,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 			field = "http-header"
 			attrs += 1
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
-			values := httpHeaderMap["values"].(*schema.Set)
+			values := httpHeaderMap[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
@@ -894,7 +894,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if httpRequestMethod, ok := conditionMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
 			field = "http-request-method"
 			attrs += 1
-			values := httpRequestMethod[0].(map[string]interface{})["values"].(*schema.Set)
+			values := httpRequestMethod[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].HttpRequestMethodConfig = &awstypes.HttpRequestMethodConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -904,7 +904,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if pathPattern, ok := conditionMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
 			field = "path-pattern"
 			attrs += 1
-			values := pathPattern[0].(map[string]interface{})["values"].(*schema.Set)
+			values := pathPattern[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -934,7 +934,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if sourceIp, ok := conditionMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
 			field = "source-ip"
 			attrs += 1
-			values := sourceIp[0].(map[string]interface{})["values"].(*schema.Set)
+			values := sourceIp[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
 				Values: flex.ExpandStringValueSet(values),

@@ -109,7 +109,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"bucket_name": {
+			names.AttrBucketName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -431,7 +431,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	s3settings := endpoint.S3Settings
 	d.Set("add_column_name", s3settings.AddColumnName)
 	d.Set("bucket_folder", s3settings.BucketFolder)
-	d.Set("bucket_name", s3settings.BucketName)
+	d.Set(names.AttrBucketName, s3settings.BucketName)
 	d.Set("canned_acl_for_objects", s3settings.CannedAclForObjects)
 	d.Set("cdc_inserts_and_updates", s3settings.CdcInsertsAndUpdates)
 	d.Set("cdc_inserts_only", s3settings.CdcInsertsOnly)
@@ -584,7 +584,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.BucketFolder = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("bucket_name"); ok {
+	if v, ok := d.GetOk(names.AttrBucketName); ok {
 		s3s.BucketName = aws.String(v.(string))
 	}
 

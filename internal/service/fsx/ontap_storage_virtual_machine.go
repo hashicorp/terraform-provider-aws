@@ -85,7 +85,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -121,7 +121,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -197,7 +197,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -243,7 +243,7 @@ func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 
 	name := d.Get(names.AttrName).(string)
 	input := &fsx.CreateStorageVirtualMachineInput{
-		FileSystemId: aws.String(d.Get("file_system_id").(string)),
+		FileSystemId: aws.String(d.Get(names.AttrFileSystemID).(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
@@ -295,10 +295,10 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
 	d.Set(names.AttrARN, storageVirtualMachine.ResourceARN)
-	if err := d.Set("endpoints", flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
-	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
+	d.Set(names.AttrFileSystemID, storageVirtualMachine.FileSystemId)
 	d.Set(names.AttrName, storageVirtualMachine.Name)
 	// RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
 	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
@@ -401,7 +401,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf["domain_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
 		out.DomainName = aws.String(v)
 	}
 
@@ -457,7 +457,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf["domain_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
 		out.DomainName = aws.String(v)
 	}
 
@@ -508,7 +508,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	if rs.DomainName != nil {
-		m["domain_name"] = aws.StringValue(rs.DomainName)
+		m[names.AttrDomainName] = aws.StringValue(rs.DomainName)
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {

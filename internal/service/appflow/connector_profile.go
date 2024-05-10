@@ -82,7 +82,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"secret_key": {
+												names.AttrSecretKey: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -1094,7 +1094,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1102,12 +1102,12 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"cluster_identifier": {
+												names.AttrClusterIdentifier: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1116,7 +1116,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"database_name": {
+												names.AttrDatabaseName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1300,7 +1300,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1308,7 +1308,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -1321,7 +1321,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
 													),
 												},
-												"region": {
+												names.AttrRegion: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
@@ -1649,7 +1649,7 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *types.Connecto
 func expandAmplitudeConnectorProfileCredentials(m map[string]interface{}) *types.AmplitudeConnectorProfileCredentials {
 	credentials := &types.AmplitudeConnectorProfileCredentials{
 		ApiKey:    aws.String(m["api_key"].(string)),
-		SecretKey: aws.String(m["secret_key"].(string)),
+		SecretKey: aws.String(m[names.AttrSecretKey].(string)),
 	}
 
 	return credentials
@@ -2065,14 +2065,14 @@ func expandMarketoConnectorProfileProperties(m map[string]interface{}) *types.Ma
 
 func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.RedshiftConnectorProfileProperties {
 	properties := &types.RedshiftConnectorProfileProperties{
-		BucketName:        aws.String(m["bucket_name"].(string)),
-		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
+		BucketName:        aws.String(m[names.AttrBucketName].(string)),
+		ClusterIdentifier: aws.String(m[names.AttrClusterIdentifier].(string)),
 		RoleArn:           aws.String(m[names.AttrRoleARN].(string)),
 		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
-		DatabaseName:      aws.String(m["database_name"].(string)),
+		DatabaseName:      aws.String(m[names.AttrDatabaseName].(string)),
 	}
 
-	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrBucketPrefix].(string); ok && v != "" {
 		properties.BucketPrefix = aws.String(v)
 	}
 
@@ -2149,7 +2149,7 @@ func expandSlackConnectorProfileProperties(m map[string]interface{}) *types.Slac
 
 func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.SnowflakeConnectorProfileProperties {
 	properties := &types.SnowflakeConnectorProfileProperties{
-		BucketName: aws.String(m["bucket_name"].(string)),
+		BucketName: aws.String(m[names.AttrBucketName].(string)),
 		Stage:      aws.String(m["stage"].(string)),
 		Warehouse:  aws.String(m["warehouse"].(string)),
 	}
@@ -2158,7 +2158,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.
 		properties.AccountName = aws.String(v)
 	}
 
-	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrBucketPrefix].(string); ok && v != "" {
 		properties.BucketPrefix = aws.String(v)
 	}
 
@@ -2166,7 +2166,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.
 		properties.PrivateLinkServiceName = aws.String(v)
 	}
 
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		properties.Region = aws.String(v)
 	}
 
@@ -2294,10 +2294,10 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["bucket_name"] = aws.ToString(properties.BucketName)
+	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
+		m[names.AttrBucketPrefix] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.DatabaseUrl != nil {
@@ -2305,9 +2305,9 @@ func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnect
 	}
 
 	m[names.AttrRoleARN] = aws.ToString(properties.RoleArn)
-	m["cluster_identifier"] = aws.ToString(properties.ClusterIdentifier)
+	m[names.AttrClusterIdentifier] = aws.ToString(properties.ClusterIdentifier)
 	m["data_api_role_arn"] = aws.ToString(properties.DataApiRoleArn)
-	m["database_name"] = aws.ToString(properties.DatabaseName)
+	m[names.AttrDatabaseName] = aws.ToString(properties.DatabaseName)
 
 	return []interface{}{m}
 }
@@ -2366,14 +2366,14 @@ func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConne
 		m["account_name"] = aws.ToString(properties.AccountName)
 	}
 
-	m["bucket_name"] = aws.ToString(properties.BucketName)
+	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
+		m[names.AttrBucketPrefix] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.Region != nil {
-		m["region"] = aws.ToString(properties.Region)
+		m[names.AttrRegion] = aws.ToString(properties.Region)
 	}
 
 	m["stage"] = aws.ToString(properties.Stage)

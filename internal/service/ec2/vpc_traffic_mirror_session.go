@@ -47,7 +47,7 @@ func ResourceTrafficMirrorSession() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
 		ClientToken:           aws.String(id.UniqueId()),
-		NetworkInterfaceId:    aws.String(d.Get("network_interface_id").(string)),
+		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 		TrafficMirrorTargetId: aws.String(d.Get("traffic_mirror_target_id").(string)),
@@ -150,7 +150,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, session.Description)
-	d.Set("network_interface_id", session.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, session.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("packet_length", session.PacketLength)
 	d.Set("session_number", session.SessionNumber)

@@ -32,13 +32,13 @@ func ResourcePartition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -209,7 +209,7 @@ func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get("database_name").(string)
+	dbName := d.Get(names.AttrDatabaseName).(string)
 	tableName := d.Get("table_name").(string)
 	values := d.Get("partition_values").([]interface{})
 
@@ -247,8 +247,8 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("table_name", partition.TableName)
-	d.Set("catalog_id", partition.CatalogId)
-	d.Set("database_name", partition.DatabaseName)
+	d.Set(names.AttrCatalogID, partition.CatalogId)
+	d.Set(names.AttrDatabaseName, partition.DatabaseName)
 	d.Set("partition_values", flex.FlattenStringList(partition.Values))
 
 	if partition.LastAccessTime != nil {

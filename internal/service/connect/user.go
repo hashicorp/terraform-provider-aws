@@ -72,7 +72,7 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -152,7 +152,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateUserInput{
 		InstanceId:         aws.String(instanceID),
@@ -229,7 +229,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
 	d.Set("hierarchy_group_id", user.HierarchyGroupId)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrName, user.Username)
 	d.Set("routing_profile_id", user.RoutingProfileId)
 	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))

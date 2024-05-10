@@ -36,7 +36,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -156,7 +156,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	filters := map[string]string{
-		"availabilityZone":   d.Get("availability_zone").(string),
+		"availabilityZone":   d.Get(names.AttrAvailabilityZone).(string),
 		"availabilityZoneId": d.Get("availability_zone_id").(string),
 		"defaultForAz":       defaultForAzStr,
 		names.AttrState:      d.Get(names.AttrState).(string),
@@ -198,7 +198,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
-	d.Set("availability_zone", subnet.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
 	d.Set("available_ip_address_count", subnet.AvailableIpAddressCount)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)

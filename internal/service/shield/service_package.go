@@ -21,7 +21,7 @@ func (p *servicePackage) NewClient(_ context.Context, config map[string]any) (*s
 	}
 
 	return shield.NewFromConfig(cfg, func(o *shield.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
 		}
 	}), nil

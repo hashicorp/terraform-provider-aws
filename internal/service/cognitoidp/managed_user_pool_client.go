@@ -192,12 +192,12 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 				Validators: append(
 					userPoolClientNameValidator,
 					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("name_prefix"),
+						path.MatchRelative().AtParent().AtName(names.AttrNamePrefix),
 						path.MatchRelative().AtParent().AtName("name_pattern"),
 					),
 				),
 			},
-			"name_prefix": schema.StringAttribute{
+			names.AttrNamePrefix: schema.StringAttribute{
 				Optional:   true,
 				Validators: userPoolClientNameValidator,
 			},

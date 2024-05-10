@@ -82,7 +82,7 @@ func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request res
 						"endpoint_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"region": schema.StringAttribute{
+						names.AttrRegion: schema.StringAttribute{
 							Optional: true,
 						},
 					},

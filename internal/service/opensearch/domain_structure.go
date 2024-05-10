@@ -67,7 +67,9 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *opensearchservice.Auto
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
 	options.UseOffPeakWindow = autoTuneOptionsInput.UseOffPeakWindow
 
-	options.RollbackOnDisable = aws.String(tfMap["rollback_on_disable"].(string))
+	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
+		options.RollbackOnDisable = aws.String(v)
+	}
 
 	return options
 }

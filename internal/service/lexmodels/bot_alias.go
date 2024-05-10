@@ -94,7 +94,7 @@ func ResourceBotAlias() *schema.Resource {
 					},
 				},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func ResourceBotAlias() *schema.Resource {
 				Default:      "",
 				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -205,9 +205,9 @@ func resourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("bot_name", resp.BotName)
 	d.Set("bot_version", resp.BotVersion)
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, resp.Name)
 
 	if resp.ConversationLogs != nil {
@@ -339,7 +339,7 @@ var logSettings = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.LogType_Values(), false),
 		},
-		"resource_arn": {
+		names.AttrResourceARN: {
 			Type:     schema.TypeString,
 			Required: true,
 			ValidateFunc: validation.All(
@@ -379,11 +379,11 @@ func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.Con
 func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
-			"destination":       response.Destination,
-			names.AttrKMSKeyARN: response.KmsKeyArn,
-			"log_type":          response.LogType,
-			"resource_arn":      response.ResourceArn,
-			"resource_prefix":   response.ResourcePrefix,
+			"destination":         response.Destination,
+			names.AttrKMSKeyARN:   response.KmsKeyArn,
+			"log_type":            response.LogType,
+			names.AttrResourceARN: response.ResourceArn,
+			"resource_prefix":     response.ResourcePrefix,
 		})
 	}
 	return
@@ -401,7 +401,7 @@ func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogS
 		request := &lexmodelbuildingservice.LogSettingsRequest{
 			Destination: aws.String(destination),
 			LogType:     aws.String(value["log_type"].(string)),
-			ResourceArn: aws.String(value["resource_arn"].(string)),
+			ResourceArn: aws.String(value[names.AttrResourceARN].(string)),
 		}
 
 		if v, ok := value[names.AttrKMSKeyARN]; ok && v != "" {

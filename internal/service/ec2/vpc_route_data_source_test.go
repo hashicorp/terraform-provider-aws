@@ -41,7 +41,7 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 
 					// By instance ID.
 					resource.TestCheckResourceAttrPair(datasource2Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource2Name, "instance_id", instanceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasource2Name, names.AttrInstanceID, instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, names.AttrID),
 
 					// By VPC peering connection ID.
@@ -74,7 +74,7 @@ func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, dataSourceName, names.AttrTransitGatewayID),
 				),
 			},
 		},

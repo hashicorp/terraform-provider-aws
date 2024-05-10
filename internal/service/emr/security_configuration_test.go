@@ -36,7 +36,7 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "configuration"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccEMRSecurityConfiguration_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-emr-sc-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-emr-sc-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-emr-sc-"),
 				),
 			},
 			{
@@ -113,7 +113,7 @@ func TestAccEMRSecurityConfiguration_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{

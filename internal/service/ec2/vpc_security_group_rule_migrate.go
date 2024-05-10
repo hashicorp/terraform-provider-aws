@@ -66,7 +66,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 
 	perm.ToPort = aws.Int64(int64(tp))
 	perm.FromPort = aws.Int64(int64(fp))
-	perm.IpProtocol = aws.String(attrs["protocol"])
+	perm.IpProtocol = aws.String(attrs[names.AttrProtocol])
 
 	groups := make(map[string]bool)
 	if attrs["self"] == "true" {

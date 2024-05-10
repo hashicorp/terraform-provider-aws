@@ -97,7 +97,7 @@ func resourceFileCache() *schema.Resource {
 								validation.StringLenBetween(1, 4096),
 							),
 						},
-						"file_system_id": {
+						names.AttrFileSystemID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -136,7 +136,7 @@ func resourceFileCache() *schema.Resource {
 								},
 							},
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -603,7 +603,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 			"file_cache_path":                dataRepositoryAssociation.FileCachePath,
 			"imported_file_chunk_size":       dataRepositoryAssociation.ImportedFileChunkSize,
 			"nfs":                            flattenNFSDataRepositoryConfiguration(dataRepositoryAssociation.NFS),
-			"resource_arn":                   dataRepositoryAssociation.ResourceARN,
+			names.AttrResourceARN:            dataRepositoryAssociation.ResourceARN,
 			names.AttrTags:                   tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
 		}
 		flattenedDataRepositoryAssociations = append(flattenedDataRepositoryAssociations, values)

@@ -59,7 +59,7 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -116,13 +116,13 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, dbProxy.DBProxyArn)
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
-	d.Set("endpoint", dbProxy.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
 	d.Set(names.AttrVPCID, dbProxy.VpcId)
-	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 
 	return diags

@@ -41,7 +41,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -268,7 +268,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"account_id": {
+												names.AttrAccountID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidAccountID,
@@ -397,7 +397,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	configID := d.Get("config_id").(string)
@@ -444,7 +444,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("reading S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrARN, output.StorageLensArn)
 	d.Set("config_id", configID)
 	if err := d.Set("storage_lens_configuration", []interface{}{flattenStorageLensConfiguration(output)}); err != nil {
@@ -909,7 +909,7 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 
 	apiObject := &types.S3BucketDestination{}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.AccountId = aws.String(v)
 	}
 
@@ -1243,7 +1243,7 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.ToString(v)
+		tfMap[names.AttrAccountID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Arn; v != nil {

@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -53,7 +54,7 @@ func resourceStackSetInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -85,7 +86,7 @@ func resourceStackSetInstance() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"account_id"},
+				ConflictsWith: []string{names.AttrAccountID},
 			},
 			"operation_preferences": {
 				Type:     schema.TypeList,
@@ -143,7 +144,7 @@ func resourceStackSetInstance() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -165,7 +166,7 @@ func resourceStackSetInstance() *schema.Resource {
 					"This will only be populated when `deployment_targets` is set.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -195,7 +196,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -206,7 +207,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	// accountOrOrgID will either be account_id or a slash-delimited list of
@@ -219,7 +220,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
 		input.DeploymentTargets = dt
 	} else {
-		d.Set("account_id", accountID)
+		d.Set(names.AttrAccountID, accountID)
 		input.Accounts = []string{accountID}
 	}
 
@@ -313,7 +314,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)
@@ -332,7 +333,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		d.Set("account_id", stackInstance.Account)
+		d.Set(names.AttrAccountID, stackInstance.Account)
 		d.Set("organizational_unit_id", stackInstance.OrganizationalUnitId)
 		if err := d.Set("parameter_overrides", flattenAllParameters(stackInstance.ParameterOverrides)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
@@ -587,7 +588,7 @@ func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []
 	tfList := []interface{}{}
 	for _, obj := range apiObject {
 		m := map[string]interface{}{
-			"account_id":             obj.Account,
+			names.AttrAccountID:      obj.Account,
 			"organizational_unit_id": obj.OrganizationalUnitId,
 			"stack_id":               obj.StackId,
 		}

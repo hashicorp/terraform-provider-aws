@@ -41,7 +41,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"access_key": {
+			names.AttrAccessKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(8, 200),
@@ -58,13 +58,13 @@ func resourceLocationObjectStorage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket_name": {
+			names.AttrBucketName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			"secret_key": {
+			names.AttrSecretKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
@@ -116,17 +116,17 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	input := &datasync.CreateLocationObjectStorageInput{
 		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
-		BucketName:     aws.String(d.Get("bucket_name").(string)),
+		BucketName:     aws.String(d.Get(names.AttrBucketName).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("access_key"); ok {
+	if v, ok := d.GetOk(names.AttrAccessKey); ok {
 		input.AccessKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("secret_key"); ok {
+	if v, ok := d.GetOk(names.AttrSecretKey); ok {
 		input.SecretKey = aws.String(v.(string))
 	}
 
@@ -175,10 +175,10 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("access_key", output.AccessKey)
+	d.Set(names.AttrAccessKey, output.AccessKey)
 	d.Set("agent_arns", output.AgentArns)
 	d.Set(names.AttrARN, output.LocationArn)
-	d.Set("bucket_name", bucketName)
+	d.Set(names.AttrBucketName, bucketName)
 	d.Set("server_certificate", string(output.ServerCertificate))
 	d.Set("server_hostname", hostname)
 	d.Set("server_port", output.ServerPort)
@@ -198,8 +198,8 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 			LocationArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("access_key") {
-			input.AccessKey = aws.String(d.Get("access_key").(string))
+		if d.HasChange(names.AttrAccessKey) {
+			input.AccessKey = aws.String(d.Get(names.AttrAccessKey).(string))
 		}
 
 		if d.HasChange("agent_arns") {
@@ -207,19 +207,19 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 
 			// Access key must be specified when updating agent ARNs
 			input.AccessKey = aws.String("")
-			if v, ok := d.GetOk("access_key"); ok {
+			if v, ok := d.GetOk(names.AttrAccessKey); ok {
 				input.AccessKey = aws.String(v.(string))
 			}
 
 			// Secret key must be specified when updating agent ARNs
 			input.SecretKey = aws.String("")
-			if v, ok := d.GetOk("secret_key"); ok {
+			if v, ok := d.GetOk(names.AttrSecretKey); ok {
 				input.SecretKey = aws.String(v.(string))
 			}
 		}
 
-		if d.HasChange("secret_key") {
-			input.SecretKey = aws.String(d.Get("secret_key").(string))
+		if d.HasChange(names.AttrSecretKey) {
+			input.SecretKey = aws.String(d.Get(names.AttrSecretKey).(string))
 		}
 
 		if d.HasChange("server_certificate") {

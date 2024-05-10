@@ -172,7 +172,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleDirection_Values(), false),
 															},
-															"protocol": {
+															names.AttrProtocol: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleProtocol_Values(), false),
@@ -694,7 +694,7 @@ func expandStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
 	if v, ok := tfMap["direction"].(string); ok && v != "" {
 		header.Direction = aws.String(v)
 	}
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		header.Protocol = aws.String(v)
 	}
 	if v, ok := tfMap["source"].(string); ok && v != "" {
@@ -1261,7 +1261,7 @@ func flattenHeader(h *networkfirewall.Header) []interface{} {
 		"destination":      aws.StringValue(h.Destination),
 		"destination_port": aws.StringValue(h.DestinationPort),
 		"direction":        aws.StringValue(h.Direction),
-		"protocol":         aws.StringValue(h.Protocol),
+		names.AttrProtocol: aws.StringValue(h.Protocol),
 		"source":           aws.StringValue(h.Source),
 		"source_port":      aws.StringValue(h.SourcePort),
 	}

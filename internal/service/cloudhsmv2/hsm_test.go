@@ -35,13 +35,13 @@ func testAccHSM_basic(t *testing.T) {
 				Config: testAccHSMConfig_subnetID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_id", "aws_cloudhsm_v2_cluster.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "hsm_eni_id", regexache.MustCompile(`^eni-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "hsm_id", regexache.MustCompile(`^hsm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_state", string(types.HsmStateActive)),
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test.0", names.AttrID),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 				Config: testAccHSMConfig_availabilityZone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHSMExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "aws_subnet.test.0", "availability_zone"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test.0", names.AttrAvailabilityZone),
 				),
 			},
 			{

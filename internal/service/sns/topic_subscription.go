@@ -56,7 +56,7 @@ var (
 				return json
 			},
 		},
-		"endpoint": {
+		names.AttrEndpoint: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -91,7 +91,7 @@ var (
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"protocol": {
+		names.AttrProtocol: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -141,12 +141,12 @@ var (
 		names.AttrARN:                    subscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
-		"endpoint":                       subscriptionAttributeNameEndpoint,
+		names.AttrEndpoint:               subscriptionAttributeNameEndpoint,
 		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
 		names.AttrOwnerID:                subscriptionAttributeNameOwner,
 		"pending_confirmation":           subscriptionAttributeNamePendingConfirmation,
-		"protocol":                       subscriptionAttributeNameProtocol,
+		names.AttrProtocol:               subscriptionAttributeNameProtocol,
 		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
 		"replay_policy":                  subscriptionAttributeNameReplayPolicy,
@@ -186,10 +186,10 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	delete(attributes, subscriptionAttributeNameProtocol)
 	delete(attributes, subscriptionAttributeNameTopicARN)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	input := &sns.SubscribeInput{
 		Attributes:            attributes,
-		Endpoint:              aws.String(d.Get("endpoint").(string)),
+		Endpoint:              aws.String(d.Get(names.AttrEndpoint).(string)),
 		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: true, // even if not confirmed, will get ARN
 		TopicArn:              aws.String(d.Get("topic_arn").(string)),

@@ -56,7 +56,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							ForceNew:     true,
 							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
-						"file_system_id": {
+						names.AttrFileSystemID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -67,7 +67,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -337,11 +337,11 @@ func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToC
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
-	if v, ok := tfMap["file_system_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -382,11 +382,11 @@ func flattenDestination(apiObject *efs.Destination) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FileSystemId; v != nil {
-		tfMap["file_system_id"] = aws.StringValue(v)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Status; v != nil {

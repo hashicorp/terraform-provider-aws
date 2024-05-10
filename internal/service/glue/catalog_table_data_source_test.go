@@ -30,8 +30,8 @@ func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
 				Config: testAccCatalogTableDataSourceConfig_basic(dbName, tName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "database_name", resourceName, "database_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "owner", resourceName, "owner"),

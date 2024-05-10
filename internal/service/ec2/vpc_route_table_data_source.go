@@ -31,7 +31,7 @@ func DataSourceRouteTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -99,7 +99,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -114,12 +114,12 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -152,7 +152,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -190,7 +190,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	req := &ec2.DescribeRouteTablesInput{}
 	vpcId, vpcIdOk := d.GetOk(names.AttrVPCID)
-	subnetId, subnetIdOk := d.GetOk("subnet_id")
+	subnetId, subnetIdOk := d.GetOk(names.AttrSubnetID)
 	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
 	rtbId, rtbOk := d.GetOk("route_table_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
@@ -323,16 +323,16 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 			m["local_gateway_id"] = aws.StringValue(r.LocalGatewayId)
 		}
 		if r.InstanceId != nil {
-			m["instance_id"] = aws.StringValue(r.InstanceId)
+			m[names.AttrInstanceID] = aws.StringValue(r.InstanceId)
 		}
 		if r.TransitGatewayId != nil {
-			m["transit_gateway_id"] = aws.StringValue(r.TransitGatewayId)
+			m[names.AttrTransitGatewayID] = aws.StringValue(r.TransitGatewayId)
 		}
 		if r.VpcPeeringConnectionId != nil {
 			m["vpc_peering_connection_id"] = aws.StringValue(r.VpcPeeringConnectionId)
 		}
 		if r.NetworkInterfaceId != nil {
-			m["network_interface_id"] = aws.StringValue(r.NetworkInterfaceId)
+			m[names.AttrNetworkInterfaceID] = aws.StringValue(r.NetworkInterfaceId)
 		}
 
 		routes = append(routes, m)
@@ -349,7 +349,7 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 		m["route_table_association_id"] = aws.StringValue(a.RouteTableAssociationId)
 		// GH[11134]
 		if a.SubnetId != nil {
-			m["subnet_id"] = aws.StringValue(a.SubnetId)
+			m[names.AttrSubnetID] = aws.StringValue(a.SubnetId)
 		}
 		if a.GatewayId != nil {
 			m["gateway_id"] = aws.StringValue(a.GatewayId)

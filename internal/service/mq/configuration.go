@@ -85,7 +85,7 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -113,7 +113,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 	name := d.Get(names.AttrName).(string)
 	input := &mq.CreateConfigurationInput{
 		EngineType:    types.EngineType(d.Get("engine_type").(string)),
-		EngineVersion: aws.String(d.Get("engine_version").(string)),
+		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
 	}
@@ -171,7 +171,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("authentication_strategy", configuration.AuthenticationStrategy)
 	d.Set(names.AttrDescription, configuration.LatestRevision.Description)
 	d.Set("engine_type", configuration.EngineType)
-	d.Set("engine_version", configuration.EngineVersion)
+	d.Set(names.AttrEngineVersion, configuration.EngineVersion)
 	d.Set("latest_revision", configuration.LatestRevision.Revision)
 	d.Set(names.AttrName, configuration.Name)
 

@@ -111,7 +111,7 @@ func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes["availability_zone"], rs.Primary.Attributes["snapshot_id"])
+			_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes["snapshot_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -137,7 +137,7 @@ func testAccCheckEBSFastSnapshotRestoreExists(ctx context.Context, n string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes["availability_zone"], rs.Primary.Attributes["snapshot_id"])
+		_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes["snapshot_id"])
 
 		return err
 	}

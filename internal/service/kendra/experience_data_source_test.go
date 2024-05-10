@@ -46,7 +46,7 @@ func TestAccKendraExperienceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.0.content_source_configuration.#", resourceName, "configuration.0.content_source_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.0.content_source_configuration.0.faq_ids.#", resourceName, "configuration.0.content_source_configuration.0.faq_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "configuration.0.content_source_configuration.0.faq_ids.0", resourceName, "configuration.0.content_source_configuration.0.faq_ids.0"),
-					resource.TestCheckResourceAttrSet(datasourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoints.0.endpoint", resourceName, "endpoints.0.endpoint"),

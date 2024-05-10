@@ -30,7 +30,7 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"filter":       customFiltersSchema(),
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -69,7 +69,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 		})...)
 	}
 
-	if v, ok := d.GetOk("transit_gateway_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
@@ -82,7 +82,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	}
 
 	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

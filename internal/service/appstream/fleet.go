@@ -161,7 +161,7 @@ func ResourceFleet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -224,7 +224,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get(names.AttrName).(string)),
-		InstanceType:    aws.String(d.Get("instance_type").(string)),
+		InstanceType:    aws.String(d.Get(names.AttrInstanceType).(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -389,7 +389,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("iam_role_arn", fleet.IamRoleArn)
 	d.Set("image_name", fleet.ImageName)
 	d.Set("image_arn", fleet.ImageArn)
-	d.Set("instance_type", fleet.InstanceType)
+	d.Set(names.AttrInstanceType, fleet.InstanceType)
 	d.Set("max_sessions_per_instance", fleet.MaxSessionsPerInstance)
 	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
 	d.Set(names.AttrName, fleet.Name)
@@ -416,7 +416,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
+	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", "iam_role_arn", names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", "vpc_config") {
 		shouldStop = true
 	}
 
@@ -477,8 +477,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.StreamView = aws.String(d.Get("stream_view").(string))
 	}
 
-	if d.HasChange("instance_type") {
-		input.InstanceType = aws.String(d.Get("instance_type").(string))
+	if d.HasChange(names.AttrInstanceType) {
+		input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
 	}
 
 	if d.HasChange("max_sessions_per_instance") {

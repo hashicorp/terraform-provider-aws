@@ -42,7 +42,7 @@ func resourceVPCIngressConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +133,7 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set(names.AttrARN, connection.VpcIngressConnectionArn)
-	d.Set("domain_name", connection.DomainName)
+	d.Set(names.AttrDomainName, connection.DomainName)
 	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(connection.IngressVpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ingress_vpc_configuration: %s", err)
 	}

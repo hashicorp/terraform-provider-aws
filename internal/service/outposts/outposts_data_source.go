@@ -26,7 +26,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -73,7 +73,7 @@ func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta in
 				continue
 			}
 
-			if v, ok := d.GetOk("availability_zone"); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
+			if v, ok := d.GetOk(names.AttrAvailabilityZone); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
 				continue
 			}
 

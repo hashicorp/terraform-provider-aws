@@ -210,7 +210,7 @@ func DataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -301,7 +301,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	v, err := FindInstanceTypeByName(ctx, conn, d.Get("instance_type").(string))
+	v, err := FindInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
@@ -389,7 +389,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("total_instance_storage", v.InstanceStorageInfo.TotalSizeInGB)
 	}
 	d.Set("instance_storage_supported", v.InstanceStorageSupported)
-	d.Set("instance_type", v.InstanceType)
+	d.Set(names.AttrInstanceType, v.InstanceType)
 	d.Set("ipv6_supported", v.NetworkInfo.Ipv6Supported)
 	d.Set("maximum_ipv4_addresses_per_interface", v.NetworkInfo.Ipv4AddressesPerInterface)
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)

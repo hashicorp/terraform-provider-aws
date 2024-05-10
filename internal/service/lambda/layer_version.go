@@ -66,7 +66,7 @@ func resourceLayerVersion() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
 				},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -236,7 +236,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, output.LayerVersionArn)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
-	d.Set("created_date", output.CreatedDate)
+	d.Set(names.AttrCreatedDate, output.CreatedDate)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("layer_arn", output.LayerArn)
 	d.Set("layer_name", layerName)

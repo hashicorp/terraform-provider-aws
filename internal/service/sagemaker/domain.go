@@ -98,7 +98,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -148,7 +148,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -207,7 +207,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,
@@ -354,7 +354,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -403,7 +403,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -493,7 +493,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -557,7 +557,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -607,7 +607,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -686,7 +686,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 5,
@@ -704,7 +704,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -823,7 +823,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -856,7 +856,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -888,7 +888,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -1007,7 +1007,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.CreateDomainInput{
-		DomainName:           aws.String(d.Get("domain_name").(string)),
+		DomainName:           aws.String(d.Get(names.AttrDomainName).(string)),
 		AuthMode:             aws.String(d.Get("auth_mode").(string)),
 		VpcId:                aws.String(d.Get(names.AttrVPCID).(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
@@ -1072,7 +1072,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("app_security_group_management", domain.AppSecurityGroupManagement)
 	d.Set(names.AttrARN, arn)
 	d.Set("auth_mode", domain.AuthMode)
-	d.Set("domain_name", domain.DomainName)
+	d.Set(names.AttrDomainName, domain.DomainName)
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
 	d.Set(names.AttrKMSKeyID, domain.KmsKeyId)
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
@@ -1295,7 +1295,7 @@ func expandUserSettings(l []interface{}) *sagemaker.UserSettings {
 		config.RSessionAppSettings = expandRSessionAppSettings(v)
 	}
 
-	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		config.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
@@ -1541,7 +1541,7 @@ func expandResourceSpec(l []interface{}) *sagemaker.ResourceSpec {
 
 	config := &sagemaker.ResourceSpec{}
 
-	if v, ok := m["instance_type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrInstanceType].(string); ok && v != "" {
 		config.InstanceType = aws.String(v)
 	}
 
@@ -1804,7 +1804,7 @@ func flattenUserSettings(config *sagemaker.UserSettings) []map[string]interface{
 	}
 
 	if config.SecurityGroups != nil {
-		m["security_groups"] = flex.FlattenStringSet(config.SecurityGroups)
+		m[names.AttrSecurityGroups] = flex.FlattenStringSet(config.SecurityGroups)
 	}
 
 	if config.SharingSettings != nil {
@@ -1856,7 +1856,7 @@ func flattenResourceSpec(config *sagemaker.ResourceSpec) []map[string]interface{
 	m := map[string]interface{}{}
 
 	if config.InstanceType != nil {
-		m["instance_type"] = aws.StringValue(config.InstanceType)
+		m[names.AttrInstanceType] = aws.StringValue(config.InstanceType)
 	}
 
 	if config.LifecycleConfigArn != nil {
@@ -2251,7 +2251,7 @@ func expanDefaultSpaceSettings(l []interface{}) *sagemaker.DefaultSpaceSettings 
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
-	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		config.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
@@ -2278,7 +2278,7 @@ func flattenDefaultSpaceSettings(config *sagemaker.DefaultSpaceSettings) []map[s
 	}
 
 	if config.SecurityGroups != nil {
-		m["security_groups"] = flex.FlattenStringSet(config.SecurityGroups)
+		m[names.AttrSecurityGroups] = flex.FlattenStringSet(config.SecurityGroups)
 	}
 
 	return []map[string]interface{}{m}
@@ -2401,7 +2401,7 @@ func expandEFSFileSystemConfig(tfMap map[string]interface{}) *sagemaker.EFSFileS
 
 	apiObject := &sagemaker.EFSFileSystemConfig{}
 
-	if v, ok := tfMap["file_system_id"].(string); ok {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -2452,7 +2452,7 @@ func flattenEFSFileSystemConfig(apiObject *sagemaker.EFSFileSystemConfig) []map[
 	tfMap := map[string]interface{}{}
 
 	if apiObject.FileSystemId != nil {
-		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(apiObject.FileSystemId)
 	}
 
 	if apiObject.FileSystemPath != nil {

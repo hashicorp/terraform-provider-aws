@@ -55,7 +55,7 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":    "region",
+						"field":    names.AttrRegion,
 						"equals.#": "1",
 						"equals.0": acctest.Region(),
 					}),
@@ -126,7 +126,7 @@ func testAccFilter_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
-						"field":    "region",
+						"field":    names.AttrRegion,
 						"equals.#": "1",
 						"equals.0": acctest.Region(),
 					}),

@@ -356,7 +356,7 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:ec2:ebs-volume"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.parameters.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.parameters.availabilityZoneIdentifier", "aws_ebs_volume.test", "availability_zone"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.parameters.availabilityZoneIdentifier", "aws_ebs_volume.test", names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "Name"),

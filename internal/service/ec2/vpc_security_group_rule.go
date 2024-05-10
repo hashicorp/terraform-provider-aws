@@ -72,7 +72,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := protocolForValue(d.Get("protocol").(string))
+					protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -100,7 +100,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				},
 				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
@@ -137,7 +137,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := protocolForValue(d.Get("protocol").(string))
+					protocol := protocolForValue(d.Get(names.AttrProtocol).(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -480,7 +480,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 
 	d.Set("security_group_id", securityGroupID)
 	d.Set(names.AttrType, ruleType)
-	d.Set("protocol", protocolName)
+	d.Set(names.AttrProtocol, protocolName)
 	if v, err := strconv.Atoi(fromPort); err == nil {
 		d.Set("from_port", v)
 	}
@@ -759,7 +759,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 
 func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
 	apiObject := &ec2.IpPermission{
-		IpProtocol: aws.String(protocolForValue(d.Get("protocol").(string))),
+		IpProtocol: aws.String(protocolForValue(d.Get(names.AttrProtocol).(string))),
 	}
 
 	// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
@@ -846,7 +846,7 @@ func flattenIpPermission(d *schema.ResourceData, apiObject *ec2.IpPermission) { 
 	}
 
 	d.Set("from_port", apiObject.FromPort)
-	d.Set("protocol", apiObject.IpProtocol)
+	d.Set(names.AttrProtocol, apiObject.IpProtocol)
 	d.Set("to_port", apiObject.ToPort)
 
 	if v := apiObject.IpRanges; len(v) > 0 {

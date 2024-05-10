@@ -229,7 +229,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -289,7 +289,7 @@ func DataSourceListener() *schema.Resource {
 				ConflictsWith: []string{names.AttrARN},
 				RequiredWith:  []string{"load_balancer_arn"},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -347,7 +347,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
 	}
 	d.Set(names.AttrPort, listener.Port)
-	d.Set("protocol", listener.Protocol)
+	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
 	tags, err := listTagsV2(ctx, conn, d.Id())

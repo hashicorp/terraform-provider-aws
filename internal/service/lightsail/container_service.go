@@ -50,11 +50,11 @@ func ResourceContainerService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,8 +250,8 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set(names.AttrARN, cs.Arn)
-	d.Set("availability_zone", cs.Location.AvailabilityZone)
-	d.Set("created_at", aws.ToTime(cs.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrAvailabilityZone, cs.Location.AvailabilityZone)
+	d.Set(names.AttrCreatedAt, aws.ToTime(cs.CreatedAt).Format(time.RFC3339))
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)

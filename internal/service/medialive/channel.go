@@ -695,7 +695,7 @@ func ResourceChannel() *schema.Resource {
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"availability_zones": {
+							names.AttrAvailabilityZones: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2454,10 +2454,10 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 	}
 
 	m := map[string]interface{}{
-		"availability_zones":       flex.FlattenStringValueSet(apiObject.AvailabilityZones),
-		"network_interface_ids":    flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
-		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		names.AttrSubnetIDs:        flex.FlattenStringValueSet(apiObject.SubnetIds),
+		names.AttrAvailabilityZones: flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids":     flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		names.AttrSecurityGroupIDs:  flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		names.AttrSubnetIDs:         flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 

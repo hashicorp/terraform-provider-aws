@@ -24,7 +24,7 @@ func ResourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -41,14 +41,14 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	_, err := conn.CreateDomain(ctx, &lightsail.CreateDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lightsail Domain: %s", err)
 	}
 
-	d.SetId(d.Get("domain_name").(string))
+	d.SetId(d.Get(names.AttrDomainName).(string))
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }

@@ -58,7 +58,7 @@ func resourceBucketInventory() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -366,7 +366,7 @@ func expandInventoryBucketDestination(m map[string]interface{}) *types.Inventory
 		Bucket: aws.String(m["bucket_arn"].(string)),
 	}
 
-	if v, ok := m["account_id"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrAccountID]; ok && v.(string) != "" {
 		destination.AccountId = aws.String(v.(string))
 	}
 
@@ -412,7 +412,7 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 	}
 
 	if destination.AccountId != nil {
-		m["account_id"] = aws.ToString(destination.AccountId)
+		m[names.AttrAccountID] = aws.ToString(destination.AccountId)
 	}
 	if destination.Prefix != nil {
 		m["prefix"] = aws.ToString(destination.Prefix)

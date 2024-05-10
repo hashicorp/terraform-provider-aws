@@ -26,7 +26,7 @@ func DataSourceSlotType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func DataSourceSlotType() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,10 +96,10 @@ func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 	d.Set("checksum", output.Checksum)
-	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("enumeration_value", flattenEnumerationValues(output.EnumerationValues))
-	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set(names.AttrName, output.Name)
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
 	d.Set(names.AttrVersion, output.Version)

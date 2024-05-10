@@ -38,7 +38,7 @@ func dataSourceGroups() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -61,7 +61,7 @@ func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, e.(string))
 		}
 

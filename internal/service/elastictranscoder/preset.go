@@ -129,7 +129,7 @@ func ResourcePreset() *schema.Resource {
 								"LittleEndian",
 							}, false),
 						},
-						"profile": {
+						names.AttrProfile: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -631,7 +631,7 @@ func expandETAudioCodecOptions(d *schema.ResourceData) *elastictranscoder.AudioC
 		codecOpts.Signed = aws.String(v.(string))
 	}
 
-	if v, ok := codec["profile"]; ok && v.(string) != "" {
+	if v, ok := codec[names.AttrProfile]; ok && v.(string) != "" {
 		codecOpts.Profile = aws.String(v.(string))
 	}
 
@@ -845,10 +845,10 @@ func flattenETAudioCodecOptions(opts *elastictranscoder.AudioCodecOptions) []map
 	}
 
 	result := map[string]interface{}{
-		"bit_depth": aws.StringValue(opts.BitDepth),
-		"bit_order": aws.StringValue(opts.BitOrder),
-		"profile":   aws.StringValue(opts.Profile),
-		"signed":    aws.StringValue(opts.Signed),
+		"bit_depth":       aws.StringValue(opts.BitDepth),
+		"bit_order":       aws.StringValue(opts.BitOrder),
+		names.AttrProfile: aws.StringValue(opts.Profile),
+		"signed":          aws.StringValue(opts.Signed),
 	}
 
 	return []map[string]interface{}{result}

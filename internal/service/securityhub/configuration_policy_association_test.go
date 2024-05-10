@@ -82,7 +82,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", names.AttrAccountID),
 				),
 			},
 		},

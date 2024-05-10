@@ -44,11 +44,11 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 				// trailing period, no longer requiring a custom StateFunc
 				// to prevent ACM API error
@@ -63,7 +63,7 @@ func ResourceCertificate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -115,8 +115,8 @@ func ResourceCertificate() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
 				// so that the user doesn't need to explicitly set it themselves.
-				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domain_name := diff.Get("domain_name").(string)
+				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
+					domain_name := diff.Get(names.AttrDomainName).(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domain_name)
@@ -140,7 +140,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	req := lightsail.CreateCertificateInput{
 		CertificateName: aws.String(d.Get(names.AttrName).(string)),
-		DomainName:      aws.String(d.Get("domain_name").(string)),
+		DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -184,8 +184,8 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrARN, certificate.Arn)
-	d.Set("created_at", certificate.CreatedAt.Format(time.RFC3339))
-	d.Set("domain_name", certificate.DomainName)
+	d.Set(names.AttrCreatedAt, certificate.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDomainName, certificate.DomainName)
 	d.Set("domain_validation_options", flattenDomainValidationRecords(certificate.DomainValidationRecords))
 	d.Set(names.AttrName, certificate.Name)
 	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
@@ -233,7 +233,7 @@ func domainValidationOptionsHash(v interface{}) int {
 		return 0
 	}
 
-	if v, ok := m["domain_name"].(string); ok {
+	if v, ok := m[names.AttrDomainName].(string); ok {
 		return create.StringHashcode(v)
 	}
 
@@ -246,7 +246,7 @@ func flattenDomainValidationRecords(domainValidationRecords []types.DomainValida
 	for _, o := range domainValidationRecords {
 		if o.ResourceRecord != nil {
 			validationOption := map[string]interface{}{
-				"domain_name":           aws.ToString(o.DomainName),
+				names.AttrDomainName:    aws.ToString(o.DomainName),
 				"resource_record_name":  aws.ToString(o.ResourceRecord.Name),
 				"resource_record_type":  aws.ToString(o.ResourceRecord.Type),
 				"resource_record_value": aws.ToString(o.ResourceRecord.Value),

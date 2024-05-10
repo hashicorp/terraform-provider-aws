@@ -69,7 +69,7 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -180,7 +180,7 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -235,8 +235,8 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
 				if use.State == directoryservice.DirectoryStageFailed {
 					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
-						"directory_id": d.Id(),
-						"domain_name":  name,
+						"directory_id":       d.Id(),
+						names.AttrDomainName: name,
 					})
 					_, deleteErr := conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
 						DirectoryId: aws.String(d.Id()),
@@ -657,7 +657,7 @@ func flattenDirectoryConnectSettingsDescription(apiObject *directoryservice.Dire
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
+		tfMap[names.AttrAvailabilityZones] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.ConnectIps; v != nil {
@@ -727,7 +727,7 @@ func flattenDirectoryVpcSettingsDescription(apiObject *directoryservice.Director
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
+		tfMap[names.AttrAvailabilityZones] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {

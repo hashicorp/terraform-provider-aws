@@ -38,12 +38,12 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -100,7 +100,7 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get("database_name").(string)
+	dbName := d.Get(names.AttrDatabaseName).(string)
 	funcName := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateUserDefinedFunctionInput{
@@ -180,8 +180,8 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set(names.AttrARN, udfArn)
 	d.Set(names.AttrName, udf.FunctionName)
-	d.Set("catalog_id", catalogID)
-	d.Set("database_name", dbName)
+	d.Set(names.AttrCatalogID, catalogID)
+	d.Set(names.AttrDatabaseName, dbName)
 	d.Set("owner_type", udf.OwnerType)
 	d.Set("owner_name", udf.OwnerName)
 	d.Set("class_name", udf.ClassName)

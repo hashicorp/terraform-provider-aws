@@ -78,11 +78,11 @@ func resourceMonitor() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -451,11 +451,11 @@ func expandS3Config(tfList []interface{}) *types.S3Config {
 	tfMap := tfList[0].(map[string]interface{})
 	apiObject := &types.S3Config{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		apiObject.BucketPrefix = aws.String(v)
 	}
 
@@ -497,12 +497,12 @@ func flattenS3Config(apiObject *types.S3Config) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"bucket_name":         aws.ToString(apiObject.BucketName),
+		names.AttrBucketName:  aws.ToString(apiObject.BucketName),
 		"log_delivery_status": string(apiObject.LogDeliveryStatus),
 	}
 
 	if apiObject.BucketPrefix != nil {
-		tfMap["bucket_prefix"] = aws.ToString(apiObject.BucketPrefix)
+		tfMap[names.AttrBucketPrefix] = aws.ToString(apiObject.BucketPrefix)
 	}
 
 	return []interface{}{tfMap}

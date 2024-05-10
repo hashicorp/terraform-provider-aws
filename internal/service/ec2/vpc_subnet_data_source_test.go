@@ -39,7 +39,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrAvailabilityZone, snResourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(ds1ResourceName, "available_ip_address_count"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
@@ -56,7 +56,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(ds2ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrAvailabilityZone, snResourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(ds2ResourceName, "available_ip_address_count"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
@@ -73,7 +73,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(ds3ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrAvailabilityZone, snResourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(ds3ResourceName, "available_ip_address_count"),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
@@ -90,7 +90,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(ds4ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrAvailabilityZone, snResourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(ds4ResourceName, "cidr_block", cidr),
@@ -106,7 +106,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(ds5ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrAvailabilityZone, snResourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(ds5ResourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(ds5ResourceName, "cidr_block", cidr),
@@ -122,7 +122,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrID, snResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrOwnerID, snResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(ds6ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrAvailabilityZone, snResourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(ds6ResourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(ds6ResourceName, "cidr_block", cidr),

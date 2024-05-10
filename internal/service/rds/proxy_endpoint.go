@@ -66,7 +66,7 @@ func resourceProxyEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func resourceProxyEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -117,7 +117,7 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 		VpcSubnetIds:        flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -160,11 +160,11 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, dbProxyEndpoint.DBProxyEndpointArn)
 	d.Set("db_proxy_endpoint_name", dbProxyEndpoint.DBProxyEndpointName)
 	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
-	d.Set("endpoint", dbProxyEndpoint.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxyEndpoint.Endpoint)
 	d.Set("is_default", dbProxyEndpoint.IsDefault)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
 	d.Set(names.AttrVPCID, dbProxyEndpoint.VpcId)
-	d.Set("vpc_security_group_ids", dbProxyEndpoint.VpcSecurityGroupIds)
+	d.Set(names.AttrVPCSecurityGroupIDs, dbProxyEndpoint.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxyEndpoint.VpcSubnetIds)
 
 	return diags
@@ -179,10 +179,10 @@ func resourceProxyEndpointUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChange("vpc_security_group_ids") {
+	if d.HasChange(names.AttrVPCSecurityGroupIDs) {
 		input := &rds.ModifyDBProxyEndpointInput{
 			DBProxyEndpointName: aws.String(dbProxyEndpointName),
-			VpcSecurityGroupIds: flex.ExpandStringValueSet(d.Get("vpc_security_group_ids").(*schema.Set)),
+			VpcSecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyDBProxyEndpoint(ctx, input)

@@ -84,7 +84,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -95,7 +95,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 					},
 				},
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,12 +147,12 @@ func dataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -209,9 +209,9 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("attachment", nil)
 	}
-	d.Set("availability_zone", eni.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, eni.AvailabilityZone)
 	d.Set(names.AttrDescription, eni.Description)
-	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
+	d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
 	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
@@ -221,7 +221,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("private_ip", eni.PrivateIpAddress)
 	d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
-	d.Set("subnet_id", eni.SubnetId)
+	d.Set(names.AttrSubnetID, eni.SubnetId)
 	d.Set(names.AttrVPCID, eni.VpcId)
 
 	setTagsOutV2(ctx, eni.TagSet)
@@ -245,7 +245,7 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInte
 	}
 
 	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.ToString(v)
+		tfMap[names.AttrInstanceID] = aws.ToString(v)
 	}
 
 	if v := apiObject.InstanceOwnerId; v != nil {

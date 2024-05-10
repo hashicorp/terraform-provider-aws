@@ -69,7 +69,7 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -506,7 +506,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = address.Primary
 
 					if v := address.Region; v != nil {
-						m["region"] = v
+						m[names.AttrRegion] = v
 					}
 
 					if v := address.StreetAddress; v != nil {

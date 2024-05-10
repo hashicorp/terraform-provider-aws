@@ -31,7 +31,7 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -67,7 +67,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}},
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -103,7 +103,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 		}},
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -138,7 +138,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		}},
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.Targets[0].AvailabilityZone = aws.String(v.(string))
 	}
 

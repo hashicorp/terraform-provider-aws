@@ -26,7 +26,7 @@ func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 				Config: testAccOutpostDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/op-.+$`).String()),
-					resource.TestMatchResourceAttr(dataSourceName, "availability_zone", regexache.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrAvailabilityZone, regexache.MustCompile(`^.+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "availability_zone_id", regexache.MustCompile(`^.+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
 					resource.TestMatchResourceAttr(dataSourceName, "lifecycle_status", regexache.MustCompile(`^[A-Za-z ]+$`)),
@@ -58,7 +58,7 @@ func TestAccOutpostsOutpostDataSource_name(t *testing.T) {
 				Config: testAccOutpostDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, sourceDataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, sourceDataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_id", sourceDataSourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, sourceDataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, sourceDataSourceName, names.AttrID),
@@ -85,7 +85,7 @@ func TestAccOutpostsOutpostDataSource_arn(t *testing.T) {
 				Config: testAccOutpostDataSourceConfig_arn(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, sourceDataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, sourceDataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_id", sourceDataSourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, sourceDataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, sourceDataSourceName, names.AttrID),
@@ -112,7 +112,7 @@ func TestAccOutpostsOutpostDataSource_ownerID(t *testing.T) {
 				Config: testAccOutpostDataSourceConfig_ownerID(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, sourceDataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", sourceDataSourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, sourceDataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_id", sourceDataSourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, sourceDataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, sourceDataSourceName, names.AttrID),

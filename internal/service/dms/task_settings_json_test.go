@@ -102,6 +102,53 @@ func TestTaskSettingsEqual(t *testing.T) {
 				expected: false,
 			},
 		},
+		"map": {
+			"equal": {
+				a: map[string]any{
+					"key1": names.AttrValue,
+					"key2": map[string]any{
+						"key3": names.AttrValue,
+					},
+				},
+				b: map[string]any{
+					"key1": names.AttrValue,
+					"key2": map[string]any{
+						"key3": names.AttrValue,
+					},
+				},
+				expected: true,
+			},
+			"not equal": {
+				a: map[string]any{
+					"key1": names.AttrValue,
+					"key2": map[string]any{
+						"key3": "value1",
+					},
+				},
+				b: map[string]any{
+					"key1": names.AttrValue,
+					"key2": map[string]any{
+						"key3": "value2",
+					},
+				},
+				expected: false,
+			},
+			"proposed null": {
+				a: map[string]any{
+					"key1": names.AttrValue,
+					"key2": map[string]any{
+						"key3": names.AttrValue,
+					},
+				},
+				b: map[string]any{
+					"key1": nil,
+					"key2": map[string]any{
+						"key3": names.AttrValue,
+					},
+				},
+				expected: true,
+			},
+		},
 	}
 
 	for name, typeTest := range tests {

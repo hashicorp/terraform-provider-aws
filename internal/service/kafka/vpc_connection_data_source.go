@@ -36,7 +36,7 @@ func dataSourceVPCConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -69,7 +69,7 @@ func dataSourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, output.VpcConnectionArn)
 	d.Set("authentication", output.Authentication)
 	d.Set("client_subnets", flex.FlattenStringValueSet(output.Subnets))
-	d.Set("security_groups", flex.FlattenStringValueSet(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueSet(output.SecurityGroups))
 	d.Set("target_cluster_arn", output.TargetClusterArn)
 	d.Set(names.AttrVPCID, output.VpcId)
 

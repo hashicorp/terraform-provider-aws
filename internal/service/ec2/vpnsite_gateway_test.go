@@ -91,14 +91,14 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", azDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, azDataSourceName, "names.0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"availability_zone"},
+				ImportStateVerifyIgnore: []string{names.AttrAvailabilityZone},
 			},
 		},
 	})

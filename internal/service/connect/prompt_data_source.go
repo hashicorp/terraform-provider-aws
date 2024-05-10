@@ -25,7 +25,7 @@ func DataSourcePrompt() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,7 +46,7 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	name := d.Get(names.AttrName).(string)
 
 	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
@@ -60,7 +60,7 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, promptSummary.Arn)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("prompt_id", promptSummary.Id)
 	d.Set(names.AttrName, promptSummary.Name)
 

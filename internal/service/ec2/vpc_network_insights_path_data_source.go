@@ -49,7 +49,7 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set("network_insights_path_id", networkInsightsPathID)
-	d.Set("protocol", nip.Protocol)
+	d.Set(names.AttrProtocol, nip.Protocol)
 	d.Set("source", nip.Source)
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)

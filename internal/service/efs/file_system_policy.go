@@ -39,7 +39,7 @@ func ResourceFileSystemPolicy() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -68,7 +68,7 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	fsID := d.Get("file_system_id").(string)
+	fsID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.PutFileSystemPolicyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		FileSystemId:                   aws.String(fsID),
@@ -106,7 +106,7 @@ func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EFS File System Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("file_system_id", output.FileSystemId)
+	d.Set(names.AttrFileSystemID, output.FileSystemId)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(output.Policy))
 	if err != nil {

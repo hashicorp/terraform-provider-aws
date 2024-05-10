@@ -385,7 +385,7 @@ func ResourceApplication() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"resource_arn": {
+																		names.AttrResourceARN: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: verify.ValidARN,
@@ -523,7 +523,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -542,7 +542,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -555,7 +555,7 @@ func ResourceApplication() *schema.Resource {
 													},
 												},
 
-												"name_prefix": {
+												names.AttrNamePrefix: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -594,7 +594,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -609,7 +609,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -624,7 +624,7 @@ func ResourceApplication() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"resource_arn": {
+															names.AttrResourceARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -2010,7 +2010,7 @@ func expandInput(vInput []interface{}) *kinesisanalyticsv2.Input {
 
 		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2022,14 +2022,14 @@ func expandInput(vInput []interface{}) *kinesisanalyticsv2.Input {
 
 		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInput.ResourceARN = aws.String(vResourceArn)
 		}
 
 		input.KinesisStreamsInput = kinesisStreamsInput
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		input.NamePrefix = aws.String(vNamePrefix)
 	}
 
@@ -2050,7 +2050,7 @@ func expandInputProcessingConfiguration(vInputProcessingConfiguration []interfac
 
 		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
 
-		if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2095,7 +2095,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 
 			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
 
-			if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+			if vResourceArn, ok := mInputLambdaProcessor[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 				inputLambdaProcessorUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 			}
 
@@ -2130,7 +2130,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 
 		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 		}
 
@@ -2142,14 +2142,14 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalyticsv2.InputUpdate {
 
 		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsInput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
 		}
 
 		inputUpdate.KinesisStreamsInputUpdate = kinesisStreamsInputUpdate
 	}
 
-	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+	if vNamePrefix, ok := mInput[names.AttrNamePrefix].(string); ok && vNamePrefix != "" {
 		inputUpdate.NamePrefixUpdate = aws.String(vNamePrefix)
 	}
 
@@ -2182,7 +2182,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 
 		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisFirehoseOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisFirehoseOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisFirehoseOutput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2194,7 +2194,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 
 		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mKinesisStreamsOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mKinesisStreamsOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			kinesisStreamsOutput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2206,7 +2206,7 @@ func expandOutput(vOutput interface{}) *kinesisanalyticsv2.Output {
 
 		mLambdaOutput := vLambdaOutput[0].(map[string]interface{})
 
-		if vResourceArn, ok := mLambdaOutput["resource_arn"].(string); ok && vResourceArn != "" {
+		if vResourceArn, ok := mLambdaOutput[names.AttrResourceARN].(string); ok && vResourceArn != "" {
 			lambdaOutput.ResourceARN = aws.String(vResourceArn)
 		}
 
@@ -2652,7 +2652,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			mInput := map[string]interface{}{
 				"in_app_stream_names": flex.FlattenStringList(inputDescription.InAppStreamNames),
 				"input_id":            aws.StringValue(inputDescription.InputId),
-				"name_prefix":         aws.StringValue(inputDescription.NamePrefix),
+				names.AttrNamePrefix:  aws.StringValue(inputDescription.NamePrefix),
 			}
 
 			if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
@@ -2672,7 +2672,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 				if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
 					mInputLambdaProcessor := map[string]interface{}{
-						"resource_arn": aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
+						names.AttrResourceARN: aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
 					}
 
 					mInputProcessingConfiguration["input_lambda_processor"] = []interface{}{mInputLambdaProcessor}
@@ -2691,7 +2691,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 			if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
 				mKinesisFirehoseInput := map[string]interface{}{
-					"resource_arn": aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
+					names.AttrResourceARN: aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
 				}
 
 				mInput["kinesis_firehose_input"] = []interface{}{mKinesisFirehoseInput}
@@ -2699,7 +2699,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 			if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
 				mKinesisStreamsInput := map[string]interface{}{
-					"resource_arn": aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
+					names.AttrResourceARN: aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
 				}
 
 				mInput["kinesis_streams_input"] = []interface{}{mKinesisStreamsInput}
@@ -2728,7 +2728,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 					if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
 						mKinesisFirehoseOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
+							names.AttrResourceARN: aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
 						}
 
 						mOutput["kinesis_firehose_output"] = []interface{}{mKinesisFirehoseOutput}
@@ -2736,7 +2736,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 					if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
 						mKinesisStreamsOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
+							names.AttrResourceARN: aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
 						}
 
 						mOutput["kinesis_streams_output"] = []interface{}{mKinesisStreamsOutput}
@@ -2744,7 +2744,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 
 					if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
 						mLambdaOutput := map[string]interface{}{
-							"resource_arn": aws.StringValue(lambdaOutputDescription.ResourceARN),
+							names.AttrResourceARN: aws.StringValue(lambdaOutputDescription.ResourceARN),
 						}
 
 						mOutput["lambda_output"] = []interface{}{mLambdaOutput}

@@ -202,7 +202,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						"order_by":     "ASC",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.clustering_key.*", map[string]string{
-						names.AttrName: "region",
+						names.AttrName: names.AttrRegion,
 						"order_by":     "DESC",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "11"),
@@ -215,7 +215,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						names.AttrType: "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "region",
+						names.AttrName: names.AttrRegion,
 						names.AttrType: "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{

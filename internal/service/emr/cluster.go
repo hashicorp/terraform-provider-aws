@@ -128,7 +128,7 @@ func resourceCluster() *schema.Resource {
 										},
 										Set: resourceClusterEBSHashConfig,
 									},
-									"instance_type": {
+									names.AttrInstanceType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -393,7 +393,7 @@ func resourceCluster() *schema.Resource {
 								Default:      1,
 								ValidateFunc: validation.IntAtLeast(1),
 							},
-							"instance_type": {
+							names.AttrInstanceType: {
 								Type:     schema.TypeString,
 								Required: true,
 								ForceNew: true,
@@ -462,7 +462,7 @@ func resourceCluster() *schema.Resource {
 								ForceNew: true,
 								Computed: true,
 							},
-							"subnet_id": {
+							names.AttrSubnetID: {
 								Type:          schema.TypeString,
 								Optional:      true,
 								Computed:      true,
@@ -620,7 +620,7 @@ func resourceCluster() *schema.Resource {
 								Default:      1,
 								ValidateFunc: validation.IntInSlice([]int{1, 3}),
 							},
-							"instance_type": {
+							names.AttrInstanceType: {
 								Type:     schema.TypeString,
 								Required: true,
 								ForceNew: true,
@@ -807,7 +807,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		instanceGroup := &emr.InstanceGroupConfig{
 			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
-			InstanceType:  aws.String(m["instance_type"].(string)),
+			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
 			Name:          aws.String(m[names.AttrName].(string)),
 		}
@@ -828,7 +828,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		instanceGroup := &emr.InstanceGroupConfig{
 			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
-			InstanceType:  aws.String(m["instance_type"].(string)),
+			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
 			Name:          aws.String(m[names.AttrName].(string)),
 		}
@@ -871,7 +871,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := attributes["key_name"]; ok {
 			instanceConfig.Ec2KeyName = aws.String(v.(string))
 		}
-		if v, ok := attributes["subnet_id"]; ok {
+		if v, ok := attributes[names.AttrSubnetID]; ok {
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
 		if v, ok := attributes[names.AttrSubnetIDs]; ok {
@@ -1612,7 +1612,7 @@ func flattenEC2InstanceAttributes(ia *emr.Ec2InstanceAttributes) []map[string]in
 		attrs["key_name"] = aws.StringValue(ia.Ec2KeyName)
 	}
 	if ia.Ec2SubnetId != nil {
-		attrs["subnet_id"] = aws.StringValue(ia.Ec2SubnetId)
+		attrs[names.AttrSubnetID] = aws.StringValue(ia.Ec2SubnetId)
 	}
 	if ia.RequestedEc2SubnetIds != nil && len(ia.RequestedEc2SubnetIds) > 0 {
 		attrs[names.AttrSubnetIDs] = flex.FlattenStringSet(ia.RequestedEc2SubnetIds)
@@ -1713,13 +1713,13 @@ func flattenCoreInstanceGroup(instanceGroup *emr.InstanceGroup) ([]interface{}, 
 	}
 
 	m := map[string]interface{}{
-		"autoscaling_policy": autoscalingPolicy,
-		"bid_price":          aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":         flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:         aws.StringValue(instanceGroup.Id),
-		"instance_count":     aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		"instance_type":      aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:       aws.StringValue(instanceGroup.Name),
+		"autoscaling_policy":   autoscalingPolicy,
+		"bid_price":            aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":           flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		names.AttrID:           aws.StringValue(instanceGroup.Id),
+		"instance_count":       aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType: aws.StringValue(instanceGroup.InstanceType),
+		names.AttrName:         aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}, nil
@@ -1731,12 +1731,12 @@ func flattenMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"bid_price":      aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":     flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:     aws.StringValue(instanceGroup.Id),
-		"instance_count": aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		"instance_type":  aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:   aws.StringValue(instanceGroup.Name),
+		"bid_price":            aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":           flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		names.AttrID:           aws.StringValue(instanceGroup.Id),
+		"instance_count":       aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType: aws.StringValue(instanceGroup.InstanceType),
+		names.AttrName:         aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}
@@ -2198,7 +2198,7 @@ func flatteninstanceTypeConfigs(instanceTypeSpecifications []*emr.InstanceTypeSp
 			flattenTypeConfig["bid_price_as_percentage_of_on_demand_price"] = aws.Float64Value(itc.BidPriceAsPercentageOfOnDemandPrice)
 		}
 
-		flattenTypeConfig["instance_type"] = aws.StringValue(itc.InstanceType)
+		flattenTypeConfig[names.AttrInstanceType] = aws.StringValue(itc.InstanceType)
 		flattenTypeConfig["weighted_capacity"] = int(aws.Int64Value(itc.WeightedCapacity))
 
 		flattenTypeConfig["ebs_config"] = flattenEBSConfig(itc.EbsBlockDevices)
@@ -2284,7 +2284,7 @@ func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.Instanc
 		configAttributes := raw.(map[string]interface{})
 
 		config := &emr.InstanceTypeConfig{
-			InstanceType: aws.String(configAttributes["instance_type"].(string)),
+			InstanceType: aws.String(configAttributes[names.AttrInstanceType].(string)),
 		}
 
 		if bidPrice, ok := configAttributes["bid_price"]; ok {
@@ -2379,7 +2379,7 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 func resourceInstanceTypeHashConfig(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType].(string)))
 	if v, ok := m["bid_price"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}

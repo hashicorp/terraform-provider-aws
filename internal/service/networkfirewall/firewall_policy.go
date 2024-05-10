@@ -143,7 +143,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -172,7 +172,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -452,7 +452,7 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
-		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
 
@@ -480,7 +480,7 @@ func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.Stat
 		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
-		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
 		references = append(references, reference)
@@ -609,7 +609,7 @@ func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGr
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			"resource_arn": aws.StringValue(ref.ResourceArn),
+			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
 		}
 		if ref.Priority != nil {
 			reference["priority"] = int(aws.Int64Value(ref.Priority))
@@ -628,8 +628,8 @@ func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRule
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			"priority":     int(aws.Int64Value(ref.Priority)),
-			"resource_arn": aws.StringValue(ref.ResourceArn),
+			"priority":            int(aws.Int64Value(ref.Priority)),
+			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
 		}
 		references = append(references, reference)
 	}

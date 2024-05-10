@@ -40,7 +40,7 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -183,7 +183,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	}.String()
 	d.Set(names.AttrARN, arn)
 
-	d.Set("availability_zones", aws.StringValueSlice(sd.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(sd.AvailabilityZones))
 	d.Set("base_endpoint_dns_names", aws.StringValueSlice(sd.BaseEndpointDnsNames))
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set("owner", sd.Owner)

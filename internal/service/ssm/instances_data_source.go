@@ -31,7 +31,7 @@ func DataSourceInstances() *schema.Resource {
 							Required: true,
 						},
 
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -129,7 +129,7 @@ func expandInstanceInformationStringFilter(tfMap map[string]interface{}) *ssm.In
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringList(v)
 	}
 

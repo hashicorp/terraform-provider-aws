@@ -49,7 +49,7 @@ func resourceAccessLogSubscription() *schema.Resource {
 				ValidateFunc:     verify.ValidARN,
 				DiffSuppressFunc: suppressEquivalentCloudWatchLogsLogGroupARN,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("destination_arn", out.DestinationArn)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)
 
 	return nil

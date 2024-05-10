@@ -28,7 +28,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zones": {
+						names.AttrAvailabilityZones: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -147,7 +147,7 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface
 		}
 
 		if bio.AvailabilityZones != nil {
-			tfMap["availability_zones"] = flattenAvailabilityZones(bio.AvailabilityZones)
+			tfMap[names.AttrAvailabilityZones] = flattenAvailabilityZones(bio.AvailabilityZones)
 		}
 
 		tfList = append(tfList, tfMap)

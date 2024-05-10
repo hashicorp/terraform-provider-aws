@@ -122,7 +122,7 @@ func TestAccEC2EIPDataSource_networkInterface(t *testing.T) {
 				Config: testAccEIPDataSourceConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "network_interface_id", resourceName, "network_interface"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, "network_interface"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_dns", resourceName, "private_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_ip", resourceName, "private_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
@@ -147,7 +147,7 @@ func TestAccEC2EIPDataSource_instance(t *testing.T) {
 				Config: testAccEIPDataSourceConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_id", resourceName, "instance"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceID, resourceName, "instance"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "association_id", resourceName, "association_id"),
 				),
 			},

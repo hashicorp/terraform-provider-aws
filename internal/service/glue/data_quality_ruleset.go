@@ -78,13 +78,13 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -221,11 +221,11 @@ func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTabl
 	}
 
 	apiObject := &glue.DataQualityTargetTable{
-		DatabaseName: aws.String(tfMap["database_name"].(string)),
+		DatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
 		TableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
@@ -238,12 +238,12 @@ func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"database_name": aws.StringValue(apiObject.DatabaseName),
-		"table_name":    aws.StringValue(apiObject.TableName),
+		names.AttrDatabaseName: aws.StringValue(apiObject.DatabaseName),
+		"table_name":           aws.StringValue(apiObject.TableName),
 	}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

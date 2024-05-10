@@ -181,7 +181,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 
 	expected_compact_list := []interface{}{
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -193,7 +193,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
@@ -204,7 +204,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -213,14 +213,14 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 				"fd00::1/128",
 				"fd00::2/128",
 			},
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-11111",
 				"sg-22222",
 				"sg-33333",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "udp",
+			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
@@ -234,14 +234,14 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 
 	expected_expanded_list := []interface{}{
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
 			"self":                true,
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -251,7 +251,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -261,7 +261,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with description",
@@ -271,7 +271,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
@@ -281,7 +281,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int(443),
 			"to_port":             int(443),
 			names.AttrDescription: "block with another description",
@@ -291,7 +291,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -301,7 +301,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -311,37 +311,37 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-11111",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "-1",
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
 			"self":                false,
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-33333",
 			}),
 		},
 		map[string]interface{}{
-			"protocol":            "udp",
+			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
@@ -351,7 +351,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			"protocol":            "udp",
+			names.AttrProtocol:    "udp",
 			"from_port":           int(10000),
 			"to_port":             int(10000),
 			names.AttrDescription: "",
@@ -436,7 +436,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 
 	local := []map[string]interface{}{
 		{
-			"protocol":            "tcp",
+			names.AttrProtocol:    "tcp",
 			"from_port":           int64(1),
 			"to_port":             int64(-1),
 			"cidr_blocks":         []string{"0.0.0.0/0"},
@@ -444,19 +444,19 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			names.AttrDescription: "desc",
 		},
 		{
-			"protocol":  "tcp",
-			"from_port": int64(80),
-			"to_port":   int64(80),
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrProtocol: "tcp",
+			"from_port":        int64(80),
+			"to_port":          int64(80),
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 		},
 		{
-			"protocol":        "-1",
-			"from_port":       int64(0),
-			"to_port":         int64(0),
-			"prefix_list_ids": []string{"pl-12345678"},
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
+			names.AttrProtocol: "-1",
+			"from_port":        int64(0),
+			"to_port":          int64(0),
+			"prefix_list_ids":  []string{"pl-12345678"},
+			names.AttrSecurityGroups: schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
 			}),
 			names.AttrDescription: "desc",
@@ -478,9 +478,9 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 					}
 				}
 
-				if _, ok := i["security_groups"]; ok {
-					outSet := i["security_groups"].(*schema.Set)
-					localSet := l["security_groups"].(*schema.Set)
+				if _, ok := i[names.AttrSecurityGroups]; ok {
+					outSet := i[names.AttrSecurityGroups].(*schema.Set)
+					localSet := l[names.AttrSecurityGroups].(*schema.Set)
 
 					if !outSet.Equal(localSet) {
 						t.Fatalf("Security Group sets are not equal")
@@ -498,21 +498,21 @@ func TestExpandIPPerms(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"protocol":    "icmp",
-			"from_port":   1,
-			"to_port":     -1,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "icmp",
+			"from_port":        1,
+			"to_port":          -1,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
 			names.AttrDescription: "desc",
 		},
 		map[string]interface{}{
-			"protocol":  "icmp",
-			"from_port": 1,
-			"to_port":   -1,
-			"self":      true,
+			names.AttrProtocol: "icmp",
+			"from_port":        1,
+			"to_port":          -1,
+			"self":             true,
 		},
 	}
 	group := &ec2.SecurityGroup{
@@ -615,11 +615,11 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"protocol":    "-1",
-			"from_port":   0,
-			"to_port":     0,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "-1",
+			"from_port":        0,
+			"to_port":          0,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -681,11 +681,11 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	// or to_port is not zero, but protocol is "-1".
 	errorCase := []interface{}{
 		map[string]interface{}{
-			"protocol":    "-1",
-			"from_port":   0,
-			"to_port":     65535,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "-1",
+			"from_port":        0,
+			"to_port":          65535,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -709,11 +709,11 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			"protocol":    "all",
-			"from_port":   0,
-			"to_port":     0,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "all",
+			"from_port":        0,
+			"to_port":          0,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -775,11 +775,11 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 	// or to_port is not zero, but protocol is "all".
 	errorCase := []interface{}{
 		map[string]interface{}{
-			"protocol":    "all",
-			"from_port":   0,
-			"to_port":     65535,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
+			names.AttrProtocol: "all",
+			"from_port":        0,
+			"to_port":          65535,
+			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
+			names.AttrSecurityGroups: schema.NewSet(hash, []interface{}{
 				"sg-11111",
 				"foo/sg-22222",
 			}),
@@ -894,7 +894,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -989,7 +989,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -1020,7 +1020,7 @@ func TestAccVPCSecurityGroup_nameTerraformPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -1050,7 +1050,7 @@ func TestAccVPCSecurityGroup_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -1081,7 +1081,7 @@ func TestAccVPCSecurityGroup_namePrefixTerraform(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "terraform-test"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-test"),
 				),
 			},
 			{
@@ -1364,7 +1364,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						"ipv6_cidr_blocks.#":  "1",
 						"ipv6_cidr_blocks.0":  "::/0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "0",
@@ -1376,7 +1376,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						"from_port":           "0",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "0",
@@ -1388,7 +1388,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						names.AttrDescription: "ingress from 192.168.0.0/16",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "80",
@@ -1399,7 +1399,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "1",
 						"ipv6_cidr_blocks.0":  "::/0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "80",
@@ -1411,7 +1411,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						names.AttrDescription: "ingress from 10.0.0.0/16",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "80",
@@ -1423,7 +1423,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "true",
 						"to_port":             "80",
@@ -1629,7 +1629,7 @@ func TestAccVPCSecurityGroup_change(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -1641,7 +1641,7 @@ func TestAccVPCSecurityGroup_change(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "9000",
@@ -1653,7 +1653,7 @@ func TestAccVPCSecurityGroup_change(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -1688,7 +1688,7 @@ func TestAccVPCSecurityGroup_ipv6(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "1",
 						"ipv6_cidr_blocks.0":  "::/0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -1700,7 +1700,7 @@ func TestAccVPCSecurityGroup_ipv6(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "1",
 						"ipv6_cidr_blocks.0":  "::/0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -1745,10 +1745,10 @@ func TestAccVPCSecurityGroup_self(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":  "tcp",
-						"from_port": "80",
-						"to_port":   "8000",
-						"self":      "true",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"self":             "true",
 					}),
 					checkSelf,
 				),
@@ -1781,19 +1781,19 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "tcp",
-						"from_port":     "80",
-						"to_port":       "8000",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"protocol":      "tcp",
-						"from_port":     "80",
-						"to_port":       "8000",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "tcp",
+						"from_port":        "80",
+						"to_port":          "8000",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1826,11 +1826,11 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "-1",
-						"from_port":     "0",
-						"to_port":       "0",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "-1",
+						"from_port":        "0",
+						"to_port":          "0",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1863,11 +1863,11 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"protocol":      "50",
-						"from_port":     "0",
-						"to_port":       "0",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "50",
+						"from_port":        "0",
+						"to_port":          "0",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1928,11 +1928,11 @@ func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						"protocol":      "-1",
-						"from_port":     "0",
-						"to_port":       "0",
-						"cidr_blocks.#": "1",
-						"cidr_blocks.0": "10.0.0.0/8",
+						names.AttrProtocol: "-1",
+						"from_port":        "0",
+						"to_port":          "0",
+						"cidr_blocks.#":    "1",
+						"cidr_blocks.0":    "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 				),
@@ -1971,7 +1971,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -1983,7 +1983,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 						names.AttrDescription: "Ingress description",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2009,7 +2009,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2021,7 +2021,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 						names.AttrDescription: "New ingress description",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2039,7 +2039,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2050,7 +2050,7 @@ func TestAccVPCSecurityGroup_ruleDescription(t *testing.T) {
 						"cidr_blocks.0":       "10.0.0.0/8",
 						names.AttrDescription: "",
 						"from_port":           "80",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2116,7 +2116,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2128,7 +2128,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2140,7 +2140,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2151,7 +2151,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2251,7 +2251,7 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 						"from_port":           "80",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "8000",
@@ -2263,7 +2263,7 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 						names.AttrDescription: "",
 						"from_port":           "22",
 						"ipv6_cidr_blocks.#":  "0",
-						"protocol":            "tcp",
+						names.AttrProtocol:    "tcp",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "22",
@@ -2362,7 +2362,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 						"from_port":           "0",
 						"ipv6_cidr_blocks.#":  "0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "0",
@@ -2374,7 +2374,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 						"ipv6_cidr_blocks.#":  "1",
 						"ipv6_cidr_blocks.0":  "::/0",
 						"prefix_list_ids.#":   "0",
-						"protocol":            "-1",
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   "0",
 						"self":                "false",
 						"to_port":             "0",

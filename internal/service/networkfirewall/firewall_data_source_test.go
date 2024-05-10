@@ -45,7 +45,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.configuration_sync_state_summary", "IN_SYNC"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, names.AttrAvailabilityZone),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
@@ -93,7 +93,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.configuration_sync_state_summary", "IN_SYNC"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, names.AttrAvailabilityZone),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
@@ -141,7 +141,7 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.configuration_sync_state_summary", "IN_SYNC"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, names.AttrAvailabilityZone),
 					resource.TestMatchTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),

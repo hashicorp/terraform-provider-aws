@@ -137,7 +137,7 @@ func resourceMetricAlarm() *schema.Resource {
 				ConflictsWith: []string{"metric_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -568,11 +568,11 @@ func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"account_id":  aws.ToString(apiObject.AccountId),
-			"expression":  aws.ToString(apiObject.Expression),
-			names.AttrID:  aws.ToString(apiObject.Id),
-			"label":       aws.ToString(apiObject.Label),
-			"return_data": aws.ToBool(apiObject.ReturnData),
+			names.AttrAccountID: aws.ToString(apiObject.AccountId),
+			"expression":        aws.ToString(apiObject.Expression),
+			names.AttrID:        aws.ToString(apiObject.Id),
+			"label":             aws.ToString(apiObject.Label),
+			"return_data":       aws.ToBool(apiObject.ReturnData),
 		}
 
 		if v := apiObject.MetricStat; v != nil {
@@ -627,7 +627,7 @@ func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
 			Id: aws.String(id),
 		}
 
-		if v, ok := tfMap["account_id"]; ok && v.(string) != "" {
+		if v, ok := tfMap[names.AttrAccountID]; ok && v.(string) != "" {
 			apiObject.AccountId = aws.String(v.(string))
 		}
 

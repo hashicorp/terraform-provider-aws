@@ -656,16 +656,16 @@ func resourceDeliveryStream() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"catalog_id": {
+													names.AttrCatalogID: {
 														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
 													},
-													"database_name": {
+													names.AttrDatabaseName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"region": {
+													names.AttrRegion: {
 														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
@@ -735,7 +735,7 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"access_key": {
+							names.AttrAccessKey: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 4096),
@@ -2200,16 +2200,16 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 	m := l[0].(map[string]interface{})
 
 	config := &types.SchemaConfiguration{
-		DatabaseName: aws.String(m["database_name"].(string)),
+		DatabaseName: aws.String(m[names.AttrDatabaseName].(string)),
 		RoleARN:      aws.String(m[names.AttrRoleARN].(string)),
 		TableName:    aws.String(m["table_name"].(string)),
 		VersionId:    aws.String(m["version_id"].(string)),
 	}
 
-	if v, ok := m["catalog_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrCatalogID].(string); ok && v != "" {
 		config.CatalogId = aws.String(v)
 	}
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		config.Region = aws.String(v)
 	}
 
@@ -2938,7 +2938,7 @@ func expandHTTPEndpointConfiguration(ep map[string]interface{}) *types.HttpEndpo
 		endpointConfiguration.Name = aws.String(Name.(string))
 	}
 
-	if AccessKey, ok := ep["access_key"]; ok {
+	if AccessKey, ok := ep[names.AttrAccessKey]; ok {
 		endpointConfiguration.AccessKey = aws.String(AccessKey.(string))
 	}
 
@@ -3695,12 +3695,12 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 	}
 
 	m := map[string]interface{}{
-		"catalog_id":      aws.ToString(sc.CatalogId),
-		"database_name":   aws.ToString(sc.DatabaseName),
-		"region":          aws.ToString(sc.Region),
-		names.AttrRoleARN: aws.ToString(sc.RoleARN),
-		"table_name":      aws.ToString(sc.TableName),
-		"version_id":      aws.ToString(sc.VersionId),
+		names.AttrCatalogID:    aws.ToString(sc.CatalogId),
+		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
+		names.AttrRegion:       aws.ToString(sc.Region),
+		names.AttrRoleARN:      aws.ToString(sc.RoleARN),
+		"table_name":           aws.ToString(sc.TableName),
+		"version_id":           aws.ToString(sc.VersionId),
 	}
 
 	return []map[string]interface{}{m}
@@ -3812,7 +3812,7 @@ func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDe
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		"access_key":                 configuredAccessKey,
+		names.AttrAccessKey:          configuredAccessKey,
 		"url":                        aws.ToString(description.EndpointConfiguration.Url),
 		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),

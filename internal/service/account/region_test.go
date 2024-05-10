@@ -34,7 +34,7 @@ func testAccRegion_basic(t *testing.T) {
 				PreConfig: func() {},
 				Config:    testAccRegionConfig_basic(regionName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
@@ -48,7 +48,7 @@ func testAccRegion_basic(t *testing.T) {
 			{
 				Config: testAccRegionConfig_basic(regionName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
@@ -77,7 +77,7 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 				PreConfig: func() {},
 				Config:    testAccRegionConfig_organization(regionName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
@@ -91,7 +91,7 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 			{
 				Config: testAccRegionConfig_organization(regionName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),

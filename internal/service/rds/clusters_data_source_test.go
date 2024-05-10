@@ -34,7 +34,7 @@ func TestAccRDSClustersDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_identifiers.0", resourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_identifiers.0", resourceName, names.AttrClusterIdentifier),
 				),
 			},
 		},

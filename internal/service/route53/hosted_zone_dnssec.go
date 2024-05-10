@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_hosted_zone_dnssec")
@@ -31,7 +32,7 @@ func ResourceHostedZoneDNSSEC() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,7 +54,7 @@ func resourceHostedZoneDNSSECCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	hostedZoneID := d.Get("hosted_zone_id").(string)
+	hostedZoneID := d.Get(names.AttrHostedZoneID).(string)
 	signingStatus := d.Get("signing_status").(string)
 
 	d.SetId(hostedZoneID)
@@ -110,7 +111,7 @@ func resourceHostedZoneDNSSECRead(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	d.Set("hosted_zone_id", d.Id())
+	d.Set(names.AttrHostedZoneID, d.Id())
 
 	if hostedZoneDnssec.Status != nil {
 		d.Set("signing_status", hostedZoneDnssec.Status.ServeSignature)

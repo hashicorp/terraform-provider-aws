@@ -37,7 +37,7 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 				AtLeastOneOf: []string{"s3_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -170,7 +170,7 @@ func expandClassificationExportConfiguration(tfMap map[string]interface{}) *maci
 
 	apiObject := &macie2.S3Destination{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -193,7 +193,7 @@ func flattenClassificationExportConfigurationS3DestinationResult(apiObject *maci
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.StringValue(v)
+		tfMap[names.AttrBucketName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.KeyPrefix; v != nil {

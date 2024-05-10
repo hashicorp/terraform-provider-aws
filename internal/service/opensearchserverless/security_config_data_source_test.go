@@ -36,7 +36,7 @@ func TestAccOpenSearchServerlessSecurityConfigDataSource_basic(t *testing.T) {
 				Config: testAccSecurityConfigDataSourceConfig_basic(rName, names.AttrDescription, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(ctx, dataSourceName, &securityconfig),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "config_version", resourceName, "config_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_date"),

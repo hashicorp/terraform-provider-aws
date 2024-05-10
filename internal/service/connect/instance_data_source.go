@@ -58,13 +58,13 @@ func DataSourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", "instance_id"},
+				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_id", "instance_alias"},
+				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
 			},
 			"multi_party_conference_enabled": {
 				Type:     schema.TypeBool,
@@ -97,7 +97,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var matchedInstance *connect.Instance
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		instanceID := v.(string)
 		instance, err := FindInstanceByID(ctx, conn, instanceID)
 

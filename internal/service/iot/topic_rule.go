@@ -206,7 +206,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validTopicRuleElasticsearchEndpoint,
@@ -414,7 +414,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"endpoint": {
+									names.AttrEndpoint: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validTopicRuleElasticsearchEndpoint,
@@ -674,7 +674,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -773,7 +773,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"database_name": {
+									names.AttrDatabaseName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1044,7 +1044,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1145,7 +1145,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1572,7 +1572,7 @@ func expandElasticsearchAction(tfList []interface{}) *iot.ElasticsearchAction {
 	apiObject := &iot.ElasticsearchAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["endpoint"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEndpoint].(string); ok && v != "" {
 		apiObject.Endpoint = aws.String(v)
 	}
 
@@ -1836,7 +1836,7 @@ func expandS3Action(tfList []interface{}) *iot.S3Action {
 	apiObject := &iot.S3Action{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -1932,7 +1932,7 @@ func expandTimestreamAction(tfList []interface{}) *iot.TimestreamAction {
 	apiObject := &iot.TimestreamAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -2681,7 +2681,7 @@ func flattenElasticsearchAction(apiObject *iot.ElasticsearchAction) []interface{
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Endpoint; v != nil {
-		tfMap["endpoint"] = aws.StringValue(v)
+		tfMap[names.AttrEndpoint] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Id; v != nil {
@@ -3097,7 +3097,7 @@ func flattenS3Action(apiObject *iot.S3Action) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.StringValue(v)
+		tfMap[names.AttrBucketName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.CannedAcl; v != nil {
@@ -3257,7 +3257,7 @@ func flattenTimestreamAction(apiObject *iot.TimestreamAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.StringValue(v)
+		tfMap[names.AttrDatabaseName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Dimensions; v != nil {

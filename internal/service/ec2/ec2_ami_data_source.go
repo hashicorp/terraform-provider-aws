@@ -50,7 +50,7 @@ func DataSourceAMI() *schema.Resource {
 				Set:      amiBlockDeviceMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -355,19 +355,19 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			"device_name":  aws.StringValue(v.DeviceName),
-			"virtual_name": aws.StringValue(v.VirtualName),
+			names.AttrDeviceName: aws.StringValue(v.DeviceName),
+			"virtual_name":       aws.StringValue(v.VirtualName),
 		}
 
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
-				"encrypted":             fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
-				"iops":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
-				"throughput":            fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
-				"volume_size":           fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
-				"snapshot_id":           aws.StringValue(v.Ebs.SnapshotId),
-				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
+				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
+				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				"iops":                        fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
+				"volume_size":                 fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
+				"snapshot_id":                 aws.StringValue(v.Ebs.SnapshotId),
+				"volume_type":                 aws.StringValue(v.Ebs.VolumeType),
 			}
 
 			mapping["ebs"] = ebs
@@ -425,12 +425,12 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	var buf bytes.Buffer
 	// All keys added in alphabetical order.
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 	if d, ok := m["ebs"]; ok {
 		if len(d.(map[string]interface{})) > 0 {
 			e := d.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s-", e["delete_on_termination"].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e["encrypted"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["iops"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_type"].(string)))

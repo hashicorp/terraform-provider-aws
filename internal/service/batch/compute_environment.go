@@ -129,7 +129,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -916,7 +916,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.InstanceRole = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_type"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrInstanceType].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.InstanceTypes = flex.ExpandStringSet(v)
 	}
 
@@ -1139,7 +1139,7 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 	}
 
 	if v := apiObject.InstanceTypes; v != nil {
-		tfMap["instance_type"] = aws.StringValueSlice(v)
+		tfMap[names.AttrInstanceType] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {

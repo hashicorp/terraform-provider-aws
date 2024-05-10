@@ -171,7 +171,7 @@ func ResourceConnector() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"security_groups": {
+												names.AttrSecurityGroups: {
 													Type:     schema.TypeSet,
 													Required: true,
 													ForceNew: true,
@@ -789,7 +789,7 @@ func expandVPC(tfMap map[string]interface{}) *kafkaconnect.Vpc {
 
 	apiObject := &kafkaconnect.Vpc{}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
@@ -1132,7 +1132,7 @@ func flattenVPCDescription(apiObject *kafkaconnect.VpcDescription) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroups] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.Subnets; v != nil {

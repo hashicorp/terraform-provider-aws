@@ -42,11 +42,11 @@ func resourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"created_date": {
+				names.AttrCreatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"last_updated_date": {
+				names.AttrLastUpdatedDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -162,8 +162,8 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	mesh := outputRaw.(*appmesh.MeshData)
 	arn := aws.StringValue(mesh.Metadata.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
 	d.Set(names.AttrName, mesh.MeshName)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)

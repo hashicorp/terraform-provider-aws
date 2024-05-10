@@ -92,7 +92,7 @@ func resourceBucket() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"bucket_prefix"},
+				ConflictsWith: []string{names.AttrBucketPrefix},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 63),
 					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
@@ -102,7 +102,7 @@ func resourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket_prefix": {
+			names.AttrBucketPrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -192,7 +192,7 @@ func resourceBucket() *schema.Resource {
 					},
 				},
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -396,7 +396,7 @@ func resourceBucket() *schema.Resource {
 					return json
 				},
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -444,7 +444,7 @@ func resourceBucket() *schema.Resource {
 														},
 													},
 												},
-												"account_id": {
+												names.AttrAccountID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidAccountID,
@@ -709,7 +709,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get("bucket_prefix").(string))
+	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
 	region := meta.(*conns.AWSClient).Region
 
 	if err := validBucketName(bucket, region); err != nil {
@@ -804,7 +804,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrBucket, d.Id())
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, d.Id()+".s3"))
-	d.Set("bucket_prefix", create.NamePrefixFromName(d.Id()))
+	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
 
 	//
 	// Bucket Policy.
@@ -1125,14 +1125,14 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) location: %s", d.Id(), err)
 	}
 
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Id(), region))
 
 	hostedZoneID, err := hostedZoneIDForRegion(region)
 	if err != nil {
 		log.Printf("[WARN] %s", err)
 	} else {
-		d.Set("hosted_zone_id", hostedZoneID)
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
 	if _, ok := d.GetOk("website"); ok {
@@ -2536,7 +2536,7 @@ func expandBucketDestination(l []interface{}) *types.Destination {
 		}
 	}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.Account = aws.String(v)
 	}
 
@@ -2685,7 +2685,7 @@ func flattenBucketDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.Account != nil {
-		m["account_id"] = aws.ToString(dest.Account)
+		m[names.AttrAccountID] = aws.ToString(dest.Account)
 	}
 
 	if dest.Bucket != nil {

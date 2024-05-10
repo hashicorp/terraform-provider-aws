@@ -62,7 +62,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OriginationRouteProtocol](),
@@ -202,7 +202,7 @@ func expandOriginationRoutes(data []interface{}) []awstypes.OriginationRoute {
 			Host:     aws.String(item["host"].(string)),
 			Port:     aws.Int32(int32(item[names.AttrPort].(int))),
 			Priority: aws.Int32(int32(item["priority"].(int))),
-			Protocol: awstypes.OriginationRouteProtocol(item["protocol"].(string)),
+			Protocol: awstypes.OriginationRouteProtocol(item[names.AttrProtocol].(string)),
 			Weight:   aws.Int32(int32(item["weight"].(int))),
 		})
 	}
@@ -215,11 +215,11 @@ func flattenOriginationRoutes(routes []awstypes.OriginationRoute) []interface{} 
 
 	for _, route := range routes {
 		r := map[string]interface{}{
-			"host":         aws.ToString(route.Host),
-			names.AttrPort: aws.ToInt32(route.Port),
-			"priority":     aws.ToInt32(route.Priority),
-			"protocol":     string(route.Protocol),
-			"weight":       aws.ToInt32(route.Weight),
+			"host":             aws.ToString(route.Host),
+			names.AttrPort:     aws.ToInt32(route.Port),
+			"priority":         aws.ToInt32(route.Priority),
+			names.AttrProtocol: string(route.Protocol),
+			"weight":           aws.ToInt32(route.Weight),
 		}
 
 		rawRoutes = append(rawRoutes, r)

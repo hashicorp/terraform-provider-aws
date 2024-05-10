@@ -97,7 +97,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -357,7 +357,7 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		result.BucketName = aws.String(v)
 	}
 
@@ -432,7 +432,7 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 	}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.BucketOwner; v != nil {

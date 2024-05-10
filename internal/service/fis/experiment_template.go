@@ -158,7 +158,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -210,7 +210,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Set:      schema.HashString,
@@ -587,7 +587,7 @@ func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentT
 	raw := l[0].(map[string]interface{})
 
 	config := types.ExperimentTemplateS3LogConfigurationInput{
-		BucketName: aws.String(raw["bucket_name"].(string)),
+		BucketName: aws.String(raw[names.AttrBucketName].(string)),
 	}
 	if v, ok := raw["prefix"].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
@@ -791,7 +791,7 @@ func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTe
 			config.Path = aws.String(v)
 		}
 
-		if v, ok := raw["values"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 			config.Values = flex.ExpandStringValueSet(v)
 		}
 
@@ -907,7 +907,7 @@ func flattenS3Configuration(configured *types.ExperimentTemplateS3LogConfigurati
 
 	dataResources := make([]map[string]interface{}, 1)
 	dataResources[0] = make(map[string]interface{})
-	dataResources[0]["bucket_name"] = configured.BucketName
+	dataResources[0][names.AttrBucketName] = configured.BucketName
 	if aws.ToString(configured.Prefix) != "" {
 		dataResources[0]["prefix"] = configured.Prefix
 	}
@@ -948,7 +948,7 @@ func flattenExperimentTemplateTargetFilters(configured []types.ExperimentTemplat
 	for _, v := range configured {
 		item := make(map[string]interface{})
 		item["path"] = aws.ToString(v.Path)
-		item["values"] = v.Values
+		item[names.AttrValues] = v.Values
 
 		dataResources = append(dataResources, item)
 	}

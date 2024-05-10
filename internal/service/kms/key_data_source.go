@@ -111,7 +111,7 @@ func dataSourceKey() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -127,7 +127,7 @@ func dataSourceKey() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -257,7 +257,7 @@ func flattenMultiRegionKey(apiObject *awstypes.MultiRegionKey) map[string]interf
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap

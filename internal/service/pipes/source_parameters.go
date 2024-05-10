@@ -498,7 +498,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"security_groups": {
+										names.AttrSecurityGroups: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 5,
@@ -1208,7 +1208,7 @@ func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]interface{}) 
 
 	apiObject := &types.SelfManagedKafkaAccessConfigurationVpc{}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroup = flex.ExpandStringValueSet(v)
 	}
 
@@ -1639,7 +1639,7 @@ func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedK
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroup; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.Subnets; v != nil {

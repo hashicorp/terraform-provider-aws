@@ -73,11 +73,11 @@ func resourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -339,11 +339,11 @@ func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DomainName; v != nil {
-		tfMap["domain_name"] = aws.ToString(v)
+		tfMap[names.AttrDomainName] = aws.ToString(v)
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.ToString(v)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
 	}
 
 	return tfMap

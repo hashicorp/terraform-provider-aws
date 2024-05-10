@@ -135,7 +135,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -263,7 +263,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeMap,
 							Required: true,
 							ForceNew: true,
@@ -898,7 +898,7 @@ func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *awstypes.D
 		apiObject.CollectionName = aws.String(v)
 	}
 
-	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
@@ -951,7 +951,7 @@ func flattenDocumentDBEventSourceConfig(apiObject *awstypes.DocumentDBEventSourc
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap["database_name"] = aws.ToString(v)
+		tfMap[names.AttrDatabaseName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -978,7 +978,7 @@ func expandSelfManagedEventSource(tfMap map[string]interface{}) *awstypes.SelfMa
 
 	apiObject := &awstypes.SelfManagedEventSource{}
 
-	if v, ok := tfMap["endpoints"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEndpoints].(map[string]interface{}); ok && len(v) > 0 {
 		m := map[string][]string{}
 
 		for k, v := range v {
@@ -1005,7 +1005,7 @@ func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) m
 			m[k] = strings.Join(v, ",")
 		}
 
-		tfMap["endpoints"] = m
+		tfMap[names.AttrEndpoints] = m
 	}
 
 	return tfMap

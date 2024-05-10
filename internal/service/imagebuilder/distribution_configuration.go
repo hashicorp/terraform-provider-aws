@@ -182,7 +182,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							MaxItems: 1000,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -244,7 +244,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -270,7 +270,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 								ValidateFunc: verify.ValidARN,
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -524,7 +524,7 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 		apiObject.LicenseConfigurationArns = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -641,7 +641,7 @@ func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.F
 
 	apiObject := &imagebuilder.FastLaunchConfiguration{}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.AccountId = aws.String(v)
 	}
 
@@ -715,7 +715,7 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuild
 		apiObject.SetDefaultVersion = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.AccountId = aws.String(v)
 	}
 
@@ -824,7 +824,7 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -908,7 +908,7 @@ func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateCo
 	}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap[names.AttrAccountID] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -940,7 +940,7 @@ func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfigurat
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap[names.AttrAccountID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {

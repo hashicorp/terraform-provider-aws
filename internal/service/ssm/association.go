@@ -91,7 +91,7 @@ func ResourceAssociation() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:       schema.TypeString,
 				ForceNew:   true,
 				Optional:   true,
@@ -149,7 +149,7 @@ func ResourceAssociation() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 163),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -184,7 +184,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.AssociationName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		associationInput.InstanceId = aws.String(v.(string))
 	}
 
@@ -276,7 +276,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, arn)
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	d.Set("association_name", association.AssociationName)
-	d.Set("instance_id", association.InstanceId)
+	d.Set(names.AttrInstanceID, association.InstanceId)
 	d.Set(names.AttrName, association.Name)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)

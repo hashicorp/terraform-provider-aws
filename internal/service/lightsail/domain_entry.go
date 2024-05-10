@@ -39,7 +39,7 @@ func ResourceDomainEntry() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,11 +85,11 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	name := d.Get(names.AttrName).(string)
 	req := &lightsail.CreateDomainEntryInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 
 		DomainEntry: &types.DomainEntry{
 			IsAlias: aws.Bool(d.Get("is_alias").(bool)),
-			Name:    aws.String(expandDomainEntryName(name, d.Get("domain_name").(string))),
+			Name:    aws.String(expandDomainEntryName(name, d.Get(names.AttrDomainName).(string))),
 			Target:  aws.String(d.Get("target").(string)),
 			Type:    aws.String(d.Get(names.AttrType).(string)),
 		},
@@ -110,7 +110,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Generate an ID
 	idParts := []string{
 		name,
-		d.Get("domain_name").(string),
+		d.Get(names.AttrDomainName).(string),
 		d.Get(names.AttrType).(string),
 		d.Get("target").(string),
 	}
@@ -118,7 +118,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	id, err := flex.FlattenResourceId(idParts, DomainEntryIdPartsCount, true)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get("domain_name").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get(names.AttrDomainName).(string), err)
 	}
 
 	d.SetId(id)
@@ -165,13 +165,13 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 		id, err := flex.FlattenResourceId(idParts, DomainEntryIdPartsCount, true)
 
 		if err != nil {
-			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get("domain_name").(string), err)
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get(names.AttrDomainName).(string), err)
 		}
 
 		d.SetId(id)
 	}
 	d.Set(names.AttrName, name)
-	d.Set("domain_name", domainName)
+	d.Set(names.AttrDomainName, domainName)
 	d.Set(names.AttrType, entry.Type)
 	d.Set("is_alias", entry.IsAlias)
 	d.Set("target", entry.Target)

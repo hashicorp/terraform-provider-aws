@@ -41,11 +41,11 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 				// trailing period, no longer requiring a custom StateFunc
 				// to prevent ACM API error
@@ -60,7 +60,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -126,8 +126,8 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
 				// so that the user doesn't need to explicitly set it themselves.
-				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domain_name := diff.Get("domain_name").(string)
+				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
+					domain_name := diff.Get(names.AttrDomainName).(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domain_name)
@@ -149,7 +149,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	certName := d.Get(names.AttrName).(string)
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
-		CertificateDomainName: aws.String(d.Get("domain_name").(string)),
+		CertificateDomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		CertificateName:       aws.String(certName),
 		LoadBalancerName:      aws.String(d.Get("lb_name").(string)),
 	}
@@ -199,8 +199,8 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
-	d.Set("domain_name", out.DomainName)
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("domain_validation_records", flattenLoadBalancerDomainValidationRecords(out.DomainValidationRecords))
 	d.Set("lb_name", out.LoadBalancerName)
 	d.Set(names.AttrName, out.Name)
@@ -242,7 +242,7 @@ func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.
 
 	for _, o := range domainValidationRecords {
 		validationOption := map[string]interface{}{
-			"domain_name":           aws.ToString(o.DomainName),
+			names.AttrDomainName:    aws.ToString(o.DomainName),
 			"resource_record_name":  aws.ToString(o.Name),
 			"resource_record_type":  aws.ToString(o.Type),
 			"resource_record_value": aws.ToString(o.Value),

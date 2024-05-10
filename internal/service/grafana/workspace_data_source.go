@@ -37,7 +37,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,12 +133,12 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}.String()
 	d.Set(names.AttrARN, workspaceARN)
 	d.Set("authentication_providers", workspace.Authentication.Providers)
-	d.Set("created_date", workspace.Created.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, workspace.Created.Format(time.RFC3339))
 	d.Set("data_sources", workspace.DataSources)
 	d.Set(names.AttrDescription, workspace.Description)
-	d.Set("endpoint", workspace.Endpoint)
+	d.Set(names.AttrEndpoint, workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
-	d.Set("last_updated_date", workspace.Modified.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, workspace.Modified.Format(time.RFC3339))
 	d.Set(names.AttrName, workspace.Name)
 	d.Set("notification_destinations", workspace.NotificationDestinations)
 	d.Set("organization_role_name", workspace.OrganizationRoleName)

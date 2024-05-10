@@ -34,7 +34,7 @@ func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 			},
 			"filter":       customFiltersSchema(),
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -70,7 +70,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 		})...)
 	}
 
-	if v, ok := d.GetOk("transit_gateway_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
@@ -84,7 +84,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 
 	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
 	d.Set("dx_gateway_id", transitGatewayAttachment.ResourceId)
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

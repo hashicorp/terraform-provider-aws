@@ -44,7 +44,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.0.info.0.eks_info.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.info.0.eks_info.0.namespace", dataSourceResourceName, "container_provider.0.info.0.eks_info.0.namespace"),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.type", dataSourceResourceName, "container_provider.0.type"),
-					resource.TestCheckResourceAttrSet(dataSourceResourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(dataSourceResourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceResourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, names.AttrState),

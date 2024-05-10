@@ -84,7 +84,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -233,7 +233,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
-	d.Set("created_at", aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
 	d.Set("service_name", serviceName)
 	d.Set(names.AttrState, deployment.State)
 	d.Set(names.AttrVersion, deployment.Version)

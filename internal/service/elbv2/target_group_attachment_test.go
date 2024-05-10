@@ -165,7 +165,7 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			}},
 		}
 
-		if v := rs.Primary.Attributes["availability_zone"]; v != "" {
+		if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
 			input.Targets[0].AvailabilityZone = aws.String(v)
 		}
 
@@ -195,7 +195,7 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 				}},
 			}
 
-			if v := rs.Primary.Attributes["availability_zone"]; v != "" {
+			if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
 				input.Targets[0].AvailabilityZone = aws.String(v)
 			}
 

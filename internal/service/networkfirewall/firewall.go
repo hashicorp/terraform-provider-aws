@@ -87,7 +87,7 @@ func ResourceFirewall() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -100,7 +100,7 @@ func ResourceFirewall() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -133,7 +133,7 @@ func ResourceFirewall() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(networkfirewall.IPAddressType_Values(), false),
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -528,7 +528,7 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 			continue
 		}
 		mapping := &networkfirewall.SubnetMapping{
-			SubnetId: aws.String(tfMap["subnet_id"].(string)),
+			SubnetId: aws.String(tfMap[names.AttrSubnetID].(string)),
 		}
 		if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
 			mapping.IPAddressType = aws.String(v)
@@ -546,7 +546,7 @@ func expandSubnetMappingIDs(l []interface{}) []string {
 		if !ok {
 			continue
 		}
-		if id, ok := tfMap["subnet_id"].(string); ok && id != "" {
+		if id, ok := tfMap[names.AttrSubnetID].(string); ok && id != "" {
 			ids = append(ids, id)
 		}
 	}
@@ -574,8 +574,8 @@ func flattenSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
 	syncStates := make([]interface{}, 0, len(s))
 	for k, v := range s {
 		m := map[string]interface{}{
-			"availability_zone": k,
-			"attachment":        flattenSyncStateAttachment(v.Attachment),
+			names.AttrAvailabilityZone: k,
+			"attachment":               flattenSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}
@@ -589,8 +589,8 @@ func flattenSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"endpoint_id": aws.StringValue(a.EndpointId),
-		"subnet_id":   aws.StringValue(a.SubnetId),
+		"endpoint_id":      aws.StringValue(a.EndpointId),
+		names.AttrSubnetID: aws.StringValue(a.SubnetId),
 	}
 
 	return []interface{}{m}
@@ -600,8 +600,8 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
-			"subnet_id":       aws.StringValue(s.SubnetId),
-			"ip_address_type": aws.StringValue(s.IPAddressType),
+			names.AttrSubnetID: aws.StringValue(s.SubnetId),
+			"ip_address_type":  aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -616,7 +616,7 @@ func subnetMappingsHash(v interface{}) int {
 	if !ok {
 		return 0
 	}
-	if id, ok := tfMap["subnet_id"].(string); ok {
+	if id, ok := tfMap[names.AttrSubnetID].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
 	if id, ok := tfMap["ip_address_type"].(string); ok {

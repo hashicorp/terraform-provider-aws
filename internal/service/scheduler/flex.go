@@ -370,7 +370,7 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 		}
 	}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		awsvpcConfig.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
@@ -398,7 +398,7 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	}
 
 	if v := apiObject.AwsvpcConfiguration.SecurityGroups; v != nil {
-		m["security_groups"] = flex.FlattenStringValueSet(v)
+		m[names.AttrSecurityGroups] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.AwsvpcConfiguration.Subnets; v != nil {

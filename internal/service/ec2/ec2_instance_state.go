@@ -44,7 +44,7 @@ func ResourceInstanceState() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -62,7 +62,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 
 	instance, instanceErr := waitInstanceReady(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
 
@@ -76,7 +76,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(d.Get("instance_id").(string))
+	d.SetId(d.Get(names.AttrInstanceID).(string))
 
 	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
@@ -98,7 +98,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstanceState, d.Id(), err)
 	}
 
-	d.Set("instance_id", d.Id())
+	d.Set(names.AttrInstanceID, d.Id())
 	d.Set(names.AttrState, state.Name)
 	d.Set("force", d.Get("force").(bool))
 

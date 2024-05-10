@@ -90,7 +90,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"hours_of_operation_id", names.AttrName},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -115,7 +115,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeHoursOfOperationInput{
 		InstanceId: aws.String(instanceID),
@@ -152,7 +152,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set(names.AttrARN, hoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set(names.AttrDescription, hoursOfOperation.Description)
 	d.Set(names.AttrName, hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)

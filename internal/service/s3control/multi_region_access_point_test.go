@@ -38,10 +38,10 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalHostname(resourceName, "domain_name", "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
+					acctest.MatchResourceAttrGlobalHostname(resourceName, names.AttrDomainName, "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
@@ -53,7 +53,7 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
 						names.AttrBucket:    bucketName,
 						"bucket_account_id": acctest.AccountID(),
-						"region":            acctest.Region(),
+						names.AttrRegion:    acctest.Region(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
 				),

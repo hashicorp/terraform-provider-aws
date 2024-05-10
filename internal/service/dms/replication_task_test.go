@@ -336,8 +336,8 @@ func TestAccDMSReplicationTask_settings_LogComponents(t *testing.T) {
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "true"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_WARNING"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogGroup)", "null"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogStream)", "null"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogGroup)", "string"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogStream)", "string"),
 				),
 			},
 			{

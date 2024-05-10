@@ -297,7 +297,7 @@ func ResourceListener() *schema.Resource {
 										Optional: true,
 										Default:  "#{port}",
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{protocol}",
@@ -372,7 +372,7 @@ func ResourceListener() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsPortNumber,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -447,7 +447,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Port = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("protocol"); ok {
+	if v, ok := d.GetOk(names.AttrProtocol); ok {
 		input.Protocol = awstypes.ProtocolEnum(v.(string))
 	} else if strings.Contains(lbARN, "loadbalancer/app/") {
 		// Keep previous default of HTTP for Application Load Balancers.
@@ -540,7 +540,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
 	}
 	d.Set(names.AttrPort, listener.Port)
-	d.Set("protocol", listener.Protocol)
+	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
 	return diags
@@ -580,7 +580,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := d.GetOk("protocol"); ok {
+		if v, ok := d.GetOk(names.AttrProtocol); ok {
 			input.Protocol = awstypes.ProtocolEnum(v.(string))
 		}
 
@@ -857,7 +857,7 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 		Host:       aws.String(tfMap["host"].(string)),
 		Path:       aws.String(tfMap["path"].(string)),
 		Port:       aws.String(tfMap[names.AttrPort].(string)),
-		Protocol:   aws.String(tfMap["protocol"].(string)),
+		Protocol:   aws.String(tfMap[names.AttrProtocol].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
 		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap["status_code"].(string)),
 	}
@@ -1177,12 +1177,12 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 	}
 
 	m := map[string]interface{}{
-		"host":         aws.ToString(config.Host),
-		"path":         aws.ToString(config.Path),
-		names.AttrPort: aws.ToString(config.Port),
-		"protocol":     aws.ToString(config.Protocol),
-		"query":        aws.ToString(config.Query),
-		"status_code":  string(config.StatusCode),
+		"host":             aws.ToString(config.Host),
+		"path":             aws.ToString(config.Path),
+		names.AttrPort:     aws.ToString(config.Port),
+		names.AttrProtocol: aws.ToString(config.Protocol),
+		"query":            aws.ToString(config.Query),
+		"status_code":      string(config.StatusCode),
 	}
 
 	return []interface{}{m}

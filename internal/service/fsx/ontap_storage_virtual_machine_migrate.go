@@ -53,7 +53,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -97,7 +97,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -173,7 +173,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),

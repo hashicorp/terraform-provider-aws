@@ -25,9 +25,9 @@ func TestAssociationRuleMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "test_document_association-dev",
 			Attributes: map[string]string{
-				"association_id": "fb03b7e6-4a21-4012-965f-91a38cfeec72",
-				"instance_id":    "i-0381b34d460caf6ef",
-				names.AttrName:   "test_document_association-dev",
+				"association_id":     "fb03b7e6-4a21-4012-965f-91a38cfeec72",
+				names.AttrInstanceID: "i-0381b34d460caf6ef",
+				names.AttrName:       "test_document_association-dev",
 			},
 			Expected: "fb03b7e6-4a21-4012-965f-91a38cfeec72",
 		},

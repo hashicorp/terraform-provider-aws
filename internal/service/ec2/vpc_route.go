@@ -41,8 +41,8 @@ var routeValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
-	"network_interface_id",
-	"transit_gateway_id",
+	names.AttrNetworkInterfaceID,
+	names.AttrTransitGatewayID,
 	"vpc_endpoint_id",
 	"vpc_peering_connection_id",
 }
@@ -132,13 +132,13 @@ func resourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -160,7 +160,7 @@ func resourceRoute() *schema.Resource {
 			//
 			// Computed attributes.
 			//
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -332,12 +332,12 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
-	d.Set("instance_id", route.InstanceId)
+	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
-	d.Set("network_interface_id", route.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
 	d.Set("origin", route.Origin)
 	d.Set(names.AttrState, route.State)
-	d.Set("transit_gateway_id", route.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
 	return diags

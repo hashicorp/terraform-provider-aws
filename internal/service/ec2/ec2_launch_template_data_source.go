@@ -40,7 +40,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -49,11 +49,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"delete_on_termination": {
+									names.AttrDeleteOnTermination: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -303,11 +303,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -329,11 +329,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -359,11 +359,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -403,11 +403,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -419,11 +419,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -435,11 +435,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -451,11 +451,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -479,11 +479,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -495,11 +495,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"max": {
+									names.AttrMax: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"min": {
+									names.AttrMin: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -509,7 +509,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -607,7 +607,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -663,7 +663,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -671,12 +671,12 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"security_groups": {
+						names.AttrSecurityGroups: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -692,7 +692,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -770,7 +770,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

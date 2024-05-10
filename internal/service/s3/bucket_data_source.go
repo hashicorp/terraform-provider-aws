@@ -39,11 +39,11 @@ func dataSourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,11 +96,11 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucket+".s3"))
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucket, region))
 	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
-		d.Set("hosted_zone_id", hostedZoneID)
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	} else {
 		log.Printf("[WARN] HostedZoneIDForRegion: %s", err)
 	}
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	if _, err := findBucketWebsite(ctx, conn, bucket, ""); err == nil {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
 		d.Set("website_domain", domain)

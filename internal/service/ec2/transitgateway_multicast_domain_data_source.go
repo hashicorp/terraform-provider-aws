@@ -37,11 +37,11 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"transit_gateway_attachment_id": {
+						names.AttrTransitGatewayAttachmentID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -66,7 +66,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -86,7 +86,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -102,11 +102,11 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	d.Set(names.AttrOwnerID, transitGatewayMulticastDomain.OwnerId)
 	d.Set(names.AttrState, transitGatewayMulticastDomain.State)
 	d.Set("static_sources_support", transitGatewayMulticastDomain.Options.StaticSourcesSupport)
-	d.Set("transit_gateway_id", transitGatewayMulticastDomain.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayMulticastDomain.TransitGatewayId)
 	d.Set("transit_gateway_multicast_domain_id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -214,11 +214,11 @@ func flattenTransitGatewayMulticastDomainAssociation(apiObject *ec2.TransitGatew
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Subnet.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TransitGatewayAttachmentId; v != nil {
-		tfMap["transit_gateway_attachment_id"] = aws.StringValue(v)
+		tfMap[names.AttrTransitGatewayAttachmentID] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -254,7 +254,7 @@ func flattenTransitGatewayMulticastGroup(apiObject *ec2.TransitGatewayMulticastG
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -104,7 +104,7 @@ func ResourceDataSource() *schema.Resource {
 											},
 										},
 									},
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -402,7 +402,7 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -697,7 +697,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}.String()
 
 	d.Set(names.AttrARN, arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("data_source_id", resp.Id)
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
@@ -941,7 +941,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguratio
 	}
 
 	result := &types.S3DataSourceConfiguration{
-		BucketName: aws.String(tfMap["bucket_name"].(string)),
+		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
 	}
 
 	if v, ok := tfMap["access_control_list_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1366,7 +1366,7 @@ func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interf
 	}
 
 	m := map[string]interface{}{
-		"bucket_name": aws.ToString(apiObject.BucketName),
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
 	}
 
 	if v := apiObject.AccessControlListConfiguration; v != nil {

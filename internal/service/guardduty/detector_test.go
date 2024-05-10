@@ -35,7 +35,7 @@ func testAccDetector_basic(t *testing.T) {
 				Config: testAccDetectorConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),

@@ -54,7 +54,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -228,7 +228,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("availability_zones", aws.StringValueSlice(svcCfg.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(svcCfg.AvailabilityZones))
 	d.Set("base_endpoint_dns_names", aws.StringValueSlice(svcCfg.BaseEndpointDnsNames))
 	d.Set("gateway_load_balancer_arns", aws.StringValueSlice(svcCfg.GatewayLoadBalancerArns))
 	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)

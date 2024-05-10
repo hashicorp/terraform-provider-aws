@@ -70,7 +70,7 @@ func resourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -297,7 +297,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
-	d.Set("created_date", api.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {

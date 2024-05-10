@@ -23,7 +23,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVPCEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(vpcEndpoint.Id))
 
 	createdDate := time.UnixMilli(aws.ToInt64(vpcEndpoint.CreatedDate))
-	d.Set("created_date", createdDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
 
 	d.Set(names.AttrName, vpcEndpoint.Name)
 	d.Set(names.AttrSecurityGroupIDs, vpcEndpoint.SecurityGroupIds)

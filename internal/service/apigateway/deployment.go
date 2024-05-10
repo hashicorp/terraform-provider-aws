@@ -38,7 +38,7 @@ func resourceDeployment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +126,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	stageName := d.Get("stage_name").(string)
-	d.Set("created_date", deployment.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, deployment.Description)
 	executionARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
