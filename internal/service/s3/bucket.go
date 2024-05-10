@@ -534,7 +534,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
@@ -2488,7 +2488,7 @@ func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.
 			}
 
 			rule.Filter = filter
-			rule.Priority = aws.Int32(int32(tfRuleMap["priority"].(int)))
+			rule.Priority = aws.Int32(int32(tfRuleMap[names.AttrPriority].(int)))
 
 			if v, ok := tfRuleMap["delete_marker_replication_status"].(string); ok && v != "" {
 				rule.DeleteMarkerReplication = &types.DeleteMarkerReplication{
@@ -2654,7 +2654,7 @@ func flattenBucketReplicationRules(ctx context.Context, rules []types.Replicatio
 		}
 
 		if rule.Priority != nil {
-			m["priority"] = aws.ToInt32(rule.Priority)
+			m[names.AttrPriority] = aws.ToInt32(rule.Priority)
 		}
 
 		if rule.SourceSelectionCriteria != nil {

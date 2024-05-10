@@ -254,7 +254,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 							Deprecated:   "Use filter instead",
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -512,7 +512,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			// XML schema V2
 			rule.Filter = expandReplicationRuleFilter(ctx, v)
-			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
+			rule.Priority = aws.Int32(int32(tfMap[names.AttrPriority].(int)))
 		} else {
 			// XML schema V1
 			rule.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
@@ -901,7 +901,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Priority != nil {
-			m["priority"] = aws.ToInt32(rule.Priority)
+			m[names.AttrPriority] = aws.ToInt32(rule.Priority)
 		}
 
 		if rule.SourceSelectionCriteria != nil {
