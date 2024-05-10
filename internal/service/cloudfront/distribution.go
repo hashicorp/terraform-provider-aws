@@ -287,7 +287,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -923,7 +923,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
