@@ -544,7 +544,7 @@ func UserAttributeKeyMatchesStandardAttribute(input string) bool {
 	}
 
 	var standardAttributeKeys = []string{
-		"address",
+		names.AttrAddress,
 		"birthdate",
 		"email",
 		"email_verified",
