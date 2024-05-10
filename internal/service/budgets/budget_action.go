@@ -24,12 +24,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_budgets_budget_action")
+// @Tags(identifierAttribute="arn")
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -221,7 +223,10 @@ func ResourceBudgetAction() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -243,6 +248,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
 		NotificationType: awstypes.NotificationType(d.Get("notification_type").(string)),
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
+		ResourceTags:     getTagsIn(ctx),
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
@@ -324,40 +330,42 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &budgets.UpdateBudgetActionInput{
-		AccountId:  aws.String(accountID),
-		ActionId:   aws.String(actionID),
-		BudgetName: aws.String(budgetName),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &budgets.UpdateBudgetActionInput{
+			AccountId:  aws.String(accountID),
+			ActionId:   aws.String(actionID),
+			BudgetName: aws.String(budgetName),
+		}
 
-	if d.HasChange("action_threshold") {
-		input.ActionThreshold = expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
-	}
+		if d.HasChange("action_threshold") {
+			input.ActionThreshold = expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{}))
+		}
 
-	if d.HasChange("approval_model") {
-		input.ApprovalModel = awstypes.ApprovalModel(d.Get("approval_model").(string))
-	}
+		if d.HasChange("approval_model") {
+			input.ApprovalModel = awstypes.ApprovalModel(d.Get("approval_model").(string))
+		}
 
-	if d.HasChange("definition") {
-		input.Definition = expandBudgetActionActionDefinition(d.Get("definition").([]interface{}))
-	}
+		if d.HasChange("definition") {
+			input.Definition = expandBudgetActionActionDefinition(d.Get("definition").([]interface{}))
+		}
 
-	if d.HasChange("execution_role_arn") {
-		input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
-	}
+		if d.HasChange("execution_role_arn") {
+			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		}
 
-	if d.HasChange("notification_type") {
-		input.NotificationType = awstypes.NotificationType(d.Get("notification_type").(string))
-	}
+		if d.HasChange("notification_type") {
+			input.NotificationType = awstypes.NotificationType(d.Get("notification_type").(string))
+		}
 
-	if d.HasChange("subscriber") {
-		input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
-	}
+		if d.HasChange("subscriber") {
+			input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
+		}
 
-	_, err = conn.UpdateBudgetAction(ctx, input)
+		_, err = conn.UpdateBudgetAction(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBudgetActionRead(ctx, d, meta)...)
