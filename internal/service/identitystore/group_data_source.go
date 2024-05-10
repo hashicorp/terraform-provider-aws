@@ -76,7 +76,7 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,7 +187,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		d.SetId(aws.ToString(group.GroupId))
 		d.Set(names.AttrDescription, group.Description)
-		d.Set("display_name", group.DisplayName)
+		d.Set(names.AttrDisplayName, group.DisplayName)
 		d.Set("group_id", group.GroupId)
 
 		if err := d.Set("external_ids", flattenExternalIds(group.ExternalIds)); err != nil {
@@ -236,7 +236,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.ToString(group.GroupId))
 
 	d.Set(names.AttrDescription, group.Description)
-	d.Set("display_name", group.DisplayName)
+	d.Set(names.AttrDisplayName, group.DisplayName)
 	d.Set("group_id", group.GroupId)
 
 	if err := d.Set("external_ids", flattenExternalIds(group.ExternalIds)); err != nil {

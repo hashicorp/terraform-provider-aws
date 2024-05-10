@@ -113,7 +113,7 @@ func DataSourceUser() *schema.Resource {
 				},
 				ConflictsWith: []string{names.AttrFilter, "user_id"},
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -327,7 +327,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		user := results[0]
 
 		d.SetId(aws.ToString(user.UserId))
-		d.Set("display_name", user.DisplayName)
+		d.Set(names.AttrDisplayName, user.DisplayName)
 		d.Set("identity_store_id", user.IdentityStoreId)
 		d.Set("locale", user.Locale)
 		d.Set("nickname", user.NickName)
@@ -405,7 +405,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.ToString(user.UserId))
 
-	d.Set("display_name", user.DisplayName)
+	d.Set(names.AttrDisplayName, user.DisplayName)
 	d.Set("identity_store_id", user.IdentityStoreId)
 	d.Set("locale", user.Locale)
 	d.Set("nickname", user.NickName)
