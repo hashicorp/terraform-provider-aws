@@ -68,7 +68,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -588,7 +588,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
-			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier:      aws.String(d.Id()),
 		}
 

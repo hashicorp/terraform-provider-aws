@@ -51,7 +51,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -160,7 +160,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  0,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -206,7 +206,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		DBInstanceIdentifier:    aws.String(instanceID),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
-		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
 	}
 
@@ -288,7 +288,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
-	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("storage_type", db.StorageType)
 
@@ -318,7 +318,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &neptune.ModifyDBInstanceInput{
-			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:     aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
