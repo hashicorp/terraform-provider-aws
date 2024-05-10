@@ -165,7 +165,7 @@ resource "aws_amplify_app" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) Name for an Amplify app.
-* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
+* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write api access with at least maintainer role access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
 * `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. An `auto_branch_creation_config` block is documented below.
 * `auto_branch_creation_patterns` - (Optional) Automated branch creation glob patterns for an Amplify app.
 * `basic_auth_credentials` - (Optional) Credentials for basic authorization for an Amplify app.
