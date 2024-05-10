@@ -43,7 +43,7 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF IPSet", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Regional IPSet", err))
 	}
 
 	d.SetId(aws.ToString(output.IPSetId))

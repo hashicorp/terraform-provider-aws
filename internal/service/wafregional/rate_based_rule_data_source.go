@@ -43,7 +43,7 @@ func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Rate Based Rule", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Regional Rate Based Rule", err))
 	}
 
 	d.SetId(aws.ToString(output.RuleId))
