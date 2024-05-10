@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -17,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -301,21 +300,18 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetRule(ctx, &waf.GetRuleInput{
-				RuleId: aws.String(rs.Primary.ID),
-			})
 
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+			_, err := tfwaf.FindRuleByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading WAF Rule (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if resp != nil && resp.Rule != nil {
-				return fmt.Errorf("WAF Rule (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("WAF Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -329,25 +325,17 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *awstypes.Rule) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Rule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetRule(ctx, &waf.GetRuleInput{
-			RuleId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindRuleByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.Rule.RuleId == rs.Primary.ID {
-			*v = *resp.Rule
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Rule (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -512,7 +500,7 @@ resource "aws_waf_rule" "wafrule" {
   }
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -541,8 +529,8 @@ resource "aws_waf_rule" "wafrule" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

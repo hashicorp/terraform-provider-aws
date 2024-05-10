@@ -11,6 +11,7 @@ var (
 	ResourceRateBasedRule   = resourceRateBasedRule
 	ResourceRegexMatchSet   = resourceRegexMatchSet
 	ResourceRegexPatternSet = resourceRegexPatternSet
+	ResourceRule            = resourceRule
 	ResourceRuleGroup       = resourceRuleGroup
 	ResourceWebACL          = resourceWebACL
 
@@ -21,6 +22,7 @@ var (
 	FindRateBasedRuleByID   = findRateBasedRuleByID
 	FindRegexMatchSetByID   = findRegexMatchSetByID
 	FindRegexPatternSetByID = findRegexPatternSetByID
+	FindRuleByID            = findRuleByID
 	FindRuleGroupByID       = findRuleGroupByID
 	FindWebACLByID          = findWebACLByID
 	FlattenFieldToMatch     = flattenFieldToMatch

@@ -226,7 +226,7 @@ func updateRateBasedRule(ctx context.Context, conn *waf.Client, id string, oldP,
 	input := &waf.UpdateRateBasedRuleInput{
 		RateLimit: aws.Int64(int64(rateLimit.(int))),
 		RuleId:    aws.String(id),
-		Updates:   DiffRulePredicates(oldP, newP),
+		Updates:   diffRulePredicates(oldP, newP),
 	}
 
 	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {

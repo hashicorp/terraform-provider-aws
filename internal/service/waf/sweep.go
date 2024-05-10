@@ -677,7 +677,7 @@ func sweepRules(region string) error {
 		}
 
 		for _, rule := range page.Rules {
-			r := ResourceRule()
+			r := resourceRule()
 			d := r.Data(nil)
 
 			id := aws.ToString(rule.RuleId)

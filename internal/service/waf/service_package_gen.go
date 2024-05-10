@@ -85,7 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Regex Pattern Set",
 		},
 		{
-			Factory:  ResourceRule,
+			Factory:  resourceRule,
 			TypeName: "aws_waf_rule",
 			Name:     "Rule",
 			Tags: &types.ServicePackageResourceTags{
