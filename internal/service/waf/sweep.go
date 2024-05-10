@@ -827,7 +827,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		}
 
 		for _, sqlInjectionMatchSet := range page.SqlInjectionMatchSets {
-			r := ResourceSQLInjectionMatchSet()
+			r := resourceSQLInjectionMatchSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(sqlInjectionMatchSet.SqlInjectionMatchSetId)

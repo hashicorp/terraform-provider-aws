@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -110,7 +108,7 @@ func TestAccWAFSQLInjectionMatchSet_disappears(t *testing.T) {
 				Config: testAccSQLInjectionMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &v),
-					testAccCheckSQLInjectionMatchSetDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceSQLInjectionMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -190,47 +188,6 @@ func TestAccWAFSQLInjectionMatchSet_noTuples(t *testing.T) {
 	})
 }
 
-func testAccCheckSQLInjectionMatchSetDisappears(ctx context.Context, v *awstypes.SqlInjectionMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-
-		wr := tfwaf.NewRetryer(conn)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateSqlInjectionMatchSetInput{
-				ChangeToken:            token,
-				SqlInjectionMatchSetId: v.SqlInjectionMatchSetId,
-			}
-
-			for _, sqlInjectionMatchTuple := range v.SqlInjectionMatchTuples {
-				sqlInjectionMatchTupleUpdate := awstypes.SqlInjectionMatchSetUpdate{
-					Action: awstypes.ChangeActionDelete,
-					SqlInjectionMatchTuple: &awstypes.SqlInjectionMatchTuple{
-						FieldToMatch:       sqlInjectionMatchTuple.FieldToMatch,
-						TextTransformation: sqlInjectionMatchTuple.TextTransformation,
-					},
-				}
-				req.Updates = append(req.Updates, sqlInjectionMatchTupleUpdate)
-			}
-			return conn.UpdateSqlInjectionMatchSet(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error updating SqlInjectionMatchSet: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteSqlInjectionMatchSetInput{
-				ChangeToken:            token,
-				SqlInjectionMatchSetId: v.SqlInjectionMatchSetId,
-			}
-			return conn.DeleteSqlInjectionMatchSet(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting SqlInjectionMatchSet: %s", err)
-		}
-		return nil
-	}
-}
-
 func testAccCheckSQLInjectionMatchSetExists(ctx context.Context, n string, v *awstypes.SqlInjectionMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -238,25 +195,17 @@ func testAccCheckSQLInjectionMatchSetExists(ctx context.Context, n string, v *aw
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF SqlInjectionMatchSet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetSqlInjectionMatchSet(ctx, &waf.GetSqlInjectionMatchSetInput{
-			SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindSQLInjectionMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.SqlInjectionMatchSet.SqlInjectionMatchSetId == rs.Primary.ID {
-			*v = *resp.SqlInjectionMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF SqlInjectionMatchSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -268,22 +217,18 @@ func testAccCheckSQLInjectionMatchSetDestroy(ctx context.Context) resource.TestC
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetSqlInjectionMatchSet(ctx, &waf.GetSqlInjectionMatchSetInput{
-				SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.SqlInjectionMatchSet.SqlInjectionMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF SqlInjectionMatchSet %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwaf.FindSQLInjectionMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the SqlInjectionMatchSet is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF SqlInjectionMatchSet %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -293,7 +238,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(ctx context.Context) resource.TestC
 func testAccSQLInjectionMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_sql_injection_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   sql_injection_match_tuples {
     text_transformation = "URL_DECODE"
@@ -309,7 +254,7 @@ resource "aws_waf_sql_injection_match_set" "test" {
 func testAccSQLInjectionMatchSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_sql_injection_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   sql_injection_match_tuples {
     text_transformation = "URL_DECODE"
@@ -325,7 +270,7 @@ resource "aws_waf_sql_injection_match_set" "test" {
 func testAccSQLInjectionMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_sql_injection_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   sql_injection_match_tuples {
     text_transformation = "NONE"
@@ -341,7 +286,7 @@ resource "aws_waf_sql_injection_match_set" "test" {
 func testAccSQLInjectionMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_sql_injection_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }

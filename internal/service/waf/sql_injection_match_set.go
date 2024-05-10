@@ -5,26 +5,30 @@ package waf
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_waf_sql_injection_match_set")
-func ResourceSQLInjectionMatchSet() *schema.Resource {
+// @SDKResource("aws_waf_sql_injection_match_set", name="SqlInjectionMatchSet")
+func resourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSQLInjectionMatchSetCreate,
 		ReadWithoutTimeout:   resourceSQLInjectionMatchSetRead,
 		UpdateWithoutTimeout: resourceSQLInjectionMatchSetUpdate,
 		DeleteWithoutTimeout: resourceSQLInjectionMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -72,22 +76,21 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get(names.AttrName).(string))
-
-	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		params := &waf.CreateSqlInjectionMatchSetInput{
+	name := d.Get(names.AttrName).(string)
+	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.CreateSqlInjectionMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get(names.AttrName).(string)),
+			Name:        aws.String(name),
 		}
 
-		return conn.CreateSqlInjectionMatchSet(ctx, params)
+		return conn.CreateSqlInjectionMatchSet(ctx, input)
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SqlInjectionMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF SqlInjectionMatchSet (%s): %s", name, err)
 	}
-	resp := out.(*waf.CreateSqlInjectionMatchSetOutput)
-	d.SetId(aws.ToString(resp.SqlInjectionMatchSet.SqlInjectionMatchSetId))
+
+	d.SetId(aws.ToString(output.(*waf.CreateSqlInjectionMatchSetOutput).SqlInjectionMatchSet.SqlInjectionMatchSetId))
 
 	return append(diags, resourceSQLInjectionMatchSetUpdate(ctx, d, meta)...)
 }
@@ -95,25 +98,21 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
-	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get(names.AttrName).(string))
-	params := &waf.GetSqlInjectionMatchSetInput{
-		SqlInjectionMatchSetId: aws.String(d.Id()),
+
+	sqlInjectionMatchSet, err := findSQLInjectionMatchSetByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAF SqlInjectionMatchSet (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.GetSqlInjectionMatchSet(ctx, params)
 	if err != nil {
-		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "reading WAF SQL Injection Match Set (%s): %s", d.Get(names.AttrName).(string), err)
+		return diag.Errorf("reading WAF SqlInjectionMatchSet (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, resp.SqlInjectionMatchSet.Name)
-
-	if err := d.Set("sql_injection_match_tuples", flattenSQLInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
+	d.Set(names.AttrName, sqlInjectionMatchSet.Name)
+	if err := d.Set("sql_injection_match_tuples", flattenSQLInjectionMatchTuples(sqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sql_injection_match_tuples: %s", err)
 	}
 
@@ -127,10 +126,8 @@ func resourceSQLInjectionMatchSetUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("sql_injection_match_tuples") {
 		o, n := d.GetChange("sql_injection_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateSQLInjectionMatchSetResource(ctx, d.Id(), oldT, newT, conn)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SqlInjectionMatchSet: %s", err)
+		if err := updateSQLInjectionMatchSet(ctx, conn, d.Id(), oldT, newT); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -141,50 +138,75 @@ func resourceSQLInjectionMatchSetDelete(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	oldTuples := d.Get("sql_injection_match_tuples").(*schema.Set).List()
-
-	if len(oldTuples) > 0 {
+	if oldTuples := d.Get("sql_injection_match_tuples").(*schema.Set).List(); len(oldTuples) > 0 {
 		noTuples := []interface{}{}
-		err := updateSQLInjectionMatchSetResource(ctx, d.Id(), oldTuples, noTuples, conn)
-		if err != nil {
-			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-				return sdkdiag.AppendErrorf(diags, "deleting SqlInjectionMatchSet: %s", err)
-			}
+		if err := updateSQLInjectionMatchSet(ctx, conn, d.Id(), oldTuples, noTuples); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.DeleteSqlInjectionMatchSetInput{
+	log.Printf("[INFO] Deleting WAF SqlInjectionMatchSet: %s", d.Id())
+	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteSqlInjectionMatchSet(ctx, req)
+		return conn.DeleteSqlInjectionMatchSet(ctx, input)
 	})
+
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SqlInjectionMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF SqlInjectionMatchSet (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func updateSQLInjectionMatchSetResource(ctx context.Context, id string, oldT, newT []interface{}, conn *waf.Client) error {
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.UpdateSqlInjectionMatchSetInput{
+func findSQLInjectionMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.SqlInjectionMatchSet, error) {
+	input := &waf.GetSqlInjectionMatchSetInput{
+		SqlInjectionMatchSetId: aws.String(id),
+	}
+
+	output, err := conn.GetSqlInjectionMatchSet(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SqlInjectionMatchSet == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SqlInjectionMatchSet, nil
+}
+
+func updateSQLInjectionMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
+	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(id),
 			Updates:                diffSQLInjectionMatchTuples(oldT, newT),
 		}
 
-		log.Printf("[INFO] Updating SqlInjectionMatchSet: %s", id)
-		return conn.UpdateSqlInjectionMatchSet(ctx, req)
+		return conn.UpdateSqlInjectionMatchSet(ctx, input)
 	})
-	return err
+
+	if err != nil {
+		return fmt.Errorf("updating WAF SqlInjectionMatchSet (%s): %w", id, err)
+	}
+
+	return nil
 }
 
 func flattenSQLInjectionMatchTuples(ts []awstypes.SqlInjectionMatchTuple) []interface{} {
