@@ -21,7 +21,7 @@ func DataSourceDistributionConfigurations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributionConfigurationsRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -76,7 +76,7 @@ func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.Res
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("names", names)
 
 	return diags

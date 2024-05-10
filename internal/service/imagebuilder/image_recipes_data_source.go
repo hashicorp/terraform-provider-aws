@@ -22,7 +22,7 @@ func DataSourceImageRecipes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRecipesRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -86,7 +86,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("names", names)
 
 	return diags
