@@ -1265,3 +1265,13 @@ rules:
       - pattern: '"session"'
     severity: ERROR
     fix: "names.AttrSession"
+  - id: literal-hosted_zone_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrHostedZoneID` for the string literal "hosted_zone_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"hosted_zone_id"'
+    severity: ERROR
+    fix: "names.AttrHostedZoneID"
