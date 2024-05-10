@@ -132,7 +132,7 @@ func DataSourceImagePipeline() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
