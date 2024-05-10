@@ -58,7 +58,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -91,7 +91,7 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -145,7 +145,7 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName, 10485760),
@@ -183,7 +183,7 @@ func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_enforce(rName, true),
@@ -223,7 +223,7 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "AUTO"),
@@ -239,7 +239,7 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_basic(rName),
@@ -278,7 +278,7 @@ func TestAccAthenaWorkGroup_configurationExecutionRole(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -308,7 +308,7 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName, true),
@@ -348,7 +348,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -382,7 +382,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption2),
@@ -425,7 +425,7 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocation(rName, rOutputLocation2),
@@ -465,7 +465,7 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_basic(rName),
@@ -509,7 +509,7 @@ func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation2),
@@ -549,7 +549,7 @@ func TestAccAthenaWorkGroup_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_description(rName, rDescriptionUpdate),
@@ -585,7 +585,7 @@ func TestAccAthenaWorkGroup_state(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_state(rName, string(types.WorkGroupStateEnabled)),
@@ -632,7 +632,7 @@ func TestAccAthenaWorkGroup_forceDestroy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -662,7 +662,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccWorkGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),

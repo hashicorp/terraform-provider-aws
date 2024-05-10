@@ -156,7 +156,7 @@ func resourceWorkGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -251,7 +251,7 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, wg.Description)
-	d.Set("force_destroy", d.Get("force_destroy"))
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy))
 	d.Set(names.AttrName, wg.Name)
 	d.Set(names.AttrState, wg.State)
 
@@ -297,7 +297,7 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		WorkGroup: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
 

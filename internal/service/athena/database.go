@@ -91,7 +91,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -187,7 +187,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		queryString += " cascade"
 	}
 	queryString += ";"
