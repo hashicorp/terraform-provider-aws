@@ -99,7 +99,7 @@ func ResourceStack() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -275,7 +275,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -342,7 +342,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, stack.Arn)
 	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, stack.Description)
-	d.Set("display_name", stack.DisplayName)
+	d.Set(names.AttrDisplayName, stack.DisplayName)
 	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
 	}
@@ -384,8 +384,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("display_name") {
-			input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChange(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
 		if d.HasChange("feedback_url") {
