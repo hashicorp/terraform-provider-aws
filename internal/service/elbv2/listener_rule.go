@@ -76,7 +76,7 @@ func ResourceListenerRule() *schema.Resource {
 				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -104,7 +104,7 @@ func ResourceListenerRule() *schema.Resource {
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc:      diffSuppressMissingForward("action"),
+							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
 							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -483,7 +483,7 @@ func ResourceListenerRule() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			validateListenerActionsCustomDiff("action"),
+			validateListenerActionsCustomDiff(names.AttrAction),
 		),
 	}
 }
@@ -513,7 +513,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsInV2(ctx),
 	}
 
-	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 	if diags.HasError() {
 		return diags
 	}
@@ -615,7 +615,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	if err := d.Set("action", flattenLbListenerActions(d, "action", rule.Actions)); err != nil {
+	if err := d.Set(names.AttrAction, flattenLbListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 
@@ -706,8 +706,8 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			RuleArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}
