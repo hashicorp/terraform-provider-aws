@@ -92,7 +92,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
@@ -192,7 +192,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		timeout = 1 * time.Minute
 	)
 	_, err := tfresource.RetryWhenIsA[*awstypes.WAFReferencedItemException](ctx, timeout, func() (interface{}, error) {
-		return NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		return newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &waf.DeleteRuleInput{
 				ChangeToken: token,
 				RuleId:      aws.String(d.Id()),
@@ -239,7 +239,7 @@ func findRuleByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.R
 }
 
 func updateRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []interface{}) error {
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(id),

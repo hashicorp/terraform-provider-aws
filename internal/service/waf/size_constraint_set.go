@@ -90,7 +90,7 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateSizeConstraintSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -165,7 +165,7 @@ func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Deleting WAF Size Constraint Set: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(d.Id()),
@@ -211,7 +211,7 @@ func findSizeConstraintSetByID(ctx context.Context, conn *waf.Client, id string)
 }
 
 func updateSizeConstraintSet(ctx context.Context, conn *waf.Client, id string, oldS, newS []interface{}) error {
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(id),

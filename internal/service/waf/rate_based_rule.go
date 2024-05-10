@@ -107,7 +107,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:       getTagsIn(ctx),
 	}
 
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input.ChangeToken = token
 
 		return conn.CreateRateBasedRule(ctx, input)
@@ -202,7 +202,7 @@ func resourceRateBasedRuleDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Deleting WAF Rate Based Rule: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteRateBasedRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(d.Id()),
@@ -229,7 +229,7 @@ func updateRateBasedRule(ctx context.Context, conn *waf.Client, id string, oldP,
 		Updates:   diffRulePredicates(oldP, newP),
 	}
 
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input.ChangeToken = token
 
 		return conn.UpdateRateBasedRule(ctx, input)

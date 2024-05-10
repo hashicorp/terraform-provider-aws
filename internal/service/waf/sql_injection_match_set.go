@@ -77,7 +77,7 @@ func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateSqlInjectionMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -146,7 +146,7 @@ func resourceSQLInjectionMatchSetDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Deleting WAF SqlInjectionMatchSet: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(d.Id()),
@@ -192,7 +192,7 @@ func findSQLInjectionMatchSetByID(ctx context.Context, conn *waf.Client, id stri
 }
 
 func updateSQLInjectionMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(id),

@@ -85,7 +85,7 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateXssMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -166,7 +166,7 @@ func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting WAF XSS Match Set: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(d.Id()),
@@ -212,7 +212,7 @@ func findXSSMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*aws
 }
 
 func updateXSSMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateXssMatchSetInput{
 			ChangeToken:   token,
 			Updates:       diffXSSMatchSetTuples(oldT, newT),

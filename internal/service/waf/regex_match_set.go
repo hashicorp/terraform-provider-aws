@@ -93,7 +93,7 @@ func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRegexMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -169,7 +169,7 @@ func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Deleting WAF Regex Match Set: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(d.Id()),
@@ -215,7 +215,7 @@ func findRegexMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*a
 }
 
 func updateRegexMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(id),

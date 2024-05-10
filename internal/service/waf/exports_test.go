@@ -18,7 +18,6 @@ var (
 	ResourceWebACL               = resourceWebACL
 	ResourceXSSMatchSet          = resourceXSSMatchSet
 
-	DiffIPSetDescriptors         = diffIPSetDescriptors
 	FindByteMatchSetByID         = findByteMatchSetByID
 	FindGeoMatchSetByID          = findGeoMatchSetByID
 	FindIPSetByID                = findIPSetByID

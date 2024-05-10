@@ -167,7 +167,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateWebACLInput{
 			ChangeToken:   token,
 			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -204,7 +204,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if rules := d.Get("rules").(*schema.Set).List(); len(rules) > 0 {
-		_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -280,7 +280,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o, n := d.GetChange("rules")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -329,7 +329,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// First, need to delete all rules.
 	if rules := d.Get("rules").(*schema.Set).List(); len(rules) > 0 {
-		_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -345,7 +345,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),

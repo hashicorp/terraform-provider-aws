@@ -87,7 +87,7 @@ func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateByteMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -156,7 +156,7 @@ func resourceByteMatchSetDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[INFO] Deleting WAF ByteMatchSet: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteByteMatchSetInput{
 			ByteMatchSetId: aws.String(d.Id()),
 			ChangeToken:    token,
@@ -202,7 +202,7 @@ func findByteMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*aw
 }
 
 func updateByteMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateByteMatchSetInput{
 			ByteMatchSetId: aws.String(id),
 			ChangeToken:    token,

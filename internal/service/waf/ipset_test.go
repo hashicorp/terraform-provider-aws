@@ -7,12 +7,10 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -244,116 +242,6 @@ func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestDiffIPSetDescriptors(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Old             []interface{}
-		New             []interface{}
-		ExpectedUpdates [][]awstypes.IPSetUpdate
-	}{
-		{
-			// Change
-			Old: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.7.0/24"},
-			},
-			New: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.8.0/24"},
-			},
-			ExpectedUpdates: [][]awstypes.IPSetUpdate{
-				{
-					{
-						Action: awstypes.ChangeActionDelete,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("192.0.7.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("192.0.8.0/24"),
-						},
-					},
-				},
-			},
-		},
-		{
-			// Fresh IPSet
-			Old: []interface{}{},
-			New: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.1.0/24"},
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.2.0/24"},
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.3.0/24"},
-			},
-			ExpectedUpdates: [][]awstypes.IPSetUpdate{
-				{
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("10.0.1.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("10.0.2.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("10.0.3.0/24"),
-						},
-					},
-				},
-			},
-		},
-		{
-			// Deletion
-			Old: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.7.0/24"},
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.8.0/24"},
-			},
-			New: []interface{}{},
-			ExpectedUpdates: [][]awstypes.IPSetUpdate{
-				{
-					{
-						Action: awstypes.ChangeActionDelete,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("192.0.7.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionDelete,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorTypeIpv4,
-							Value: aws.String("192.0.8.0/24"),
-						},
-					},
-				},
-			},
-		},
-	}
-	for i, tc := range testCases {
-		tc := tc
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			t.Parallel()
-
-			updates := tfwaf.DiffIPSetDescriptors(tc.Old, tc.New)
-			if !reflect.DeepEqual(updates, tc.ExpectedUpdates) {
-				t.Fatalf("IPSet updates don't match.\nGiven: %v\nExpected: %v",
-					updates, tc.ExpectedUpdates)
-			}
-		})
-	}
 }
 
 func TestAccWAFIPSet_ipv6(t *testing.T) {

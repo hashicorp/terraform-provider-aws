@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -124,7 +122,7 @@ func TestAccWAFRuleGroup_disappears(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
-					testAccCheckRuleGroupDisappears(ctx, &group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -304,52 +302,6 @@ func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckRuleGroupDisappears(ctx context.Context, group *awstypes.RuleGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-
-		rResp, err := conn.ListActivatedRulesInRuleGroup(ctx, &waf.ListActivatedRulesInRuleGroupInput{
-			RuleGroupId: group.RuleGroupId,
-		})
-		if err != nil {
-			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.ToString(group.RuleGroupId), err)
-		}
-
-		wr := tfwaf.NewRetryer(conn)
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateRuleGroupInput{
-				ChangeToken: token,
-				RuleGroupId: group.RuleGroupId,
-			}
-
-			for _, rule := range rResp.ActivatedRules {
-				rule := awstypes.RuleGroupUpdate{
-					Action:        awstypes.ChangeActionDelete,
-					ActivatedRule: &rule,
-				}
-				req.Updates = append(req.Updates, rule)
-			}
-
-			return conn.UpdateRuleGroup(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteRuleGroupInput{
-				ChangeToken: token,
-				RuleGroupId: group.RuleGroupId,
-			}
-			return conn.DeleteRuleGroup(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF Rule Group: %s", err)
-		}
-		return nil
-	}
 }
 
 func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {

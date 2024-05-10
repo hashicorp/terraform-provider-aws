@@ -73,7 +73,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateIPSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -165,7 +165,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting WAF IPSet: %s", d.Id())
-	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.DeleteIPSetInput{
 			ChangeToken: token,
 			IPSetId:     aws.String(d.Id()),
@@ -212,7 +212,7 @@ func findIPSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.
 
 func updateIPSet(ctx context.Context, conn *waf.Client, id string, oldD, newD []interface{}) error {
 	for _, ipSetUpdates := range diffIPSetDescriptors(oldD, newD) {
-		_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &waf.UpdateIPSetInput{
 				ChangeToken: token,
 				IPSetId:     aws.String(id),
