@@ -972,7 +972,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
-													"mode": {
+													names.AttrMode: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -3761,7 +3761,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["min_segment_length"].(int); ok && v != 0 {
 		out.MinSegmentLength = aws.Int32(int32(v))
 	}
-	if v, ok := m["mode"].(string); ok && v != "" {
+	if v, ok := m[names.AttrMode].(string); ok && v != "" {
 		out.Mode = types.HlsMode(v)
 	}
 	if v, ok := m["output_selection"].(string); ok && v != "" {
@@ -6306,7 +6306,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 		"manifest_compression":         string(in.ManifestCompression),
 		"manifest_duration_format":     string(in.ManifestDurationFormat),
 		"min_segment_length":           int(aws.ToInt32(in.MinSegmentLength)),
-		"mode":                         string(in.Mode),
+		names.AttrMode:                 string(in.Mode),
 		"output_selection":             string(in.OutputSelection),
 		"program_date_time":            string(in.ProgramDateTime),
 		"program_date_time_clock":      string(in.ProgramDateTimeClock),
