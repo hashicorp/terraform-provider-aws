@@ -166,7 +166,7 @@ func sweepKeySigningKeys(region string) error {
 				r := ResourceKeySigningKey()
 				d := r.Data(nil)
 				d.SetId(id)
-				d.Set("hosted_zone_id", id)
+				d.Set(names.AttrHostedZoneID, id)
 				d.Set(names.AttrName, dns.Name)
 				d.Set(names.AttrStatus, dns.Status)
 
