@@ -185,7 +185,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -406,7 +406,7 @@ func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []*ecs.InferenceAcce
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		iao := &ecs.InferenceAcceleratorOverride{
-			DeviceName: aws.String(tfMap["device_name"].(string)),
+			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
 			DeviceType: aws.String(tfMap["device_type"].(string)),
 		}
 		apiObject = append(apiObject, iao)
