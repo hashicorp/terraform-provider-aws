@@ -67,7 +67,7 @@ func resourceSamplingRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 10),
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 9999),
@@ -123,7 +123,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		FixedRate:     d.Get("fixed_rate").(float64),
 		Host:          aws.String(d.Get("host").(string)),
 		HTTPMethod:    aws.String(d.Get("http_method").(string)),
-		Priority:      aws.Int32(int32(d.Get("priority").(int))),
+		Priority:      aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 		ReservoirSize: int32(d.Get("reservoir_size").(int)),
 		ResourceARN:   aws.String(d.Get(names.AttrResourceARN).(string)),
 		RuleName:      aws.String(name),
@@ -174,7 +174,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("fixed_rate", samplingRule.FixedRate)
 	d.Set("host", samplingRule.Host)
 	d.Set("http_method", samplingRule.HTTPMethod)
-	d.Set("priority", samplingRule.Priority)
+	d.Set(names.AttrPriority, samplingRule.Priority)
 	d.Set("reservoir_size", samplingRule.ReservoirSize)
 	d.Set(names.AttrResourceARN, samplingRule.ResourceARN)
 	d.Set("rule_name", samplingRule.RuleName)
@@ -195,7 +195,7 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			FixedRate:     aws.Float64(d.Get("fixed_rate").(float64)),
 			Host:          aws.String(d.Get("host").(string)),
 			HTTPMethod:    aws.String(d.Get("http_method").(string)),
-			Priority:      aws.Int32(int32(d.Get("priority").(int))),
+			Priority:      aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 			ReservoirSize: aws.Int32(int32(d.Get("reservoir_size").(int))),
 			ResourceARN:   aws.String(d.Get(names.AttrResourceARN).(string)),
 			RuleName:      aws.String(d.Id()),
