@@ -6,14 +6,17 @@ package wafregional
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func RegisterSweepers() {
@@ -67,7 +70,7 @@ func sweepRateBasedRules(region string) error {
 	for {
 		output, err := conn.ListRateBasedRules(ctx, input)
 
-		if awsv1.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Rate-Based Rule sweep for %s: %s", region, err)
 			return nil
 		}
@@ -183,7 +186,7 @@ func sweepRegexMatchSets(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAF Regional RegexMatchSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -236,7 +239,7 @@ func sweepRegexPatternSets(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAF Regional RegexPatternSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -262,36 +265,70 @@ func sweepRuleGroups(region string) error {
 	}
 	conn := client.WAFRegionalClient(ctx)
 
-	req := &wafregional.ListRuleGroupsInput{}
-	resp, err := conn.ListRuleGroups(ctx, req)
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, err)
-			return nil
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
+	input := &wafregional.ListRuleGroupsInput{}
+
+	err = listRuleGroupsPages(ctx, conn, input, func(page *wafregional.ListRuleGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing WAF Regional Rule Groups: %s", err)
+
+		for _, ruleGroup := range page.RuleGroups {
+			r := resourceRuleGroup()
+			d := r.Data(nil)
+
+			id := aws.ToString(ruleGroup.RuleGroupId)
+			d.SetId(id)
+
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in activated_rule attribute
+				err := sdk.ReadResource(ctx, r, d, client)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF Regional Rule Group (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
+
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+
+				return nil
+			})
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Regional Rule Group for %s: %w", region, err))
 	}
 
-	if len(resp.RuleGroups) == 0 {
-		log.Print("[DEBUG] No AWS WAF Regional Rule Groups to sweep")
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regional Rule Groups: %w", err))
+	}
+
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regional Rule Group for %s: %w", region, err))
+	}
+
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	for _, group := range resp.RuleGroups {
-		rResp, err := conn.ListActivatedRulesInRuleGroup(ctx, &wafregional.ListActivatedRulesInRuleGroupInput{
-			RuleGroupId: group.RuleGroupId,
-		})
-		if err != nil {
-			return err
-		}
-		oldRules := FlattenActivatedRules(rResp.ActivatedRules)
-		err = DeleteRuleGroup(ctx, *group.RuleGroupId, oldRules, conn, region)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return errs.ErrorOrNil()
 }
 
 func sweepRules(region string) error {
@@ -307,7 +344,7 @@ func sweepRules(region string) error {
 	for {
 		output, err := conn.ListRules(ctx, input)
 
-		if awsv1.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Rule sweep for %s: %s", region, err)
 			return nil
 		}
@@ -400,7 +437,7 @@ func sweepWebACLs(region string) error {
 	for {
 		output, err := conn.ListWebACLs(ctx, input)
 
-		if awsv1.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Web ACL sweep for %s: %s", region, err)
 			return nil
 		}

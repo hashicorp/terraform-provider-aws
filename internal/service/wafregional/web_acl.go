@@ -252,7 +252,6 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  "webacl/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-
 	if err := d.Set("default_action", flattenAction(webACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}

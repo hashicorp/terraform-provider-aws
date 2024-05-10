@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -290,66 +288,55 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetRuleGroup(ctx, &wafregional.GetRuleGroupInput{
-				RuleGroupId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.RuleGroup.RuleGroupId == rs.Primary.ID {
-					return fmt.Errorf("WAF Regional Rule Group %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindRuleGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional Rule Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRuleGroupExists(ctx context.Context, n string, group *awstypes.RuleGroup) resource.TestCheckFunc {
+func testAccCheckRuleGroupExists(ctx context.Context, n string, v *awstypes.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Regional Rule Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetRuleGroup(ctx, &wafregional.GetRuleGroupInput{
-			RuleGroupId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindRuleGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.RuleGroup.RuleGroupId == rs.Primary.ID {
-			*group = *resp.RuleGroup
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Regional Rule Group (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
 func testAccRuleGroupConfig_basic(ruleName, groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "test" {
-  name        = "%[1]s"
-  metric_name = "%[1]s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_rule_group" "test" {
-  name        = "%[2]s"
-  metric_name = "%[2]s"
+  name        = %[2]q
+  metric_name = %[2]q
 
   activated_rule {
     action {
@@ -421,23 +408,23 @@ resource "aws_wafregional_rule_group" "test" {
 func testAccRuleGroupConfig_changeActivateds(ruleName1, ruleName2, ruleName3, groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "test" {
-  name        = "%[1]s"
-  metric_name = "%[1]s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_rule" "test2" {
-  name        = "%[2]s"
-  metric_name = "%[2]s"
+  name        = %[2]q
+  metric_name = %[2]q"
 }
 
 resource "aws_wafregional_rule" "test3" {
-  name        = "%[3]s"
-  metric_name = "%[3]s"
+  name        = %[3]q
+  metric_name = %[3]q"
 }
 
 resource "aws_wafregional_rule_group" "test" {
-  name        = "%[4]s"
-  metric_name = "%[4]s"
+  name        = %[4]q
+  metric_name = %[4]q
 
   activated_rule {
     action {
@@ -472,8 +459,8 @@ resource "aws_wafregional_rule_group" "test" {
 func testAccRuleGroupConfig_noActivateds(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule_group" "test" {
-  name        = "%[1]s"
-  metric_name = "%[1]s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 `, groupName)
 }

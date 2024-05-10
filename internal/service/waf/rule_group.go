@@ -134,13 +134,13 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	ruleGroup, err := findRuleGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] WAF ByteMatchSet (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF ByteMatchSet (%s): %s", d.Id(), err)
+		return diag.Errorf("reading WAF Rule Group (%s): %s", d.Id(), err)
 	}
 
 	var activatedRules []awstypes.ActivatedRule
@@ -215,7 +215,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
