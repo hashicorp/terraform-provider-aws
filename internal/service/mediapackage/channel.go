@@ -72,7 +72,7 @@ func ResourceChannel() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -208,7 +208,7 @@ func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
 		endpoint := map[string]interface{}{
 			names.AttrPassword: aws.ToString(e.Password),
 			names.AttrURL:      aws.ToString(e.Url),
-			"username":         aws.ToString(e.Username),
+			names.AttrUsername: aws.ToString(e.Username),
 		}
 
 		ingestEndpoints = append(ingestEndpoints, endpoint)
