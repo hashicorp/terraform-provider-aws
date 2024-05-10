@@ -60,7 +60,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -627,7 +627,7 @@ func expandPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	if v, ok := m["schedule"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.Schedules = expandSchedules(v)
 	}
-	if v, ok := m["action"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrAction].([]interface{}); ok && len(v) > 0 {
 		policyDetails.Actions = expandActions(v)
 	}
 	if v, ok := m["event_source"].([]interface{}); ok && len(v) > 0 {
@@ -647,7 +647,7 @@ func flattenPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interfa
 	result := make(map[string]interface{})
 	result["resource_types"] = flex.FlattenStringList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringList(policyDetails.ResourceLocations)
-	result["action"] = flattenActions(policyDetails.Actions)
+	result[names.AttrAction] = flattenActions(policyDetails.Actions)
 	result["event_source"] = flattenEventSource(policyDetails.EventSource)
 	result["schedule"] = flattenSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenTags(policyDetails.TargetTags)
