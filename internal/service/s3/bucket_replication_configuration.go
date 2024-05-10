@@ -196,7 +196,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -509,7 +509,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		// Support the empty filter block in terraform i.e. 'filter {}',
 		// which implies the replication rule does not require a specific filter,
 		// by expanding the "filter" array even if the first element is nil.
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			// XML schema V2
 			rule.Filter = expandReplicationRuleFilter(ctx, v)
 			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
@@ -889,7 +889,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenReplicationRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenReplicationRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {

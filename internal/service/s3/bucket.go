@@ -508,7 +508,7 @@ func resourceBucket() *schema.Resource {
 											},
 										},
 									},
-									"filter": {
+									names.AttrFilter: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
@@ -2469,7 +2469,7 @@ func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.
 			rule.SourceSelectionCriteria = expandBucketSourceSelectionCriteria(v)
 		}
 
-		if v, ok := tfRuleMap["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfRuleMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			// XML schema V2.
 			tfFilterMap := v[0].(map[string]interface{})
 			var filter types.ReplicationRuleFilter
@@ -2642,7 +2642,7 @@ func flattenBucketReplicationRules(ctx context.Context, rules []types.Replicatio
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenBucketReplicationRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenBucketReplicationRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {

@@ -122,7 +122,7 @@ func resourceBucketInventory() *schema.Resource {
 				Default:  true,
 				Optional: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -190,7 +190,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		inventoryConfiguration.Filter = expandInventoryFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -274,7 +274,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 	d.Set(names.AttrEnabled, ic.IsEnabled)
-	if err := d.Set("filter", flattenInventoryFilter(ic.Filter)); err != nil {
+	if err := d.Set(names.AttrFilter, flattenInventoryFilter(ic.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set("included_object_versions", ic.IncludedObjectVersions)

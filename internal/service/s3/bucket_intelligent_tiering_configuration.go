@@ -42,7 +42,7 @@ func resourceBucketIntelligentTieringConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -105,7 +105,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		Status: types.IntelligentTieringStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		intelligentTieringConfiguration.Filter = expandIntelligentTieringFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -170,11 +170,11 @@ func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *s
 
 	d.Set(names.AttrBucket, bucket)
 	if output.Filter != nil {
-		if err := d.Set("filter", []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
+		if err := d.Set(names.AttrFilter, []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 		}
 	} else {
-		d.Set("filter", nil)
+		d.Set(names.AttrFilter, nil)
 	}
 	d.Set(names.AttrName, output.Id)
 	d.Set(names.AttrStatus, output.Status)

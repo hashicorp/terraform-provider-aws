@@ -101,7 +101,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							// If neither the filter block nor the prefix parameter in the rule are specified,
@@ -565,7 +565,7 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 			result.Expiration = expandLifecycleExpiration(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			result.Filter = expandLifecycleRuleFilter(ctx, v)
 		}
 
@@ -859,7 +859,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenLifecycleRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {
