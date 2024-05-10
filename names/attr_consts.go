@@ -46,6 +46,7 @@ const (
 	AttrOwnerID                    = "owner_id"
 	AttrParameters                 = "parameters"
 	AttrPassword                   = "password"
+	AttrPath                       = "path"
 	AttrPolicy                     = "policy"
 	AttrPort                       = "port"
 	AttrPreferredMaintenanceWindow = "preferred_maintenance_window"
