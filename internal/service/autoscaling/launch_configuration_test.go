@@ -286,9 +286,9 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
-						"encrypted":   "true",
-						"volume_size": "11",
-						"volume_type": "gp2",
+						names.AttrEncrypted: "true",
+						"volume_size":       "11",
+						"volume_type":       "gp2",
 					}),
 				),
 			},
@@ -376,7 +376,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						"encrypted":          "true",
+						names.AttrEncrypted:  "true",
 						"throughput":         "150",
 						"volume_size":        "9",
 						"volume_type":        "gp3",
@@ -416,7 +416,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						"encrypted":          "true",
+						names.AttrEncrypted:  "true",
 						"volume_size":        "9",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -438,7 +438,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						"encrypted":          "true",
+						names.AttrEncrypted:  "true",
 						"volume_size":        "10",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),

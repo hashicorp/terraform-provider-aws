@@ -71,7 +71,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -241,7 +241,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -550,7 +550,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok && v {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -604,7 +604,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok && v {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -673,7 +673,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 
 		if v := apiObject.Ebs; v != nil {
 			if v := v.Encrypted; v != nil {
-				tfMap["encrypted"] = aws.ToBool(v)
+				tfMap[names.AttrEncrypted] = aws.ToBool(v)
 			}
 
 			if v := v.Iops; v != nil {
