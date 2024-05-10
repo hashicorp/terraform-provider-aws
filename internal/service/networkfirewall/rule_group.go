@@ -53,7 +53,7 @@ func ResourceRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"encryption_configuration": encryptionConfigurationSchema(),
+			names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -476,7 +476,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -524,7 +524,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, response.RuleGroupArn)
 	d.Set("capacity", response.Capacity)
 	d.Set(names.AttrDescription, response.Description)
-	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
+	d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(response.EncryptionConfiguration))
 	d.Set(names.AttrName, response.RuleGroupName)
 	if err := d.Set("rule_group", flattenRuleGroup(output.RuleGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule_group: %s", err)
@@ -542,9 +542,9 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "encryption_configuration", "rule_group", "rules", names.AttrType) {
+	if d.HasChanges(names.AttrDescription, names.AttrEncryptionConfiguration, "rule_group", "rules", names.AttrType) {
 		input := &networkfirewall.UpdateRuleGroupInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 			RuleGroupArn:            aws.String(d.Id()),
 			Type:                    aws.String(d.Get(names.AttrType).(string)),
 			UpdateToken:             aws.String(d.Get("update_token").(string)),
