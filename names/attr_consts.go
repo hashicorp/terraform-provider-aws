@@ -23,6 +23,7 @@ const (
 	AttrEndpoint                   = "endpoint"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
+	AttrHostedZoneID               = "hosted_zone_id"
 	AttrID                         = "id" // Should be explicitly declared only for Framework resources
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"
