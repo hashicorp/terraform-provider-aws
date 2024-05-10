@@ -78,6 +78,7 @@ const (
 	AttrTransitGatewayID           = "transit_gateway_id"
 	AttrType                       = "type"
 	AttrURL                        = "url"
+	AttrUsername                   = "username"
 	AttrVPCID                      = "vpc_id"
 	AttrVPCSecurityGroupIDs        = "vpc_security_group_ids"
 	AttrValue                      = "value"
