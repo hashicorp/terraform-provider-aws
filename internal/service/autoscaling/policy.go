@@ -293,7 +293,7 @@ func resourcePolicy() *schema.Resource {
 									},
 								},
 							},
-							"mode": {
+							names.AttrMode: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Default:          awstypes.PredictiveScalingModeForecastOnly,
@@ -888,7 +888,7 @@ func expandPredictiveScalingConfig(predictiveScalingConfigSlice []interface{}) *
 	predictiveScalingConfig := &awstypes.PredictiveScalingConfiguration{
 		MetricSpecifications:      expandPredictiveScalingMetricSpecifications(predictiveScalingConfigFlat["metric_specification"].([]interface{})),
 		MaxCapacityBreachBehavior: awstypes.PredictiveScalingMaxCapacityBreachBehavior(predictiveScalingConfigFlat["max_capacity_breach_behavior"].(string)),
-		Mode:                      awstypes.PredictiveScalingMode(predictiveScalingConfigFlat["mode"].(string)),
+		Mode:                      awstypes.PredictiveScalingMode(predictiveScalingConfigFlat[names.AttrMode].(string)),
 	}
 	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["max_capacity_buffer"].(string)).ValueInt32(); !null {
 		predictiveScalingConfig.MaxCapacityBuffer = aws.Int32(v)
@@ -1142,7 +1142,7 @@ func flattenPredictiveScalingConfig(predictiveScalingConfig *awstypes.Predictive
 	if predictiveScalingConfig.MetricSpecifications != nil && len(predictiveScalingConfig.MetricSpecifications) > 0 {
 		predictiveScalingConfigFlat["metric_specification"] = flattenPredictiveScalingMetricSpecifications(predictiveScalingConfig.MetricSpecifications)
 	}
-	predictiveScalingConfigFlat["mode"] = string(predictiveScalingConfig.Mode)
+	predictiveScalingConfigFlat[names.AttrMode] = string(predictiveScalingConfig.Mode)
 	if predictiveScalingConfig.SchedulingBufferTime != nil {
 		predictiveScalingConfigFlat["scheduling_buffer_time"] = strconv.FormatInt(int64(aws.ToInt32(predictiveScalingConfig.SchedulingBufferTime)), 10)
 	}
