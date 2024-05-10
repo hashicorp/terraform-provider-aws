@@ -260,7 +260,7 @@ func resourceServer() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -418,7 +418,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("url"); ok {
+	if v, ok := d.GetOk(names.AttrURL); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
 		}
@@ -546,9 +546,9 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
-		d.Set("url", output.IdentityProviderDetails.Url)
+		d.Set(names.AttrURL, output.IdentityProviderDetails.Url)
 	} else {
-		d.Set("url", "")
+		d.Set(names.AttrURL, "")
 	}
 	if err := d.Set("workflow_details", flattenWorkflowDetails(output.WorkflowDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
@@ -676,7 +676,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", "url") {
+		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", names.AttrURL) {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
@@ -695,7 +695,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				identityProviderDetails.SftpAuthenticationMethods = aws.String(attr.(string))
 			}
 
-			if attr, ok := d.GetOk("url"); ok {
+			if attr, ok := d.GetOk(names.AttrURL); ok {
 				identityProviderDetails.Url = aws.String(attr.(string))
 			}
 
