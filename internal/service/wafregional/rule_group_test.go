@@ -419,7 +419,7 @@ resource "aws_wafregional_rule" "test2" {
 
 resource "aws_wafregional_rule" "test3" {
   name        = %[3]q
-  metric_name = %[3]q"
+  metric_name = %[3]q
 }
 
 resource "aws_wafregional_rule_group" "test" {

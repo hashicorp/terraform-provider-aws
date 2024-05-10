@@ -441,7 +441,7 @@ resource "aws_waf_rule_group" "test" {
   metric_name = %[1]q
 
   tags = {
-    %[2]q =%[3]q
+    %[2]q = %[3]q
   }
 }
 `, gName, tag1Key, tag1Value)

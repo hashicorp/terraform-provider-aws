@@ -499,7 +499,7 @@ func testAccRateBasedRuleConfig_tags1(name, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
   name        = %[1]q
-  metric_name = %[1]q"
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = 2000
 
