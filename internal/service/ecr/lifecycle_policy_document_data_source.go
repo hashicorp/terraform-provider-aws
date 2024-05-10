@@ -52,7 +52,7 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
-						"priority": schema.Int64Attribute{
+						names.AttrPriority: schema.Int64Attribute{
 							Required: true,
 							Validators: []validator.Int64{
 								int64validator.AtLeast(1),
