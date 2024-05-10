@@ -251,7 +251,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[types.LaunchType](),
 							},
-							"network_configuration": {
+							names.AttrNetworkConfiguration: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -404,7 +404,7 @@ func targetParametersSchema() *schema.Schema {
 												},
 											},
 										},
-										"execution_role_arn": {
+										names.AttrExecutionRoleARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -1141,7 +1141,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 		apiObject.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -1289,7 +1289,7 @@ func expandECSTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 		apiObject.EphemeralStorage = expandECSEphemeralStorage(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -2133,7 +2133,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		tfMap["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		tfMap[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2228,7 +2228,7 @@ func flattenECSTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.ToString(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.InferenceAcceleratorOverrides; v != nil {
