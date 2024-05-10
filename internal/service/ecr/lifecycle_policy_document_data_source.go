@@ -60,7 +60,7 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"action": schema.ListNestedBlock{
+						names.AttrAction: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[lifecyclePolicyDocumentRuleAction](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
