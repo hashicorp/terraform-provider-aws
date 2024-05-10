@@ -357,7 +357,7 @@ func resourceBucket() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"mode": {
+												names.AttrMode: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
@@ -2905,7 +2905,7 @@ func expandBucketObjectLockConfiguration(l []interface{}) *types.ObjectLockConfi
 			if v, ok := tfMap["days"].(int); ok && v > 0 {
 				apiObject.Rule.DefaultRetention.Days = aws.Int32(int32(v))
 			}
-			if v, ok := tfMap["mode"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 				apiObject.Rule.DefaultRetention.Mode = types.ObjectLockRetentionMode(v)
 			}
 			if v, ok := tfMap["years"].(int); ok && v > 0 {
@@ -2931,9 +2931,9 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 		tfMap := map[string]interface{}{
 			"default_retention": []interface{}{
 				map[string]interface{}{
-					"days":  aws.ToInt32(apiObject.Days),
-					"mode":  apiObject.Mode,
-					"years": aws.ToInt32(apiObject.Years),
+					"days":         aws.ToInt32(apiObject.Days),
+					names.AttrMode: apiObject.Mode,
+					"years":        aws.ToInt32(apiObject.Years),
 				},
 			},
 		}
