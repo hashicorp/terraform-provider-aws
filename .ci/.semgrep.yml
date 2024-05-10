@@ -1425,3 +1425,13 @@ rules:
       - pattern: '"arns"'
     severity: ERROR
     fix: "names.AttrARNs"
+  - id: literal-username-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrUsername` for the string literal "username"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"username"'
+    severity: ERROR
+    fix: "names.AttrUsername"
