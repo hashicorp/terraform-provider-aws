@@ -62,7 +62,7 @@ func resourceUserPool() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.RecoveryOptionNameType_Values(), false),
 									},
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -1319,7 +1319,7 @@ func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *
 				opt.Name = aws.String(v.(string))
 			}
 
-			if v, ok := param["priority"]; ok {
+			if v, ok := param[names.AttrPriority]; ok {
 				opt.Priority = aws.Int64(int64(v.(int)))
 			}
 
@@ -1343,8 +1343,8 @@ func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider
 
 	for _, conf := range config.RecoveryMechanisms {
 		mech := map[string]interface{}{
-			names.AttrName: aws.StringValue(conf.Name),
-			"priority":     aws.Int64Value(conf.Priority),
+			names.AttrName:     aws.StringValue(conf.Name),
+			names.AttrPriority: aws.Int64Value(conf.Priority),
 		}
 		mechanisms = append(mechanisms, mech)
 	}
