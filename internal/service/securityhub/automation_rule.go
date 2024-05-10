@@ -268,7 +268,7 @@ func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"unit": schema.StringAttribute{
+							names.AttrUnit: schema.StringAttribute{
 								CustomType: fwtypes.StringEnumType[awstypes.DateRangeUnit](),
 								Required:   true,
 							},
