@@ -150,7 +150,7 @@ func resourceBucket() *schema.Resource {
 					},
 				},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -1556,7 +1556,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
-		if d.Get("force_destroy").(bool) {
+		if d.Get(names.AttrForceDestroy).(bool) {
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
 			var objectLockEnabled bool

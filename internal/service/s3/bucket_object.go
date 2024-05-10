@@ -119,7 +119,7 @@ func resourceBucketObject() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{names.AttrKMSKeyID},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -340,7 +340,7 @@ func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, met
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
 	}
