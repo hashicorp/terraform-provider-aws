@@ -34,7 +34,7 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrConfiguration),
-					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
