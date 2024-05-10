@@ -414,7 +414,7 @@ resource "aws_wafregional_rule" "test" {
 
 resource "aws_wafregional_rule" "test2" {
   name        = %[2]q
-  metric_name = %[2]q"
+  metric_name = %[2]q
 }
 
 resource "aws_wafregional_rule" "test3" {
