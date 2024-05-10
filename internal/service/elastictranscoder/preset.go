@@ -468,7 +468,7 @@ func ResourcePreset() *schema.Resource {
 								"ShrinkToFit",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -743,7 +743,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 			MaxWidth:         aws.String(p["max_width"].(string)),
 			Opacity:          aws.String(p["opacity"].(string)),
 			SizingPolicy:     aws.String(p["sizing_policy"].(string)),
-			Target:           aws.String(p["target"].(string)),
+			Target:           aws.String(p[names.AttrTarget].(string)),
 			VerticalAlign:    aws.String(p["vertical_align"].(string)),
 			VerticalOffset:   aws.String(p["vertical_offset"].(string)),
 		}
@@ -909,7 +909,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 			"max_width":         aws.StringValue(w.MaxWidth),
 			"opacity":           aws.StringValue(w.Opacity),
 			"sizing_policy":     aws.StringValue(w.SizingPolicy),
-			"target":            aws.StringValue(w.Target),
+			names.AttrTarget:    aws.StringValue(w.Target),
 			"vertical_align":    aws.StringValue(w.VerticalAlign),
 			"vertical_offset":   aws.StringValue(w.VerticalOffset),
 		}
