@@ -1102,7 +1102,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -1308,7 +1308,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -2072,7 +2072,7 @@ func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.R
 		DatabaseName:      aws.String(m[names.AttrDatabaseName].(string)),
 	}
 
-	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrBucketPrefix].(string); ok && v != "" {
 		properties.BucketPrefix = aws.String(v)
 	}
 
@@ -2158,7 +2158,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.
 		properties.AccountName = aws.String(v)
 	}
 
-	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrBucketPrefix].(string); ok && v != "" {
 		properties.BucketPrefix = aws.String(v)
 	}
 
@@ -2297,7 +2297,7 @@ func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnect
 	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
+		m[names.AttrBucketPrefix] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.DatabaseUrl != nil {
@@ -2369,7 +2369,7 @@ func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConne
 	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
+		m[names.AttrBucketPrefix] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.Region != nil {
