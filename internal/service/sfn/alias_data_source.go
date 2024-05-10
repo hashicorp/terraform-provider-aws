@@ -27,7 +27,7 @@ func DataSourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, output.StateMachineAliasArn)
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(output.RoutingConfiguration)); err != nil {
 		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
