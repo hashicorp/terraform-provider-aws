@@ -82,7 +82,7 @@ func ResourceDataIntegration() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 							),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -220,7 +220,7 @@ func expandScheduleConfig(scheduleConfig []interface{}) *awstypes.ScheduleConfig
 	result := &awstypes.ScheduleConfiguration{
 		FirstExecutionFrom: aws.String(tfMap["first_execution_from"].(string)),
 		Object:             aws.String(tfMap["object"].(string)),
-		ScheduleExpression: aws.String(tfMap["schedule_expression"].(string)),
+		ScheduleExpression: aws.String(tfMap[names.AttrScheduleExpression].(string)),
 	}
 
 	return result
@@ -234,7 +234,7 @@ func flattenScheduleConfig(scheduleConfig *awstypes.ScheduleConfiguration) []int
 	values := map[string]interface{}{
 		"first_execution_from": aws.ToString(scheduleConfig.FirstExecutionFrom),
 		"object":               aws.ToString(scheduleConfig.Object),
-		"schedule_expression":  aws.ToString(scheduleConfig.ScheduleExpression),
+		names.AttrScheduleExpression:  aws.ToString(scheduleConfig.ScheduleExpression),
 	}
 
 	return []interface{}{values}
