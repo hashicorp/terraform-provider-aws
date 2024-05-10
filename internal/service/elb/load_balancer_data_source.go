@@ -101,7 +101,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Computed: true,
 						},
 
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
