@@ -27,7 +27,6 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	rNameTarget := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 	sourceName := "aws_s3_object.source"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,7 +100,6 @@ func TestAccS3ObjectCopy_disappears(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -127,7 +125,6 @@ func TestAccS3ObjectCopy_tags(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -173,7 +170,6 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnCreate(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -199,7 +195,6 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -234,7 +229,6 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -268,7 +262,6 @@ func TestAccS3ObjectCopy_metadata(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -295,7 +288,6 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -325,7 +317,6 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -350,7 +341,6 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -406,7 +396,6 @@ func TestAccS3ObjectCopy_checksumAlgorithm(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -446,7 +435,6 @@ func TestAccS3ObjectCopy_objectLockLegalHold(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -478,7 +466,6 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashes(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "/dir//target/"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -503,7 +490,6 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashesMigrated(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "/dir//target/"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -539,7 +525,6 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -613,7 +598,6 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 	sourceName := "aws_s3_object.source"
-	sourceKey := names.AttrSource
 	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
