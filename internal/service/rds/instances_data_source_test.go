@@ -32,7 +32,7 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, "identifier"),
 				),
@@ -59,7 +59,7 @@ func TestAccRDSInstancesDataSource_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, "identifier"),
 				),

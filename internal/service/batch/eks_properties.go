@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -89,10 +90,10 @@ func expandContainers(containers []interface{}) []*batch.EksContainer {
 			for _, e := range v.List() {
 				environment := &batch.EksContainerEnvironmentVariable{}
 				environ := e.(map[string]interface{})
-				if v, ok := environ["name"].(string); ok && v != "" {
+				if v, ok := environ[names.AttrName].(string); ok && v != "" {
 					environment.Name = aws.String(v)
 				}
-				if v, ok := environ["value"].(string); ok && v != "" {
+				if v, ok := environ[names.AttrValue].(string); ok && v != "" {
 					environment.Value = aws.String(v)
 				}
 				env = append(env, environment)
@@ -107,7 +108,7 @@ func expandContainers(containers []interface{}) []*batch.EksContainer {
 			container.ImagePullPolicy = aws.String(v)
 		}
 
-		if v, ok := containerMap["name"].(string); ok && v != "" {
+		if v, ok := containerMap[names.AttrName].(string); ok && v != "" {
 			container.Name = aws.String(v)
 		}
 		if r, ok := containerMap["resources"].([]interface{}); ok && len(r) > 0 {
@@ -157,7 +158,7 @@ func expandVolumes(volumes []interface{}) []*batch.EksVolume {
 	for _, v := range volumes {
 		volume := &batch.EksVolume{}
 		volumeMap := v.(map[string]interface{})
-		if v, ok := volumeMap["name"].(string); ok {
+		if v, ok := volumeMap[names.AttrName].(string); ok {
 			volume.Name = aws.String(v)
 		}
 		if e, ok := volumeMap["empty_dir"].([]interface{}); ok && len(e) > 0 {
@@ -198,7 +199,7 @@ func expandVolumeMounts(volumeMounts []interface{}) []*batch.EksContainerVolumeM
 	for _, v := range volumeMounts {
 		volumeMount := &batch.EksContainerVolumeMount{}
 		volumeMountMap := v.(map[string]interface{})
-		if v, ok := volumeMountMap["name"]; ok {
+		if v, ok := volumeMountMap[names.AttrName]; ok {
 			volumeMount.Name = aws.String(v.(string))
 		}
 		if v, ok := volumeMountMap["mount_path"]; ok {
@@ -286,7 +287,7 @@ func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{
 		}
 
 		if v := container.Name; v != nil {
-			tfMap["name"] = aws.StringValue(v)
+			tfMap[names.AttrName] = aws.StringValue(v)
 		}
 
 		if v := container.Resources; v != nil {
@@ -320,11 +321,11 @@ func flattenEKSContainerEnvironmentVariables(env []*batch.EksContainerEnvironmen
 		tfMap := map[string]interface{}{}
 
 		if v := e.Name; v != nil {
-			tfMap["name"] = aws.StringValue(v)
+			tfMap[names.AttrName] = aws.StringValue(v)
 		}
 
 		if v := e.Value; v != nil {
-			tfMap["value"] = aws.StringValue(v)
+			tfMap[names.AttrValue] = aws.StringValue(v)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -337,7 +338,7 @@ func flattenEKSContainerVolumeMounts(volumeMounts []*batch.EksContainerVolumeMou
 		tfMap := map[string]interface{}{}
 
 		if v := v.Name; v != nil {
-			tfMap["name"] = aws.StringValue(v)
+			tfMap[names.AttrName] = aws.StringValue(v)
 		}
 
 		if v := v.MountPath; v != nil {
@@ -358,7 +359,7 @@ func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
 		tfMap := map[string]interface{}{}
 
 		if v := v.Name; v != nil {
-			tfMap["name"] = aws.StringValue(v)
+			tfMap[names.AttrName] = aws.StringValue(v)
 		}
 
 		if v := v.EmptyDir; v != nil {

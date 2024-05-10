@@ -41,8 +41,8 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", fmt.Sprintf("%s/%s", rNameTarget, targetKey)),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rNameTarget),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", fmt.Sprintf("%s/%s", rNameTarget, targetKey)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rNameTarget),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
@@ -68,9 +68,9 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, targetKey),
 					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
@@ -311,7 +311,7 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
 						"permissions.#": "1",
-						"type":          "Group",
+						names.AttrType:  "Group",
 						"uri":           "http://acs.amazonaws.com/groups/global/AllUsers",
 					}),
 				),
@@ -490,7 +490,7 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashes(t *testing.T) {
 			{
 				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, targetKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, targetKey),
 					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
 				),
 			},
@@ -521,7 +521,7 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashesMigrated(t *testing.T) {
 				},
 				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, targetKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, targetKey),
 					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
 				),
 			},
@@ -553,8 +553,8 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", regexache.MustCompile(fmt.Sprintf(`%s--[-a-z0-9]+--x-s3/%s$`, rName2, targetKey))),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexache.MustCompile(fmt.Sprintf(`^%s--[-a-z0-9]+--x-s3$`, rName2))),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", regexache.MustCompile(fmt.Sprintf(`%s--[-a-z0-9]+--x-s3/%s$`, rName2, targetKey))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrBucket, regexache.MustCompile(fmt.Sprintf(`^%s--[-a-z0-9]+--x-s3$`, rName2))),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
@@ -579,9 +579,9 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, targetKey),
 					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
@@ -627,7 +627,7 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					resource.TestCheckResourceAttrSet(resourceName, "bucket"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
@@ -653,9 +653,9 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, targetKey),
 					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
@@ -689,16 +689,16 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-			if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+			if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			var optFns []func(*s3.Options)
-			if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "", optFns...)
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], "", optFns...)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -723,16 +723,16 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
-		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "", optFns...)
+		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], "", optFns...)
 
 		return err
 	}

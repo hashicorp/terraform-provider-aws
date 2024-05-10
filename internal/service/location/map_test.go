@@ -38,7 +38,7 @@ func TestAccLocationMap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.style", "VectorHereBerlin"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "map_arn", "geo", fmt.Sprintf("map/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "map_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
@@ -92,7 +92,7 @@ func TestAccLocationMap_description(t *testing.T) {
 				Config: testAccMapConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccLocationMap_description(t *testing.T) {
 				Config: testAccMapConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},

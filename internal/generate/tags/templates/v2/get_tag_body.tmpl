@@ -16,7 +16,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 				Values: []string{identifier},
 			},
 			{
-				Name:   aws.String("key"),
+				Name:   aws.String(names.AttrKey),
 				Values: []string{key},
 			},
 		},

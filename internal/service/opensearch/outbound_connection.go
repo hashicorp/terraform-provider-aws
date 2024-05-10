@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opensearch_outbound_connection")
@@ -30,12 +31,12 @@ func ResourceOutboundConnection() *schema.Resource {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"domain_name": {
+					names.AttrDomainName: {
 						Type:     schema.TypeString,
 						Required: true,
 						ForceNew: true,
 					},
-					"owner_id": {
+					names.AttrOwnerID: {
 						Type:     schema.TypeString,
 						Required: true,
 						ForceNew: true,
@@ -350,8 +351,8 @@ func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservi
 
 	return &opensearchservice.DomainInformationContainer{
 		AWSDomainInformation: &opensearchservice.AWSDomainInformation{
-			DomainName: aws.String(mOptions["domain_name"].(string)),
-			OwnerId:    aws.String(mOptions["owner_id"].(string)),
+			DomainName: aws.String(mOptions[names.AttrDomainName].(string)),
+			OwnerId:    aws.String(mOptions[names.AttrOwnerID].(string)),
 			Region:     aws.String(mOptions["region"].(string)),
 		},
 	}
@@ -362,9 +363,9 @@ func flattenOutboundConnectionDomainInfo(domainInfo *opensearchservice.DomainInf
 		return nil
 	}
 	return []interface{}{map[string]interface{}{
-		"owner_id":    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
-		"domain_name": aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
-		"region":      aws.StringValue(domainInfo.AWSDomainInformation.Region),
+		names.AttrOwnerID:    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
+		names.AttrDomainName: aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
+		"region":             aws.StringValue(domainInfo.AWSDomainInformation.Region),
 	}}
 }
 

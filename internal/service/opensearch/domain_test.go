@@ -154,7 +154,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -233,7 +233,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -343,7 +343,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "false",
+						names.AttrEnabled: "false",
 					})),
 			},
 			{
@@ -357,7 +357,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "true",
+						names.AttrEnabled: "true",
 					})),
 			},
 		},
@@ -584,7 +584,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 				),
 				ExpectError: regexache.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
@@ -613,7 +613,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
-						resourceName, "engine_version", "Elasticsearch_2.3"),
+						resourceName, names.AttrEngineVersion, "Elasticsearch_2.3"),
 				),
 			},
 			{
@@ -785,7 +785,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 				Config: testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
@@ -809,7 +809,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 				Config: testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
@@ -1855,7 +1855,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Config: testAccDomainConfig_clusterUpdateVersion(rName, "Elasticsearch_5.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_5.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_5.5"),
 				),
 			},
 			{
@@ -1869,7 +1869,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_5.6"),
 				),
 			},
 			{
@@ -1877,7 +1877,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.3"),
 				),
 			},
 		}})
@@ -2130,7 +2130,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *opensearchs
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
-		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
@@ -2188,7 +2188,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
-			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue

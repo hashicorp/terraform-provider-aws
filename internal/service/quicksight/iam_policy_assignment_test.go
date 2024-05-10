@@ -146,7 +146,7 @@ func TestAccQuickSightIAMPolicyAssignment_identities(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identities.0.user.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "identities.0.user.0", userResourceName, "user_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_arn", policyResourceName, names.AttrARN),
 				),
 			},
 			{

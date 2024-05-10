@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RecordMigrateState(
@@ -33,8 +34,8 @@ func migrateRecordStateV0toV1(is *terraform.InstanceState) *terraform.InstanceSt
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newName := strings.TrimSuffix(is.Attributes["name"], ".")
-	is.Attributes["name"] = newName
+	newName := strings.TrimSuffix(is.Attributes[names.AttrName], ".")
+	is.Attributes[names.AttrName] = newName
 	log.Printf("[DEBUG] Attributes after migration: %#v, new name: %s", is.Attributes, newName)
 	return is
 }

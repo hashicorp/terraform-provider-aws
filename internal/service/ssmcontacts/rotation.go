@@ -55,14 +55,14 @@ func (r *resourceRotation) Metadata(_ context.Context, request resource.Metadata
 func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"contact_ids": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"start_time": schema.StringAttribute{
@@ -420,7 +420,7 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	_, err := conn.DeleteRotation(ctx, &ssmcontacts.DeleteRotationInput{

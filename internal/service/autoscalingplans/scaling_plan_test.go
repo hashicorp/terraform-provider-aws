@@ -39,7 +39,7 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -99,7 +99,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -163,7 +163,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -196,7 +196,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -280,7 +280,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -319,7 +319,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
@@ -381,7 +381,7 @@ func testAccCheckScalingPlanDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+			_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes[names.AttrName], scalingPlanVersion)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -413,7 +413,7 @@ func testAccCheckScalingPlanExists(ctx context.Context, name string, v *awstypes
 			return err
 		}
 
-		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes[names.AttrName], scalingPlanVersion)
 
 		if err != nil {
 			return err

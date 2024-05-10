@@ -17,43 +17,45 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_virtual_router")
-func DataSourceVirtualRouter() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_router", name="Virtual Router")
+func dataSourceVirtualRouter() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualRouterRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -63,8 +65,8 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	virtualRouterName := d.Get("name").(string)
-	vr, err := FindVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualRouterName)
+	virtualRouterName := d.Get(names.AttrName).(string)
+	vr, err := findVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualRouterName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Router (%s): %s", virtualRouterName, err)
@@ -72,13 +74,13 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(vr.VirtualRouterName))
 	arn := aws.StringValue(vr.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", vr.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vr.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vr.MeshName)
 	meshOwner := aws.StringValue(vr.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", vr.VirtualRouterName)
+	d.Set(names.AttrName, vr.VirtualRouterName)
 	d.Set("resource_owner", vr.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -97,7 +99,7 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

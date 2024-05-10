@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_orderable_db_instance")
@@ -28,7 +29,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -39,7 +40,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Required: true,
 			},
 
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -214,7 +215,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
-		MaxRecords: aws.Int64(3412),
+		MaxRecords: aws.Int64(1000),
 	}
 
 	if v, ok := d.GetOk("availability_zone_group"); ok {
@@ -229,7 +230,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -471,9 +472,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	for _, v := range found.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
-	d.Set("availability_zones", availabilityZones)
+	d.Set(names.AttrAvailabilityZones, availabilityZones)
 	d.Set("engine", found.Engine)
-	d.Set("engine_version", found.EngineVersion)
+	d.Set(names.AttrEngineVersion, found.EngineVersion)
 	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("license_model", found.LicenseModel)
 	d.Set("max_iops_per_db_instance", found.MaxIopsPerDbInstance)

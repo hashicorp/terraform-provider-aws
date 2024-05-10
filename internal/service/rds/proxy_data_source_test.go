@@ -30,15 +30,15 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccProxyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auth.#", resourceName, "auth.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "debug_logging", resourceName, "debug_logging"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_family", resourceName, "engine_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_client_timeout", resourceName, "idle_client_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "require_tls", resourceName, "require_tls"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "role_arn", resourceName, "role_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_security_group_ids.#", resourceName, "vpc_security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_subnet_ids.#", resourceName, "vpc_subnet_ids.#"),
 				),

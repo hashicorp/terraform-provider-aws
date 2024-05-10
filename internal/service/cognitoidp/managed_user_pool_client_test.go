@@ -45,7 +45,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.0", "code"),
@@ -73,7 +73,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.0", "COGNITO"),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", "0"),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -106,7 +106,7 @@ func TestAccCognitoIDPManagedUserPoolClient_namePattern(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_namePattern(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
 				),
 			},
 			{
@@ -148,7 +148,7 @@ func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -196,7 +196,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -212,7 +212,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -270,7 +270,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -286,7 +286,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -344,7 +344,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -360,7 +360,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -417,7 +417,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -436,7 +436,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -452,7 +452,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -513,7 +513,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -532,7 +532,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -568,7 +568,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -588,7 +588,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -611,7 +611,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_allFields(rName, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
@@ -646,7 +646,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -672,7 +672,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 				Config: testAccManagedUserPoolClientConfig_allFields(rName, 299),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
@@ -707,7 +707,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -736,9 +736,9 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.role_arn", "aws_iam_role.analytics", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.role_arn", "aws_iam_role.analytics", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_arn"),
 				),
@@ -749,7 +749,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -757,7 +757,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
 				),
@@ -768,7 +768,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -784,7 +784,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -815,7 +815,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, names.AttrARN),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 				),
@@ -826,7 +826,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -834,7 +834,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, names.AttrARN),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_id"),
@@ -847,7 +847,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -879,7 +879,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -895,7 +895,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 		},
@@ -958,7 +958,7 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{
@@ -1001,7 +1001,7 @@ func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"name_prefix",
+					names.AttrNamePrefix,
 				},
 			},
 			{

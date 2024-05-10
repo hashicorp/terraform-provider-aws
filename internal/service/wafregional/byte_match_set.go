@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafregional_byte_match_set", name="Byte Match Set")
@@ -31,7 +32,7 @@ func resourceByteMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +52,7 @@ func resourceByteMatchSet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -82,13 +83,13 @@ func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating ByteMatchSet: %s", d.Get(names.AttrName).(string))
 
 	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateByteMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 		return conn.CreateByteMatchSetWithContext(ctx, params)
 	})
@@ -107,7 +108,7 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
-	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading ByteMatchSet: %s", d.Get(names.AttrName).(string))
 
 	params := &waf.GetByteMatchSetInput{
 		ByteMatchSetId: aws.String(d.Id()),
@@ -135,7 +136,7 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting byte_match_tuples: %s", err)
 	}
 
-	d.Set("name", resp.ByteMatchSet.Name)
+	d.Set(names.AttrName, resp.ByteMatchSet.Name)
 
 	return diags
 }
@@ -145,8 +146,8 @@ func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 
 	for i, tuple := range in {
 		fieldToMatchMap := map[string]interface{}{
-			"data": aws.StringValue(tuple.FieldToMatch.Data),
-			"type": aws.StringValue(tuple.FieldToMatch.Type),
+			"data":         aws.StringValue(tuple.FieldToMatch.Data),
+			names.AttrType: aws.StringValue(tuple.FieldToMatch.Type),
 		}
 
 		m := map[string]interface{}{

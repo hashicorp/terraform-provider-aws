@@ -30,7 +30,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_tagFilter(t *testing.T) 
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
 					}),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, names.AttrARN),
 				),
 			},
 		},
@@ -75,7 +75,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceTypeFilters(t *t
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
 					}),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, names.AttrARN),
 				),
 			},
 		},
@@ -99,7 +99,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceARNList(t *testi
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
 					}),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, names.AttrARN),
 				),
 			},
 		},

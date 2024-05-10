@@ -54,25 +54,31 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_redshift_cluster",
 			Name:     "Cluster",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceClusterCredentials,
+			Factory:  dataSourceClusterCredentials,
 			TypeName: "aws_redshift_cluster_credentials",
+			Name:     "Cluster Credentials",
 		},
 		{
-			Factory:  DataSourceOrderableCluster,
+			Factory:  dataSourceOrderableCluster,
 			TypeName: "aws_redshift_orderable_cluster",
+			Name:     "Orderable Cluster Options",
 		},
 		{
-			Factory:  DataSourceServiceAccount,
+			Factory:  dataSourceServiceAccount,
 			TypeName: "aws_redshift_service_account",
+			Name:     "Service Account",
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
+			Name:     "Subnet Group",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -80,115 +86,123 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAuthenticationProfile,
+			Factory:  resourceAuthenticationProfile,
 			TypeName: "aws_redshift_authentication_profile",
+			Name:     "Authentication Profile",
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_redshift_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceClusterIAMRoles,
+			Factory:  resourceClusterIAMRoles,
 			TypeName: "aws_redshift_cluster_iam_roles",
+			Name:     "Cluster IAM Roles",
 		},
 		{
-			Factory:  ResourceClusterSnapshot,
+			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_redshift_cluster_snapshot",
 			Name:     "Cluster Snapshot",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceEndpointAccess,
+			Factory:  resourceEndpointAccess,
 			TypeName: "aws_redshift_endpoint_access",
+			Name:     "Endpoint Access",
 		},
 		{
-			Factory:  ResourceEndpointAuthorization,
+			Factory:  resourceEndpointAuthorization,
 			TypeName: "aws_redshift_endpoint_authorization",
+			Name:     "Endpoint Authorization",
 		},
 		{
-			Factory:  ResourceEventSubscription,
+			Factory:  resourceEventSubscription,
 			TypeName: "aws_redshift_event_subscription",
 			Name:     "Event Subscription",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceHSMClientCertificate,
+			Factory:  resourceHSMClientCertificate,
 			TypeName: "aws_redshift_hsm_client_certificate",
 			Name:     "HSM Client Certificate",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceHSMConfiguration,
+			Factory:  resourceHSMConfiguration,
 			TypeName: "aws_redshift_hsm_configuration",
 			Name:     "HSM Configuration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceParameterGroup,
+			Factory:  resourceParameterGroup,
 			TypeName: "aws_redshift_parameter_group",
 			Name:     "Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourcePartner,
+			Factory:  resourcePartner,
 			TypeName: "aws_redshift_partner",
+			Name:     "Partner",
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_redshift_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceScheduledAction,
+			Factory:  resourceScheduledAction,
 			TypeName: "aws_redshift_scheduled_action",
+			Name:     "Scheduled Action",
 		},
 		{
-			Factory:  ResourceSnapshotCopyGrant,
+			Factory:  resourceSnapshotCopyGrant,
 			TypeName: "aws_redshift_snapshot_copy_grant",
 			Name:     "Snapshot Copy Grant",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceSnapshotSchedule,
+			Factory:  resourceSnapshotSchedule,
 			TypeName: "aws_redshift_snapshot_schedule",
 			Name:     "Snapshot Schedule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceSnapshotScheduleAssociation,
+			Factory:  resourceSnapshotScheduleAssociation,
 			TypeName: "aws_redshift_snapshot_schedule_association",
+			Name:     "Snapshot Schedule Association",
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceUsageLimit,
+			Factory:  resourceUsageLimit,
 			TypeName: "aws_redshift_usage_limit",
 			Name:     "Usage Limit",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}

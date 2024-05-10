@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
@@ -17,7 +18,7 @@ func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
 	cfg := make(map[string]interface{})
 	cfg["enable"] = aws.BoolValue(ls.LoggingEnabled)
 	if ls.BucketName != nil {
-		cfg["bucket_name"] = aws.StringValue(ls.BucketName)
+		cfg[names.AttrBucketName] = aws.StringValue(ls.BucketName)
 	}
 	if ls.LogDestinationType != nil {
 		cfg["log_destination_type"] = aws.StringValue(ls.LogDestinationType)

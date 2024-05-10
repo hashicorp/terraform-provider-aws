@@ -53,7 +53,7 @@ func (r *resourceApplicationAssignmentConfiguration) Schema(ctx context.Context,
 			"assignment_required": schema.BoolAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }
@@ -172,7 +172,7 @@ func (r *resourceApplicationAssignmentConfiguration) Delete(ctx context.Context,
 
 func (r *resourceApplicationAssignmentConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Set both id and application_arn on import to avoid immediate diff and planned replacement
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("application_arn"), req.ID)...)
 }
 

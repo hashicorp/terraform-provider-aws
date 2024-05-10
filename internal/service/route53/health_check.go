@@ -42,7 +42,7 @@ func ResourceHealthCheck() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func ResourceHealthCheck() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IsPortNumber,
@@ -162,7 +162,7 @@ func ResourceHealthCheck() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -181,7 +181,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	healthCheckType := d.Get("type").(string)
+	healthCheckType := d.Get(names.AttrType).(string)
 	healthCheckConfig := &route53.HealthCheckConfig{
 		Type: aws.String(healthCheckType),
 	}
@@ -209,7 +209,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("ip_address"); ok {
 		healthCheckConfig.IPAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		healthCheckConfig.Port = aws.Int64(int64(v.(int)))
 	}
 
@@ -311,7 +311,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 		Service:   "route53",
 		Resource:  fmt.Sprintf("healthcheck/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	healthCheckConfig := output.HealthCheckConfig
 	d.Set("child_health_threshold", healthCheckConfig.HealthThreshold)
 	d.Set("child_healthchecks", aws.StringValueSlice(healthCheckConfig.ChildHealthChecks))
@@ -327,13 +327,13 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("invert_healthcheck", healthCheckConfig.Inverted)
 	d.Set("ip_address", healthCheckConfig.IPAddress)
 	d.Set("measure_latency", healthCheckConfig.MeasureLatency)
-	d.Set("port", healthCheckConfig.Port)
+	d.Set(names.AttrPort, healthCheckConfig.Port)
 	d.Set("regions", aws.StringValueSlice(healthCheckConfig.Regions))
 	d.Set("request_interval", healthCheckConfig.RequestInterval)
 	d.Set("resource_path", healthCheckConfig.ResourcePath)
 	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
 	d.Set("search_string", healthCheckConfig.SearchString)
-	d.Set("type", healthCheckConfig.Type)
+	d.Set(names.AttrType, healthCheckConfig.Type)
 
 	return diags
 }
@@ -342,7 +342,7 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53.UpdateHealthCheckInput{
 			HealthCheckId: aws.String(d.Id()),
 		}
@@ -392,8 +392,8 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.IPAddress = aws.String(d.Get("ip_address").(string))
 		}
 
-		if d.HasChange("port") {
-			input.Port = aws.Int64(int64(d.Get("port").(int)))
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int64(int64(d.Get(names.AttrPort).(int)))
 		}
 
 		if d.HasChange("regions") {

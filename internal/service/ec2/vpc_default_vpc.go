@@ -50,7 +50,7 @@ func ResourceDefaultVPC() *schema.Resource {
 		//   - existing_default_vpc Computed-only, set in resourceDefaultVPCCreate
 		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

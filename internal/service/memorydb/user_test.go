@@ -34,7 +34,7 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "user/"+rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "user/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
@@ -50,6 +50,41 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBUser_authenticationModeIAM(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_authenticationModeIAM(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "user/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords",
+				},
 			},
 		},
 	})
@@ -271,6 +306,19 @@ resource "aws_memorydb_user" "test" {
 
   tags = {
     Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_authenticationModeIAM(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_user" "test" {
+  access_string = "on ~* &* +@all"
+  user_name     = %[1]q
+
+  authentication_mode {
+    type = "iam"
   }
 }
 `, rName)

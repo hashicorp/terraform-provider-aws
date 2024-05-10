@@ -36,10 +36,10 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_on"),
 					resource.TestCheckResourceAttr(resourceName, "ruleset", ruleset),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "0"),
@@ -111,7 +111,7 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, originalDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -152,8 +152,8 @@ func TestAccGlueDataQualityRuleset_targetTableRequired(t *testing.T) {
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.0.catalog_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
 				),
 			},
 			{
@@ -187,8 +187,8 @@ func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", "catalog_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
 				),
 			},
 			{

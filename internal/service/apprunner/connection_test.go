@@ -35,10 +35,10 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithub)),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.ConnectionStatusPendingHandshake)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ConnectionStatusPendingHandshake)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

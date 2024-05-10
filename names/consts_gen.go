@@ -32,6 +32,7 @@ const (
 	Budgets                      = "budgets"
 	CE                           = "ce"
 	CUR                          = "cur"
+	Chatbot                      = "chatbot"
 	Chime                        = "chime"
 	ChimeSDKMediaPipelines       = "chimesdkmediapipelines"
 	ChimeSDKVoice                = "chimesdkvoice"
@@ -186,6 +187,7 @@ const (
 	RolesAnywhere                = "rolesanywhere"
 	Route53                      = "route53"
 	Route53Domains               = "route53domains"
+	Route53Profiles              = "route53profiles"
 	Route53RecoveryControlConfig = "route53recoverycontrolconfig"
 	Route53RecoveryReadiness     = "route53recoveryreadiness"
 	Route53Resolver              = "route53resolver"
@@ -232,6 +234,7 @@ const (
 	WellArchitected              = "wellarchitected"
 	WorkLink                     = "worklink"
 	WorkSpaces                   = "workspaces"
+	WorkSpacesWeb                = "workspacesweb"
 	XRay                         = "xray"
 )
 
@@ -268,6 +271,7 @@ const (
 	BudgetsServiceID                      = "Budgets"
 	CEServiceID                           = "Cost Explorer"
 	CURServiceID                          = "Cost and Usage Report Service"
+	ChatbotServiceID                      = "Chatbot"
 	ChimeServiceID                        = "Chime"
 	ChimeSDKMediaPipelinesServiceID       = "Chime SDK Media Pipelines"
 	ChimeSDKVoiceServiceID                = "Chime SDK Voice"
@@ -422,6 +426,7 @@ const (
 	RolesAnywhereServiceID                = "RolesAnywhere"
 	Route53ServiceID                      = "Route 53"
 	Route53DomainsServiceID               = "Route 53 Domains"
+	Route53ProfilesServiceID              = "Route 53 Profiles"
 	Route53RecoveryControlConfigServiceID = "Route53 Recovery Control Config"
 	Route53RecoveryReadinessServiceID     = "Route53 Recovery Readiness"
 	Route53ResolverServiceID              = "Route53Resolver"
@@ -468,5 +473,6 @@ const (
 	WellArchitectedServiceID              = "WellArchitected"
 	WorkLinkServiceID                     = "WorkLink"
 	WorkSpacesServiceID                   = "WorkSpaces"
+	WorkSpacesWebServiceID                = "WorkSpaces Web"
 	XRayServiceID                         = "XRay"
 )

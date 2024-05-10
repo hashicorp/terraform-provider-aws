@@ -26,6 +26,7 @@ BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
@@ -187,6 +188,7 @@ Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
@@ -238,4 +240,5 @@ Web Services Budgets
 Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray

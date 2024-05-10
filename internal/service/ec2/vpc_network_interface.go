@@ -46,7 +46,7 @@ func resourceNetworkInterface() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func resourceNetworkInterface() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -150,7 +150,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -199,7 +199,7 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -343,10 +343,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	input := &ec2.CreateNetworkInterfaceInput{
 		ClientToken: aws.String(id.UniqueId()),
-		SubnetId:    aws.String(d.Get("subnet_id").(string)),
+		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -412,7 +412,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.Groups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -516,7 +516,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: ownerID,
 		Resource:  "network-interface/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if eni.Attachment != nil {
 		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
@@ -524,7 +524,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("attachment", nil)
 	}
-	d.Set("description", eni.Description)
+	d.Set(names.AttrDescription, eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
 	if err := d.Set("ipv4_prefixes", flattenIPv4PrefixSpecifications(eni.Ipv4Prefixes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv4_prefixes: %s", err)
@@ -543,7 +543,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
 	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
@@ -553,11 +553,11 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
 	}
-	if err := d.Set("security_groups", flattenGroupIdentifiers(eni.Groups)); err != nil {
+	if err := d.Set(names.AttrSecurityGroups, flattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
-	d.Set("subnet_id", eni.SubnetId)
+	d.Set(names.AttrSubnetID, eni.SubnetId)
 
 	setTagsOutV2(ctx, eni.TagSet)
 
@@ -1006,10 +1006,10 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
-			Groups:             flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+			Groups:             flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
@@ -1019,10 +1019,10 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
-			Description:        &types.AttributeValue{Value: aws.String(d.Get("description").(string))},
+			Description:        &types.AttributeValue{Value: aws.String(d.Get(names.AttrDescription).(string))},
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)

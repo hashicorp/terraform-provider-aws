@@ -39,17 +39,17 @@ func ResourceCarrierGateway() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +65,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &ec2.CreateCarrierGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCarrierGateway),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	output, err := conn.CreateCarrierGatewayWithContext(ctx, input)
@@ -107,9 +107,9 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("carrier-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
-	d.Set("vpc_id", carrierGateway.VpcId)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set(names.AttrVPCID, carrierGateway.VpcId)
 
 	setTagsOut(ctx, carrierGateway.Tags)
 

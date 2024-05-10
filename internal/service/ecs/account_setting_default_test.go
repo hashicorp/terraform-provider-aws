@@ -48,8 +48,8 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", settingName),
-					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -77,8 +77,8 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", settingName),
-					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -106,8 +106,8 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", settingName),
-					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -135,8 +135,8 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", settingName),
-					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -164,8 +164,8 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", settingName),
-					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -217,7 +217,7 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			name := rs.Primary.Attributes["name"]
+			name := rs.Primary.Attributes[names.AttrName]
 
 			input := &ecs.ListAccountSettingsInput{
 				Name:              aws.String(name),

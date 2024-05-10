@@ -37,7 +37,7 @@ func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "firewall_fail_open", "ENABLED"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 				),
 			},
 			{

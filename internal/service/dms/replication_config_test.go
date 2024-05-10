@@ -41,8 +41,8 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 						Config: testAccReplicationConfigConfig_basic(rName, migrationType),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-							resource.TestCheckResourceAttrSet(resourceName, "arn"),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
+							resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+							acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
@@ -316,7 +316,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 				Config: testAccReplicationConfigConfig_update(rName, "cdc", 2, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
@@ -326,7 +326,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 				Config: testAccReplicationConfigConfig_update(rName, "cdc", 4, 32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "32"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "4"),

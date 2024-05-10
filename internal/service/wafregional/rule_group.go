@@ -37,7 +37,7 @@ func resourceRuleGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,7 +59,7 @@ func resourceRuleGroup() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -74,7 +74,7 @@ func resourceRuleGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  wafregional.WafRuleTypeRegular,
@@ -84,7 +84,7 @@ func resourceRuleGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -99,7 +99,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
@@ -162,9 +162,9 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
 		Service:   "waf-regional",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("activated_rule", tfwaf.FlattenActivatedRules(rResp.ActivatedRules))
-	d.Set("name", resp.RuleGroup.Name)
+	d.Set(names.AttrName, resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
 	return diags

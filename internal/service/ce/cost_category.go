@@ -47,7 +47,7 @@ func resourceCostCategory() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -65,7 +65,7 @@ func resourceCostCategory() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -101,12 +101,12 @@ func resourceCostCategory() *schema.Resource {
 								Optional: true,
 								Elem:     expressionElem(costCategoryRuleRootElementSchemaLevel),
 							},
-							"type": {
+							names.AttrType: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.CostCategoryRuleType](),
 							},
-							"value": {
+							names.AttrValue: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 50),
@@ -135,12 +135,12 @@ func resourceCostCategory() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"type": {
+										names.AttrType: {
 											Type:             schema.TypeString,
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CostCategorySplitChargeRuleParameterType](),
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -187,7 +187,7 @@ func expressionElem(level int) *schema.Resource {
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"key": {
+					names.AttrKey: {
 						Type:         schema.TypeString,
 						Optional:     true,
 						ValidateFunc: validation.StringLenBetween(1, 50),
@@ -200,7 +200,7 @@ func expressionElem(level int) *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-					"values": {
+					names.AttrValues: {
 						Type:     schema.TypeSet,
 						Optional: true,
 						Elem: &schema.Schema{
@@ -217,7 +217,7 @@ func expressionElem(level int) *schema.Resource {
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"key": {
+					names.AttrKey: {
 						Type:             schema.TypeString,
 						Optional:         true,
 						ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
@@ -230,7 +230,7 @@ func expressionElem(level int) *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-					"values": {
+					names.AttrValues: {
 						Type:     schema.TypeSet,
 						Optional: true,
 						Elem: &schema.Schema{
@@ -241,13 +241,13 @@ func expressionElem(level int) *schema.Resource {
 				},
 			},
 		},
-		"tags": {
+		names.AttrTags: {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"key": {
+					names.AttrKey: {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
@@ -259,7 +259,7 @@ func expressionElem(level int) *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-					"values": {
+					names.AttrValues: {
 						Type:     schema.TypeSet,
 						Optional: true,
 						Elem: &schema.Schema{
@@ -301,7 +301,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(name),
 		ResourceTags: getTagsIn(ctx),
@@ -351,11 +351,11 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Cost Category (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", costCategory.CostCategoryArn)
+	d.Set(names.AttrARN, costCategory.CostCategoryArn)
 	d.Set("default_value", costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
-	d.Set("name", costCategory.Name)
+	d.Set(names.AttrName, costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
@@ -371,7 +371,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
 			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
@@ -454,11 +454,11 @@ func expandCostCategoryRule(tfMap map[string]interface{}) *awstypes.CostCategory
 		apiObject.Rule = expandExpression(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.CostCategoryRuleType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -536,7 +536,7 @@ func expandExpression(tfMap map[string]interface{}) *awstypes.Expression {
 		apiObject.Or = expandExpressions(v.List())
 	}
 
-	if v, ok := tfMap["tags"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrTags].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Tags = expandTagValues(v[0].(map[string]interface{}))
 	}
 
@@ -575,7 +575,7 @@ func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCatego
 
 	apiObject := &awstypes.CostCategoryValues{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
@@ -583,7 +583,7 @@ func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCatego
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -597,7 +597,7 @@ func expandDimensionValues(tfMap map[string]interface{}) *awstypes.DimensionValu
 
 	apiObject := &awstypes.DimensionValues{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = awstypes.Dimension(v)
 	}
 
@@ -605,7 +605,7 @@ func expandDimensionValues(tfMap map[string]interface{}) *awstypes.DimensionValu
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -619,7 +619,7 @@ func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
 
 	apiObject := &awstypes.TagValues{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
@@ -627,7 +627,7 @@ func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -675,8 +675,8 @@ func expandCostCategorySplitChargeRules(tfList []interface{}) []awstypes.CostCat
 
 func expandCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *awstypes.CostCategorySplitChargeRuleParameter {
 	apiObject := &awstypes.CostCategorySplitChargeRuleParameter{
-		Type:   awstypes.CostCategorySplitChargeRuleParameterType(tfMap["type"].(string)),
-		Values: flex.ExpandStringValueList(tfMap["values"].([]interface{})),
+		Type:   awstypes.CostCategorySplitChargeRuleParameterType(tfMap[names.AttrType].(string)),
+		Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 	}
 
 	return apiObject
@@ -717,8 +717,8 @@ func flattenCostCategoryRule(apiObject *awstypes.CostCategoryRule) map[string]in
 
 	tfMap["inherited_value"] = flattenCostCategoryInheritedValueDimension(apiObject.InheritedValue)
 	tfMap["rule"] = []interface{}{flattenExpression(apiObject.Rule)}
-	tfMap["type"] = string(apiObject.Type)
-	tfMap["value"] = aws.ToString(apiObject.Value)
+	tfMap[names.AttrType] = string(apiObject.Type)
+	tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
 
 	return tfMap
 }
@@ -770,7 +770,7 @@ func flattenExpression(apiObject *awstypes.Expression) map[string]interface{} {
 	if len(apiObject.Or) > 0 {
 		tfMap["or"] = flattenExpressions(apiObject.Or)
 	}
-	tfMap["tags"] = flattenTagValues(apiObject.Tags)
+	tfMap[names.AttrTags] = flattenTagValues(apiObject.Tags)
 
 	return tfMap
 }
@@ -797,9 +797,9 @@ func flattenCostCategoryValues(apiObject *awstypes.CostCategoryValues) []map[str
 	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
 
-	tfMap["key"] = aws.ToString(apiObject.Key)
+	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	tfList = append(tfList, tfMap)
 
@@ -814,9 +814,9 @@ func flattenDimensionValues(apiObject *awstypes.DimensionValues) []map[string]in
 	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
 
-	tfMap["key"] = string(apiObject.Key)
+	tfMap[names.AttrKey] = string(apiObject.Key)
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	tfList = append(tfList, tfMap)
 
@@ -831,9 +831,9 @@ func flattenTagValues(apiObject *awstypes.TagValues) []map[string]interface{} {
 	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
 
-	tfMap["key"] = aws.ToString(apiObject.Key)
+	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	tfList = append(tfList, tfMap)
 
@@ -874,8 +874,8 @@ func flattenCostCategorySplitChargeRuleParameter(apiObject *awstypes.CostCategor
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["type"] = string(apiObject.Type)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrType] = string(apiObject.Type)
+	tfMap[names.AttrValues] = apiObject.Values
 
 	return tfMap
 }

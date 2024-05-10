@@ -33,11 +33,11 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -45,7 +45,7 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,14 +62,14 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -112,14 +112,14 @@ func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	arn := aws.StringValue(ns.Arn)
-	d.Set("arn", arn)
-	d.Set("description", ns.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
 		d.Set("hosted_zone", ns.Properties.DnsProperties.HostedZoneId)
 	} else {
 		d.Set("hosted_zone", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
 	return nil
 }
@@ -127,11 +127,11 @@ func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData,
 func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &servicediscovery.UpdatePublicDnsNamespaceInput{
 			Id: aws.String(d.Id()),
 			Namespace: &servicediscovery.PublicDnsNamespaceChange{
-				Description: aws.String(d.Get("description").(string)),
+				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
 			UpdaterRequestId: aws.String(id.UniqueId()),
 		}

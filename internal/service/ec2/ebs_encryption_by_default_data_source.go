@@ -7,11 +7,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ebs_encryption_by_default")
@@ -24,7 +25,7 @@ func DataSourceEBSEncryptionByDefault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -33,15 +34,15 @@ func DataSourceEBSEncryptionByDefault() *schema.Resource {
 }
 func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	res, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+	res, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading default EBS encryption toggle: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("enabled", res.EbsEncryptionByDefault)
+	d.Set(names.AttrEnabled, res.EbsEncryptionByDefault)
 
 	return diags
 }

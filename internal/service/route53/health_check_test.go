@@ -38,9 +38,9 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 				Config: testAccHealthCheckConfig_basic("2", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("healthcheck/.+")),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("healthcheck/.+")),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", "true"),
-					resource.TestCheckResourceAttr(resourceName, "port", "80"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "2"),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -387,7 +387,7 @@ func TestAccRoute53HealthCheck_withRoutingControlARN(t *testing.T) {
 				Config: testAccHealthCheckConfig_routingControlARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "type", "RECOVERY_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "RECOVERY_CONTROL"),
 				),
 			},
 			{

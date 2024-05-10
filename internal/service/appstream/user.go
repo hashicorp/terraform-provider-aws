@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appstream_user")
@@ -32,7 +33,7 @@ func ResourceUser() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +47,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -116,7 +117,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Enabling/disabling workflow
-	if !d.Get("enabled").(bool) {
+	if !d.Get(names.AttrEnabled).(bool) {
 		input := &appstream.DisableUserInput{
 			AuthenticationType: aws.String(authType),
 			UserName:           aws.String(userName),
@@ -153,10 +154,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading AppStream User (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", user.Arn)
+	d.Set(names.AttrARN, user.Arn)
 	d.Set("authentication_type", user.AuthenticationType)
 	d.Set("created_time", aws.TimeValue(user.CreatedTime).Format(time.RFC3339))
-	d.Set("enabled", user.Enabled)
+	d.Set(names.AttrEnabled, user.Enabled)
 	d.Set("first_name", user.FirstName)
 
 	d.Set("last_name", user.LastName)
@@ -175,8 +176,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange("enabled") {
-		if d.Get("enabled").(bool) {
+	if d.HasChange(names.AttrEnabled) {
+		if d.Get(names.AttrEnabled).(bool) {
 			input := &appstream.EnableUserInput{
 				AuthenticationType: aws.String(authType),
 				UserName:           aws.String(userName),

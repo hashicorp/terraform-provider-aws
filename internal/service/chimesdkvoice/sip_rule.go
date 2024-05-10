@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_chimesdkvoice_sip_rule", name="Sip Rule")
@@ -38,7 +39,7 @@ func ResourceSipRule() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -86,7 +87,7 @@ func resourceSipRuleCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.CreateSipRuleInput{
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(d.Get(names.AttrName).(string)),
 		TriggerType:        awstypes.SipRuleTriggerType(d.Get("trigger_type").(string)),
 		TriggerValue:       aws.String(d.Get("trigger_value").(string)),
 		TargetApplications: expandSipRuleTargetApplications(d.Get("target_applications").(*schema.Set).List()),
@@ -121,7 +122,7 @@ func resourceSipRuleRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 	d.Set("disabled", resp.Disabled)
 	d.Set("trigger_type", resp.TriggerType)
 	d.Set("trigger_value", resp.TriggerValue)
@@ -135,7 +136,7 @@ func resourceSipRuleUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	updateInput := &chimesdkvoice.UpdateSipRuleInput{
 		SipRuleId: aws.String(d.Id()),
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if d.HasChanges("target_applications") {

@@ -20,7 +20,7 @@ func DataSourceReplicationSet() *schema.Resource {
 		ReadWithoutTimeout: dataSourceReplicationSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -29,15 +29,15 @@ func DataSourceReplicationSet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -48,7 +48,7 @@ func DataSourceReplicationSet() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			// all other computed fields in alphabetic order
 			"created_by": {
 				Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func DataSourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,11 +91,11 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
 	}
 
-	d.Set("arn", replicationSet.Arn)
+	d.Set(names.AttrARN, replicationSet.Arn)
 	d.Set("created_by", replicationSet.CreatedBy)
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
-	d.Set("status", replicationSet.Status)
+	d.Set(names.AttrStatus, replicationSet.Status)
 
 	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
@@ -110,7 +110,7 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, DSNameReplicationSet, d.Id(), err)
 	}
 

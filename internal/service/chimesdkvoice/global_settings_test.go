@@ -49,7 +49,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 			// Note: due to eventual consistency, the read after update can occasionally
@@ -111,7 +111,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
 				),
 			},
 		},

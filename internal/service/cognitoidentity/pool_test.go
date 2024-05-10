@@ -41,7 +41,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", "false"),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", ""),
 				),
@@ -220,7 +220,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.default", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.default", names.AttrARN),
 				),
 			},
 			{
@@ -235,7 +235,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.secondary", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.secondary", names.AttrARN),
 				),
 			},
 			{

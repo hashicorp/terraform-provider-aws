@@ -46,7 +46,7 @@ func ResourceVocabulary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,7 +150,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("vocabulary/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
 	d.Set("language_code", out.LanguageCode)
@@ -161,7 +161,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateVocabularyInput{
 			VocabularyName: aws.String(d.Id()),
 			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),

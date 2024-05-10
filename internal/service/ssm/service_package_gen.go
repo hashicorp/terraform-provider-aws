@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssm_document",
 			Name:     "Document",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Document",
 			},
 		},
@@ -85,7 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssm_maintenance_window",
 			Name:     "Maintenance Window",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "MaintenanceWindow",
 			},
 		},
@@ -102,7 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Parameter",
 			},
 		},
@@ -111,7 +111,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 				ResourceType:        "PatchBaseline",
 			},
 		},

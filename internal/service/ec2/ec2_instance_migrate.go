@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func InstanceMigrateState(
@@ -94,7 +95,7 @@ func WriteV1BlockDevice(
 		delete(oldBd, "encrypted")
 		delete(oldBd, "snapshot_id")
 	case "ephemeral_block_device":
-		delete(oldBd, "delete_on_termination")
+		delete(oldBd, names.AttrDeleteOnTermination)
 		delete(oldBd, "encrypted")
 		delete(oldBd, "iops")
 		delete(oldBd, "volume_size")

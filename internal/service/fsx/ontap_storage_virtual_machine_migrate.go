@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceONTAPStorageVirtualMachineV0() *schema.Resource {
+func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 0,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceONTAPStorageVirtualMachineV0() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -178,7 +178,7 @@ func ResourceONTAPStorageVirtualMachineV0() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -210,7 +210,7 @@ func ResourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	}
 }
 
-func ResourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
 	rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"] = rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"]

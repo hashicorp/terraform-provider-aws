@@ -55,15 +55,15 @@ func (r *resourcePolicy) Metadata(_ context.Context, req resource.MetadataReques
 func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id":        framework.IDAttribute(),
-			"policy_id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
+			"policy_id":  framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -90,7 +90,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"description": schema.StringAttribute{
+									names.AttrDescription: schema.StringAttribute{
 										Optional: true,
 									},
 									"statement": schema.StringAttribute{

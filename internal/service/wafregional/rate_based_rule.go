@@ -38,7 +38,7 @@ func resourceRateBasedRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceRateBasedRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(wafregional.PredicateType_Values(), false),
@@ -82,7 +82,7 @@ func resourceRateBasedRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRateBasedRuleInput{
 			ChangeToken: token,
@@ -138,21 +138,21 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 
 	resp, err := conn.GetRateBasedRuleWithContext(ctx, params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Get("name").(string))
+		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Get(names.AttrName).(string))
 		d.SetId("")
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Rate Based Rule (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Rate Based Rule (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	var predicates []map[string]interface{}
 
 	for _, predicateSet := range resp.Rule.MatchPredicates {
 		predicates = append(predicates, map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
+			"negated":      *predicateSet.Negated,
+			names.AttrType: *predicateSet.Type,
+			"data_id":      *predicateSet.DataId,
 		})
 	}
 
@@ -163,9 +163,9 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
 		Service:   "waf-regional",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("predicate", predicates)
-	d.Set("name", resp.Rule.Name)
+	d.Set(names.AttrName, resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 	d.Set("rate_key", resp.Rule.RateKey)
 	d.Set("rate_limit", resp.Rule.RateLimit)

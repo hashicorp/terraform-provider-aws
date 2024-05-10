@@ -35,7 +35,7 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 					resource.TestCheckResourceAttrSet(resourceName, "website_domain"),
@@ -95,7 +95,7 @@ func TestAccS3BucketWebsiteConfiguration_update(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 					resource.TestCheckResourceAttr(resourceName, "error_document.#", "1"),
@@ -126,7 +126,7 @@ func TestAccS3BucketWebsiteConfiguration_Redirect(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_redirect(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.0.host_name", "example.com"),
 				),

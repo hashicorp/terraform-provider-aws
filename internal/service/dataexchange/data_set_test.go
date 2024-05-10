@@ -37,10 +37,10 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 			{
@@ -52,9 +52,9 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 				Config: testAccDataSetConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 		},

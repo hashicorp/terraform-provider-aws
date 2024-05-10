@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name="Lifecycle Policy Document")
@@ -48,7 +49,7 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
 						"priority": schema.Int64Attribute{
@@ -66,7 +67,7 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
+									names.AttrType: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf("expire"),

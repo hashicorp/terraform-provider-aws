@@ -29,7 +29,7 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 				Config: testAccOpenIDConnectProviderDataSourceConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "thumbprint_list", resourceName, "thumbprint_list"),
@@ -56,7 +56,7 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 				Config: testAccOpenIDConnectProviderDataSourceConfig_url(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "thumbprint_list", resourceName, "thumbprint_list"),
@@ -83,7 +83,7 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 				Config: testAccOpenIDConnectProviderDataSourceConfig_tags(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "thumbprint_list", resourceName, "thumbprint_list"),

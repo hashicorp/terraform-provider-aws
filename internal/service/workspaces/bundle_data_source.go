@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_workspaces_bundle")
@@ -25,9 +26,9 @@ func DataSourceBundle() *schema.Resource {
 			"bundle_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"owner", "name"},
+				ConflictsWith: []string{"owner", names.AttrName},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
@@ -37,7 +38,7 @@ func DataSourceBundle() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"bundle_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +47,7 @@ func DataSourceBundle() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -106,7 +107,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 		bundle = resp.Bundles[0]
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if name, ok := d.GetOk(names.AttrName); ok {
 		id := name
 		input := &workspaces.DescribeWorkspaceBundlesInput{}
 
@@ -142,14 +143,14 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(bundle.BundleId))
 	d.Set("bundle_id", bundle.BundleId)
-	d.Set("description", bundle.Description)
-	d.Set("name", bundle.Name)
+	d.Set(names.AttrDescription, bundle.Description)
+	d.Set(names.AttrName, bundle.Name)
 	d.Set("owner", bundle.Owner)
 
 	computeType := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {
 		computeType[0] = map[string]interface{}{
-			"name": string(bundle.ComputeType.Name),
+			names.AttrName: string(bundle.ComputeType.Name),
 		}
 	}
 	if err := d.Set("compute_type", computeType); err != nil {

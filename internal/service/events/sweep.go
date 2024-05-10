@@ -279,6 +279,7 @@ func sweepRules(region string) error {
 					r := resourceRule()
 					d := r.Data(nil)
 					d.SetId(ruleCreateResourceID(eventBusName, ruleName))
+					d.Set("force_destroy", true)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -357,6 +358,7 @@ func sweepTargets(region string) error {
 							d := r.Data(nil)
 							d.SetId(targetCreateResourceID(eventBusName, ruleName, targetID))
 							d.Set("event_bus_name", eventBusName)
+							d.Set("force_destroy", true)
 							d.Set("rule", ruleName)
 							d.Set("target_id", targetID)
 

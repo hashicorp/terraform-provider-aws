@@ -62,7 +62,7 @@ func ResourceTransitGateway() *schema.Resource {
 				Optional: true,
 				Default:  64512,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +88,7 @@ func ResourceTransitGateway() *schema.Resource {
 				Default:      ec2.DefaultRouteTablePropagationValueEnable,
 				ValidateFunc: validation.StringInSlice(ec2.DefaultRouteTablePropagationValue_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -105,7 +105,7 @@ func ResourceTransitGateway() *schema.Resource {
 				Default:      ec2.MulticastSupportValueDisable,
 				ValidateFunc: validation.StringInSlice(ec2.MulticastSupportValue_Values(), false),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,7 +160,7 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Options.AmazonSideAsn = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -201,15 +201,15 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
-	d.Set("arn", transitGateway.TransitGatewayArn)
+	d.Set(names.AttrARN, transitGateway.TransitGatewayArn)
 	d.Set("association_default_route_table_id", transitGateway.Options.AssociationDefaultRouteTableId)
 	d.Set("auto_accept_shared_attachments", transitGateway.Options.AutoAcceptSharedAttachments)
 	d.Set("default_route_table_association", transitGateway.Options.DefaultRouteTableAssociation)
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
-	d.Set("description", transitGateway.Description)
+	d.Set(names.AttrDescription, transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
-	d.Set("owner_id", transitGateway.OwnerId)
+	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
@@ -223,7 +223,7 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyTransitGatewayInput{
 			Options:          &ec2.ModifyTransitGatewayOptions{},
 			TransitGatewayId: aws.String(d.Id()),
@@ -245,8 +245,8 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.Options.DefaultRouteTablePropagation = aws.String(d.Get("default_route_table_propagation").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("dns_support") {

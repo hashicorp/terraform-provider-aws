@@ -33,7 +33,7 @@ func testAccAccessGrantsInstance_basic(t *testing.T) {
 					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

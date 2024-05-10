@@ -37,8 +37,8 @@ func TestAccVPCInternetGatewayAttachment_basic(t *testing.T) {
 				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "internet_gateway_id", igwResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "internet_gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
 			{

@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_policy_association", name="Access Policy Association")
@@ -58,7 +59,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -259,7 +260,7 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 
 	accessScope := &types.AccessScope{}
 
-	if v, ok := m["type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrType].(string); ok && v != "" {
 		accessScope.Type = types.AccessScopeType(v)
 	}
 
@@ -276,8 +277,8 @@ func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"type":       (*string)(&apiObject.Type),
-		"namespaces": apiObject.Namespaces,
+		names.AttrType: (*string)(&apiObject.Type),
+		"namespaces":   apiObject.Namespaces,
 	}
 
 	return []interface{}{tfMap}

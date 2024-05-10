@@ -38,7 +38,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Config: testAccRoleAliasConfig_basic(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(resourceName, "credential_duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
@@ -49,7 +49,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName),
 					testAccCheckRoleAliasExists(ctx, resourceName2),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(resourceName, "credential_duration", "43200"),
 				),
 			},
@@ -74,7 +74,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Config: testAccRoleAliasConfig_update5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName2),
-					acctest.MatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexache.MustCompile("role/rolebogus")),
+					acctest.MatchResourceAttrGlobalARN(resourceName2, names.AttrRoleARN, "iam", regexache.MustCompile("role/rolebogus")),
 				),
 			},
 			{
@@ -118,7 +118,7 @@ func testAccCheckRoleAliasExists(ctx context.Context, n string) resource.TestChe
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
-		role_arn := rs.Primary.Attributes["role_arn"]
+		role_arn := rs.Primary.Attributes[names.AttrRoleARN]
 
 		roleAliasDescription, err := tfiot.GetRoleAliasDescription(ctx, conn, rs.Primary.ID)
 

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_efs_access_point")
@@ -35,11 +36,11 @@ func DataSourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +98,7 @@ func DataSourceAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -122,7 +123,7 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Found EFS access point: %#v", ap)
 
 	d.SetId(aws.StringValue(ap.AccessPointId))
-	d.Set("arn", ap.AccessPointArn)
+	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.StringValue(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -133,14 +134,14 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 	}.String()
 	d.Set("file_system_arn", fsARN)
 	d.Set("file_system_id", fsID)
-	d.Set("owner_id", ap.OwnerId)
+	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}
 	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting root_directory: %s", err)
 	}
-	if err := d.Set("tags", KeyValueTags(ctx, ap.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, ap.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_wafregional_xss_match_set", name="XSS Match Set")
@@ -32,7 +33,7 @@ func resourceXSSMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -52,7 +53,7 @@ func resourceXSSMatchSet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(wafregional.MatchFieldType_Values(), false),
@@ -77,13 +78,13 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	log.Printf("[INFO] Creating regional WAF XSS Match Set: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating regional WAF XSS Match Set: %s", d.Get(names.AttrName).(string))
 
 	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateXssMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		return conn.CreateXssMatchSetWithContext(ctx, params)
@@ -127,7 +128,7 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("xss_match_tuple", flattenXSSMatchTuples(set.XssMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xss_match_tuple: %s", err)
 	}
-	d.Set("name", set.Name)
+	d.Set(names.AttrName, set.Name)
 
 	return diags
 }

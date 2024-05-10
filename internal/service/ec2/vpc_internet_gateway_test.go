@@ -35,10 +35,10 @@ func TestAccVPCInternetGateway_basic(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_attachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc1ResourceName, names.AttrID),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_attachmentUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc2ResourceName, names.AttrID),
 				),
 			},
 		},

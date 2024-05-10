@@ -42,25 +42,25 @@ func TestAccRDSProxy_basic(t *testing.T) {
 				Config: testAccProxyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "engine_family", "MYSQL"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db-proxy:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
 						"auth_scheme":               "SECRETS",
 						"client_password_auth_type": "MYSQL_NATIVE_PASSWORD",
-						"description":               "test",
+						names.AttrDescription:       "test",
 						"iam_auth":                  "DISABLED",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
 					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
 					resource.TestCheckResourceAttr(resourceName, "require_tls", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccRDSProxy_name(t *testing.T) {
 				Config: testAccProxyConfig_name(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccRDSProxy_name(t *testing.T) {
 				Config: testAccProxyConfig_name(rName, nName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "name", nName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, nName),
 				),
 			},
 		},
@@ -250,7 +250,7 @@ func TestAccRDSProxy_roleARN(t *testing.T) {
 				Config: testAccProxyConfig_name(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -262,7 +262,7 @@ func TestAccRDSProxy_roleARN(t *testing.T) {
 				Config: testAccProxyConfig_roleARN(rName, nName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},
 		},
@@ -291,7 +291,7 @@ func TestAccRDSProxy_vpcSecurityGroupIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", names.AttrID),
 				),
 			},
 			{
@@ -304,7 +304,7 @@ func TestAccRDSProxy_vpcSecurityGroupIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test2", names.AttrID),
 				),
 			},
 		},
@@ -334,7 +334,7 @@ func TestAccRDSProxy_authDescription(t *testing.T) {
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
-						"description": "test",
+						names.AttrDescription: "test",
 					}),
 				),
 			},
@@ -349,7 +349,7 @@ func TestAccRDSProxy_authDescription(t *testing.T) {
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
-						"description": description,
+						names.AttrDescription: description,
 					}),
 				),
 			},
@@ -425,7 +425,7 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -438,8 +438,8 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test2", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "auth.*.secret_arn", "aws_secretsmanager_secret.test2", names.AttrARN),
 				),
 			},
 		},

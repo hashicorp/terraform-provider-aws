@@ -36,13 +36,13 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3control_bucket.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.days": "365",
-						"id":                "test",
-						"status":            string(types.ExpirationStatusEnabled),
+						names.AttrID:        "test",
+						names.AttrStatus:    string(types.ExpirationStatusEnabled),
 					}),
 				),
 			},
@@ -368,7 +368,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id": "test1",
+						names.AttrID: "test1",
 					}),
 				),
 			},
@@ -383,7 +383,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id": "test2",
+						names.AttrID: "test2",
 					}),
 				),
 			},
@@ -408,7 +408,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": string(types.ExpirationStatusDisabled),
+						names.AttrStatus: string(types.ExpirationStatusDisabled),
 					}),
 				),
 			},
@@ -423,7 +423,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": string(types.ExpirationStatusEnabled),
+						names.AttrStatus: string(types.ExpirationStatusEnabled),
 					}),
 				),
 			},

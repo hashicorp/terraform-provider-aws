@@ -37,7 +37,7 @@ func testAccMember_basic(t *testing.T) {
 				Config: testAccMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
@@ -157,7 +157,7 @@ func testAccMember_invitationMessage(t *testing.T) {
 				Config: testAccMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),

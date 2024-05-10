@@ -29,8 +29,8 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "key1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value1"),
 				),
 			},
 			{
@@ -111,8 +111,8 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "key1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value1"),
 				),
 			},
 			{
@@ -124,8 +124,8 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "key1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value1updated"),
 				),
 			},
 		},

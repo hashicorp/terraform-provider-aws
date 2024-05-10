@@ -912,7 +912,7 @@ func StatusTransitGatewayVPCAttachmentState(ctx context.Context, conn *ec2.EC2, 
 	}
 }
 
-func StatusVolumeState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+func StatusVolumeState(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEBSVolumeByID(ctx, conn, id)
 
@@ -924,13 +924,13 @@ func StatusVolumeState(ctx context.Context, conn *ec2.EC2, id string) retry.Stat
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }
 
 func StatusVolumeAttachmentState(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
+		output, err := FindVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1310,7 +1310,7 @@ func StatusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.EC2, 
 	}
 }
 
-func StatusEBSSnapshotImport(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+func StatusEBSSnapshotImport(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImportSnapshotTaskByID(ctx, conn, id)
 
@@ -1342,7 +1342,7 @@ func statusVPCEndpointConnectionVPCEndpointState(ctx context.Context, conn *ec2.
 	}
 }
 
-func StatusSnapshotStorageTier(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+func StatusSnapshotStorageTier(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)
 
@@ -1354,7 +1354,7 @@ func StatusSnapshotStorageTier(ctx context.Context, conn *ec2.EC2, id string) re
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.StorageTier), nil
+		return output, string(output.StorageTier), nil
 	}
 }
 

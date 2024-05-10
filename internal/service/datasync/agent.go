@@ -43,7 +43,7 @@ func ResourceAgent() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func ResourceAgent() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -184,7 +184,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.AgentName = aws.String(v.(string))
 	}
 
@@ -235,8 +235,8 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Agent (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.AgentArn)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.AgentArn)
+	d.Set(names.AttrName, output.Name)
 	if plc := output.PrivateLinkConfig; plc != nil {
 		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
 		d.Set("security_group_arns", flex.FlattenStringValueList(plc.SecurityGroupArns))
@@ -256,10 +256,10 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		input := &datasync.UpdateAgentInput{
 			AgentArn: aws.String(d.Id()),
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		_, err := conn.UpdateAgent(ctx, input)

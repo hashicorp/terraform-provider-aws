@@ -36,7 +36,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
@@ -56,7 +56,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
 					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", "Rails App Server"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Rails App Server"),
 					resource.TestCheckResourceAttr(resourceName, "passenger_version", "4.0.46"),
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.2.2"),
@@ -208,7 +208,7 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_server", "nginx_unicorn"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.12.5"),
 					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "passenger_version", "4.0.60"),
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.6"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.5.1"),
@@ -226,7 +226,7 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.15.4"),
 					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "passenger_version", "5.1.3"),
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.3"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.7.9"),
@@ -252,7 +252,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_elb(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.0", names.AttrName),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_elb(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.1", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.1", names.AttrName),
 				),
 			},
 		},

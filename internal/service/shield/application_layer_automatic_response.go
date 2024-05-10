@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -70,7 +71,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 				Required:   true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -79,7 +80,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -331,12 +332,12 @@ type applicationLayerAutomaticResponseResourceModel struct {
 }
 
 func (data *applicationLayerAutomaticResponseResourceModel) InitFromID() error {
-	v, err := fwdiag.AsError(fwtypes.ARNValue(data.ID.ValueString()))
+	_, err := arn.Parse(data.ID.ValueString())
 	if err != nil {
 		return err
 	}
 
-	data.ResourceARN = v
+	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
 
 	return nil
 }

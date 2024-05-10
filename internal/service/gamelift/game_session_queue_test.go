@@ -69,8 +69,8 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", queueName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
@@ -90,8 +90,8 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 				Config: testAccGameSessionQueueConfig_basic(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", uQueueName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, uQueueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),

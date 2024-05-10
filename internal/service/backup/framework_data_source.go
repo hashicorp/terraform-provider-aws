@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_backup_framework")
@@ -22,7 +23,7 @@ func DataSourceFramework() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFrameworkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,18 +37,18 @@ func DataSourceFramework() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -70,7 +71,7 @@ func DataSourceFramework() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"tags": tftags.TagsSchemaComputed(),
+									names.AttrTags: tftags.TagsSchemaComputed(),
 								},
 							},
 						},
@@ -85,19 +86,19 @@ func DataSourceFramework() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -107,7 +108,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	resp, err := conn.DescribeFrameworkWithContext(ctx, &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(name),
@@ -118,11 +119,11 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(resp.FrameworkName))
 
-	d.Set("arn", resp.FrameworkArn)
+	d.Set(names.AttrARN, resp.FrameworkArn)
 	d.Set("deployment_status", resp.DeploymentStatus)
-	d.Set("description", resp.FrameworkDescription)
-	d.Set("name", resp.FrameworkName)
-	d.Set("status", resp.FrameworkStatus)
+	d.Set(names.AttrDescription, resp.FrameworkDescription)
+	d.Set(names.AttrName, resp.FrameworkName)
+	d.Set(names.AttrStatus, resp.FrameworkStatus)
 
 	if err := d.Set("creation_time", resp.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
@@ -138,7 +139,7 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

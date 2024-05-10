@@ -44,7 +44,7 @@ func ResourceUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func ResourceUser() *schema.Resource {
 				Default:      transfer.HomeDirectoryTypePath,
 				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -161,7 +161,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.HomeDirectoryType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", v.(string), err)
@@ -207,18 +207,18 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Transfer User (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", user.Arn)
+	d.Set(names.AttrARN, user.Arn)
 	d.Set("home_directory", user.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(user.HomeDirectoryMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
 	}
 	d.Set("home_directory_type", user.HomeDirectoryType)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(user.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(user.Policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer User (%s): %s", d.Id(), err)
 	}
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	if err := d.Set("posix_profile", flattenUserPOSIXUser(user.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
@@ -236,7 +236,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		serverID, userName, err := UserParseResourceID(d.Id())
 
 		if err != nil {
@@ -260,10 +260,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
 		}
 
-		if d.HasChange("policy") {
-			policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+		if d.HasChange(names.AttrPolicy) {
+			policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+				return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 			}
 
 			input.Policy = aws.String(policy)

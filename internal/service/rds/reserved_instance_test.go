@@ -44,7 +44,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 				Config: testAccReservedInstanceConfig_basic(rName, instanceCount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`ri:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`ri:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "currency_code", resourceName, "currency_code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "duration", resourceName, "duration"),
@@ -58,7 +58,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_id", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttrSet(resourceName, "usage_price"),
 				),
 			},

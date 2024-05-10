@@ -37,7 +37,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -98,7 +98,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	input := &ec2.CreateNetworkInsightsPathInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		Destination:       aws.String(d.Get("destination").(string)),
-		Protocol:          aws.String(d.Get("protocol").(string)),
+		Protocol:          aws.String(d.Get(names.AttrProtocol).(string)),
 		Source:            aws.String(d.Get("source").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInsightsPath),
 	}
@@ -143,12 +143,12 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", nip.NetworkInsightsPathArn)
+	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
 	d.Set("destination", nip.Destination)
 	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
-	d.Set("protocol", nip.Protocol)
+	d.Set(names.AttrProtocol, nip.Protocol)
 	d.Set("source", nip.Source)
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)

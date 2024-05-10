@@ -62,16 +62,18 @@ github.com/aws-sdk-go-v2/service/<service>
 awstypes github.com/aws-sdk-go-v2/service/<service>/types
 ```
 
-If the `aws` package is used, this should also be upgraded.
+If the `aws` or `arn` packages are used, these should also be upgraded.
 
 ```
 // Remove
 github.com/aws-sdk-go/aws
+github.com/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
 github.com/aws-sdk-go-v2/aws
+github.com/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client
@@ -247,31 +249,31 @@ ValidateFunc: validation.StringInSlice(<service>.Thing_Values(), false),
 ValidateDiagFunc: enum.Validate[awstypes.Thing](),
 ```
 
-## Acceptance Testing `ErrorCheck`
+## Acceptance Testing `PreCheckPartitionHasService`
 
 With V1, this check relies on the endpoint ID constant included in the SDK.
-These are not included in the V2 SDK, but can be replaced with a generated constant from the `names` package.
+These are not included in the V2 SDK, but can be replaced with a constant from the `names` package.
 
 ```go
 // Remove
-ErrorCheck: acctest.ErrorCheck(t, <service>.EndpointsID),
+acctest.PreCheckPartitionHasService(t, <service>.EndpointsID),
 ```
 
 ```go
 // Add
-ErrorCheck: acctest.ErrorCheck(t, names.<service>ServiceID),
+acctest.PreCheckPartitionHasService(t, names.<Service>EndpointID),
 ```
 
 For example,
 
 ```
-ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+acctest.PreCheckPartitionHasService(t, ssoadmin.EndpointsID),
 ```
 
 becomes:
 
 ```go
-ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
+acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID),
 ```
 
 ## Pagination

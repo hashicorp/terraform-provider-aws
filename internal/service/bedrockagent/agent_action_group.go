@@ -79,7 +79,7 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
@@ -439,7 +439,7 @@ func flattenActionGroupExecutor(ctx context.Context, apiObject awstypes.ActionGr
 
 	switch v := apiObject.(type) {
 	case *awstypes.ActionGroupExecutorMemberLambda:
-		actionGroupExecutorData.Lambda = fwtypes.ARNValueMust(v.Value)
+		actionGroupExecutorData.Lambda = fwtypes.ARNValue(v.Value)
 	}
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &actionGroupExecutorData)

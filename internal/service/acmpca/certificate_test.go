@@ -40,10 +40,10 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_root(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
@@ -85,10 +85,10 @@ func TestAccACMPCACertificate_rootCertificateWithAPIPassthrough(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					testAccCheckCertificateExtension(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
@@ -129,10 +129,10 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_subordinate(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", rootCertificateAuthorityResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", rootCertificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_signing_request", subordinateCertificateAuthorityResourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
@@ -173,7 +173,7 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_endEntity(domain, acctest.TLSPEMEscapeNewlines(csr)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
@@ -217,7 +217,7 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 				Config: testAccCertificateConfig_validityEndDate(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
@@ -261,7 +261,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 				Config: testAccCertificateConfig_validityAbsolute(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
@@ -584,7 +584,7 @@ func TestValidateTemplateARN(t *testing.T) {
 	}
 
 	invalidNames := []string{
-		"arn",
+		names.AttrARN,
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                       // lintignore:AWSAT005
 		"arn:aws:acm-pca:us-west-2::template/SubordinateCACertificate_PathLen0/V1", // lintignore:AWSAT003,AWSAT005
 		"arn:aws:acm-pca::123456789012:template/EndEntityCertificate/V1",           // lintignore:AWSAT005

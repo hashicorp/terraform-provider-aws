@@ -44,7 +44,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
@@ -277,7 +277,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 				Config: testAccCertificateConfig_description(certificate, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 				),
 			},
 			{
@@ -290,7 +290,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 				Config: testAccCertificateConfig_description(certificate, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 				),
 			},
 		},

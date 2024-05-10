@@ -44,7 +44,7 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
 					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "S3_INTEGRATION"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{

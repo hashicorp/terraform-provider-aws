@@ -39,7 +39,7 @@ func ResourceFlowLog() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -127,11 +127,11 @@ func ResourceFlowLog() *schema.Resource {
 				Default:      600,
 				ValidateFunc: validation.IntInSlice([]int{60, 600}),
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -141,23 +141,23 @@ func ResourceFlowLog() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.TrafficType_Values(), false),
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"eni_id", "subnet_id", "vpc_id", "transit_gateway_id", "transit_gateway_attachment_id"},
+				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
 		},
 
@@ -176,19 +176,19 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Type string
 	}{
 		{
-			ID:   d.Get("vpc_id").(string),
+			ID:   d.Get(names.AttrVPCID).(string),
 			Type: ec2.FlowLogsResourceTypeVpc,
 		},
 		{
-			ID:   d.Get("transit_gateway_id").(string),
+			ID:   d.Get(names.AttrTransitGatewayID).(string),
 			Type: ec2.FlowLogsResourceTypeTransitGateway,
 		},
 		{
-			ID:   d.Get("transit_gateway_attachment_id").(string),
+			ID:   d.Get(names.AttrTransitGatewayAttachmentID).(string),
 			Type: ec2.FlowLogsResourceTypeTransitGatewayAttachment,
 		},
 		{
-			ID:   d.Get("subnet_id").(string),
+			ID:   d.Get(names.AttrSubnetID).(string),
 			Type: ec2.FlowLogsResourceTypeSubnet,
 		},
 		{
@@ -285,7 +285,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("deliver_cross_account_role", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
@@ -302,15 +302,15 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):
-		d.Set("vpc_id", resourceID)
+		d.Set(names.AttrVPCID, resourceID)
 	case strings.HasPrefix(resourceID, "tgw-"):
 		if strings.HasPrefix(resourceID, "tgw-attach-") {
-			d.Set("transit_gateway_attachment_id", resourceID)
+			d.Set(names.AttrTransitGatewayAttachmentID, resourceID)
 		} else {
-			d.Set("transit_gateway_id", resourceID)
+			d.Set(names.AttrTransitGatewayID, resourceID)
 		}
 	case strings.HasPrefix(resourceID, "subnet-"):
-		d.Set("subnet_id", resourceID)
+		d.Set(names.AttrSubnetID, resourceID)
 	case strings.HasPrefix(resourceID, "eni-"):
 		d.Set("eni_id", resourceID)
 	}

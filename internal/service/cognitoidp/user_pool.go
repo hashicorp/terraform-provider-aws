@@ -57,7 +57,7 @@ func resourceUserPool() *schema.Resource {
 							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.RecoveryOptionNameType_Values(), false),
@@ -120,7 +120,7 @@ func resourceUserPool() *schema.Resource {
 				},
 				ConflictsWith: []string{"username_attributes"},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -288,7 +288,7 @@ func resourceUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -362,7 +362,7 @@ func resourceUserPool() *schema.Resource {
 				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
 				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.UserPoolMfaType_Values(), false),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -428,7 +428,7 @@ func resourceUserPool() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validUserPoolSchemaName,
@@ -518,7 +518,7 @@ func resourceUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -641,7 +641,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName:     aws.String(name),
 		UserPoolTags: getTagsIn(ctx),
@@ -844,7 +844,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if userPool.AliasAttributes != nil {
 		d.Set("alias_attributes", aws.StringValueSlice(userPool.AliasAttributes))
 	}
-	d.Set("arn", userPool.Arn)
+	d.Set(names.AttrARN, userPool.Arn)
 	d.Set("auto_verified_attributes", aws.StringValueSlice(userPool.AutoVerifiedAttributes))
 	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
 	d.Set("custom_domain", userPool.CustomDomain)
@@ -864,7 +864,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting lambda_config: %s", err)
 	}
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
-	d.Set("name", userPool.Name)
+	d.Set(names.AttrName, userPool.Name)
 	if err := d.Set("password_policy", flattenUserPoolPasswordPolicy(userPool.Policies.PasswordPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting password_policy: %s", err)
 	}
@@ -972,8 +972,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
-		"tags",
-		"tags_all",
+		names.AttrTags,
+		names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
@@ -1256,7 +1256,7 @@ func expandSoftwareTokenMFAConfiguration(tfList []interface{}) *cognitoidentityp
 
 	apiObject := &cognitoidentityprovider.SoftwareTokenMfaConfigType{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1293,7 +1293,7 @@ func flattenSoftwareTokenMFAConfiguration(apiObject *cognitoidentityprovider.Sof
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap[names.AttrEnabled] = aws.BoolValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1315,7 +1315,7 @@ func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *
 			param := m.(map[string]interface{})
 			opt := &cognitoidentityprovider.RecoveryOptionType{}
 
-			if v, ok := param["name"]; ok {
+			if v, ok := param[names.AttrName]; ok {
 				opt.Name = aws.String(v.(string))
 			}
 
@@ -1343,8 +1343,8 @@ func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider
 
 	for _, conf := range config.RecoveryMechanisms {
 		mech := map[string]interface{}{
-			"name":     aws.StringValue(conf.Name),
-			"priority": aws.Int64Value(conf.Priority),
+			names.AttrName: aws.StringValue(conf.Name),
+			"priority":     aws.Int64Value(conf.Priority),
 		}
 		mechanisms = append(mechanisms, mech)
 	}
@@ -1522,7 +1522,7 @@ func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityp
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
 
-	if v, ok := config["kms_key_id"]; ok && v.(string) != "" {
+	if v, ok := config[names.AttrKMSKeyID]; ok && v.(string) != "" {
 		configs.KMSKeyID = aws.String(v.(string))
 	}
 
@@ -1594,7 +1594,7 @@ func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []
 	}
 
 	if s.KMSKeyID != nil {
-		m["kms_key_id"] = aws.StringValue(s.KMSKeyID)
+		m[names.AttrKMSKeyID] = aws.StringValue(s.KMSKeyID)
 	}
 
 	if s.CustomSMSSender != nil {
@@ -1675,7 +1675,7 @@ func expandUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.Schem
 			config.Mutable = aws.Bool(v.(bool))
 		}
 
-		if v, ok := param["name"]; ok {
+		if v, ok := param[names.AttrName]; ok {
 			config.Name = aws.String(v.(string))
 		}
 
@@ -1772,7 +1772,7 @@ func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovid
 			"attribute_data_type":      aws.StringValue(input.AttributeDataType),
 			"developer_only_attribute": aws.BoolValue(input.DeveloperOnlyAttribute),
 			"mutable":                  aws.BoolValue(input.Mutable),
-			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
+			names.AttrName:             strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
 			"required":                 aws.BoolValue(input.Required),
 		}
 
@@ -2061,7 +2061,7 @@ func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovi
 			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
-			Name:                   aws.String("name"),
+			Name:                   aws.String(names.AttrName),
 			Required:               aws.Bool(false),
 			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),

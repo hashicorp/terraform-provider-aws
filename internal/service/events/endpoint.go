@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_endpoint", name="Global Endpoint")
@@ -38,11 +39,11 @@ func resourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -66,7 +67,7 @@ func resourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -78,7 +79,7 @@ func resourceEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"state": {
+						names.AttrState: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.ReplicationStateEnabled,
@@ -88,7 +89,7 @@ func resourceEndpoint() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -147,14 +148,14 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateEndpointInput{
 		EventBuses:    expandEndpointEventBuses(d.Get("event_bus").([]interface{})),
 		Name:          aws.String(name),
 		RoutingConfig: expandRoutingConfig(d.Get("routing_config").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -162,7 +163,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ReplicationConfig = expandReplicationConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -202,13 +203,13 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Global Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("endpoint_url", output.EndpointUrl)
 	if err := d.Set("event_bus", flattenEndpointEventBuses(output.EventBuses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting event_bus: %s", err)
 	}
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	if output.ReplicationConfig != nil {
 		if err := d.Set("replication_config", []interface{}{flattenReplicationConfig(output.ReplicationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting replication_config: %s", err)
@@ -216,7 +217,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("replication_config", nil)
 	}
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	if output.RoutingConfig != nil {
 		if err := d.Set("routing_config", []interface{}{flattenRoutingConfig(output.RoutingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
@@ -236,8 +237,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		Name: aws.String(d.Id()),
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("event_bus") {
@@ -250,8 +251,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("role_arn") {
-		input.RoleArn = aws.String(d.Get("role_arn").(string))
+	if d.HasChange(names.AttrRoleARN) {
+		input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 	}
 
 	if d.HasChange("routing_config") {
@@ -446,7 +447,7 @@ func expandReplicationConfig(tfMap map[string]interface{}) *types.ReplicationCon
 
 	apiObject := &types.ReplicationConfig{}
 
-	if v, ok := tfMap["state"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrState].(string); ok && v != "" {
 		apiObject.State = types.ReplicationState(v)
 	}
 
@@ -547,7 +548,7 @@ func flattenReplicationConfig(apiObject *types.ReplicationConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"state": apiObject.State,
+		names.AttrState: apiObject.State,
 	}
 
 	return tfMap

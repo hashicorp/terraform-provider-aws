@@ -44,7 +44,7 @@ func TestAccLogsQueryDefinition_basic(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "query_string", expectedQueryString),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "query_definition_id", regexache.MustCompile(verify.UUIDRegexPattern)),
@@ -115,14 +115,14 @@ func TestAccLogsQueryDefinition_rename(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 				),
 			},
 			{
 				Config: testAccQueryDefinitionConfig_basic(updatedQueryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedQueryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedQueryName),
 				),
 			},
 			{
@@ -151,19 +151,19 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_logGroups(queryName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrName),
 				),
 			},
 			{
 				Config: testAccQueryDefinitionConfig_logGroups(queryName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "5"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", names.AttrName),
 				),
 			},
 			{
@@ -185,7 +185,7 @@ func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *types.Q
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.ID)
+		output, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -206,7 +206,7 @@ func testAccCheckQueryDefinitionDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.ID)
+			_, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

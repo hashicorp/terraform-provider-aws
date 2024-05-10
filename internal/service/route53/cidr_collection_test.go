@@ -36,8 +36,8 @@ func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile(`cidrcollection/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile(`cidrcollection/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{

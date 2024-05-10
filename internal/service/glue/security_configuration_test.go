@@ -46,7 +46,7 @@ func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.s3_encryption_mode", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -79,7 +79,7 @@ func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMo
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.cloudwatch_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.cloudwatch_encryption.0.cloudwatch_encryption_mode", "SSE-KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.cloudwatch_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.cloudwatch_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncrypti
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.job_bookmarks_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.job_bookmarks_encryption.0.job_bookmarks_encryption_mode", "CSE-KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.job_bookmarks_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.job_bookmarks_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *tes
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.s3_encryption_mode", "SSE-KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.s3_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.s3_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{

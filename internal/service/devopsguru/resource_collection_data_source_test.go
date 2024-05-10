@@ -29,7 +29,7 @@ func testAccResourceCollectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccResourceCollectionDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 				),
 			},
 		},
