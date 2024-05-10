@@ -221,7 +221,7 @@ func ResourceListenerRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 100),
@@ -263,7 +263,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		in.Priority = aws.Int32(int32(v.(int)))
 	}
 
@@ -311,7 +311,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("priority", out.Priority)
+	d.Set(names.AttrPriority, out.Priority)
 	d.Set(names.AttrName, out.Name)
 	d.Set("listener_identifier", listenerId)
 	d.Set("service_identifier", serviceId)

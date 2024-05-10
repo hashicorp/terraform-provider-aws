@@ -360,7 +360,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*.overrides.*", map[string]string{
 						"instance_requirements.#": "0",
 						names.AttrInstanceType:    "m3.medium",
-						"priority":                "1",
+						names.AttrPriority:        "1",
 						"spot_price":              "0.26",
 					}),
 				),

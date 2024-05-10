@@ -640,7 +640,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
 					return schema
 				}(),
-				"priority": {
+				names.AttrPriority: {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					ValidateFunc: validation.IntBetween(0, 1000),

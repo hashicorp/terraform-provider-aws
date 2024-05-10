@@ -75,7 +75,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

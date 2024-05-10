@@ -63,7 +63,7 @@ func ResourceRuleGroup() *schema.Resource {
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},

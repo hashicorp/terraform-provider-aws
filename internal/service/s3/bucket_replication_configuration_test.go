@@ -146,7 +146,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -155,7 +155,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -164,7 +164,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule3",
-						"priority":                    "3",
+						names.AttrPriority:            "3",
 						names.AttrStatus:              string(types.ReplicationRuleStatusDisabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -206,7 +206,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
@@ -215,7 +215,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.tag.#":              "1",
@@ -226,7 +226,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule3",
-						"priority":                    "3",
+						names.AttrPriority:            "3",
 						names.AttrStatus:              string(types.ReplicationRuleStatusDisabled),
 						"filter.#":                    "1",
 						"filter.0.and.#":              "1",
@@ -273,7 +273,7 @@ func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
@@ -282,7 +282,7 @@ func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",

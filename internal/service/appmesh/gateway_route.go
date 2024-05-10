@@ -495,7 +495,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 				},
 				"http_route":  httpRouteSchema("http_route"),
 				"http2_route": httpRouteSchema("http2_route"),
-				"priority": {
+				names.AttrPriority: {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					ValidateFunc: validation.IntBetween(0, 1000),
@@ -716,7 +716,7 @@ func expandGatewayRouteSpec(vSpec []interface{}) *appmesh.GatewayRouteSpec {
 		spec.HttpRoute = expandHTTPGatewayRoute(vHttpRoute)
 	}
 
-	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+	if vPriority, ok := mSpec[names.AttrPriority].(int); ok && vPriority > 0 {
 		spec.Priority = aws.Int64(int64(vPriority))
 	}
 
@@ -1000,10 +1000,10 @@ func flattenGatewayRouteSpec(spec *appmesh.GatewayRouteSpec) []interface{} {
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenGRPCGatewayRoute(spec.GrpcRoute),
-		"http2_route": flattenHTTPGatewayRoute(spec.Http2Route),
-		"http_route":  flattenHTTPGatewayRoute(spec.HttpRoute),
-		"priority":    int(aws.Int64Value(spec.Priority)),
+		"grpc_route":       flattenGRPCGatewayRoute(spec.GrpcRoute),
+		"http2_route":      flattenHTTPGatewayRoute(spec.Http2Route),
+		"http_route":       flattenHTTPGatewayRoute(spec.HttpRoute),
+		names.AttrPriority: int(aws.Int64Value(spec.Priority)),
 	}
 
 	return []interface{}{mSpec}

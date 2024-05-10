@@ -720,7 +720,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeFloat,
 										Optional: true,
 										Computed: true,
@@ -1546,7 +1546,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *ec2.LaunchTemp
 		apiObject.InstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["priority"].(float64); ok && v != 0.0 {
+	if v, ok := tfMap[names.AttrPriority].(float64); ok && v != 0.0 {
 		apiObject.Priority = aws.Float64(v)
 	}
 
@@ -2194,7 +2194,7 @@ func flattenLaunchTemplateOverrides(apiObject *ec2.LaunchTemplateOverrides) map[
 	}
 
 	if v := apiObject.Priority; v != nil {
-		tfMap["priority"] = aws.Float64Value(v)
+		tfMap[names.AttrPriority] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.SpotPrice; v != nil {

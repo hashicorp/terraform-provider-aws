@@ -34,7 +34,7 @@ func expandRule(m map[string]interface{}) awstypes.Rule {
 		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
-		Priority:         int32(m["priority"].(int)),
+		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -769,7 +769,7 @@ func expandTextTransformations(l []interface{}) []awstypes.TextTransformation {
 
 func expandTextTransformation(m map[string]interface{}) awstypes.TextTransformation {
 	return awstypes.TextTransformation{
-		Priority: int32(m["priority"].(int)),
+		Priority: int32(m[names.AttrPriority].(int)),
 		Type:     awstypes.TextTransformationType(m[names.AttrType].(string)),
 	}
 }
@@ -997,7 +997,7 @@ func expandWebACLRule(m map[string]interface{}) awstypes.Rule {
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
-		Priority:         int32(m["priority"].(int)),
+		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -1641,7 +1641,7 @@ func flattenRules(r []awstypes.Rule) interface{} {
 		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m[names.AttrName] = aws.ToString(rule.Name)
-		m["priority"] = rule.Priority
+		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -2194,7 +2194,7 @@ func flattenTextTransformations(l []awstypes.TextTransformation) []interface{} {
 	out := make([]interface{}, len(l))
 	for i, t := range l {
 		m := make(map[string]interface{})
-		m["priority"] = t.Priority
+		m[names.AttrPriority] = t.Priority
 		m[names.AttrType] = string(t.Type)
 		out[i] = m
 	}
@@ -2489,7 +2489,7 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrName] = aws.ToString(rule.Name)
-		m["priority"] = rule.Priority
+		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
