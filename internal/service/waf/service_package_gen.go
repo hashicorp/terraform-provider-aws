@@ -93,7 +93,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRuleGroup,
+			Factory:  resourceRuleGroup,
 			TypeName: "aws_waf_rule_group",
 			Name:     "Rule Group",
 			Tags: &types.ServicePackageResourceTags{

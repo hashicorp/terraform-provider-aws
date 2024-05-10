@@ -602,7 +602,7 @@ func sweepRuleGroups(region string) error {
 		}
 
 		for _, ruleGroup := range page.RuleGroups {
-			r := ResourceRuleGroup()
+			r := resourceRuleGroup()
 			d := r.Data(nil)
 
 			id := aws.ToString(ruleGroup.RuleGroupId)
