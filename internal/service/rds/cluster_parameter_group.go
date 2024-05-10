@@ -73,7 +73,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -177,7 +177,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// add only system parameters that are set in the config
-	p := d.Get("parameter")
+	p := d.Get(names.AttrParameter)
 	if p == nil {
 		p = new(schema.Set)
 	}
@@ -209,7 +209,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -223,8 +223,8 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}
