@@ -223,7 +223,7 @@ func updateIPSet(ctx context.Context, conn *waf.Client, id string, oldD, newD []
 		})
 
 		if err != nil {
-			return fmt.Errorf("updating WAF IPSet (%s): %s", id, err)
+			return fmt.Errorf("updating WAF IPSet (%s): %w", id, err)
 		}
 	}
 

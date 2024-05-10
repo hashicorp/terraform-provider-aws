@@ -207,7 +207,7 @@ func updateIPSet(ctx context.Context, conn *wafregional.Client, region, ipSetID 
 		})
 
 		if err != nil {
-			return fmt.Errorf("updating WAF Regional IPSet (%s): %s", ipSetID, err)
+			return fmt.Errorf("updating WAF Regional IPSet (%s): %w", ipSetID, err)
 		}
 	}
 

@@ -27,7 +27,7 @@ func TestAccWAFIPSetDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIPSetDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`WAF IP Set not found`),
+				ExpectError: regexache.MustCompile(`no matching WAF IPSet found`),
 			},
 			{
 				Config: testAccIPSetDataSourceConfig_name(name),

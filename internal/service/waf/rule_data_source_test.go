@@ -27,7 +27,7 @@ func TestAccWAFRuleDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRuleDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`WAF Rules not found`),
+				ExpectError: regexache.MustCompile(`no matching WAF Rule found`),
 			},
 			{
 				Config: testAccRuleDataSourceConfig_name(name),
