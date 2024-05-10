@@ -31,7 +31,7 @@ func dataSourceCustomKeyStore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func dataSourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(keyStore.CustomKeyStoreId))
 	d.Set("cloud_hsm_cluster_id", keyStore.CloudHsmClusterId)
 	d.Set("connection_state", keyStore.ConnectionState)
-	d.Set("creation_date", keyStore.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, keyStore.CreationDate.Format(time.RFC3339))
 	d.Set("custom_key_store_id", keyStore.CustomKeyStoreId)
 	d.Set("custom_key_store_name", keyStore.CustomKeyStoreName)
 	d.Set("trust_anchor_certificate", keyStore.TrustAnchorCertificate)
