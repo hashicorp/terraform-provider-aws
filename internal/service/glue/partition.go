@@ -189,7 +189,7 @@ func ResourcePartition() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -260,7 +260,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if partition.CreationTime != nil {
-		d.Set("creation_time", partition.CreationTime.Format(time.RFC3339))
+		d.Set(names.AttrCreationTime, partition.CreationTime.Format(time.RFC3339))
 	}
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(partition.StorageDescriptor)); err != nil {

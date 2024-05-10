@@ -75,7 +75,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(glue.ResourceType_Values(), false),
@@ -249,7 +249,7 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*glue.ResourceUri 
 		}
 
 		uri := &glue.ResourceUri{
-			ResourceType: aws.String(uriRaw["resource_type"].(string)),
+			ResourceType: aws.String(uriRaw[names.AttrResourceType].(string)),
 			Uri:          aws.String(uriRaw["uri"].(string)),
 		}
 
@@ -264,7 +264,7 @@ func flattenUserDefinedFunctionResourceURI(uris []*glue.ResourceUri) []map[strin
 
 	for _, i := range uris {
 		l := map[string]interface{}{
-			"resource_type": aws.StringValue(i.ResourceType),
+			names.AttrResourceType: aws.StringValue(i.ResourceType),
 			"uri":           aws.StringValue(i.Uri),
 		}
 
