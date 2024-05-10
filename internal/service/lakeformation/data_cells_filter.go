@@ -108,9 +108,6 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 							Validators: []validator.String{
 								stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]+$`), "must be a number"),
 							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -138,6 +135,7 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 								Attributes: map[string]schema.Attribute{
 									"filter_expression": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -303,6 +301,25 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 			)
 			return
 		}
+
+		output, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		td := tableData{}
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
+
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		plan.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
