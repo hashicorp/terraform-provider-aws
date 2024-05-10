@@ -55,7 +55,7 @@ func resourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -151,7 +151,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		TypeName:             aws.String(typeName),
 	}
 
-	if v, ok := d.GetOk("execution_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
@@ -207,7 +207,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("deprecated_status", output.DeprecatedStatus)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("documentation_url", output.DocumentationUrl)
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
