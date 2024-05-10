@@ -39,7 +39,7 @@ func resourcePermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "events:PutEvents",
@@ -99,7 +99,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	statementID := d.Get("statement_id").(string)
 	id := permissionCreateResourceID(eventBusName, statementID)
 	input := &eventbridge.PutPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get("condition").([]interface{})),
 		EventBusName: aws.String(eventBusName),
 		Principal:    aws.String(d.Get("principal").(string)),
@@ -143,7 +143,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	policyStatement := outputRaw.(*permissionPolicyStatement)
 
-	d.Set("action", policyStatement.Action)
+	d.Set(names.AttrAction, policyStatement.Action)
 	if err := d.Set("condition", flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
@@ -180,7 +180,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	input := &eventbridge.PutPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get("condition").([]interface{})),
 		EventBusName: aws.String(eventBusName),
 		Principal:    aws.String(d.Get("principal").(string)),
