@@ -190,7 +190,7 @@ func resourcePatchBaseline() *schema.Resource {
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"configuration": {
+						names.AttrConfiguration: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -567,7 +567,7 @@ func expandPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 
 		source := &ssm.PatchSource{
 			Name:          aws.String(config[names.AttrName].(string)),
-			Configuration: aws.String(config["configuration"].(string)),
+			Configuration: aws.String(config[names.AttrConfiguration].(string)),
 			Products:      flex.ExpandStringList(config["products"].([]interface{})),
 		}
 
@@ -587,7 +587,7 @@ func flattenPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
 	for _, source := range sources {
 		s := make(map[string]interface{})
 		s[names.AttrName] = aws.StringValue(source.Name)
-		s["configuration"] = aws.StringValue(source.Configuration)
+		s[names.AttrConfiguration] = aws.StringValue(source.Configuration)
 		s["products"] = flex.FlattenStringList(source.Products)
 		result = append(result, s)
 	}
