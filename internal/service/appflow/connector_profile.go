@@ -136,7 +136,7 @@ func resourceConnectorProfile() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"password": {
+															names.AttrPassword: {
 																Type:         schema.TypeString,
 																Required:     true,
 																Sensitive:    true,
@@ -520,7 +520,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
@@ -615,7 +615,7 @@ func resourceConnectorProfile() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"password": {
+															names.AttrPassword: {
 																Type:         schema.TypeString,
 																Required:     true,
 																Sensitive:    true,
@@ -708,7 +708,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
@@ -808,7 +808,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
@@ -849,7 +849,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
@@ -1757,7 +1757,7 @@ func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *types.M
 
 func expandRedshiftConnectorProfileCredentials(m map[string]interface{}) *types.RedshiftConnectorProfileCredentials {
 	credentials := &types.RedshiftConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
@@ -1804,7 +1804,7 @@ func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *types.
 
 func expandServiceNowConnectorProfileCredentials(m map[string]interface{}) *types.ServiceNowConnectorProfileCredentials {
 	credentials := &types.ServiceNowConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
@@ -1835,7 +1835,7 @@ func expandSlackConnectorProfileCredentials(m map[string]interface{}) *types.Sla
 
 func expandSnowflakeConnectorProfileCredentials(m map[string]interface{}) *types.SnowflakeConnectorProfileCredentials {
 	credentials := &types.SnowflakeConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
@@ -1852,7 +1852,7 @@ func expandTrendmicroConnectorProfileCredentials(m map[string]interface{}) *type
 
 func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *types.VeevaConnectorProfileCredentials {
 	credentials := &types.VeevaConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
@@ -1904,7 +1904,7 @@ func expandAPIKeyCredentials(m map[string]interface{}) *types.ApiKeyCredentials 
 func expandBasicAuthCredentials(m map[string]interface{}) *types.BasicAuthCredentials {
 	credentials := &types.BasicAuthCredentials{}
 
-	if v, ok := m["password"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPassword].(string); ok && v != "" {
 		credentials.Password = aws.String(v)
 	}
 

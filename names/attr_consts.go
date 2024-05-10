@@ -44,6 +44,7 @@ const (
 	AttrNetworkInterfaceID         = "network_interface_id"
 	AttrOwnerID                    = "owner_id"
 	AttrParameters                 = "parameters"
+	AttrPassword                   = "password"
 	AttrPolicy                     = "policy"
 	AttrPort                       = "port"
 	AttrPreferredMaintenanceWindow = "preferred_maintenance_window"

@@ -1197,7 +1197,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"password": {
+							names.AttrPassword: {
 								Type:      schema.TypeString,
 								Required:  true,
 								Sensitive: true,
@@ -2372,7 +2372,7 @@ func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *ty
 	configuration := &types.RedshiftDestinationConfiguration{
 		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:    expandRedshiftRetryOptions(redshift),
-		Password:        aws.String(redshift["password"].(string)),
+		Password:        aws.String(redshift[names.AttrPassword].(string)),
 		Username:        aws.String(redshift["username"].(string)),
 		RoleARN:         aws.String(roleARN),
 		CopyCommand:     expandCopyCommand(redshift),
@@ -2398,7 +2398,7 @@ func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *types.Red
 	configuration := &types.RedshiftDestinationUpdate{
 		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:   expandRedshiftRetryOptions(redshift),
-		Password:       aws.String(redshift["password"].(string)),
+		Password:       aws.String(redshift[names.AttrPassword].(string)),
 		Username:       aws.String(redshift["username"].(string)),
 		RoleARN:        aws.String(roleARN),
 		CopyCommand:    expandCopyCommand(redshift),
@@ -3381,7 +3381,7 @@ func flattenRedshiftDestinationDescription(description *types.RedshiftDestinatio
 	m := map[string]interface{}{
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":            aws.ToString(description.ClusterJDBCURL),
-		"password":                   configuredPassword,
+		names.AttrPassword:           configuredPassword,
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(description.RoleARN)),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"s3_backup_configuration":    flattenS3DestinationDescription(description.S3BackupDescription),

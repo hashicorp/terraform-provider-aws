@@ -1345,3 +1345,13 @@ rules:
       - pattern: '"source"'
     severity: ERROR
     fix: "names.AttrSource"
+  - id: literal-password-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPassword` for the string literal "password"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"password"'
+    severity: ERROR
+    fix: "names.AttrPassword"

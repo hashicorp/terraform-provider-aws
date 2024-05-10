@@ -234,7 +234,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2000),
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -649,7 +649,7 @@ func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.S
 	req := &fsx.SelfManagedActiveDirectoryConfiguration{
 		DomainName: aws.String(data[names.AttrDomainName].(string)),
 		DnsIps:     flex.ExpandStringSet(data["dns_ips"].(*schema.Set)),
-		Password:   aws.String(data["password"].(string)),
+		Password:   aws.String(data[names.AttrPassword].(string)),
 		UserName:   aws.String(data["username"].(string)),
 	}
 
@@ -676,7 +676,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fsx.S
 		req.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := data["password"].(string); ok && v != "" {
+	if v, ok := data[names.AttrPassword].(string); ok && v != "" {
 		req.Password = aws.String(v)
 	}
 
@@ -703,7 +703,7 @@ func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adop
 		names.AttrDomainName:                     aws.StringValue(adopts.DomainName),
 		"file_system_administrators_group":       aws.StringValue(adopts.FileSystemAdministratorsGroup),
 		"organizational_unit_distinguished_name": aws.StringValue(adopts.OrganizationalUnitDistinguishedName),
-		"password":                               d.Get("self_managed_active_directory.0.password").(string),
+		names.AttrPassword:                       d.Get("self_managed_active_directory.0.password").(string),
 		"username":                               aws.StringValue(adopts.UserName),
 	}
 
