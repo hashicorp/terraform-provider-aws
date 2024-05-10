@@ -198,7 +198,7 @@ func resourceMetricAlarm() *schema.Resource {
 											),
 										),
 									},
-									"unit": {
+									names.AttrUnit: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.StandardUnit](),
@@ -281,7 +281,7 @@ func resourceMetricAlarm() *schema.Resource {
 				Default:      missingDataMissing,
 				ValidateFunc: validation.StringInSlice(missingData_Values(), true),
 			},
-			"unit": {
+			names.AttrUnit: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.StandardUnit](),
@@ -410,7 +410,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)
 	}
-	d.Set("unit", alarm.Unit)
+	d.Set(names.AttrUnit, alarm.Unit)
 
 	return diags
 }
@@ -542,7 +542,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.Threshold = aws.Float64(d.Get("threshold").(float64))
 	}
 
-	if v, ok := d.GetOk("unit"); ok {
+	if v, ok := d.GetOk(names.AttrUnit); ok {
 		apiObject.Unit = types.StandardUnit(v.(string))
 	}
 
@@ -595,9 +595,9 @@ func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string
 	}
 
 	tfMap := map[string]interface{}{
-		"period": aws.ToInt32(apiObject.Period),
-		"stat":   aws.ToString(apiObject.Stat),
-		"unit":   apiObject.Unit,
+		"period":       aws.ToInt32(apiObject.Period),
+		"stat":         aws.ToString(apiObject.Stat),
+		names.AttrUnit: apiObject.Unit,
 	}
 
 	if v := apiObject.Metric; v != nil {
@@ -685,7 +685,7 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricS
 		apiObject.Period = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := tfMap["unit"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrUnit]; ok && v.(string) != "" {
 		apiObject.Unit = types.StandardUnit(v.(string))
 	}
 
