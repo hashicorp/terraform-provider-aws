@@ -593,7 +593,7 @@ func resourceProject() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -717,7 +717,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	var projectSource *types.ProjectSource
-	if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		projectSource = expandProjectSource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -907,11 +907,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("service_role", project.ServiceRole)
 	if project.Source != nil {
-		if err := d.Set("source", []interface{}{flattenProjectSource(project.Source)}); err != nil {
+		if err := d.Set(names.AttrSource, []interface{}{flattenProjectSource(project.Source)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 		}
 	} else {
-		d.Set("source", nil)
+		d.Set(names.AttrSource, nil)
 	}
 	d.Set("source_version", project.SourceVersion)
 	if err := d.Set("vpc_config", flattenVPCConfig(project.VpcConfig)); err != nil {
@@ -1037,8 +1037,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ServiceRole = aws.String(d.Get("service_role").(string))
 		}
 
-		if d.HasChange("source") {
-			if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrSource) {
+			if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Source = expandProjectSource(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
