@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_field_level_encryption_config", name="Field-level Encryption Config")
@@ -63,7 +64,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"format": {
+												names.AttrFormat: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.Format](),
@@ -330,7 +331,7 @@ func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTyp
 		apiObject.ContentType = aws.String(v)
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
 		apiObject.Format = awstypes.Format(v)
 	}
 
@@ -483,7 +484,7 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	}
 
 	tfMap := map[string]interface{}{
-		"format": apiObject.Format,
+		names.AttrFormat: apiObject.Format,
 	}
 
 	if v := apiObject.ContentType; v != nil {
