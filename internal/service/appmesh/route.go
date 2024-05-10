@@ -217,7 +217,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
 								},
-								"path": {
+								names.AttrPath: {
 									Type:     schema.TypeList,
 									Optional: true,
 									MinItems: 0,

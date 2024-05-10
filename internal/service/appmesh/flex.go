@@ -448,7 +448,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 			httpRouteMatch.Headers = httpRouteHeaders
 		}
 
-		if vHttpRoutePath, ok := mHttpRouteMatch["path"].([]interface{}); ok && len(vHttpRoutePath) > 0 && vHttpRoutePath[0] != nil {
+		if vHttpRoutePath, ok := mHttpRouteMatch[names.AttrPath].([]interface{}); ok && len(vHttpRoutePath) > 0 && vHttpRoutePath[0] != nil {
 			httpRoutePath := &appmesh.HttpPathMatch{}
 
 			mHttpRoutePath := vHttpRoutePath[0].(map[string]interface{})
@@ -812,7 +812,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
 					healthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
 				}
-				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+				if vPath, ok := mHealthCheck[names.AttrPath].(string); ok && vPath != "" {
 					healthCheck.Path = aws.String(vPath)
 				}
 				if vPort, ok := mHealthCheck[names.AttrPort].(int); ok && vPort > 0 {
@@ -1057,7 +1057,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 					file.Format = format
 				}
 
-				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
+				if vPath, ok := mFile[names.AttrPath].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
 
@@ -1503,7 +1503,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 			map[string]interface{}{
 				"header":          vHttpRouteHeaders,
 				"method":          aws.StringValue(httpRouteMatch.Method),
-				"path":            vHttpRoutePath,
+				names.AttrPath:    vHttpRoutePath,
 				names.AttrPort:    int(aws.Int64Value(httpRouteMatch.Port)),
 				names.AttrPrefix:  aws.StringValue(httpRouteMatch.Prefix),
 				"query_parameter": vHttpRouteQueryParameters,
@@ -1718,7 +1718,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 				mHealthCheck := map[string]interface{}{
 					"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
 					"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
-					"path":                aws.StringValue(healthCheck.Path),
+					names.AttrPath:        aws.StringValue(healthCheck.Path),
 					names.AttrPort:        int(aws.Int64Value(healthCheck.Port)),
 					names.AttrProtocol:    aws.StringValue(healthCheck.Protocol),
 					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
@@ -1874,7 +1874,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 					mFile["format"] = []interface{}{mFormat}
 				}
 
-				mFile["path"] = aws.StringValue(file.Path)
+				mFile[names.AttrPath] = aws.StringValue(file.Path)
 
 				mAccessLog["file"] = []interface{}{mFile}
 			}
