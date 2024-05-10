@@ -86,7 +86,7 @@ func resourceService() *schema.Resource {
 							Default:      5,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "/",
@@ -772,7 +772,7 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckCo
 		result.Interval = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["path"].(string); ok {
+	if v, ok := tfMap[names.AttrPath].(string); ok {
 		result.Path = aws.String(v)
 	}
 
@@ -1171,7 +1171,7 @@ func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfigurati
 	m := map[string]interface{}{
 		"healthy_threshold":   config.HealthyThreshold,
 		"interval":            config.Interval,
-		"path":                aws.ToString(config.Path),
+		names.AttrPath:        aws.ToString(config.Path),
 		names.AttrProtocol:    string(config.Protocol),
 		"timeout":             config.Timeout,
 		"unhealthy_threshold": config.UnhealthyThreshold,
