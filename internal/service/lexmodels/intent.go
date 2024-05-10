@@ -200,7 +200,7 @@ func ResourceIntent() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 							),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      0,
@@ -753,10 +753,10 @@ func expandPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt
 func flattenSlots(slots []*lexmodelbuildingservice.Slot) (flattenedSlots []map[string]interface{}) {
 	for _, slot := range slots {
 		flattenedSlot := map[string]interface{}{
-			names.AttrName:    aws.StringValue(slot.Name),
-			"priority":        aws.Int64Value(slot.Priority),
-			"slot_constraint": aws.StringValue(slot.SlotConstraint),
-			"slot_type":       aws.StringValue(slot.SlotType),
+			names.AttrName:     aws.StringValue(slot.Name),
+			names.AttrPriority: aws.Int64Value(slot.Priority),
+			"slot_constraint":  aws.StringValue(slot.SlotConstraint),
+			"slot_type":        aws.StringValue(slot.SlotType),
 		}
 
 		if slot.Description != nil {
@@ -799,7 +799,7 @@ func expandSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 
 		slot := &lexmodelbuildingservice.Slot{
 			Name:           aws.String(value[names.AttrName].(string)),
-			Priority:       aws.Int64(int64(value["priority"].(int))),
+			Priority:       aws.Int64(int64(value[names.AttrPriority].(int))),
 			SlotConstraint: aws.String(value["slot_constraint"].(string)),
 			SlotType:       aws.String(value["slot_type"].(string)),
 		}
