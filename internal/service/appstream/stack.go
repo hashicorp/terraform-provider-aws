@@ -188,7 +188,7 @@ func ResourceStack() *schema.Resource {
 				DiffSuppressFunc: suppressAppsStreamStackUserSettings,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appstream.Action_Values(), false),
@@ -698,7 +698,7 @@ func expandUserSetting(tfMap map[string]interface{}) *appstream.UserSetting {
 	}
 
 	apiObject := &appstream.UserSetting{
-		Action:     aws.String(tfMap["action"].(string)),
+		Action:     aws.String(tfMap[names.AttrAction].(string)),
 		Permission: aws.String(tfMap["permission"].(string)),
 	}
 
@@ -737,7 +737,7 @@ func flattenUserSetting(apiObject *appstream.UserSetting) map[string]interface{}
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["action"] = aws.StringValue(apiObject.Action)
+	tfMap[names.AttrAction] = aws.StringValue(apiObject.Action)
 	tfMap["permission"] = aws.StringValue(apiObject.Permission)
 
 	return tfMap
