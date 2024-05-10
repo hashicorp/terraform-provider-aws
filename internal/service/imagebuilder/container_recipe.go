@@ -121,7 +121,7 @@ func ResourceContainerRecipe() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
