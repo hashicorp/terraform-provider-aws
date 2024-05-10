@@ -129,7 +129,7 @@ func resourceRuleGroup() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
-							"priority": {
+							names.AttrPriority: {
 								Type:     schema.TypeInt,
 								Required: true,
 							},
