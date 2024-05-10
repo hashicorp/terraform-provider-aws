@@ -206,7 +206,7 @@ func ResourceBudgetAction() *schema.Resource {
 				MaxItems: 11,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -474,7 +474,7 @@ func expandBudgetActionSubscriber(l *schema.Set) []awstypes.Subscriber {
 		config := awstypes.Subscriber{}
 		raw := m.(map[string]interface{})
 
-		if v, ok := raw["address"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrAddress].(string); ok && v != "" {
 			config.Address = aws.String(v)
 		}
 
@@ -589,7 +589,7 @@ func flattenBudgetActionSubscriber(configured []awstypes.Subscriber) []map[strin
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["address"] = aws.ToString(raw.Address)
+		item[names.AttrAddress] = aws.ToString(raw.Address)
 		item["subscription_type"] = string(raw.SubscriptionType)
 
 		dataResources = append(dataResources, item)
