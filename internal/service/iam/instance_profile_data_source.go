@@ -29,7 +29,7 @@ func dataSourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func dataSourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.ToString(instanceProfile.InstanceProfileId))
 	d.Set(names.AttrARN, instanceProfile.Arn)
 	d.Set("create_date", fmt.Sprintf("%v", instanceProfile.CreateDate))
-	d.Set("path", instanceProfile.Path)
+	d.Set(names.AttrPath, instanceProfile.Path)
 	if len(instanceProfile.Roles) > 0 {
 		role := instanceProfile.Roles[0]
 		d.Set(names.AttrRoleARN, role.Arn)

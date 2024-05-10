@@ -60,7 +60,7 @@ func resourceUser() *schema.Resource {
 					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -95,7 +95,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	path := d.Get("path").(string)
+	path := d.Get(names.AttrPath).(string)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
 		Tags:     getTagsIn(ctx),
@@ -161,7 +161,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrName, user.UserName)
-	d.Set("path", user.Path)
+	d.Set(names.AttrPath, user.Path)
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
@@ -178,12 +178,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChanges(names.AttrName, "path") {
+	if d.HasChanges(names.AttrName, names.AttrPath) {
 		o, n := d.GetChange(names.AttrName)
 		input := &iam.UpdateUserInput{
 			UserName:    aws.String(o.(string)),
 			NewUserName: aws.String(n.(string)),
-			NewPath:     aws.String(d.Get("path").(string)),
+			NewPath:     aws.String(d.Get(names.AttrPath).(string)),
 		}
 
 		_, err := conn.UpdateUser(ctx, input)
