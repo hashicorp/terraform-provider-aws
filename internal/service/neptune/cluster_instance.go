@@ -47,7 +47,7 @@ func ResourceClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -296,7 +296,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		address := aws.StringValue(db.Endpoint.Address)
 		port := int(aws.Int64Value(db.Endpoint.Port))
 
-		d.Set("address", address)
+		d.Set(names.AttrAddress, address)
 		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
 		d.Set(names.AttrPort, port)
 	}
