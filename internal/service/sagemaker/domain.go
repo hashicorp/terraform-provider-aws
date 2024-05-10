@@ -403,7 +403,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -2401,7 +2401,7 @@ func expandEFSFileSystemConfig(tfMap map[string]interface{}) *sagemaker.EFSFileS
 
 	apiObject := &sagemaker.EFSFileSystemConfig{}
 
-	if v, ok := tfMap["file_system_id"].(string); ok {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -2452,7 +2452,7 @@ func flattenEFSFileSystemConfig(apiObject *sagemaker.EFSFileSystemConfig) []map[
 	tfMap := map[string]interface{}{}
 
 	if apiObject.FileSystemId != nil {
-		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(apiObject.FileSystemId)
 	}
 
 	if apiObject.FileSystemPath != nil {
