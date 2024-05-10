@@ -129,11 +129,15 @@ func ResourceReplicationTask() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+
+		Timeouts: &schema.ResourceTimeout{},
 	}
 }
 
 func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutCreate))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	taskID := d.Get("replication_task_id").(string)
@@ -176,7 +180,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(taskID)
 
-	if _, err := waitReplicationTaskReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitReplicationTaskReady(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) create: %s", d.Id(), err)
 	}
 
@@ -221,6 +225,8 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutUpdate))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "replication_instance_arn", "start_replication_task") {
@@ -265,7 +271,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitReplicationTaskModified(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
@@ -292,7 +298,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "moving DMS Replication Task (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitReplicationTaskMoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitReplicationTaskMoved(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
@@ -320,6 +326,8 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	ctx, cancel := context.WithTimeout(ctx, d.Timeout(schema.TimeoutDelete))
+	defer cancel()
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
@@ -339,7 +347,7 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Task (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitReplicationTaskDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitReplicationTaskDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) delete: %s", d.Id(), err)
 	}
 
@@ -429,12 +437,13 @@ func setLastReplicationTaskError(err error, replication *dms.ReplicationTask) {
 	tfresource.SetLastError(err, errors.Join(errs...))
 }
 
-func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(expiration),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -449,12 +458,13 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 	return nil, err
 }
 
-func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(expiration),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -469,12 +479,13 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigratio
 	return nil, err
 }
 
-func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(expiration),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -489,12 +500,13 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationSe
 	return nil, err
 }
 
-func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
 		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(expiration),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -510,14 +522,12 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationSe
 }
 
 func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
 		Refresh:    statusReplicationTask(ctx, conn, id),
-		Timeout:    timeout,
+		Timeout:    time.Until(expiration),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
@@ -533,14 +543,12 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigration
 }
 
 func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:                    []string{replicationTaskStatusStopped},
 		Refresh:                   statusReplicationTask(ctx, conn, id),
-		Timeout:                   timeout,
+		Timeout:                   time.Until(expiration),
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -557,14 +565,12 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigration
 }
 
 func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+	expiration, _ := ctx.Deadline()
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{replicationTaskStatusCreating, replicationTaskStatusDeleting, replicationTaskStatusModifying, replicationTaskStatusStopping, replicationTaskStatusStarting},
 		Target:                    []string{replicationTaskStatusFailed, replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusRunning},
 		Refresh:                   statusReplicationTask(ctx, conn, id),
-		Timeout:                   timeout,
+		Timeout:                   time.Until(expiration),
 		MinTimeout:                10 * time.Second,
 		Delay:                     60 * time.Second,
 		ContinuousTargetOccurence: 2,
