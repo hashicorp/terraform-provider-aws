@@ -200,7 +200,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -634,7 +634,7 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 		config := types.CreateExperimentTemplateTargetInput{}
 		var hasSeenResourceArns bool
 
-		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			config.Filters = expandExperimentTemplateTargetFilters(v)
 		}
 
@@ -684,7 +684,7 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 		config := types.UpdateExperimentTemplateTargetInput{}
 		var hasSeenResourceArns bool
 
-		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			config.Filters = expandExperimentTemplateTargetFilters(v)
 		}
 
@@ -859,7 +859,7 @@ func flattenExperimentTemplateTargets(configured map[string]types.ExperimentTemp
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["filter"] = flattenExperimentTemplateTargetFilters(v.Filters)
+		item[names.AttrFilter] = flattenExperimentTemplateTargetFilters(v.Filters)
 		item["resource_arns"] = v.ResourceArns
 		item["resource_tag"] = flattenExperimentTemplateTargetResourceTags(v.ResourceTags)
 		item["resource_type"] = aws.ToString(v.ResourceType)

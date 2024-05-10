@@ -65,7 +65,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.FilterBehavior](),
 							},
-							"filter": {
+							names.AttrFilter: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem: &schema.Resource{
@@ -304,7 +304,7 @@ func expandLoggingFilter(l []interface{}) *awstypes.LoggingFilter {
 		loggingFilter.DefaultBehavior = awstypes.FilterBehavior(v)
 	}
 
-	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrFilter].(*schema.Set); ok && v.Len() > 0 {
 		loggingFilter.Filters = expandFilters(v.List())
 	}
 
@@ -454,7 +454,7 @@ func flattenLoggingFilter(filter *awstypes.LoggingFilter) []interface{} {
 
 	m := map[string]interface{}{
 		"default_behavior": string(filter.DefaultBehavior),
-		"filter":           flattenFilters(filter.Filters),
+		names.AttrFilter:   flattenFilters(filter.Filters),
 	}
 
 	return []interface{}{m}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_licensemanager_grants")
@@ -21,7 +22,7 @@ func DataSourceDistributedGrants() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributedGrantsRead,
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			names.AttrFilter: DataSourceFiltersSchema(),
 			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -38,7 +39,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	in := &licensemanager.ListDistributedGrantsInput{}
 
 	in.Filters = BuildFiltersDataSource(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)
 
 	if len(in.Filters) == 0 {

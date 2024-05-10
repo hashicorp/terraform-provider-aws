@@ -154,7 +154,7 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": storageVirtualMachineFiltersSchema(),
+			names.AttrFilter: storageVirtualMachineFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -206,7 +206,7 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	}
 
 	input.Filters = newStorageVirtualMachineFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)
 
 	if len(input.Filters) == 0 {

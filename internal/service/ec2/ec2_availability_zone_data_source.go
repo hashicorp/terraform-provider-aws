@@ -32,7 +32,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -109,7 +109,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

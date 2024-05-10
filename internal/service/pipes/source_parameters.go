@@ -162,7 +162,7 @@ func sourceParametersSchema() *schema.Schema {
 					DiffSuppressFunc: suppressEmptyConfigurationBlock("source_parameters.0.filter_criteria"),
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"filter": {
+							names.AttrFilter: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 5,
@@ -656,7 +656,7 @@ func expandFilterCriteria(tfMap map[string]interface{}) *types.FilterCriteria {
 
 	apiObject := &types.FilterCriteria{}
 
-	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 		apiObject.Filters = expandFilters(v)
 	}
 
@@ -1305,7 +1305,7 @@ func flattenFilterCriteria(apiObject *types.FilterCriteria) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Filters; v != nil {
-		tfMap["filter"] = flattenFilters(v)
+		tfMap[names.AttrFilter] = flattenFilters(v)
 	}
 
 	return tfMap

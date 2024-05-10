@@ -43,7 +43,7 @@ func resourceBucketMetric() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -88,7 +88,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 		Id: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 			metricsConfiguration.Filter = expandMetricsFilter(ctx, tfMap)
 		}
@@ -151,7 +151,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrBucket, bucket)
 	if mc.Filter != nil {
-		if err := d.Set("filter", []interface{}{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
+		if err := d.Set(names.AttrFilter, []interface{}{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter")
 		}
 	}

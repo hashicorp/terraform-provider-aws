@@ -75,7 +75,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"filter": {
+												names.AttrFilter: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -288,7 +288,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilter
 	for _, filter := range data {
 		ec := filter.(map[string]interface{})
 		config := types.RepositoryFilter{
-			Filter:     aws.String(ec["filter"].(string)),
+			Filter:     aws.String(ec[names.AttrFilter].(string)),
 			FilterType: types.RepositoryFilterType((ec["filter_type"].(string))),
 		}
 
@@ -306,8 +306,8 @@ func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilte
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"filter":      aws.ToString(apiObject.Filter),
-			"filter_type": apiObject.FilterType,
+			names.AttrFilter: aws.ToString(apiObject.Filter),
+			"filter_type":    apiObject.FilterType,
 		}
 
 		tfList = append(tfList, tfMap)

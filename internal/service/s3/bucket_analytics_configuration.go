@@ -43,7 +43,7 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -144,7 +144,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		StorageClassAnalysis: expandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		analyticsConfiguration.Filter = expandAnalyticsFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -204,7 +204,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	if err := d.Set("filter", flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
+	if err := d.Set(names.AttrFilter, flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set(names.AttrName, name)
