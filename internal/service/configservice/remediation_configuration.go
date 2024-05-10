@@ -113,7 +113,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -165,7 +165,7 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		remediationConfiguration.Parameters = expandRemediationParameterValues(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		remediationConfiguration.ResourceType = aws.String(v.(string))
 	}
 
@@ -226,7 +226,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
-	d.Set("resource_type", remediationConfiguration.ResourceType)
+	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
 	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("target_id", remediationConfiguration.TargetId)
 	d.Set("target_type", remediationConfiguration.TargetType)
@@ -243,7 +243,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 		ConfigRuleName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		input.ResourceType = aws.String(v.(string))
 	}
 
