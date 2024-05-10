@@ -1285,3 +1285,13 @@ rules:
       - pattern: '"device_name"'
     severity: ERROR
     fix: "names.AttrDeviceName"
+  - id: literal-catalog_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCatalogID` for the string literal "catalog_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"catalog_id"'
+    severity: ERROR
+    fix: "names.AttrCatalogID"
