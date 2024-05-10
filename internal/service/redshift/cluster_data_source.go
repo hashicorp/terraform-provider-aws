@@ -122,7 +122,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -259,7 +259,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if rsc.ElasticIpStatus != nil {
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
 	}
-	d.Set("encrypted", rsc.Encrypted)
+	d.Set(names.AttrEncrypted, rsc.Encrypted)
 	if rsc.Endpoint != nil {
 		d.Set(names.AttrEndpoint, rsc.Endpoint.Address)
 		d.Set(names.AttrPort, rsc.Endpoint.Port)

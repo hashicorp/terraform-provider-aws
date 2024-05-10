@@ -108,7 +108,7 @@ func ResourceAMI() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
@@ -337,7 +337,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			var encrypted bool
 
-			if v, ok := tfMap["encrypted"].(bool); ok {
+			if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 				encrypted = v
 			}
 
@@ -625,7 +625,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
 	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
-	} else if v, ok := tfMap["encrypted"].(bool); ok {
+	} else if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -694,7 +694,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.Encrypted; v != nil {
-		tfMap["encrypted"] = aws.BoolValue(v)
+		tfMap[names.AttrEncrypted] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Ebs.Iops; v != nil {

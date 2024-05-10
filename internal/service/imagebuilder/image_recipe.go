@@ -66,7 +66,7 @@ func ResourceImageRecipe() *schema.Resource {
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
@@ -483,7 +483,7 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -666,7 +666,7 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInsta
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Iops; v != nil {

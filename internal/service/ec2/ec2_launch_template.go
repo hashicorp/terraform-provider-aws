@@ -69,7 +69,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
@@ -1377,7 +1377,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -2399,7 +2399,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Iops; v != nil {

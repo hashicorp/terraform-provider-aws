@@ -46,7 +46,7 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},

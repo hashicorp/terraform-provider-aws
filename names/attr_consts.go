@@ -23,6 +23,7 @@ const (
 	AttrDeviceName                 = "device_name"
 	AttrDomainName                 = "domain_name"
 	AttrEnabled                    = "enabled"
+	AttrEncrypted                  = "encrypted"
 	AttrEndpoint                   = "endpoint"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"

@@ -227,7 +227,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"encrypted": {
+					names.AttrEncrypted: {
 						Type:     schema.TypeBool,
 						Optional: true,
 						Default:  false,
@@ -1217,7 +1217,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 
 	apiObject := &opsworks.VolumeConfiguration{}
 
-	if v, ok := tfMap["encrypted"].(bool); ok {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -1284,7 +1284,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = aws.BoolValue(v)
+		tfMap[names.AttrEncrypted] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Iops; v != nil {

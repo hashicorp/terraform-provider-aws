@@ -83,7 +83,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: verify.ValidARN,
 															},
-															"encrypted": {
+															names.AttrEncrypted: {
 																Type:     schema.TypeBool,
 																Optional: true,
 																Default:  false,
@@ -307,7 +307,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 														},
 													},
 												},
-												"encrypted": {
+												names.AttrEncrypted: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -829,7 +829,7 @@ func expandActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) *dl
 
 	m := l[0].(map[string]interface{})
 	config := &dlm.EncryptionConfiguration{
-		Encrypted: aws.Bool(m["encrypted"].(bool)),
+		Encrypted: aws.Bool(m[names.AttrEncrypted].(bool)),
 	}
 
 	if v, ok := m["cmk_arn"].(string); ok && v != "" {
@@ -844,8 +844,8 @@ func flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule *dlm.Encryptio
 	}
 
 	m := map[string]interface{}{
-		"encrypted": aws.BoolValue(rule.Encrypted),
-		"cmk_arn":   aws.StringValue(rule.CmkArn),
+		names.AttrEncrypted: aws.BoolValue(rule.Encrypted),
+		"cmk_arn":           aws.StringValue(rule.CmkArn),
 	}
 
 	return []interface{}{m}
@@ -935,7 +935,7 @@ func expandCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
 		if v, ok := m["deprecate_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.DeprecateRule = expandCrossRegionCopyRuleDeprecateRule(v)
 		}
-		if v, ok := m["encrypted"].(bool); ok {
+		if v, ok := m[names.AttrEncrypted].(bool); ok {
 			rule.Encrypted = aws.Bool(v)
 		}
 		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -964,12 +964,12 @@ func flattenCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interface{}
 		}
 
 		m := map[string]interface{}{
-			"cmk_arn":        aws.StringValue(rule.CmkArn),
-			"copy_tags":      aws.BoolValue(rule.CopyTags),
-			"deprecate_rule": flattenCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
-			"encrypted":      aws.BoolValue(rule.Encrypted),
-			"retain_rule":    flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
-			"target":         aws.StringValue(rule.Target),
+			"cmk_arn":           aws.StringValue(rule.CmkArn),
+			"copy_tags":         aws.BoolValue(rule.CopyTags),
+			"deprecate_rule":    flattenCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
+			names.AttrEncrypted: aws.BoolValue(rule.Encrypted),
+			"retain_rule":       flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
+			"target":            aws.StringValue(rule.Target),
 		}
 
 		result = append(result, m)

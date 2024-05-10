@@ -40,7 +40,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -148,7 +148,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},

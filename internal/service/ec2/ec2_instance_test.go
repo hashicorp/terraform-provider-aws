@@ -416,7 +416,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"encrypted": "true",
+						names.AttrEncrypted: "true",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -820,7 +820,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdd",
-						"encrypted":          "true",
+						names.AttrEncrypted:  "true",
 						"volume_size":        "12",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
@@ -2869,7 +2869,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sdd",
-						"encrypted":                   "false",
+						names.AttrEncrypted:           "false",
 						"iops":                        "100",
 						"volume_size":                 "10",
 						"volume_type":                 "gp2",
@@ -2877,7 +2877,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sdc",
-						"encrypted":                   "false",
+						names.AttrEncrypted:           "false",
 						"iops":                        "100",
 						"volume_size":                 "10",
 						"volume_type":                 "gp2",
@@ -2885,7 +2885,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sdb",
-						"encrypted":                   "false",
+						names.AttrEncrypted:           "false",
 						"iops":                        "100",
 						"volume_size":                 "10",
 						"volume_type":                 "gp2",

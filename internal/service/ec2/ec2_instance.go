@@ -241,7 +241,7 @@ func ResourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -702,7 +702,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -2342,7 +2342,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["iops"] = aws.Int64Value(vol.Iops)
 		}
 		if vol.Encrypted != nil {
-			bd["encrypted"] = aws.BoolValue(vol.Encrypted)
+			bd[names.AttrEncrypted] = aws.BoolValue(vol.Encrypted)
 		}
 		if vol.KmsKeyId != nil {
 			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
@@ -2559,7 +2559,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
@@ -2633,7 +2633,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 

@@ -1305,3 +1305,13 @@ rules:
       - pattern: '"bucket_prefix"'
     severity: ERROR
     fix: "names.AttrBucketPrefix"
+  - id: literal-encrypted-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEncrypted` for the string literal "encrypted"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"encrypted"'
+    severity: ERROR
+    fix: "names.AttrEncrypted"
