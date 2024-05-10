@@ -24,6 +24,7 @@ const (
 	AttrDatabaseName               = "database_name"
 	AttrDeleteOnTermination        = "delete_on_termination"
 	AttrDescription                = "description"
+	AttrDestination                = "destination"
 	AttrDeviceName                 = "device_name"
 	AttrDomainName                 = "domain_name"
 	AttrEnabled                    = "enabled"
