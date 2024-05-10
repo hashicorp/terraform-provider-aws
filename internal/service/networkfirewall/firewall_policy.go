@@ -130,7 +130,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"action": {
+												names.AttrAction: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.OverrideAction_Values(), false),
@@ -430,7 +430,7 @@ func expandStatefulRuleGroupOverride(l []interface{}) *networkfirewall.StatefulR
 	lRaw := l[0].(map[string]interface{})
 	override := &networkfirewall.StatefulRuleGroupOverride{}
 
-	if v, ok := lRaw["action"].(string); ok && v != "" {
+	if v, ok := lRaw[names.AttrAction].(string); ok && v != "" {
 		override.SetAction(v)
 	}
 
@@ -599,7 +599,7 @@ func flattenStatefulRuleGroupOverride(override *networkfirewall.StatefulRuleGrou
 	}
 
 	m := map[string]interface{}{
-		"action": aws.StringValue(override.Action),
+		names.AttrAction: aws.StringValue(override.Action),
 	}
 
 	return []interface{}{m}
