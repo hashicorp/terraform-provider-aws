@@ -286,7 +286,7 @@ func ResourceListener() *schema.Resource {
 										Default:      "#{host}",
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
@@ -855,7 +855,7 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 
 	return &awstypes.RedirectActionConfig{
 		Host:       aws.String(tfMap["host"].(string)),
-		Path:       aws.String(tfMap["path"].(string)),
+		Path:       aws.String(tfMap[names.AttrPath].(string)),
 		Port:       aws.String(tfMap[names.AttrPort].(string)),
 		Protocol:   aws.String(tfMap[names.AttrProtocol].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
@@ -1178,7 +1178,7 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 
 	m := map[string]interface{}{
 		"host":             aws.ToString(config.Host),
-		"path":             aws.ToString(config.Path),
+		names.AttrPath:     aws.ToString(config.Path),
 		names.AttrPort:     aws.ToString(config.Port),
 		names.AttrProtocol: aws.ToString(config.Protocol),
 		"query":            aws.ToString(config.Query),

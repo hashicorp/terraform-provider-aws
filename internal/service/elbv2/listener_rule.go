@@ -167,7 +167,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
