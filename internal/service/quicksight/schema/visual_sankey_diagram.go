@@ -43,9 +43,9 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination":    dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrSource: dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"weight":         measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													names.AttrDestination: dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrSource:      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"weight":              measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -163,7 +163,7 @@ func expandSankeyDiagramAggregatedFieldWells(tfList []interface{}) *quicksight.S
 
 	config := &quicksight.SankeyDiagramAggregatedFieldWells{}
 
-	if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		config.Destination = expandDimensionFields(v)
 	}
 	if v, ok := tfMap[names.AttrSource].([]interface{}); ok && len(v) > 0 {
@@ -264,7 +264,7 @@ func flattenSankeyDiagramAggregatedFieldWells(apiObject *quicksight.SankeyDiagra
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Destination != nil {
-		tfMap["destination"] = flattenDimensionFields(apiObject.Destination)
+		tfMap[names.AttrDestination] = flattenDimensionFields(apiObject.Destination)
 	}
 	if apiObject.Source != nil {
 		tfMap[names.AttrSource] = flattenDimensionFields(apiObject.Source)
