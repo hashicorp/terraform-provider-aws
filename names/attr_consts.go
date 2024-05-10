@@ -7,6 +7,7 @@ const (
 	AttrARN                        = "arn"
 	AttrAccessKey                  = "access_key"
 	AttrAccountID                  = "account_id"
+	AttrAction                     = "action"
 	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
 	AttrAvailabilityZone           = "availability_zone"
 	AttrAvailabilityZones          = "availability_zones"
