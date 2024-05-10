@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_waf_ipset")
-func DataSourceIPSet() *schema.Resource {
+// @SDKDataSource("aws_waf_ipset", name="IPSet")
+func dataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPSetRead,
 
