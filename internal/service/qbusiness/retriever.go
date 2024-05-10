@@ -228,7 +228,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 									ElementType: types.StringType,
 									Optional:    true,
 									Validators: []validator.Map{
-										mapvalidator.SizeAtMost(10),
+										mapvalidator.SizeAtMost(10), //nolint:mnd // max number of attributes
 									},
 								},
 							},
@@ -364,7 +364,6 @@ func (r *resourceRetriever) Delete(ctx context.Context, req resource.DeleteReque
 		resp.Diagnostics.AddError("failed to wait for Q Business retriever deletion", err.Error())
 		return
 	}
-
 }
 
 func (r *resourceRetriever) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -413,7 +412,6 @@ func (r *resourceRetriever) Update(ctx context.Context, req resource.UpdateReque
 		!old.NativeIndexConfiguration.Equal(new.NativeIndexConfiguration) ||
 		!old.RoleArn.Equal(new.RoleArn) ||
 		!old.DisplayName.Equal(new.DisplayName) {
-
 		input := &qbusiness.UpdateRetrieverInput{
 			ApplicationId: aws.String(old.ApplicationId.ValueString()),
 			RetrieverId:   aws.String(old.RetrieverId.ValueString()),
