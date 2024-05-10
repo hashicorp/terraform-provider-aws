@@ -1410,11 +1410,11 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
-						"device_name": "/dev/xvdcz",
-						"iops":        "4000",
-						"throughput":  "500",
-						"volume_size": "15",
-						"volume_type": "gp3",
+						names.AttrDeviceName: "/dev/xvdcz",
+						"iops":               "4000",
+						"throughput":         "500",
+						"volume_size":        "15",
+						"volume_type":        "gp3",
 					}),
 				),
 			},

@@ -46,7 +46,7 @@ func ResourceImageRecipe() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -521,7 +521,7 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilde
 
 	apiObject := &imagebuilder.InstanceBlockDeviceMapping{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -704,7 +704,7 @@ func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDevi
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {

@@ -140,7 +140,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -820,8 +820,8 @@ func flattenInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, iAcc := range list {
 		l := map[string]interface{}{
-			"device_name": aws.StringValue(iAcc.DeviceName),
-			"device_type": aws.StringValue(iAcc.DeviceType),
+			names.AttrDeviceName: aws.StringValue(iAcc.DeviceName),
+			"device_type":        aws.StringValue(iAcc.DeviceType),
 		}
 
 		result = append(result, l)
@@ -834,7 +834,7 @@ func expandInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccel
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 		l := &ecs.InferenceAccelerator{
-			DeviceName: aws.String(data["device_name"].(string)),
+			DeviceName: aws.String(data[names.AttrDeviceName].(string)),
 			DeviceType: aws.String(data["device_type"].(string)),
 		}
 		iAccs = append(iAccs, l)

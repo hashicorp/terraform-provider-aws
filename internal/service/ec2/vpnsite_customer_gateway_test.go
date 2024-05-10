@@ -41,7 +41,7 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "172.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ipsec.1"),
@@ -140,7 +140,7 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "device_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "test"),
 				),
 			},
 			{

@@ -50,7 +50,7 @@ func DataSourceAMI() *schema.Resource {
 				Set:      amiBlockDeviceMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -355,8 +355,8 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			"device_name":  aws.StringValue(v.DeviceName),
-			"virtual_name": aws.StringValue(v.VirtualName),
+			names.AttrDeviceName: aws.StringValue(v.DeviceName),
+			"virtual_name":       aws.StringValue(v.VirtualName),
 		}
 
 		if v.Ebs != nil {
@@ -425,7 +425,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	var buf bytes.Buffer
 	// All keys added in alphabetical order.
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 	if d, ok := m["ebs"]; ok {
 		if len(d.(map[string]interface{})) > 0 {
 			e := d.(map[string]interface{})

@@ -143,7 +143,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Default:  true,
 										ForceNew: true,
 									},
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -207,7 +207,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1373,7 +1373,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 			}
 
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -1384,7 +1384,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			})
 		}
@@ -1972,7 +1972,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 					continue
 				}
 
-				m["device_name"] = aws.StringValue(val.DeviceName)
+				m[names.AttrDeviceName] = aws.StringValue(val.DeviceName)
 			}
 
 			if ebs.DeleteOnTermination != nil {
@@ -2023,7 +2023,7 @@ func ephemeralBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping) *schema.Set {
 			m["virtual_name"] = aws.StringValue(val.VirtualName)
 
 			if val.DeviceName != nil {
-				m["device_name"] = aws.StringValue(val.DeviceName)
+				m[names.AttrDeviceName] = aws.StringValue(val.DeviceName)
 			}
 
 			set.Add(m)
@@ -2079,7 +2079,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 func hashEphemeralBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 	return create.StringHashcode(buf.String())
 }
@@ -2107,7 +2107,7 @@ func hashLaunchSpecification(v interface{}) int {
 func hashEBSBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	if name, ok := m["device_name"]; ok {
+	if name, ok := m[names.AttrDeviceName]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", name.(string)))
 	}
 	if id, ok := m["snapshot_id"]; ok {

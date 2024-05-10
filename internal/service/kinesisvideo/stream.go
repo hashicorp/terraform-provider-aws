@@ -62,7 +62,7 @@ func ResourceStream() *schema.Resource {
 				Default:  0,
 			},
 
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -109,7 +109,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("device_name"); ok {
+	if v, ok := d.GetOk(names.AttrDeviceName); ok {
 		input.DeviceName = aws.String(v.(string))
 	}
 
@@ -165,7 +165,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrName, resp.StreamInfo.StreamName)
 	d.Set("data_retention_in_hours", resp.StreamInfo.DataRetentionInHours)
-	d.Set("device_name", resp.StreamInfo.DeviceName)
+	d.Set(names.AttrDeviceName, resp.StreamInfo.DeviceName)
 	d.Set(names.AttrKMSKeyID, resp.StreamInfo.KmsKeyId)
 	d.Set("media_type", resp.StreamInfo.MediaType)
 	d.Set(names.AttrARN, resp.StreamInfo.StreamARN)
@@ -186,7 +186,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 	}
 
-	if v, ok := d.GetOk("device_name"); ok {
+	if v, ok := d.GetOk(names.AttrDeviceName); ok {
 		updateOpts.DeviceName = aws.String(v.(string))
 	}
 

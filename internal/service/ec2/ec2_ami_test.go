@@ -44,7 +44,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
-						"device_name":                 "/dev/sda1",
+						names.AttrDeviceName:          "/dev/sda1",
 						"encrypted":                   "false",
 						"iops":                        "0",
 						"throughput":                  "0",
@@ -242,7 +242,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
-						"device_name":                 "/dev/sda1",
+						names.AttrDeviceName:          "/dev/sda1",
 						"encrypted":                   "false",
 						"iops":                        "0",
 						"throughput":                  "0",
@@ -253,12 +253,12 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name":  "/dev/sdb",
-						"virtual_name": "ephemeral0",
+						names.AttrDeviceName: "/dev/sdb",
+						"virtual_name":       "ephemeral0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name":  "/dev/sdc",
-						"virtual_name": "ephemeral1",
+						names.AttrDeviceName: "/dev/sdc",
+						"virtual_name":       "ephemeral1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -306,7 +306,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
-						"device_name":                 "/dev/sda1",
+						names.AttrDeviceName:          "/dev/sda1",
 						"encrypted":                   "false",
 						"iops":                        "0",
 						"throughput":                  "0",
@@ -317,7 +317,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "false",
-						"device_name":                 "/dev/sdb",
+						names.AttrDeviceName:          "/dev/sdb",
 						"encrypted":                   "true",
 						"iops":                        "100",
 						"throughput":                  "500",
