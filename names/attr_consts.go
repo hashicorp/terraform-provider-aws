@@ -67,6 +67,7 @@ const (
 	AttrSubnetIDs                  = "subnet_ids"
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"
+	AttrTarget                     = "target"
 	AttrTimeouts                   = "timeouts" // Should be explicitly declared only for Framework resources
 	AttrTransitGatewayAttachmentID = "transit_gateway_attachment_id"
 	AttrTransitGatewayID           = "transit_gateway_id"
