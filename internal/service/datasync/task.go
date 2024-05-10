@@ -204,7 +204,7 @@ func resourceTask() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -647,7 +647,7 @@ func expandTaskSchedule(l []interface{}) *awstypes.TaskSchedule {
 	m := l[0].(map[string]interface{})
 
 	schedule := &awstypes.TaskSchedule{
-		ScheduleExpression: aws.String(m["schedule_expression"].(string)),
+		ScheduleExpression: aws.String(m[names.AttrScheduleExpression].(string)),
 	}
 
 	return schedule
@@ -659,7 +659,7 @@ func flattenTaskSchedule(schedule *awstypes.TaskSchedule) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"schedule_expression": aws.ToString(schedule.ScheduleExpression),
+		names.AttrScheduleExpression: aws.ToString(schedule.ScheduleExpression),
 	}
 
 	return []interface{}{m}
