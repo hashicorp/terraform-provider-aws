@@ -87,7 +87,7 @@ func dataSourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -136,7 +136,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)
 	d.Set("namespace_name", resource.NamespaceName)
-	d.Set("publicly_accessible", resource.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, resource.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroupIDs, resource.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
 	d.Set("workgroup_id", resource.WorkgroupId)
